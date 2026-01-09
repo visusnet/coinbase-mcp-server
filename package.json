@@ -1,0 +1,78 @@
+{
+  "name": "coinbase-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP server for Coinbase Advanced Trading API",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "coinbase-mcp-server": "dist/index.js"
+  },
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "rollup -c",
+    "build:watch": "rollup -c --watch",
+    "start": "node dist/index.js",
+    "start:dev": "tsx --watch src/index.ts",
+    "inspect": "CLIENT_PORT=3000 npx @modelcontextprotocol/inspector@latest --config mcp.json",
+    "test": "jest",
+    "test:coverage": "jest --coverage",
+    "test:watch": "jest --watch",
+    "test:types": "tsc --noEmit",
+    "lint": "eslint src/",
+    "lint:fix": "eslint src/ --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "knip": "knip"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "coinbase",
+    "trading",
+    "api"
+  ],
+  "author": "Alexander Rose",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/visusnet/coinbase-mcp-server"
+  },
+  "license": "MIT",
+  "engines": {
+    "node": ">=24.12.0"
+  },
+  "dependencies": {
+    "@coinbase-sample/advanced-trade-sdk-ts": "^0.2.0",
+    "@coinbase-sample/core-ts": "^0.2.2",
+    "@modelcontextprotocol/sdk": "^1.25.2",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.17.0",
+    "@jest/globals": "^29.7.0",
+    "@rollup/plugin-commonjs": "^28.0.2",
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-node-resolve": "^16.0.0",
+    "@rollup/plugin-typescript": "^12.1.2",
+    "@types/express": "^5.0.6",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^22.10.5",
+    "@types/supertest": "^6.0.3",
+    "eslint": "^9.17.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-jest": "^29.12.1",
+    "eslint-plugin-prettier": "^5.5.4",
+    "globals": "^15.14.0",
+    "jest": "^29.7.0",
+    "knip": "^5.80.0",
+    "prettier": "^3.7.4",
+    "rollup": "^4.30.1",
+    "supertest": "^7.2.2",
+    "ts-jest": "^29.2.5",
+    "tslib": "^2.8.1",
+    "tsx": "^4.21.0",
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.19.1"
+  }
+}
