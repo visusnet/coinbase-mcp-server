@@ -1,0 +1,133 @@
+import {
+  describe,
+  it,
+  expect,
+  jest,
+  beforeEach,
+  afterEach,
+} from '@jest/globals';
+
+// Mock dotenv to prevent .env file loading
+jest.mock('dotenv', () => ({
+  config: jest.fn(),
+}));
+
+// Mock the CoinbaseMcpServer before importing index
+jest.mock('@server/CoinbaseMcpServer', () => {
+  return {
+    CoinbaseMcpServer: jest.fn().mockImplementation(() => {
+      return {
+        listen: jest.fn(),
+      };
+    }),
+  };
+});
+
+describe('main', () => {
+  let originalEnv: NodeJS.ProcessEnv;
+  let mockExit: jest.SpiedFunction<(code?: number) => never>;
+  let mockConsoleError: jest.SpiedFunction<typeof console.error>;
+
+  beforeEach(() => {
+    originalEnv = { ...process.env };
+    mockExit = jest
+      .spyOn(process, 'exit')
+      .mockImplementation(() => undefined as never);
+    mockConsoleError = jest
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
+
+    // Clear the module cache to ensure fresh import
+    jest.resetModules();
+
+    // Clear all environment variables to ensure clean state
+    delete process.env.COINBASE_API_KEY_NAME;
+    delete process.env.COINBASE_PRIVATE_KEY;
+    delete process.env.PORT;
+  });
+
+  afterEach(() => {
+    process.env = originalEnv;
+    mockExit.mockRestore();
+    mockConsoleError.mockRestore();
+  });
+
+  it('should start server with environment variables set', () => {
+    process.env.COINBASE_API_KEY_NAME = 'test-api-key';
+    process.env.COINBASE_PRIVATE_KEY = 'test-private-key';
+    process.env.PORT = '4000';
+
+    const { CoinbaseMcpServer } = require('@server/CoinbaseMcpServer') as {
+      CoinbaseMcpServer: jest.MockedClass<
+        typeof import('./server/CoinbaseMcpServer').CoinbaseMcpServer
+      >;
+    };
+
+    // Import and run main
+    require('./index');
+
+    expect(CoinbaseMcpServer).toHaveBeenCalledWith(
+      'test-api-key',
+      'test-private-key',
+    );
+
+    const mockInstance = CoinbaseMcpServer.mock.results[0]?.value as {
+      listen: jest.Mock;
+    };
+    expect(mockInstance.listen).toHaveBeenCalledWith(4000);
+  });
+
+  it('should use default port 3000 when PORT is not set', () => {
+    process.env.COINBASE_API_KEY_NAME = 'test-api-key';
+    process.env.COINBASE_PRIVATE_KEY = 'test-private-key';
+
+    const { CoinbaseMcpServer } = require('@server/CoinbaseMcpServer') as {
+      CoinbaseMcpServer: jest.MockedClass<
+        typeof import('./server/CoinbaseMcpServer').CoinbaseMcpServer
+      >;
+    };
+
+    require('./index');
+
+    const mockInstance = CoinbaseMcpServer.mock.results[0]?.value as {
+      listen: jest.Mock;
+    };
+    expect(mockInstance.listen).toHaveBeenCalledWith(3000);
+  });
+
+  it('should exit with error when COINBASE_API_KEY_NAME is missing', () => {
+    delete process.env.COINBASE_API_KEY_NAME;
+    process.env.COINBASE_PRIVATE_KEY = 'test-private-key';
+
+    require('./index');
+
+    expect(mockConsoleError).toHaveBeenCalledWith(
+      'Error: COINBASE_API_KEY_NAME and COINBASE_PRIVATE_KEY environment variables must be set',
+    );
+    expect(mockExit).toHaveBeenCalledWith(1);
+  });
+
+  it('should exit with error when COINBASE_PRIVATE_KEY is missing', () => {
+    process.env.COINBASE_API_KEY_NAME = 'test-api-key';
+    delete process.env.COINBASE_PRIVATE_KEY;
+
+    require('./index');
+
+    expect(mockConsoleError).toHaveBeenCalledWith(
+      'Error: COINBASE_API_KEY_NAME and COINBASE_PRIVATE_KEY environment variables must be set',
+    );
+    expect(mockExit).toHaveBeenCalledWith(1);
+  });
+
+  it('should exit with error when both environment variables are missing', () => {
+    delete process.env.COINBASE_API_KEY_NAME;
+    delete process.env.COINBASE_PRIVATE_KEY;
+
+    require('./index');
+
+    expect(mockConsoleError).toHaveBeenCalledWith(
+      'Error: COINBASE_API_KEY_NAME and COINBASE_PRIVATE_KEY environment variables must be set',
+    );
+    expect(mockExit).toHaveBeenCalledWith(1);
+  });
+});

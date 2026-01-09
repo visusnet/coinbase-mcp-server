@@ -1,0 +1,246 @@
+# Coinbase MCP Server
+
+A Model Context Protocol (MCP) server that provides tools for interacting with the Coinbase Advanced Trading API. **This repository includes both the MCP server and a Claude Skill for fully autonomous crypto trading.**
+
+With this project, AI assistants like Claude can not only check account balances, place trades, and view market data, but also execute automated trading strategies end-to-end via the included autonomous trading agent (`/trade` Skill).
+
+## Getting Started
+
+Get from zero to running `/trade 10 EUR from BTC` in 5 minutes.
+
+### 1. Get Coinbase API Credentials
+
+1. Go to [Coinbase Developer Platform](https://portal.cdp.coinbase.com/)
+2. Create a new project or select an existing one
+3. Navigate to **API Keys** → **Create API Key**
+4. Select **Trading** permissions (read and trade)
+5. Download your credentials:
+   - **API Key Name**: `organizations/xxx/apiKeys/yyy`
+   - **Private Key**: PEM format (starts with `-----BEGIN EC PRIVATE KEY-----`)
+
+> **Warning**: Save your private key immediately. You won't be able to retrieve it again.
+
+### 2. Clone and Setup
+
+```bash
+git clone https://github.com/visusnet/coinbase-mcp-server
+cd coinbase-mcp-server
+npm install
+```
+
+### 3. Create `.env` File
+
+Copy the example and fill in your credentials:
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env`:
+
+```env
+COINBASE_API_KEY_NAME=organizations/your-org/apiKeys/your-key-id
+COINBASE_PRIVATE_KEY="-----BEGIN EC PRIVATE KEY-----
+MHcCAQEEI...your-key-here...
+-----END EC PRIVATE KEY-----"
+```
+
+### 4. Start the Server
+
+```bash
+npm start
+```
+
+You should see: `Coinbase MCP Server running on http://localhost:3000/mcp`
+
+### 5. Open Claude Code
+
+```bash
+claude
+```
+
+The MCP server is **automatically configured** (via `.claude/settings.json` in this repo).
+
+### 6. Start Trading
+
+```
+/trade 10 EUR from BTC dry-run
+```
+
+That's it! The trading agent will analyze the market and show you what trades it would make.
+
+Remove `dry-run` to execute real trades.
+
+---
+
+## Features
+
+
+### 44 Trading Tools & Autonomous Trading Skill
+
+Full access to the Coinbase Advanced Trading API **plus a fully autonomous trading skill for Claude**:
+
+- **Accounts**: List accounts, get balances
+- **Orders**: Create, edit, cancel, preview orders
+- **Products**: List trading pairs, get candles, order books, market trades
+- **Portfolios**: Create, manage, move funds between portfolios
+- **Converts**: Currency conversion quotes and execution
+- **Futures & Perpetuals**: Position management
+- **Public Data**: No-auth endpoints for market data
+- **Autonomous Trading Agent (Skill)**: Automates technical/sentiment analysis and trading decisions via `/trade` command in Claude
+
+### Trading Assistant Prompt (`/coinbase:trading`)
+
+A built-in prompt that provides comprehensive guidance for trading on Coinbase:
+
+```
+/coinbase:trading
+```
+
+**What it provides:**
+- Complete overview of all available tools and capabilities
+- Trading best practices and safety guidelines
+- Fee considerations and market context
+- Recommended workflow for order creation (always preview first)
+
+### Autonomous Trading Agent (`/trade`)
+
+A built-in Claude command that runs an autonomous trading bot:
+
+```
+/trade 10 EUR from BTC
+/trade 5 EUR dry-run
+```
+
+**What it does:**
+- Technical analysis (RSI, MACD, Bollinger Bands)
+- Sentiment analysis (Fear & Greed Index, news search)
+- Automatic order execution with preview
+- Stop-loss (10%) and take-profit (5%)
+- Continuous 15-minute loop until you stop it
+
+**Configuration:**
+
+| Setting | Default | Customizable |
+|---------|---------|--------------|
+| Strategy | Aggressive | No |
+| Take-Profit | 5% | No |
+| Stop-Loss | 10% | No |
+| Check Interval | 15 minutes | Yes (`interval=5m`) |
+| Pairs | BTC, ETH, SOL, XRP, DOGE (EUR) | No |
+
+**Stop the agent**: Press `Ctrl+C`
+
+---
+
+## Usage Examples
+
+### Natural Language
+
+Just ask Claude:
+
+```
+"What are my account balances?"
+"Show me the current BTC-EUR price"
+"Buy 0.001 BTC at market price"
+"Get the last 24 hours of ETH-EUR candles"
+```
+
+### Trading Agent
+
+```bash
+# Dry run (no real trades)
+/trade 10 EUR from BTC dry-run
+
+# Real trading with 10 EUR budget from your BTC
+/trade 10 EUR from BTC
+
+# Trade with EUR balance directly
+/trade 5 EUR
+
+# Custom interval (check every 5 minutes)
+/trade 10 EUR from BTC interval=5m
+
+# Fast trading (every 60 seconds, dry-run)
+/trade 5 EUR interval=60s dry-run
+```
+
+---
+
+## Development
+
+### Project Structure
+
+```
+coinbase-mcp-server/
+├── src/
+│   ├── index.ts                 # HTTP server entry point
+│   └── server/
+│       └── CoinbaseMcpServer.ts # MCP server with 44 tools
+├── .claude/
+│   ├── settings.json            # MCP server config (auto-loaded)
+│   └── commands/
+│       └── trade.md             # /trade command definition
+├── .env.example                 # Environment template
+└── package.json
+```
+
+### Scripts
+
+```bash
+npm start          # Start production server
+npm run dev        # Start with hot-reload
+npm test           # Run tests
+npm run lint       # Check code style
+npm run build      # Build for production
+npm run inspect    # Open MCP Inspector for debugging
+```
+
+### Testing with MCP Inspector
+
+1. Start the server: `npm run dev`
+2. In another terminal: `npm run inspect`
+3. Connect to `http://localhost:3000/mcp`
+4. Test any of the 44 tools interactively
+
+---
+
+## Security
+
+1. **Never commit `.env`** - It's in `.gitignore`
+2. **Use read-only keys for testing** - Create separate keys with minimal permissions
+3. **Rotate keys regularly**
+4. **Monitor API usage** - Check your Coinbase account for unexpected activity
+
+## API Rate Limits
+
+- Public endpoints: 10 requests/second
+- Private endpoints: 15 requests/second
+
+## Troubleshooting
+
+| Problem | Solution |
+|---------|----------|
+| "Authentication failed" | Check API key and private key format (PEM with newlines) |
+| "Server not responding" | Ensure `npm start` is running, check `.env` |
+| "/trade not found" | Restart Claude Code to reload commands |
+| Tools not showing | Verify `.claude/settings.json` exists, restart Claude |
+
+## Resources
+
+- [Model Context Protocol](https://modelcontextprotocol.io)
+- [Coinbase Advanced Trade API](https://docs.cloud.coinbase.com/advanced-trade/docs/welcome)
+- [Claude Code](https://claude.ai/download)
+
+## Disclaimer
+
+**This software is for educational purposes.** Cryptocurrency trading involves significant risk. The autonomous trading agent can and will lose money.
+
+- Start with small amounts
+- Use `dry-run` mode first
+- Monitor the agent's decisions
+- Never invest more than you can afford to lose
+
+## License
+
+MIT
