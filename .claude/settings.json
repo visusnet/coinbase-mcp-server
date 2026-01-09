@@ -1,0 +1,58 @@
+{
+  "mcpServers": {
+    "coinbase": {
+      "url": "http://localhost:3005/mcp"
+    }
+  },
+  "permissions": {
+    "allow": [
+      "mcp__coinbase__list_accounts",
+      "mcp__coinbase__get_account",
+      "mcp__coinbase__list_orders",
+      "mcp__coinbase__get_order",
+      "mcp__coinbase__create_order",
+      "mcp__coinbase__cancel_orders",
+      "mcp__coinbase__list_products",
+      "mcp__coinbase__get_product",
+      "mcp__coinbase__get_product_book",
+      "mcp__coinbase__get_product_candles",
+      "mcp__coinbase__get_market_trades",
+      "mcp__coinbase__get_best_bid_ask",
+      "mcp__coinbase__get_transaction_summary",
+      "mcp__coinbase__list_portfolios",
+      "mcp__coinbase__create_portfolio",
+      "mcp__coinbase__list_fills",
+      "mcp__coinbase__edit_order",
+      "mcp__coinbase__preview_edit_order",
+      "mcp__coinbase__preview_order",
+      "mcp__coinbase__close_position",
+      "mcp__coinbase__create_convert_quote",
+      "mcp__coinbase__commit_convert_trade",
+      "mcp__coinbase__get_convert_trade",
+      "mcp__coinbase__get_server_time",
+      "mcp__coinbase__get_public_product",
+      "mcp__coinbase__list_public_products",
+      "mcp__coinbase__get_public_product_book",
+      "mcp__coinbase__get_public_product_candles",
+      "mcp__coinbase__get_public_market_trades",
+      "mcp__coinbase__list_payment_methods",
+      "mcp__coinbase__get_payment_method",
+      "mcp__coinbase__get_portfolio",
+      "mcp__coinbase__move_portfolio_funds",
+      "mcp__coinbase__edit_portfolio",
+      "mcp__coinbase__delete_portfolio",
+      "mcp__coinbase__list_futures_positions",
+      "mcp__coinbase__get_futures_position",
+      "mcp__coinbase__get_futures_balance_summary",
+      "mcp__coinbase__list_futures_sweeps",
+      "mcp__coinbase__list_perpetuals_positions",
+      "mcp__coinbase__get_perpetuals_position",
+      "mcp__coinbase__get_perpetuals_portfolio_summary",
+      "mcp__coinbase__get_perpetuals_portfolio_balance",
+      "mcp__coinbase__get_api_key_permissions",
+      "WebFetch",
+      "WebSearch"
+    ],
+    "deny": ["Read(./.env)"]
+  }
+}
