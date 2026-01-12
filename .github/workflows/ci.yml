@@ -53,6 +53,7 @@ jobs:
         with:
           path: node_modules
           key: node-modules-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          fail-on-cache-miss: true
 
       - name: Run type checks
         run: npm run test:types
@@ -75,6 +76,7 @@ jobs:
         with:
           path: node_modules
           key: node-modules-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          fail-on-cache-miss: true
 
       - name: Run linter
         run: npm run lint
@@ -97,6 +99,7 @@ jobs:
         with:
           path: node_modules
           key: node-modules-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          fail-on-cache-miss: true
 
       - name: Run knip
         run: npm run knip
@@ -119,6 +122,7 @@ jobs:
         with:
           path: node_modules
           key: node-modules-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+          fail-on-cache-miss: true
 
       - name: Run tests with coverage
         run: npm run test:coverage
