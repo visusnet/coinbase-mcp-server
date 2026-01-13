@@ -154,6 +154,8 @@ Full access to the Coinbase Advanced Trading API **plus a fully autonomous tradi
 - **Public Data**: No-auth endpoints for market data
 - **Autonomous Trading Agent (Skill)**: Automates technical/sentiment analysis and trading decisions via `/trade` command in Claude
 
+For a complete list of all trading skill features, see **[SKILL_FEATURES.md](docs/SKILL_FEATURES.md)**.
+
 ### Trading Assistant Prompt (`/coinbase:trading`)
 
 A built-in prompt that provides comprehensive guidance for trading on Coinbase:
