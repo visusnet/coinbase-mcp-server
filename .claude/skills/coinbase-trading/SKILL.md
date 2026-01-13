@@ -28,6 +28,8 @@ The project does NOT need to be built. Just call the tools.
 
 ## Configuration
 
+### General
+
 - **Budget**: From command arguments (e.g., "10 EUR from BTC" or "5 EUR")
   - This is the **TOTAL budget for the entire /trade session**, NOT per cycle
   - "5 EUR from BTC" = BTC is the funding source, but ONLY sell BTC when a trade justifies it
@@ -44,7 +46,7 @@ The project does NOT need to be built. Just call the tools.
 
 **Interval formats**: `interval=5m`, `interval=30m`, `interval=1h`, `interval=60s`
 
-## Fee Optimization
+### Fee Optimization
 
 - **Maker Fee**: ~0.4% (Limit Orders)
 - **Taker Fee**: ~0.6% (Market Orders)
@@ -53,7 +55,7 @@ The project does NOT need to be built. Just call the tools.
 - **Limit Order Timeout**: 120 seconds
 - **Prefer Direct Pairs**: Yes (BTC→X instead of BTC→EUR→X when available)
 
-## Dynamic Stop-Loss / Take-Profit
+### Dynamic Stop-Loss / Take-Profit
 
 Use ATR-based dynamic thresholds instead of fixed percentages:
 
@@ -64,7 +66,7 @@ Use ATR-based dynamic thresholds instead of fixed percentages:
 - **Max SL**: 15.0% (capital protection)
 - **Min SL**: 3.0% (avoid noise triggers)
 
-## Trailing Stop
+### Trailing Stop
 
 Activate trailing stop after position becomes profitable:
 
@@ -74,7 +76,7 @@ Activate trailing stop after position becomes profitable:
 
 Trailing stop works alongside ATR-based TP/SL - whichever triggers first.
 
-## Liquidity Requirements
+### Liquidity Requirements
 
 Check orderbook before altcoin entries:
 
@@ -83,7 +85,7 @@ Check orderbook before altcoin entries:
 - **Full Position Spread**: < 0.2%
 - **Bypass Check**: BTC-EUR, ETH-EUR, all limit orders, all exits
 
-## Compound Mode
+### Compound Mode
 
 Automatically reinvest a portion of profits to enable exponential growth:
 
@@ -101,6 +103,30 @@ Automatically reinvest a portion of profits to enable exponential growth:
 - `no-compound` → Disable compounding
 - `compound=75` → Custom rate: 75%
 - `compound-cap=15` → Max budget: 15€
+
+### Opportunity Rebalancing
+
+Automatically exit stagnant positions for better opportunities:
+
+- **Rebalance Enabled**: true (disable with "no-rebalance" argument)
+- **Stagnation Hours**: 12h (position age to consider stagnant)
+- **Stagnation Threshold**: 3% (max move to be "stagnant")
+- **Min Opportunity Delta**: 40 (score difference to trigger)
+- **Min Alternative Score**: 50 (minimum score for alternative)
+- **Max Rebalance Loss**: -2% (never rebalance if losing more)
+- **Cooldown**: 4h between rebalances
+- **Max per Day**: 3 rebalances
+- **Flip-Back Block**: 24h (don't rebalance back to recently exited position)
+
+**Arguments**:
+- `no-rebalance` → Disable rebalancing
+- `rebalance-delta=50` → Custom delta threshold
+- `rebalance-max=2` → Max rebalances per day
+
+**Edge Cases**:
+- Multiple positions eligible → Highest delta first, max 1 per cycle
+- High volatility (ATR > 2×) → Increase min delta to 60
+- No good alternatives (all < 50%) → HOLD
 
 ## Your Task
 
@@ -123,6 +149,33 @@ State is persisted in `.claude/trading-state.json`.
 Use `/portfolio` for a compact status overview without verbose explanation.
 
 ## Workflow
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ PHASE 1: DATA COLLECTION                                    │
+│   1. Check Portfolio Status                                 │
+│   2. Collect Market Data                                    │
+│   3. Technical Analysis                                     │
+│   4. Sentiment Analysis                                     │
+├─────────────────────────────────────────────────────────────┤
+│ PHASE 2: MANAGE EXISTING POSITIONS (frees up capital)       │
+│   5. Check SL/TP/Trailing                                   │
+│   6. Rebalancing Check                                      │
+│   7. Apply Compound (after exits)                           │
+├─────────────────────────────────────────────────────────────┤
+│ PHASE 3: NEW ENTRIES (uses freed capital)                   │
+│   8. Signal Aggregation                                     │
+│   9. Check Fees & Profit Threshold                          │
+│  10. Pre-Trade Liquidity Check                              │
+│  11. Execute Order                                          │
+├─────────────────────────────────────────────────────────────┤
+│ PHASE 4: REPORT                                             │
+│  12. Output Report                                          │
+│  13. Sleep → Repeat                                         │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
 
 ### 1. Check Portfolio Status
 
@@ -193,19 +246,147 @@ Perform a web search:
 - 55-75 (Greed): Slight SELL signal
 - 75-100 (Extreme Greed): Contrarian SELL signal
 
-### 5. Pre-Trade Liquidity Check
+### 5. Check Stop-Loss / Take-Profit
 
-For altcoin market order entries only (skip for BTC-EUR, ETH-EUR, limit orders, exits):
+For all open positions, use dynamic ATR-based thresholds:
 
-1. Call `get_product_book` for target pair
-2. Calculate: `spread = (best_ask - best_bid) / best_bid`
-3. Decision:
-   - Spread > 0.5% → SKIP trade, log "Spread too high: {X}%"
-   - Spread 0.2% - 0.5% → Reduce position to 50%
-   - Spread < 0.2% → Full position allowed
-4. Store `entrySpread` and `liquidityStatus` in position
+```
+// Use stored values from position entry
+entry_price = position.entry.price
+entry_atr = position.riskManagement.entryATR
+dynamic_tp = position.riskManagement.dynamicTP
+dynamic_sl = position.riskManagement.dynamicSL
 
-### 6. Signal Aggregation
+// Or recalculate if position > 24h old:
+ATR_PERCENT = ATR(14) / entry_price × 100
+
+TP_PERCENT = max(2.0, ATR_PERCENT × 2.0)  // Floor at 2%
+SL_PERCENT = clamp(ATR_PERCENT × 2.0, 3.0, 15.0)  // Between 3-15%
+
+take_profit_price = entry_price × (1 + TP_PERCENT / 100)
+stop_loss_price = entry_price × (1 - SL_PERCENT / 100)
+```
+
+**Check and Execute**:
+```
+// Priority 1: Stop-Loss
+IF current_price <= stop_loss_price:
+  → Immediately sell (STOP-LOSS) using Market Order
+  → Log: "Stop-Loss triggered at -[X]% (ATR-based)"
+
+// Priority 2: Take-Profit
+IF current_price >= take_profit_price:
+  → Secure profit (TAKE-PROFIT) using Limit Order
+  → Log: "Take-Profit triggered at +[X]% (ATR-based)"
+```
+
+**Trailing Stop Check** (after SL/TP check):
+```
+// Update highest price
+IF current_price > position.riskManagement.trailingStop.highestPrice:
+  position.riskManagement.trailingStop.highestPrice = current_price
+
+// Check activation
+current_profit_pct = (current_price - entry_price) / entry_price × 100
+
+IF current_profit_pct >= 3.0:
+  position.riskManagement.trailingStop.active = true
+  position.riskManagement.trailingStop.currentStopPrice = position.riskManagement.trailingStop.highestPrice × 0.985
+
+// Priority 3: Trailing Stop
+IF position.riskManagement.trailingStop.active AND current_price <= position.riskManagement.trailingStop.currentStopPrice:
+  // Ensure minimum profit (covers fees)
+  IF current_price >= entry_price × 1.01:  // At least +1%
+    → SELL (Trailing Stop) using Market Order
+    → Log: "Trailing Stop triggered at +[X]% (peak was +[Y]%)"
+```
+
+**Report Section**:
+```
+Position: SOL-EUR
+  Entry: 119.34 EUR
+  Current: 125.00 EUR (+4.7%)
+  Highest: 128.50 EUR (+7.7%)
+  ATR(14): 8.0%
+  Dynamic TP: 143.21 EUR (+20.0%)
+  Dynamic SL: 101.44 EUR (-15.0% capped)
+  Trailing Stop: ACTIVE at 126.57 EUR
+  Status: TRAILING (stop rising with price)
+```
+
+### 6. Rebalancing Check
+
+For positions held > 12h with < 3% movement:
+
+```
+// Calculate opportunity delta
+current_signal = position.analysis.signalStrength
+best_alternative = max(all_pairs.filter(not_held AND score > 50).signalStrength)
+opportunity_delta = best_alternative.score - current_signal
+
+// Stagnation check
+is_stagnant = holdingTimeHours > 12 AND abs(unrealizedPnLPercent) < 3
+
+// Rebalancing decision
+IF opportunity_delta > 40 AND is_stagnant AND unrealizedPnLPercent > -2:
+  → SELL current position (market order)
+  → BUY best alternative (limit order preferred)
+  → Log: "Rebalanced {FROM}→{TO}: stagnant {X}h, delta +{Y}"
+
+IF opportunity_delta > 60 AND unrealizedPnLPercent > -2:
+  → REBALANCE (even if not stagnant, urgent opportunity)
+```
+
+**Safeguards**:
+- Max 1 rebalance per cycle
+- Max 3 rebalances per day
+- 4h cooldown between rebalances
+- 24h block on recently exited positions (no flip-back)
+- High volatility → increase min delta to 60
+
+**Report Section (Rebalancing)**:
+```
+═══════════════════════════════════════════════════════════════
+                 REBALANCING ANALYSIS
+═══════════════════════════════════════════════════════════════
+Position: SOL-EUR (18h, +1.2%)
+  Status: STAGNANT
+  Current Signal: 25%
+  Best Alternative: ETH-EUR (78%)
+  Opportunity Delta: +53
+  Recommendation: REBALANCE ✓
+
+Today's Rebalances: 1/3
+Last Rebalance: 4h ago (cooldown OK)
+═══════════════════════════════════════════════════════════════
+```
+
+### 7. Apply Compound
+
+After any profitable exit (SL/TP/Trailing/Rebalance):
+
+```
+IF netPnL > 0 AND session.compound.enabled:
+  compoundAmount = netPnL × session.compound.rate
+  
+  IF compoundAmount >= 0.10€:
+    IF session.budget.remaining + compoundAmount <= session.compound.maxBudget:
+      session.budget.remaining += compoundAmount
+    ELSE:
+      compoundAmount = maxBudget - session.budget.remaining  // Cap at max
+      session.budget.remaining = maxBudget
+    
+    Log compound event to session.compound.compoundEvents[]
+    session.compound.totalCompounded += compoundAmount
+    Report: "Compounded +{X}€ → Budget now {Y}€"
+```
+
+**Risk Controls**:
+- Pause after 2 consecutive losses
+- Reduce rate to 25% after 3 consecutive wins
+- Never compound losses
+
+### 8. Signal Aggregation
 
 Combine all signals into a decision:
 
@@ -243,7 +424,7 @@ Combine all signals into a decision:
 
 See [strategies.md](strategies.md) for strategy configurations.
 
-### 7. Check Fees & Profit Threshold
+### 9. Check Fees & Profit Threshold
 
 Call `get_transaction_summary` and calculate:
 
@@ -275,7 +456,19 @@ Fees:
   Expected Move: [V]% [✓/✗]
 ```
 
-### 8. Execute Order
+### 10. Pre-Trade Liquidity Check
+
+For altcoin market order entries only (skip for BTC-EUR, ETH-EUR, limit orders, exits):
+
+1. Call `get_product_book` for target pair
+2. Calculate: `spread = (best_ask - best_bid) / best_bid`
+3. Decision:
+   - Spread > 0.5% → SKIP trade, log "Spread too high: {X}%"
+   - Spread 0.2% - 0.5% → Reduce position to 50%
+   - Spread < 0.2% → Full position allowed
+4. Store `entrySpread` and `liquidityStatus` in position
+
+### 11. Execute Order
 
 When a signal is present and expected profit exceeds MIN_PROFIT threshold:
 
@@ -323,86 +516,10 @@ When a signal is present and expected profit exceeds MIN_PROFIT threshold:
 2. For Stop-Loss: Use Market Order (immediate execution)
 3. Call preview_order → execute create_order
 4. Calculate and log profit/loss (gross and net after fees)
-5. Apply Compound (if profitable):
-   a. IF netPnL > 0 AND compound.enabled:
-   b. compoundAmount = netPnL × compound.rate
-   c. IF compoundAmount >= 0.10€:
-      - session.budget.remaining += compoundAmount
-      - Log compound event to state
-      - Report: "Compounded +X€ → Budget now Y€"
-   d. IF budget exceeds cap: compound only up to cap
-6. Update state file
+5. Update state file (compound is applied in step 7)
 ```
 
-### 9. Check Stop-Loss / Take-Profit
-
-For all open positions, use dynamic ATR-based thresholds:
-
-```
-// Use stored values from position entry
-entry_price = position.entryPrice
-entry_atr = position.entryATR
-dynamic_tp = position.dynamicTP
-dynamic_sl = position.dynamicSL
-
-// Or recalculate if position > 24h old:
-ATR_PERCENT = ATR(14) / entry_price × 100
-
-TP_PERCENT = max(2.0, ATR_PERCENT × 2.0)  // Floor at 2%
-SL_PERCENT = clamp(ATR_PERCENT × 2.0, 3.0, 15.0)  // Between 3-15%
-
-take_profit_price = entry_price × (1 + TP_PERCENT / 100)
-stop_loss_price = entry_price × (1 - SL_PERCENT / 100)
-```
-
-**Check and Execute**:
-```
-// Priority 1: Stop-Loss
-IF current_price <= stop_loss_price:
-  → Immediately sell (STOP-LOSS) using Market Order
-  → Log: "Stop-Loss triggered at -[X]% (ATR-based)"
-
-// Priority 2: Take-Profit
-IF current_price >= take_profit_price:
-  → Secure profit (TAKE-PROFIT) using Limit Order
-  → Log: "Take-Profit triggered at +[X]% (ATR-based)"
-```
-
-**Trailing Stop Check** (after SL/TP check):
-```
-// Update highest price
-IF current_price > position.highestPrice:
-  position.highestPrice = current_price
-
-// Check activation
-current_profit_pct = (current_price - entry_price) / entry_price × 100
-
-IF current_profit_pct >= 3.0:
-  position.trailingStopActive = true
-  position.trailingStopPrice = position.highestPrice × 0.985
-
-// Priority 3: Trailing Stop
-IF position.trailingStopActive AND current_price <= position.trailingStopPrice:
-  // Ensure minimum profit (covers fees)
-  IF current_price >= entry_price × 1.01:  // At least +1%
-    → SELL (Trailing Stop) using Market Order
-    → Log: "Trailing Stop triggered at +[X]% (peak was +[Y]%)"
-```
-
-**Report Section**:
-```
-Position: SOL-EUR
-  Entry: 119.34 EUR
-  Current: 125.00 EUR (+4.7%)
-  Highest: 128.50 EUR (+7.7%)
-  ATR(14): 8.0%
-  Dynamic TP: 143.21 EUR (+20.0%)
-  Dynamic SL: 101.44 EUR (-15.0% capped)
-  Trailing Stop: ACTIVE at 126.57 EUR
-  Status: TRAILING (stop rising with price)
-```
-
-### 9. Output Report
+### 12. Output Report
 
 Output a structured report:
 
@@ -528,4 +645,4 @@ The agent runs indefinitely until the user stops it with Ctrl+C.
 **Important during the loop:**
 - Load/save positions from trading-state.json each cycle
 - Check stop-loss/take-profit on each cycle
-- Show at the end of each cycle: "Next cycle in X minutes... (sleep Y)"
+- Show at the end of each cycle: "Next cycle in X minutes at Y... (sleep Z)"

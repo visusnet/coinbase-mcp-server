@@ -13,7 +13,7 @@ Complete overview of all features of the autonomous trading agent.
 | Technical Analysis | 6 Categories |
 | Sentiment Analysis | 2 |
 | Liquidity Management | 1 |
-| Capital Management | 2 |
+| Capital Management | 3 |
 | State Management | 1 |
 
 ---
@@ -299,6 +299,56 @@ Automatic reinvestment of profits for exponential growth.
 
 ---
 
+### 3. Opportunity Rebalancing
+
+Automatically exit stagnant positions for better opportunities.
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| Enabled | true | Active by default |
+| Stagnation Hours | 12h | Time to consider position stagnant |
+| Stagnation Threshold | 3% | Max movement to be "stagnant" |
+| Min Opportunity Delta | 40 | Score difference to trigger |
+| Min Alternative Score | 50 | Minimum score for alternative |
+| Max Rebalance Loss | -2% | Never rebalance if losing more |
+| Cooldown | 4h | Minimum time between rebalances |
+| Max per Day | 3 | Prevent over-trading |
+| Flip-Back Block | 24h | Don't rebalance to recently exited position |
+
+**Rebalancing Decision Matrix**:
+
+| Condition | Action |
+|-----------|--------|
+| `delta > 40` AND `stagnant` AND `pnl > -2%` | REBALANCE |
+| `delta > 60` AND `pnl > -2%` | REBALANCE (urgent) |
+| `delta > 30` AND `stagnant` AND `pnl > 0` | REBALANCE |
+| Otherwise | HOLD |
+
+**Edge Cases**:
+- Multiple eligible → Highest delta first, max 1 per cycle
+- High volatility (ATR > 2×) → Increase min delta to 60
+- No good alternatives (all < 50%) → HOLD
+
+**Example**:
+```
+SOL-EUR: Held 18h, +1.2% (stagnant)
+ETH-EUR: Signal 78% (alternative)
+Delta: 78 - 25 = 53 (> 40 ✓)
+
+→ SELL SOL → BUY ETH
+→ Log: "Rebalanced SOL→ETH: stagnant 18h, delta +53"
+```
+
+**CLI Arguments**:
+```
+/trade 5 EUR from BTC                    → Rebalancing active (default)
+/trade 5 EUR from BTC no-rebalance       → Rebalancing disabled
+/trade 5 EUR from BTC rebalance-delta=50 → Custom delta threshold
+/trade 5 EUR from BTC rebalance-max=2    → Max 2 per day
+```
+
+---
+
 ## 📁 State Management
 
 ### Persistent Trading State
@@ -310,16 +360,18 @@ Stored in `.claude/trading-state.json`
 - Stats (wins, losses, PnL, fees)
 - Config (strategy, interval, dryRun)
 - Compound (enabled, rate, events)
+- Rebalancing (enabled, history, cooldown)
 
 **Position Data**:
 - Entry (price, time, orderType, fee, route)
 - Analysis (signalStrength, reason, confidence)
-- Risk Management (stopLoss, takeProfit, trailingStop)
+- Risk Management (dynamicSL, dynamicTP, trailingStop)
 - Performance (currentPrice, unrealizedPnL, peakPnL)
+- Rebalancing (eligible, stagnantSince, bestAlternative)
 
 **Trade History**:
 - Complete documentation of all closed trades
-- Exit trigger (SL, TP, Trailing, Manual)
+- Exit trigger (SL, TP, Trailing, Rebalance, Manual)
 - Net PnL after fees
 
 ---
@@ -367,19 +419,28 @@ Stored in `.claude/trading-state.json`
 ## 🔄 Trading Loop
 
 ```
-1. Check Portfolio Status
-2. Collect Market Data (Candles, Prices)
-3. Technical Analysis (20+ Indicators)
-4. Sentiment Analysis (Fear & Greed, News)
-5. Pre-Trade Liquidity Check
-6. Signal Aggregation
-7. Fee & Profit Threshold Check
-8. Execute Order (Limit/Market)
-9. Check SL/TP/Trailing for open positions
-10. Apply Compound (on profitable exits)
-11. Output Report
-12. Sleep (interval)
-13. → Repeat
+┌─────────────────────────────────────────────────────────────┐
+│ PHASE 1: DATA COLLECTION                                    │
+│   1. Check Portfolio Status                                 │
+│   2. Collect Market Data                                    │
+│   3. Technical Analysis                                     │
+│   4. Sentiment Analysis                                     │
+├─────────────────────────────────────────────────────────────┤
+│ PHASE 2: MANAGE EXISTING POSITIONS (frees up capital)       │
+│   5. Check SL/TP/Trailing                                   │
+│   6. Rebalancing Check                                      │
+│   7. Apply Compound (after exits)                           │
+├─────────────────────────────────────────────────────────────┤
+│ PHASE 3: NEW ENTRIES (uses freed capital)                   │
+│   8. Signal Aggregation                                     │
+│   9. Check Fees & Profit Threshold                          │
+│  10. Pre-Trade Liquidity Check                              │
+│  11. Execute Order                                          │
+├─────────────────────────────────────────────────────────────┤
+│ PHASE 4: REPORT                                             │
+│  12. Output Report                                          │
+│  13. Sleep → Repeat                                         │
+└─────────────────────────────────────────────────────────────┘
 ```
 
 ---

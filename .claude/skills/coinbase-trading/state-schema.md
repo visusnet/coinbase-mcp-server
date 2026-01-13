@@ -40,6 +40,21 @@ Single Source of Truth for `.claude/trading-state.json` structure.
       "maxBudget": 10.00,
       "totalCompounded": 0.00,
       "compoundEvents": []
+    },
+    "rebalancing": {
+      "enabled": true,
+      "stagnationHours": 12,
+      "stagnationThreshold": 3.0,
+      "minOpportunityDelta": 40,
+      "minAlternativeScore": 50,
+      "maxRebalanceLoss": -2.0,
+      "cooldownHours": 4,
+      "maxPerDay": 3,
+      "totalRebalances": 0,
+      "rebalancesToday": 0,
+      "lastRebalance": null,
+      "recentlyExited": [],
+      "rebalanceHistory": []
     }
   },
   "openPositions": [
@@ -66,8 +81,8 @@ Single Source of Truth for `.claude/trading-state.json` structure.
       },
       "riskManagement": {
         "entryATR": 9.55,
-        "stopLoss": 101.44,
-        "takeProfit": 142.13,
+        "dynamicSL": 101.44,
+        "dynamicTP": 142.13,
         "trailingStop": {
           "active": false,
           "currentStopPrice": null,
@@ -80,6 +95,12 @@ Single Source of Truth for `.claude/trading-state.json` structure.
         "unrealizedPnLPercent": null,
         "peakPnLPercent": 0,
         "holdingTimeHours": null
+      },
+      "rebalancing": {
+        "eligible": true,
+        "stagnantSince": null,
+        "bestAlternative": null,
+        "rebalanceCount": 0
       }
     }
   ],
@@ -147,6 +168,19 @@ Single Source of Truth for `.claude/trading-state.json` structure.
 | `session.compound.maxBudget` | number | Budget cap (default: 2× initial) |
 | `session.compound.totalCompounded` | number | Total amount reinvested (EUR) |
 | `session.compound.compoundEvents` | array | History of compound actions |
+| `session.rebalancing.enabled` | boolean | Is rebalancing active (default: true) |
+| `session.rebalancing.stagnationHours` | number | Hours to consider position stagnant (default: 12) |
+| `session.rebalancing.stagnationThreshold` | number | Max % move to be stagnant (default: 3.0) |
+| `session.rebalancing.minOpportunityDelta` | number | Min score delta to trigger (default: 40) |
+| `session.rebalancing.minAlternativeScore` | number | Min alternative score (default: 50) |
+| `session.rebalancing.maxRebalanceLoss` | number | Max loss to allow rebalance (default: -2.0) |
+| `session.rebalancing.cooldownHours` | number | Hours between rebalances (default: 4) |
+| `session.rebalancing.maxPerDay` | number | Max daily rebalances (default: 3) |
+| `session.rebalancing.totalRebalances` | number | Total rebalances this session |
+| `session.rebalancing.rebalancesToday` | number | Rebalances today |
+| `session.rebalancing.lastRebalance` | string | ISO 8601, last rebalance time |
+| `session.rebalancing.recentlyExited` | array | Pairs exited in last 24h (no flip-back) |
+| `session.rebalancing.rebalanceHistory` | array | History of rebalance events |
 
 ## Open Position Object Fields
 
@@ -169,8 +203,8 @@ Single Source of Truth for `.claude/trading-state.json` structure.
 | `analysis.reason` | string | Top indicators |
 | `analysis.confidence` | enum | "high" / "medium" / "low" |
 | `riskManagement.entryATR` | number | ATR at entry |
-| `riskManagement.stopLoss` | number | SL price (EUR) |
-| `riskManagement.takeProfit` | number | TP price (EUR) |
+| `riskManagement.dynamicSL` | number | ATR-based stop-loss price (EUR) |
+| `riskManagement.dynamicTP` | number | ATR-based take-profit price (EUR) |
 | `riskManagement.trailingStop.active` | boolean | Is trailing active? |
 | `riskManagement.trailingStop.currentStopPrice` | number | Current trail |
 | `riskManagement.trailingStop.highestPrice` | number | Peak price |
@@ -179,6 +213,10 @@ Single Source of Truth for `.claude/trading-state.json` structure.
 | `performance.unrealizedPnLPercent` | number | Current P/L (%) |
 | `performance.peakPnLPercent` | number | Best P/L achieved |
 | `performance.holdingTimeHours` | number | Hours since entry |
+| `rebalancing.eligible` | boolean | Is position eligible for rebalancing |
+| `rebalancing.stagnantSince` | string | ISO 8601, when stagnation began |
+| `rebalancing.bestAlternative` | object | Current best alternative {pair, score, delta} |
+| `rebalancing.rebalanceCount` | number | Times this position was rebalanced into |
 
 ## Trade History Object Fields
 
@@ -210,7 +248,7 @@ Single Source of Truth for `.claude/trading-state.json` structure.
 - `entry.liquidityStatus`: "good" | "moderate" | "skipped"
 - `analysis.confidence`: "high" | "medium" | "low"
 - `analysis.sentiment`: "bullish" | "neutral" | "bearish"
-- `exit.trigger`: "stopLoss" | "takeProfit" | "trailingStop" | "manual"
+- `exit.trigger`: "stopLoss" | "takeProfit" | "trailingStop" | "rebalance" | "manual"
 
 ## Operations
 
@@ -255,8 +293,8 @@ analysis.reason = "MACD Golden Cross + RSI < 30"
 analysis.confidence = "high" (>70) / "medium" (40-70) / "low" (<40)
 
 riskManagement.entryATR = ATR(14) at entry
-riskManagement.stopLoss = calculated SL price
-riskManagement.takeProfit = calculated TP price
+riskManagement.dynamicSL = calculated SL price (ATR-based)
+riskManagement.dynamicTP = calculated TP price (ATR-based)
 riskManagement.trailingStop.active = false
 riskManagement.trailingStop.currentStopPrice = null
 riskManagement.trailingStop.highestPrice = entry price

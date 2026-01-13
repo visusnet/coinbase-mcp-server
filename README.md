@@ -180,21 +180,30 @@ A built-in Claude command that runs an autonomous trading bot:
 ```
 
 **What it does:**
-- Technical analysis (RSI, MACD, Bollinger Bands)
+- Technical analysis (RSI, MACD, Bollinger Bands, ATR, and more)
 - Sentiment analysis (Fear & Greed Index, news search)
 - Automatic order execution with preview
-- Stop-loss (10%) and take-profit (5%)
-- Continuous 15-minute loop until you stop it
+- Dynamic ATR-based stop-loss/take-profit
+- Trailing stop (locks in profits)
+- Liquidity check before altcoin entries
+- Compound mode (reinvest profits)
+- Opportunity rebalancing (exit stagnant positions)
+- Continuous loop until you stop it
+
+For a complete list of all trading features, see **[SKILL_FEATURES.md](docs/SKILL_FEATURES.md)**.
 
 **Configuration:**
 
 | Setting | Default | Customizable |
 |---------|---------|--------------|
 | Strategy | Aggressive | No |
-| Take-Profit | 5% | No |
-| Stop-Loss | 10% | No |
+| Take-Profit | ATR-based (min 2%) | Via ATR |
+| Stop-Loss | ATR-based (3-15%) | Via ATR |
+| Trailing Stop | 1.5% trail after +3% | No |
 | Check Interval | 15 minutes | Yes (`interval=5m`) |
-| Pairs | BTC, ETH, SOL, XRP, DOGE (EUR) | No |
+| Compound | 50% of profits | Yes (`compound=75`, `no-compound`) |
+| Rebalancing | After 12h stagnation | Yes (`no-rebalance`) |
+| Pairs | All EUR pairs | No |
 
 **Stop the agent**: Press `Ctrl+C`
 
