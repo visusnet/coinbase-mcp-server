@@ -23,9 +23,15 @@ paths:
 ```
 
 ## State Persistence
-- File: `.claude/trading-state.json`
-- Load at start, save after each trade
-- Track: positions, entry prices, PnL
+
+**File**: `.claude/trading-state.json`
+
+**Schema**: See [state-schema.md](../skills/coinbase-trading/state-schema.md) for complete structure.
+
+**Workflow**:
+- Load at start of `/trade` session
+- Save after each trade (entry/exit)
+- Update `session.lastUpdated` on each cycle
 
 ## Interval Parsing
 - `interval=5m` → sleep 300

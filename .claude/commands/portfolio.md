@@ -38,10 +38,14 @@ Use this EXACT format template (no deviation, no explanatory text before/after):
 
 ## Required Steps
 
-1. **Get Balances**: Call `mcp_coinbase_list_accounts` to get all account balances
-2. **Get Current Prices**: Call `mcp_coinbase_get_best_bid_ask` for held assets to calculate EUR values
-3. **Read State**: Read `.claude/trading-state.json` for open positions and session stats
-4. **Format Output**: Use the exact template above
+1. **Get Balances**: Call `mcp_coinbase_list_accounts`
+2. **Get Prices**: Call `mcp_coinbase_get_best_bid_ask` for held assets
+3. **Read State**: Per [state-schema.md](../skills/coinbase-trading/state-schema.md):
+   - Session stats: `session.stats.*`
+   - Budget: `session.budget.*`
+   - Open positions: `openPositions[]`
+   - Exit levels: `openPositions[].riskManagement.*`
+4. **Format Output**: Use template above
 
 ## Output Rules
 

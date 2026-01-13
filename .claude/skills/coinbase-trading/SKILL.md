@@ -89,51 +89,15 @@ Analyze the market and execute profitable trades. You trade **fully autonomously
 
 ## State Management
 
-Load/save positions to `.claude/trading-state.json`:
-```json
-{
-  "positions": [
-    {
-      "coin": "BTC-EUR",
-      "amount": "0.001",
-      "entryPrice": 42000,
-      "entryTime": "2026-01-13T12:00:00Z",
-      "orderType": "limit",
-      "entryFee": 0.40,
-      "route": "direct",
-      "entryATR": 1900.00,
-      "dynamicTP": 45360.00,
-      "dynamicSL": 38640.00,
-      "highestPrice": 42000,
-      "trailingStopActive": false,
-      "trailingStopPrice": null
-    }
-  ],
-  "totalPnL": 0,
-  "totalFeesPaid": 0,
-  "tradesExecuted": 0,
-  "initialBudget": 5.00,
-  "remainingBudget": 5.00,
-  "budgetSource": "BTC"
-}
-```
+State is persisted in `.claude/trading-state.json`.
 
-**Position Fields**:
-- `orderType`: "limit" or "market" (for fee tracking)
-- `entryFee`: Fee paid on entry (EUR)
-- `route`: "direct" or "indirect" (for MIN_PROFIT calculation)
-- `entryATR`: ATR value at entry time (for dynamic SL/TP)
-- `dynamicTP`: Calculated take-profit price
-- `dynamicSL`: Calculated stop-loss price
-- `highestPrice`: Highest price observed since entry (for trailing stop)
-- `trailingStopActive`: Boolean, true when profit >= 3%
-- `trailingStopPrice`: Current trailing stop price level
+**Schema**: See [state-schema.md](state-schema.md) for complete structure and field definitions.
 
-**Session Fields**:
-- `totalFeesPaid`: Cumulative fees paid this session (EUR)
-- `wins`: Number of profitable trades closed
-- `losses`: Number of losing trades closed
-- `lastUpdated`: Timestamp of last state update
+**Key Operations**:
+- **Session Init**: Set `session.*` fields per schema
+- **On Entry**: Populate `openPositions[].entry.*` and `openPositions[].analysis.*`
+- **Each Cycle**: Update `openPositions[].performance.*`, check `riskManagement.*`
+- **On Exit**: Move position to `tradeHistory[]`, populate `exit.*` and `result.*`
 
 ## Quick Commands
 
