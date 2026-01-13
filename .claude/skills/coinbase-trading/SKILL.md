@@ -64,6 +64,16 @@ Use ATR-based dynamic thresholds instead of fixed percentages:
 - **Max SL**: 15.0% (capital protection)
 - **Min SL**: 3.0% (avoid noise triggers)
 
+## Trailing Stop
+
+Activate trailing stop after position becomes profitable:
+
+- **Activation Threshold**: 3.0% profit
+- **Trail Distance**: 1.5% below highest price
+- **Min Lock-In**: 1.0% (never trail below +1% to cover fees)
+
+Trailing stop works alongside ATR-based TP/SL - whichever triggers first.
+
 ## Your Task
 
 Analyze the market and execute profitable trades. You trade **fully autonomously** without confirmation.
@@ -84,7 +94,10 @@ Load/save positions to `.claude/trading-state.json`:
       "route": "direct",
       "entryATR": 1900.00,
       "dynamicTP": 45360.00,
-      "dynamicSL": 38640.00
+      "dynamicSL": 38640.00,
+      "highestPrice": 42000,
+      "trailingStopActive": false,
+      "trailingStopPrice": null
     }
   ],
   "totalPnL": 0,
@@ -103,6 +116,9 @@ Load/save positions to `.claude/trading-state.json`:
 - `entryATR`: ATR value at entry time (for dynamic SL/TP)
 - `dynamicTP`: Calculated take-profit price
 - `dynamicSL`: Calculated stop-loss price
+- `highestPrice`: Highest price observed since entry (for trailing stop)
+- `trailingStopActive`: Boolean, true when profit >= 3%
+- `trailingStopPrice`: Current trailing stop price level
 
 **Session Fields**:
 - `totalFeesPaid`: Cumulative fees paid this session (EUR)
@@ -322,13 +338,36 @@ stop_loss_price = entry_price × (1 - SL_PERCENT / 100)
 
 **Check and Execute**:
 ```
+// Priority 1: Stop-Loss
 IF current_price <= stop_loss_price:
   → Immediately sell (STOP-LOSS) using Market Order
   → Log: "Stop-Loss triggered at -[X]% (ATR-based)"
 
+// Priority 2: Take-Profit
 IF current_price >= take_profit_price:
   → Secure profit (TAKE-PROFIT) using Limit Order
   → Log: "Take-Profit triggered at +[X]% (ATR-based)"
+```
+
+**Trailing Stop Check** (after SL/TP check):
+```
+// Update highest price
+IF current_price > position.highestPrice:
+  position.highestPrice = current_price
+
+// Check activation
+current_profit_pct = (current_price - entry_price) / entry_price × 100
+
+IF current_profit_pct >= 3.0:
+  position.trailingStopActive = true
+  position.trailingStopPrice = position.highestPrice × 0.985
+
+// Priority 3: Trailing Stop
+IF position.trailingStopActive AND current_price <= position.trailingStopPrice:
+  // Ensure minimum profit (covers fees)
+  IF current_price >= entry_price × 1.01:  // At least +1%
+    → SELL (Trailing Stop) using Market Order
+    → Log: "Trailing Stop triggered at +[X]% (peak was +[Y]%)"
 ```
 
 **Report Section**:
@@ -336,10 +375,12 @@ IF current_price >= take_profit_price:
 Position: SOL-EUR
   Entry: 119.34 EUR
   Current: 125.00 EUR (+4.7%)
+  Highest: 128.50 EUR (+7.7%)
   ATR(14): 8.0%
-  Dynamic TP: 138.46 EUR (+16.0%)
+  Dynamic TP: 143.21 EUR (+20.0%)
   Dynamic SL: 101.44 EUR (-15.0% capped)
-  Status: HOLDING (within range)
+  Trailing Stop: ACTIVE at 126.57 EUR
+  Status: TRAILING (stop rising with price)
 ```
 
 ### 9. Output Report

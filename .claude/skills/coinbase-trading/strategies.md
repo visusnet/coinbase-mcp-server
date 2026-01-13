@@ -203,12 +203,51 @@ IF profit_ratio < MIN_PROFIT_THRESHOLD:
 
 ## Trailing Stop Strategy
 
-After position is profitable:
-1. Initial stop: ATR-based dynamic SL from entry
-2. At +3% profit: Move stop to breakeven
-3. At +5% profit: Move stop to +3%
-4. At +7% profit: Move stop to +5%
-5. Continue trailing at 2% below highest price
+Trailing stop activates after position becomes profitable, locking in gains as price rises.
+
+### Activation Rules
+
+```
+IF profit >= ACTIVATION_THRESHOLD (3.0%):
+  → Activate trailing stop
+  → Set trailingStopPrice = highestPrice × (1 - TRAIL_PERCENT)
+
+// Update on each price check:
+highestPrice = max(highestPrice, currentPrice)
+trailingStopPrice = highestPrice × (1 - TRAIL_PERCENT)
+```
+
+### Parameters
+
+| Parameter | Value | Reasoning |
+|-----------|-------|-----------|
+| ACTIVATION_THRESHOLD | 3.0% | Enough profit to justify trailing |
+| TRAIL_PERCENT | 1.5% | Tight enough to capture gains |
+| MIN_LOCK_IN | 1.0% | Ensures fees are covered |
+
+### Exit Priority
+
+| Condition | Priority | Action |
+|-----------|----------|--------|
+| Price <= dynamicSL | 1 (Highest) | SELL - Stop Loss |
+| Price >= dynamicTP | 2 | SELL - Take Profit |
+| Trailing triggered | 3 | SELL - Trailing Stop |
+
+### Trailing Stop Progression
+
+| Profit | Trailing Active | Stop Level |
+|--------|-----------------|------------|
+| < 3% | No | N/A (use dynamicSL) |
+| 3-5% | Yes | highest × 0.985 |
+| 5-10% | Yes | highest × 0.985 |
+| > 10% | Yes | highest × 0.985 |
+
+### Benefits
+
+1. **Captures extended rallies**: No fixed ceiling on profits
+2. **Protects gains**: Locks in profit as price rises
+3. **Adapts to momentum**: Tighter exit on reversals
+4. **Prevents round-trips**: Avoids watching profits evaporate
 
 ---
 
