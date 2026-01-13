@@ -204,11 +204,55 @@ IF profit_ratio < MIN_PROFIT_THRESHOLD:
 ## Trailing Stop Strategy
 
 After position is profitable:
-1. Initial stop: -10% from entry
+1. Initial stop: ATR-based dynamic SL from entry
 2. At +3% profit: Move stop to breakeven
 3. At +5% profit: Move stop to +3%
 4. At +7% profit: Move stop to +5%
 5. Continue trailing at 2% below highest price
+
+---
+
+## ATR-Based Stop-Loss / Take-Profit
+
+Dynamic thresholds based on market volatility:
+
+### Calculation
+
+```
+ATR_PERCENT = ATR(14) / Price × 100
+
+TP_PERCENT = max(MIN_TP, ATR_PERCENT × TP_MULTIPLIER)
+SL_PERCENT = clamp(ATR_PERCENT × SL_MULTIPLIER, MIN_SL, MAX_SL)
+
+take_profit_price = entry_price × (1 + TP_PERCENT / 100)
+stop_loss_price = entry_price × (1 - SL_PERCENT / 100)
+```
+
+### Default Parameters
+
+| Parameter | Value | Reasoning |
+|-----------|-------|-----------|
+| TP_MULTIPLIER | 2.0 | Achievable within 1-2 days |
+| SL_MULTIPLIER | 2.0 | Room for normal volatility |
+| MIN_TP | 2.0% | Must exceed round-trip fees |
+| MIN_SL | 3.0% | Avoid noise-triggered stops |
+| MAX_SL | 15.0% | Capital protection |
+
+### Volatility Categories
+
+| ATR % | Category | Typical TP | Typical SL |
+|-------|----------|------------|------------|
+| < 2% | Low | 2.0% (floor) | 3.0% (floor) |
+| 2-5% | Normal | 4-10% | 4-10% |
+| 5-10% | High | 10-20% | 10-15% (capped) |
+| > 10% | Extreme | 20%+ | 15% (capped) |
+
+### Benefits
+
+1. **Adapts to market conditions**: Wider stops in volatile markets
+2. **Reduces premature exits**: Normal swings don't trigger SL
+3. **Realistic targets**: TP based on actual price movement
+4. **Risk management**: MAX_SL prevents catastrophic losses
 
 ---
 

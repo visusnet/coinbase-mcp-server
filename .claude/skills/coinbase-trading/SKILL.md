@@ -53,6 +53,17 @@ The project does NOT need to be built. Just call the tools.
 - **Limit Order Timeout**: 120 seconds
 - **Prefer Direct Pairs**: Yes (BTC→X instead of BTC→EUR→X when available)
 
+## Dynamic Stop-Loss / Take-Profit
+
+Use ATR-based dynamic thresholds instead of fixed percentages:
+
+- **ATR Period**: 14 candles
+- **TP Multiplier**: 2.0× ATR
+- **SL Multiplier**: 2.0× ATR
+- **Min TP**: 2.0% (must exceed fees)
+- **Max SL**: 15.0% (capital protection)
+- **Min SL**: 3.0% (avoid noise triggers)
+
 ## Your Task
 
 Analyze the market and execute profitable trades. You trade **fully autonomously** without confirmation.
@@ -70,7 +81,10 @@ Load/save positions to `.claude/trading-state.json`:
       "entryTime": "2026-01-13T12:00:00Z",
       "orderType": "limit",
       "entryFee": 0.40,
-      "route": "direct"
+      "route": "direct",
+      "entryATR": 1900.00,
+      "dynamicTP": 45360.00,
+      "dynamicSL": 38640.00
     }
   ],
   "totalPnL": 0,
@@ -86,6 +100,9 @@ Load/save positions to `.claude/trading-state.json`:
 - `orderType`: "limit" or "market" (for fee tracking)
 - `entryFee`: Fee paid on entry (EUR)
 - `route`: "direct" or "indirect" (for MIN_PROFIT calculation)
+- `entryATR`: ATR value at entry time (for dynamic SL/TP)
+- `dynamicTP`: Calculated take-profit price
+- `dynamicSL`: Calculated stop-loss price
 
 **Session Fields**:
 - `totalFeesPaid`: Cumulative fees paid this session (EUR)
@@ -284,9 +301,46 @@ When a signal is present and expected profit exceeds MIN_PROFIT threshold:
 
 ### 8. Check Stop-Loss / Take-Profit
 
-For all open positions:
-- If loss > 10% → Immediately sell (stop-loss)
-- If profit > 5% → Secure profit (take-profit)
+For all open positions, use dynamic ATR-based thresholds:
+
+```
+// Use stored values from position entry
+entry_price = position.entryPrice
+entry_atr = position.entryATR
+dynamic_tp = position.dynamicTP
+dynamic_sl = position.dynamicSL
+
+// Or recalculate if position > 24h old:
+ATR_PERCENT = ATR(14) / entry_price × 100
+
+TP_PERCENT = max(2.0, ATR_PERCENT × 2.0)  // Floor at 2%
+SL_PERCENT = clamp(ATR_PERCENT × 2.0, 3.0, 15.0)  // Between 3-15%
+
+take_profit_price = entry_price × (1 + TP_PERCENT / 100)
+stop_loss_price = entry_price × (1 - SL_PERCENT / 100)
+```
+
+**Check and Execute**:
+```
+IF current_price <= stop_loss_price:
+  → Immediately sell (STOP-LOSS) using Market Order
+  → Log: "Stop-Loss triggered at -[X]% (ATR-based)"
+
+IF current_price >= take_profit_price:
+  → Secure profit (TAKE-PROFIT) using Limit Order
+  → Log: "Take-Profit triggered at +[X]% (ATR-based)"
+```
+
+**Report Section**:
+```
+Position: SOL-EUR
+  Entry: 119.34 EUR
+  Current: 125.00 EUR (+4.7%)
+  ATR(14): 8.0%
+  Dynamic TP: 138.46 EUR (+16.0%)
+  Dynamic SL: 101.44 EUR (-15.0% capped)
+  Status: HOLDING (within range)
+```
 
 ### 9. Output Report
 
