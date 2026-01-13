@@ -178,6 +178,41 @@ IF profit_ratio < MIN_PROFIT_THRESHOLD:
 
 ---
 
+## Liquidity Filter
+
+### When to Check
+
+| Scenario | Check Required? |
+|----------|----------------|
+| Altcoin entries (SOL, AVAX, MATIC, etc.) | ✅ Yes |
+| Major pairs (BTC-EUR, ETH-EUR) | ❌ No - always liquid |
+| Limit orders | ❌ No - you control the price |
+| Exit orders (SL/TP/Trailing) | ❌ No - must exit regardless |
+
+### Spread Thresholds
+
+| Spread | Action | Position Size | Reason |
+|--------|--------|---------------|--------|
+| > 0.5% | Skip | 0% | Hidden cost exceeds typical profit |
+| 0.2% - 0.5% | Reduce | 50% | Partial exposure, reduced risk |
+| < 0.2% | Full | 100% | Acceptable spread |
+
+### Spread Calculation
+
+```
+spread_pct = (best_ask - best_bid) / best_bid × 100
+```
+
+### Example
+
+Orderbook for SOL-EUR:
+- Best Bid: €119.50
+- Best Ask: €119.65
+- Spread: (119.65 - 119.50) / 119.50 = 0.126%
+- Decision: < 0.2% → Full position ✅
+
+---
+
 ## Trade Filters
 
 ### Conditions to AVOID trading:

@@ -74,6 +74,15 @@ Activate trailing stop after position becomes profitable:
 
 Trailing stop works alongside ATR-based TP/SL - whichever triggers first.
 
+## Liquidity Requirements
+
+Check orderbook before altcoin entries:
+
+- **Max Spread**: 0.5% (skip trade if higher)
+- **Reduced Position Spread**: 0.2% - 0.5% (use 50% size)
+- **Full Position Spread**: < 0.2%
+- **Bypass Check**: BTC-EUR, ETH-EUR, all limit orders, all exits
+
 ## Your Task
 
 Analyze the market and execute profitable trades. You trade **fully autonomously** without confirmation.
@@ -201,7 +210,19 @@ Perform a web search:
 - 55-75 (Greed): Slight SELL signal
 - 75-100 (Extreme Greed): Contrarian SELL signal
 
-### 5. Signal Aggregation
+### 5. Pre-Trade Liquidity Check
+
+For altcoin market order entries only (skip for BTC-EUR, ETH-EUR, limit orders, exits):
+
+1. Call `get_product_book` for target pair
+2. Calculate: `spread = (best_ask - best_bid) / best_bid`
+3. Decision:
+   - Spread > 0.5% → SKIP trade, log "Spread too high: {X}%"
+   - Spread 0.2% - 0.5% → Reduce position to 50%
+   - Spread < 0.2% → Full position allowed
+4. Store `entrySpread` and `liquidityStatus` in position
+
+### 6. Signal Aggregation
 
 Combine all signals into a decision:
 
@@ -239,7 +260,7 @@ Combine all signals into a decision:
 
 See [strategies.md](strategies.md) for strategy configurations.
 
-### 6. Check Fees & Profit Threshold
+### 7. Check Fees & Profit Threshold
 
 Call `get_transaction_summary` and calculate:
 
@@ -271,7 +292,7 @@ Fees:
   Expected Move: [V]% [✓/✗]
 ```
 
-### 7. Execute Order
+### 8. Execute Order
 
 When a signal is present and expected profit exceeds MIN_PROFIT threshold:
 
@@ -322,7 +343,7 @@ When a signal is present and expected profit exceeds MIN_PROFIT threshold:
 5. Update state file
 ```
 
-### 8. Check Stop-Loss / Take-Profit
+### 9. Check Stop-Loss / Take-Profit
 
 For all open positions, use dynamic ATR-based thresholds:
 
