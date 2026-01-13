@@ -148,6 +148,34 @@ Search for recent news and categorize:
 - Max simultaneous positions: 3
 - Max exposure per asset: 33% of budget
 
+### Fee-Adjusted Profitability
+
+Before each trade, calculate net profitability:
+
+```
+gross_profit = target_price - entry_price
+fees = entry_fee + exit_fee
+net_profit = gross_profit - fees
+profit_ratio = net_profit / entry_price
+
+IF profit_ratio < MIN_PROFIT_THRESHOLD:
+  → Skip Trade (not profitable after fees)
+```
+
+**Minimum Profit Thresholds**:
+- Direct route (e.g., BTC→SOL): 2.0%
+- Indirect route (e.g., BTC→EUR→SOL): 3.2%
+
+**Example Calculation**:
+
+| Scenario | Entry | Target (+5%) | Fees | Net | Profitable? |
+|----------|-------|--------------|------|-----|-------------|
+| Market→Market | 100€ | 105€ | 1.2€ | 3.8€ | ✅ Yes (3.8%) |
+| Limit→Market | 100€ | 105€ | 1.0€ | 4.0€ | ✅ Yes (4.0%) |
+| Limit→Limit | 100€ | 105€ | 0.8€ | 4.2€ | ✅ Yes (4.2%) |
+| Indirect Market→Market | 100€ | 102€ | 1.6€ | 0.4€ | ❌ No (<3.2%) |
+| Direct Limit→Market | 100€ | 102€ | 1.0€ | 1.0€ | ❌ No (<2.0%) |
+
 ---
 
 ## Trade Filters

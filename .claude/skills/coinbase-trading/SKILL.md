@@ -44,6 +44,15 @@ The project does NOT need to be built. Just call the tools.
 
 **Interval formats**: `interval=5m`, `interval=30m`, `interval=1h`, `interval=60s`
 
+## Fee Optimization
+
+- **Maker Fee**: ~0.4% (Limit Orders)
+- **Taker Fee**: ~0.6% (Market Orders)
+- **Min Profit Threshold (Direct)**: 2.0% (must exceed fees)
+- **Min Profit Threshold (Indirect)**: 3.2% (for routes like BTC→EUR→SOL)
+- **Limit Order Timeout**: 120 seconds
+- **Prefer Direct Pairs**: Yes (BTC→X instead of BTC→EUR→X when available)
+
 ## Your Task
 
 Analyze the market and execute profitable trades. You trade **fully autonomously** without confirmation.
@@ -53,14 +62,33 @@ Analyze the market and execute profitable trades. You trade **fully autonomously
 Load/save positions to `.claude/trading-state.json`:
 ```json
 {
-  "positions": [{"coin": "BTC-EUR", "amount": "0.001", "entryPrice": 42000, "entryTime": "..."}],
+  "positions": [
+    {
+      "coin": "BTC-EUR",
+      "amount": "0.001",
+      "entryPrice": 42000,
+      "entryTime": "2026-01-13T12:00:00Z",
+      "orderType": "limit",
+      "entryFee": 0.40,
+      "route": "direct"
+    }
+  ],
   "totalPnL": 0,
+  "totalFeesPaid": 0,
   "tradesExecuted": 0,
   "initialBudget": 5.00,
   "remainingBudget": 5.00,
   "budgetSource": "BTC"
 }
 ```
+
+**Position Fields**:
+- `orderType`: "limit" or "market" (for fee tracking)
+- `entryFee`: Fee paid on entry (EUR)
+- `route`: "direct" or "indirect" (for MIN_PROFIT calculation)
+
+**Session Fields**:
+- `totalFeesPaid`: Cumulative fees paid this session (EUR)
 
 ## Workflow
 
@@ -171,18 +199,73 @@ Combine all signals into a decision:
 
 See [strategies.md](strategies.md) for strategy configurations.
 
-### 6. Check Fees
+### 6. Check Fees & Profit Threshold
 
 Call `get_transaction_summary` and calculate:
-- Taker fee (market orders): typically 0.6-0.8%
-- Round-trip cost: ~1.2-1.6%
-- **Minimum profit must exceed round-trip costs!**
+
+```
+maker_fee = fee_tier.maker_fee_rate  // e.g., 0.004
+taker_fee = fee_tier.taker_fee_rate  // e.g., 0.006
+
+// For Limit Order (Entry) + Market Order (Exit)
+round_trip_fee = maker_fee + taker_fee  // ~1.0%
+
+// Minimum Profit must exceed Round-Trip + Buffer
+MIN_PROFIT_DIRECT = round_trip_fee × 2  // ~2.0%
+MIN_PROFIT_INDIRECT = round_trip_fee × 4  // ~3.2% (for BTC→EUR→X routes)
+
+// Check before trading
+IF expected_move < MIN_PROFIT:
+  → "Trade unprofitable after fees - SKIP"
+```
+
+**Fee Report Section**:
+```
+Fees:
+  Your Tier: [Tier Name]
+  Maker: [X]%
+  Taker: [Y]%
+  Route: [Direct/Indirect]
+  Round-Trip: [Z]%
+  Min Profit Required: [W]%
+  Expected Move: [V]% [✓/✗]
+```
 
 ### 7. Execute Order
 
-When a strong signal is present:
+When a signal is present and expected profit exceeds MIN_PROFIT threshold:
 
-**For BUY**:
+**Order Type Selection**:
+
+| Signal Strength | Order Type | Reason |
+|-----------------|------------|--------|
+| > 70% (Strong) | Market (IOC) | Speed is priority |
+| 40-70% (Normal) | Limit (GTC) | Lower fees |
+| < 40% (Weak) | No Trade | - |
+
+**Route Selection**:
+1. Call `list_products` to check if direct pair exists (e.g., BTC-SOL)
+2. IF direct pair exists with sufficient liquidity:
+   → Use direct pair, MIN_PROFIT = 2.0%
+3. ELSE (no direct pair or illiquid):
+   → Use indirect route (BTC → EUR → SOL)
+   → MIN_PROFIT = 3.2%
+   → Only trade if expected_profit > 3.2%
+
+**For BUY (Limit Order)**:
+```
+1. Call get_best_bid_ask for current price
+2. Calculate limit_price = best_ask × 1.0005 (slightly above)
+3. Call preview_order with limitLimitGtc, postOnly=true
+4. If preview OK → execute create_order
+5. Wait 120 seconds
+6. Call get_order to check status
+7. If not filled → cancel_orders + Market Order Fallback
+8. Record position (coin, amount, entry price, orderType)
+9. Save state to trading-state.json
+```
+
+**For BUY (Market Order - Strong Signal)**:
 ```
 1. Call preview_order (Market Order, BUY)
 2. If preview OK → execute create_order
@@ -192,10 +275,11 @@ When a strong signal is present:
 
 **For SELL (open position)**:
 ```
-1. Call preview_order (Market Order, SELL)
-2. If preview OK → execute create_order
-3. Calculate and log profit/loss
-4. Update state file
+1. For Take-Profit: Use Limit Order (limitLimitGtc, postOnly=true)
+2. For Stop-Loss: Use Market Order (immediate execution)
+3. Call preview_order → execute create_order
+4. Calculate and log profit/loss (gross and net after fees)
+5. Update state file
 ```
 
 ### 8. Check Stop-Loss / Take-Profit
