@@ -33,6 +33,13 @@ Single Source of Truth for `.claude/trading-state.json` structure.
       "strategy": "aggressive",
       "interval": "15m",
       "dryRun": false
+    },
+    "compound": {
+      "enabled": true,
+      "rate": 0.50,
+      "maxBudget": 10.00,
+      "totalCompounded": 0.00,
+      "compoundEvents": []
     }
   },
   "openPositions": [
@@ -135,6 +142,11 @@ Single Source of Truth for `.claude/trading-state.json` structure.
 | `session.config.strategy` | string | "aggressive" / "conservative" |
 | `session.config.interval` | string | "5m" / "15m" / "1h" |
 | `session.config.dryRun` | boolean | Dry-run mode active |
+| `session.compound.enabled` | boolean | Is compound mode active (default: true) |
+| `session.compound.rate` | number | Reinvestment rate (0.0-1.0, default: 0.50) |
+| `session.compound.maxBudget` | number | Budget cap (default: 2× initial) |
+| `session.compound.totalCompounded` | number | Total amount reinvested (EUR) |
+| `session.compound.compoundEvents` | array | History of compound actions |
 
 ## Open Position Object Fields
 

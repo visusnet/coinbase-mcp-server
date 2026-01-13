@@ -83,6 +83,25 @@ Check orderbook before altcoin entries:
 - **Full Position Spread**: < 0.2%
 - **Bypass Check**: BTC-EUR, ETH-EUR, all limit orders, all exits
 
+## Compound Mode
+
+Automatically reinvest a portion of profits to enable exponential growth:
+
+- **Compound Enabled**: true (disable with "no-compound" argument)
+- **Compound Rate**: 50% of net profits
+- **Min Compound Amount**: 0.10€
+- **Max Budget**: 2× initial budget (optional cap)
+
+**Risk Controls**:
+- Compound pauses after 2 consecutive losses
+- Rate reduces to 25% after 3 consecutive wins
+- Never compounds losses (only positive PnL)
+
+**Arguments**:
+- `no-compound` → Disable compounding
+- `compound=75` → Custom rate: 75%
+- `compound-cap=15` → Max budget: 15€
+
 ## Your Task
 
 Analyze the market and execute profitable trades. You trade **fully autonomously** without confirmation.
@@ -304,7 +323,15 @@ When a signal is present and expected profit exceeds MIN_PROFIT threshold:
 2. For Stop-Loss: Use Market Order (immediate execution)
 3. Call preview_order → execute create_order
 4. Calculate and log profit/loss (gross and net after fees)
-5. Update state file
+5. Apply Compound (if profitable):
+   a. IF netPnL > 0 AND compound.enabled:
+   b. compoundAmount = netPnL × compound.rate
+   c. IF compoundAmount >= 0.10€:
+      - session.budget.remaining += compoundAmount
+      - Log compound event to state
+      - Report: "Compounded +X€ → Budget now Y€"
+   d. IF budget exceeds cap: compound only up to cap
+6. Update state file
 ```
 
 ### 9. Check Stop-Loss / Take-Profit
