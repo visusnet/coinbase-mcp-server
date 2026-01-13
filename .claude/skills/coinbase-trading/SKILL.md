@@ -122,6 +122,13 @@ Load/save positions to `.claude/trading-state.json`:
 
 **Session Fields**:
 - `totalFeesPaid`: Cumulative fees paid this session (EUR)
+- `wins`: Number of profitable trades closed
+- `losses`: Number of losing trades closed
+- `lastUpdated`: Timestamp of last state update
+
+## Quick Commands
+
+Use `/portfolio` for a compact status overview without verbose explanation.
 
 ## Workflow
 
