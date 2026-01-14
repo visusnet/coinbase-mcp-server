@@ -4,7 +4,7 @@
 
 This server now uses the official `@coinbase-sample/advanced-trade-sdk-ts` SDK directly, eliminating all custom domain/repository layers.
 
-**Total Tools: 44**
+**Total Tools: 45**
 
 ## Accounts (2)
 
@@ -23,7 +23,7 @@ This server now uses the official `@coinbase-sample/advanced-trade-sdk-ts` SDK d
 - ✅ `preview_edit_order` - Preview order edit before committing
 - ✅ `close_position` - Close an open position
 
-## Products (6)
+## Products (7)
 
 - ✅ `list_products` - List all tradable products
 - ✅ `get_product` - Get details of a specific product
@@ -31,6 +31,7 @@ This server now uses the official `@coinbase-sample/advanced-trade-sdk-ts` SDK d
 - ✅ `get_product_candles` - Get historic price data (candlesticks)
 - ✅ `get_market_trades` - Get recent trades for a product
 - ✅ `get_best_bid_ask` - Get best bid/ask prices for products
+- ✅ `get_market_snapshot` - Get comprehensive market data for multiple products in one call
 
 ## Public Data (6 - No Auth Required)
 

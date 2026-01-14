@@ -1,7 +1,6 @@
 import {
   AccountsService,
   OrdersService,
-  ProductsService,
   ConvertsService,
   FeesService,
   PaymentMethodsService,
@@ -11,6 +10,7 @@ import {
   PublicService,
   DataService,
 } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
+import { ProductsService } from '@server/ProductsService';
 import { jest } from '@jest/globals';
 
 // Mock the SDK services to avoid real API calls
@@ -66,6 +66,9 @@ export const mockProductsService: Record<
   listProducts: jest
     .fn<typeof mockProductsService.listProducts>()
     .mockRejectedValue(new Error('Not implemented')),
+  getProductFixed: jest
+    .fn<typeof mockProductsService.getProductFixed>()
+    .mockRejectedValue(new Error('Not implemented')),
   getProduct: jest
     .fn<typeof mockProductsService.getProduct>()
     .mockRejectedValue(new Error('Not implemented')),
@@ -80,6 +83,9 @@ export const mockProductsService: Record<
     .mockRejectedValue(new Error('Not implemented')),
   getBestBidAsk: jest
     .fn<typeof mockProductsService.getBestBidAsk>()
+    .mockRejectedValue(new Error('Not implemented')),
+  getMarketSnapshot: jest
+    .fn<typeof mockProductsService.getMarketSnapshot>()
     .mockRejectedValue(new Error('Not implemented')),
 };
 

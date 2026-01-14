@@ -16,7 +16,6 @@ Essential standards that apply to all code in this project.
 - Classes: PascalCase (`CoinbaseMcpServer`)
 - Methods: camelCase (`listAccounts()`)
 - Constants: SCREAMING_SNAKE_CASE (`DEFAULT_PORT`)
-- Private members: prefix `_` (`_client`)
 
 ## Design Principles
 - **YAGNI**: No abstraction until needed

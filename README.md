@@ -140,7 +140,6 @@ Now you can use all 44 trading tools and the `/coinbase:trading` prompt in Claud
 
 ## Features
 
-
 ### 44 Trading Tools & Autonomous Trading Skill
 
 Full access to the Coinbase Advanced Trading API **plus a fully autonomous trading skill for Claude**:

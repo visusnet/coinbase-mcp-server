@@ -7,7 +7,6 @@ import {
   CoinbaseAdvTradeCredentials,
   AccountsService,
   OrdersService,
-  ProductsService,
   ConvertsService,
   FeesService,
   PaymentMethodsService,
@@ -23,6 +22,7 @@ import { ProductType } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/e
 import { ContractExpiryType } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/ContractExpiryType.js';
 import { ProductVenue } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/ProductVenue.js';
 import { StopPriceDirection } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/StopPriceDirection.js';
+import { ProductsService } from './ProductsService';
 
 export class CoinbaseMcpServer {
   private readonly app: Express;
@@ -382,6 +382,31 @@ export class CoinbaseMcpServer {
         },
       },
       this.call(this.products.getBestBidAsk.bind(this.products)),
+    );
+
+    server.registerTool(
+      'get_market_snapshot',
+      {
+        title: 'Get Market Snapshot',
+        description:
+          'Get comprehensive market snapshot for one or more trading pairs. ' +
+          'Returns price, bid, ask, spread, volume, and 24h change in a single call. ' +
+          'Use this instead of separate get_best_bid_ask and get_product calls.',
+        inputSchema: {
+          productIds: z
+            .array(z.string())
+            .min(1)
+            .max(10)
+            .describe(
+              "Trading pairs to query (e.g., ['BTC-EUR', 'ETH-EUR']). Max 10 pairs.",
+            ),
+          includeOrderBook: z
+            .boolean()
+            .optional()
+            .describe('Include order book levels per asset (default: false)'),
+        },
+      },
+      this.call(this.products.getMarketSnapshot.bind(this.products)),
     );
 
     // ===== FEES =====
@@ -929,10 +954,10 @@ export class CoinbaseMcpServer {
                 type: 'text',
                 text: `You are a Coinbase Advanced Trade assistant.
 
-TOOL CATEGORIES (44 total):
+TOOL CATEGORIES (45 total):
 - Accounts (2): list_accounts, get_account
 - Orders (9): create_order, preview_order, list_orders, get_order, cancel_orders, edit_order, preview_edit_order, list_fills, close_position
-- Products (6): list_products, get_product, get_product_candles, get_best_bid_ask, get_product_book, get_market_trades
+- Products (7): list_products, get_product, get_product_candles, get_best_bid_ask, get_market_snapshot, get_product_book, get_market_trades
 - Portfolios (6): list_portfolios, create_portfolio, get_portfolio, edit_portfolio, delete_portfolio, move_portfolio_funds
 - Conversions (3): create_convert_quote, commit_convert_trade, get_convert_trade
 - Public Data (6): get_server_time, list_public_products, get_public_product, get_public_product_book, get_public_product_candles, get_public_market_trades

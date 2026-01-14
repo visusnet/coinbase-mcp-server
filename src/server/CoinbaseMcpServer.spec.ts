@@ -345,6 +345,30 @@ describe('CoinbaseMcpServer Integration Tests', () => {
         expect(mockProductsService.getBestBidAsk).toHaveBeenCalledWith(args);
         expectResponseToContain(response, result);
       });
+
+      it('should call getMarketSnapshot via MCP tool get_market_snapshot', async () => {
+        const args = { productIds: ['BTC-EUR', 'ETH-EUR'] };
+        const result = {
+          timestamp: '2024-01-01T00:00:00Z',
+          snapshots: {},
+          summary: {
+            assetsQueried: 0,
+            bestPerformer: null,
+            worstPerformer: null,
+          },
+        };
+        mockProductsService.getMarketSnapshot.mockResolvedValueOnce(result);
+
+        const response = await client.callTool({
+          name: 'get_market_snapshot',
+          arguments: args,
+        });
+
+        expect(mockProductsService.getMarketSnapshot).toHaveBeenCalledWith(
+          args,
+        );
+        expectResponseToContain(response, result);
+      });
     });
 
     describe('Fees', () => {
