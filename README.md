@@ -146,7 +146,7 @@ Full access to the Coinbase Advanced Trading API **plus a fully autonomous tradi
 
 - **Accounts**: List accounts, get balances
 - **Orders**: Create, edit, cancel, preview orders
-- **Products**: List trading pairs, get candles, order books, market trades
+- **Products**: List trading pairs, get candles (including batch for up to 10 products), order books, market trades, market snapshots
 - **Portfolios**: Create, manage, move funds between portfolios
 - **Converts**: Currency conversion quotes and execution
 - **Futures & Perpetuals**: Position management
