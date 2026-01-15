@@ -136,7 +136,7 @@ Add the MCP server to your Claude settings (e.g., `~/.claude/settings.json`):
 }
 ```
 
-Now you can use all 46 trading tools and the `/coinbase:trading` prompt in Claude, but without the autonomous `/trade` skill.
+Now you can use all 46 trading tools and the `/coinbase:assist` prompt in Claude, but without the autonomous `/trade` skill.
 
 ## Features
 
@@ -155,12 +155,12 @@ Full access to the Coinbase Advanced Trading API **plus a fully autonomous tradi
 
 For a complete list of all trading skill features, see **[SKILL_FEATURES.md](docs/SKILL_FEATURES.md)**.
 
-### Trading Assistant Prompt (`/coinbase:trading`)
+### Trading Assistant Prompt (`/coinbase:assist`)
 
 A built-in prompt that provides comprehensive guidance for trading on Coinbase:
 
 ```
-/coinbase:trading
+/coinbase:assist
 ```
 
 **What it provides:**
