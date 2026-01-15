@@ -29,7 +29,7 @@ src/
 
 ```bash
 cp .env.example .env
-# Set COINBASE_API_KEY and COINBASE_PRIVATE_KEY
+# Set COINBASE_API_KEY_NAME and COINBASE_PRIVATE_KEY
 ```
 
 ## Guidelines
