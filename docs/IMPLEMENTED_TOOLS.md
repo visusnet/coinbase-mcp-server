@@ -47,7 +47,7 @@ This server now uses the official `@coinbase-sample/advanced-trade-sdk-ts` SDK d
 
 - ✅ `get_transaction_summary` - Get fee tier and transaction summary
 
-## Portfolios (5)
+## Portfolios (6)
 
 - ✅ `list_portfolios` - List all portfolios
 - ✅ `create_portfolio` - Create a new portfolio
