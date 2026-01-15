@@ -4,6 +4,7 @@ import type { GetBestBidAskResponse } from '@coinbase-sample/advanced-trade-sdk-
 import type { GetProductBookResponse } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/GetProductBookResponse';
 import type { Product } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/Product';
 import { ProductsService } from './ProductsService';
+import { Granularity } from './ProductCandles';
 
 const createService = () =>
   new ProductsService({} as unknown as CoinbaseAdvTradeClient);
@@ -321,6 +322,177 @@ describe('ProductsService', () => {
 
       expect(result.summary.bestPerformer).toBe('SOL-EUR');
       expect(result.summary.worstPerformer).toBe('ETH-EUR');
+    });
+  });
+
+  describe('getProductCandlesFixed', () => {
+    // The SDK accepts ISO 8601 timestamp strings for candle requests,
+    // but the REST API expects Unix timestamps. The toUnixTimestamp method
+    // handles conversion while also supporting already-formatted Unix timestamps.
+    describe('Timestamp Conversion for REST API Compatibility', () => {
+      it('should reject invalid ISO 8601 timestamps with descriptive error', async () => {
+        const service = createService();
+        jest.spyOn(service, 'getProductCandles').mockResolvedValue({
+          candles: [],
+        } as unknown as Awaited<ReturnType<typeof service.getProductCandles>>);
+
+        const args = {
+          productId: 'BTC-USD',
+          start: 'invalid-date-string',
+          end: '2025-12-31T23:59:59Z',
+          granularity: 'ONE_DAY',
+        };
+
+        await expect(() =>
+          service.getProductCandlesFixed(args),
+        ).rejects.toThrow('Invalid timestamp: invalid-date-string');
+      });
+
+      it('should convert ISO 8601 timestamps to Unix timestamps', async () => {
+        const service = createService();
+        const getProductCandlesMock = jest
+          .spyOn(service, 'getProductCandles')
+          .mockResolvedValue({
+            candles: [],
+          } as unknown as Awaited<
+            ReturnType<typeof service.getProductCandles>
+          >);
+
+        const args = {
+          productId: 'BTC-USD',
+          start: '2025-12-31T00:00:00Z',
+          end: '2026-01-01T00:00:00Z',
+          granularity: Granularity.ONE_DAY,
+        };
+
+        await service.getProductCandlesFixed(args);
+
+        expect(getProductCandlesMock).toHaveBeenCalled();
+        expect(getProductCandlesMock).toHaveBeenCalledWith({
+          productId: 'BTC-USD',
+          start: '1767139200',
+          end: '1767225600',
+          granularity: Granularity.ONE_DAY,
+        });
+      });
+    });
+  });
+
+  describe('getProductCandlesBatch', () => {
+    it('returns candles for multiple products', async () => {
+      const service = createService();
+      const mockCandles = [
+        {
+          start: '1704067200',
+          low: '95000',
+          high: '96000',
+          open: '95500',
+          close: '95800',
+          volume: '100',
+        },
+        {
+          start: '1704066300',
+          low: '94000',
+          high: '95500',
+          open: '94500',
+          close: '95500',
+          volume: '150',
+        },
+      ];
+
+      jest.spyOn(service, 'getProductCandles').mockResolvedValue({
+        candles: mockCandles,
+      } as unknown as Awaited<ReturnType<typeof service.getProductCandles>>);
+
+      const result = await service.getProductCandlesBatch({
+        productIds: ['BTC-EUR', 'ETH-EUR'],
+        start: new Date().toISOString(),
+        end: new Date().toISOString(),
+        granularity: Granularity.FIFTEEN_MINUTE,
+      });
+
+      expect(result.timestamp).toBeDefined();
+      expect(result.granularity).toBe(Granularity.FIFTEEN_MINUTE);
+      expect(result.candleCount).toBe(2 * 2); // 2 candles per product
+      expect(Object.keys(result.productCandlesByProductId)).toHaveLength(2);
+      expect(result.productCandlesByProductId['BTC-EUR'].candles).toHaveLength(
+        2,
+      );
+      expect(result.productCandlesByProductId['BTC-EUR'].latest).toEqual(
+        mockCandles[0],
+      );
+      expect(result.productCandlesByProductId['BTC-EUR'].oldest).toEqual(
+        mockCandles[1],
+      );
+    });
+
+    it('handles empty candle arrays', async () => {
+      const service = createService();
+      jest.spyOn(service, 'getProductCandles').mockResolvedValue({
+        candles: [],
+      } as unknown as Awaited<ReturnType<typeof service.getProductCandles>>);
+
+      const result = await service.getProductCandlesBatch({
+        productIds: ['BTC-EUR'],
+        start: new Date().toISOString(),
+        end: new Date().toISOString(),
+        granularity: Granularity.ONE_HOUR,
+      });
+
+      expect(result.productCandlesByProductId['BTC-EUR'].candles).toHaveLength(
+        0,
+      );
+      expect(result.productCandlesByProductId['BTC-EUR'].latest).toBeNull();
+      expect(result.productCandlesByProductId['BTC-EUR'].oldest).toBeNull();
+    });
+
+    it('handles missing candle arrays', async () => {
+      const service = createService();
+      jest
+        .spyOn(service, 'getProductCandles')
+        .mockResolvedValue(
+          {} as unknown as Awaited<
+            ReturnType<typeof service.getProductCandles>
+          >,
+        );
+
+      const result = await service.getProductCandlesBatch({
+        productIds: ['BTC-EUR'],
+        start: new Date().toISOString(),
+        end: new Date().toISOString(),
+        granularity: Granularity.ONE_HOUR,
+      });
+
+      expect(result.productCandlesByProductId['BTC-EUR'].candles).toHaveLength(
+        0,
+      );
+      expect(result.productCandlesByProductId['BTC-EUR'].latest).toBeNull();
+      expect(result.productCandlesByProductId['BTC-EUR'].oldest).toBeNull();
+    });
+
+    it('uses default limit of 100', async () => {
+      const service = createService();
+      const getProductCandlesFixedSpy = jest
+        .spyOn(service, 'getProductCandlesFixed')
+        .mockResolvedValue({
+          candles: [],
+        } as unknown as Awaited<
+          ReturnType<typeof service.getProductCandlesFixed>
+        >);
+
+      await service.getProductCandlesBatch({
+        productIds: ['BTC-EUR'],
+        start: new Date(Date.now() - 100 * 900 * 1000).toISOString(),
+        end: new Date().toISOString(),
+        granularity: Granularity.FIFTEEN_MINUTE,
+      });
+
+      const callArg = getProductCandlesFixedSpy.mock.calls[0][0];
+      const startTime = new Date(callArg.start).getTime();
+      const endTime = new Date(callArg.end).getTime();
+      const expectedDuration = 100 * 900 * 1000; // 100 candles * 15 min
+
+      expect(endTime - startTime).toBe(expectedDuration);
     });
   });
 });

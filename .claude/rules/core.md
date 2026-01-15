@@ -33,6 +33,7 @@ Essential standards that apply to all code in this project.
 - File name matches class name
 - Index files (`index.ts`) for clean imports
 - Tests colocated next to source files (`.spec.ts`)
+- Helper functions are placed outside the class, not as methods. This keeps them reusable across different parts of the codebase and separates pure utility logic from class business logic.
 
 ## Error Handling
 - Never swallow errors

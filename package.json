@@ -20,7 +20,7 @@
     "test:types": "tsc --noEmit",
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
-    "format": "prettier --write .",
+    "format": "prettier --write src/",
     "format:check": "prettier --check .",
     "knip": "knip"
   },

@@ -1,6 +1,6 @@
 # Coinbase MCP Server
 
-MCP server providing 44 Coinbase Advanced Trade API tools.
+MCP server providing 46 Coinbase Advanced Trade API tools.
 
 ## Commands
 
@@ -20,7 +20,7 @@ Direct SDK usage, no abstraction layers (YAGNI).
 src/
 ├── index.ts                    # Entry point, credentials validation
 ├── server/
-│   └── CoinbaseMcpServer.ts   # MCP server, 44 tools, SDK integration
+│   └── CoinbaseMcpServer.ts   # MCP server, 46 tools, SDK integration
 └── test/
     └── serviceMocks.ts         # Test mocks
 ```
@@ -51,7 +51,7 @@ See `.claude/rules/` for context-specific guidelines:
 ```bash
 npm run inspect    # MCP Inspector at http://localhost:6274
                    # Connect to http://localhost:3000/mcp
-                   # Click "List Tools" to see all 44 tools
+                   # Click "List Tools" to see all 46 tools
 ```
 
 ## Code Quality
@@ -63,5 +63,5 @@ npm run lint && npm run format && npm test  # All checks before commit
 ## Resources
 
 - [CONTRIBUTING.md](CONTRIBUTING.md) - Development guide
-- [docs/IMPLEMENTED_TOOLS.md](docs/IMPLEMENTED_TOOLS.md) - All 44 tools
+- [docs/IMPLEMENTED_TOOLS.md](docs/IMPLEMENTED_TOOLS.md) - All 46 tools
 - [Coinbase API Docs](https://docs.cdp.coinbase.com/advanced-trade/)

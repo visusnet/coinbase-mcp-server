@@ -7,10 +7,10 @@ import {
   PortfoliosService,
   FuturesService,
   PerpetualsService,
-  PublicService,
   DataService,
 } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
 import { ProductsService } from '@server/ProductsService';
+import { PublicService } from '@server/PublicService';
 import { jest } from '@jest/globals';
 
 // Mock the SDK services to avoid real API calls
@@ -77,6 +77,12 @@ export const mockProductsService: Record<
     .mockRejectedValue(new Error('Not implemented')),
   getProductCandles: jest
     .fn<typeof mockProductsService.getProductCandles>()
+    .mockRejectedValue(new Error('Not implemented')),
+  getProductCandlesFixed: jest
+    .fn<typeof mockProductsService.getProductCandlesFixed>()
+    .mockRejectedValue(new Error('Not implemented')),
+  getProductCandlesBatch: jest
+    .fn<typeof mockProductsService.getProductCandlesBatch>()
     .mockRejectedValue(new Error('Not implemented')),
   getProductMarketTrades: jest
     .fn<typeof mockProductsService.getProductMarketTrades>()
@@ -225,6 +231,9 @@ export const mockPublicService: Record<
   getProductCandles: jest
     .fn<typeof mockPublicService.getProductCandles>()
     .mockRejectedValue(new Error('Not implemented')),
+  getProductCandlesFixed: jest
+    .fn<typeof mockPublicService.getProductCandlesFixed>()
+    .mockRejectedValue(new Error('Not implemented')),
   getProductMarketTrades: jest
     .fn<typeof mockPublicService.getProductMarketTrades>()
     .mockRejectedValue(new Error('Not implemented')),
@@ -246,7 +255,6 @@ export function mockServices() {
       CoinbaseAdvTradeCredentials: jest.fn().mockImplementation(() => ({})),
       AccountsService: jest.fn().mockImplementation(() => mockAccountsService),
       OrdersService: jest.fn().mockImplementation(() => mockOrdersService),
-      ProductsService: jest.fn().mockImplementation(() => mockProductsService),
       ConvertsService: jest.fn().mockImplementation(() => mockConvertsService),
       FeesService: jest.fn().mockImplementation(() => mockFeesService),
       PaymentMethodsService: jest
@@ -259,8 +267,19 @@ export function mockServices() {
       PerpetualsService: jest
         .fn()
         .mockImplementation(() => mockPerpetualsService),
-      PublicService: jest.fn().mockImplementation(() => mockPublicService),
       DataService: jest.fn().mockImplementation(() => mockDataService),
+    };
+  });
+
+  jest.mock('@server/ProductsService', () => {
+    return {
+      ProductsService: jest.fn().mockImplementation(() => mockProductsService),
+    };
+  });
+
+  jest.mock('@server/PublicService', () => {
+    return {
+      PublicService: jest.fn().mockImplementation(() => mockPublicService),
     };
   });
 }

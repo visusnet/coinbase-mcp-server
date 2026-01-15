@@ -19,6 +19,7 @@ import {
   mockDataService,
   mockServices,
 } from '@test/serviceMocks';
+import { Granularity } from './ProductCandles';
 
 mockServices();
 
@@ -280,7 +281,7 @@ describe('CoinbaseMcpServer Integration Tests', () => {
         expectResponseToContain(response, result);
       });
 
-      it('should call getProductCandles via MCP tool get_product_candles', async () => {
+      it('should call getProductCandlesFixed via MCP tool get_product_candles', async () => {
         const args = {
           productId: 'BTC-USD',
           start: '2024-01-01T00:00:00Z',
@@ -288,29 +289,49 @@ describe('CoinbaseMcpServer Integration Tests', () => {
           granularity: 'ONE_HOUR',
         };
         const result = { candles: [] };
-        mockProductsService.getProductCandles.mockResolvedValueOnce(result);
+        mockProductsService.getProductCandlesFixed.mockResolvedValueOnce(
+          result,
+        );
 
         const response = await client.callTool({
           name: 'get_product_candles',
           arguments: args,
         });
 
-        const toUnixTimestamp = (value: string): string => {
-          if (/^\d+(\.\d+)?$/.test(value)) {
-            return value;
-          }
-          const ms = Date.parse(value);
-          if (Number.isNaN(ms)) {
-            throw new Error(`Invalid timestamp in test: ${value}`);
-          }
-          return Math.floor(ms / 1000).toString();
-        };
+        expect(mockProductsService.getProductCandlesFixed).toHaveBeenCalledWith(
+          args,
+        );
+        expectResponseToContain(response, result);
+      });
 
-        expect(mockProductsService.getProductCandles).toHaveBeenCalledWith({
-          ...args,
-          start: toUnixTimestamp(args.start),
-          end: toUnixTimestamp(args.end),
+      it('should call getProductCandlesBatch via MCP tool get_product_candles_batch', async () => {
+        const args = {
+          productIds: ['BTC-EUR', 'ETH-EUR'],
+          start: new Date().toISOString(),
+          end: new Date().toISOString(),
+          granularity: Granularity.FIFTEEN_MINUTE,
+        };
+        const result = {
+          timestamp: new Date().toISOString(),
+          granularity: Granularity.FIFTEEN_MINUTE,
+          candleCount: 100,
+          productCandlesByProductId: {
+            'BTC-EUR': { candles: [], latest: null, oldest: null },
+            'ETH-EUR': { candles: [], latest: null, oldest: null },
+          },
+        };
+        mockProductsService.getProductCandlesBatch.mockResolvedValueOnce(
+          result,
+        );
+
+        const response = await client.callTool({
+          name: 'get_product_candles_batch',
+          arguments: args,
         });
+
+        expect(mockProductsService.getProductCandlesBatch).toHaveBeenCalledWith(
+          args,
+        );
         expectResponseToContain(response, result);
       });
 
@@ -638,7 +659,7 @@ describe('CoinbaseMcpServer Integration Tests', () => {
         expectResponseToContain(response, result);
       });
 
-      it('should call getProductCandles via MCP tool get_public_product_candles', async () => {
+      it('should call getProductCandlesFixed via MCP tool get_public_product_candles', async () => {
         const args = {
           productId: 'BTC-USD',
           start: '2024-01-01T00:00:00Z',
@@ -646,29 +667,16 @@ describe('CoinbaseMcpServer Integration Tests', () => {
           granularity: 'ONE_HOUR',
         };
         const result = { candles: [] };
-        mockPublicService.getProductCandles.mockResolvedValueOnce(result);
+        mockPublicService.getProductCandlesFixed.mockResolvedValueOnce(result);
 
         const response = await client.callTool({
           name: 'get_public_product_candles',
           arguments: args,
         });
 
-        const toUnixTimestamp = (value: string): string => {
-          if (/^\d+(\.\d+)?$/.test(value)) {
-            return value;
-          }
-          const ms = Date.parse(value);
-          if (Number.isNaN(ms)) {
-            throw new Error(`Invalid timestamp in test: ${value}`);
-          }
-          return Math.floor(ms / 1000).toString();
-        };
-
-        expect(mockPublicService.getProductCandles).toHaveBeenCalledWith({
-          ...args,
-          start: toUnixTimestamp(args.start),
-          end: toUnixTimestamp(args.end),
-        });
+        expect(mockPublicService.getProductCandlesFixed).toHaveBeenCalledWith(
+          args,
+        );
         expectResponseToContain(response, result);
       });
 
@@ -992,82 +1000,6 @@ describe('CoinbaseMcpServer Integration Tests', () => {
 
       errorSpy.mockRestore();
       spy.mockRestore();
-    });
-  });
-
-  // The SDK accepts ISO 8601 timestamp strings for candle requests,
-  // but the REST API expects Unix timestamps. The toUnixTimestamp method
-  // handles conversion while also supporting already-formatted Unix timestamps.
-  describe('Timestamp Conversion for REST API Compatibility', () => {
-    it('should reject invalid ISO 8601 timestamps with descriptive error', async () => {
-      const args = {
-        productId: 'BTC-USD',
-        start: 'invalid-date-string',
-        end: '2025-12-31T23:59:59Z',
-        granularity: 'ONE_DAY',
-      };
-
-      const response = await client.callTool({
-        name: 'get_product_candles',
-        arguments: args,
-      });
-
-      const result = response as CallToolResult;
-      expect(result.isError).toBe(true);
-      expect(result.content[0]).toEqual({
-        type: 'text',
-        text: 'Invalid timestamp: invalid-date-string',
-      });
-    });
-
-    it('should pass through Unix timestamps without conversion', async () => {
-      // When users provide Unix timestamps directly, they should be used as-is
-      const args = {
-        productId: 'BTC-USD',
-        start: '1704067200',
-        end: '1704153600',
-        granularity: 'ONE_DAY',
-      };
-      const result = { candles: [] };
-      mockProductsService.getProductCandles.mockResolvedValueOnce(result);
-
-      const response = await client.callTool({
-        name: 'get_product_candles',
-        arguments: args,
-      });
-
-      expect(mockProductsService.getProductCandles).toHaveBeenCalledWith({
-        productId: 'BTC-USD',
-        start: '1704067200',
-        end: '1704153600',
-        granularity: 'ONE_DAY',
-      });
-      expectResponseToContain(response, result);
-    });
-
-    it('should preserve Unix timestamps with decimal precision', async () => {
-      // Unix timestamps can include decimal seconds for millisecond precision
-      const args = {
-        productId: 'BTC-USD',
-        start: '1704067200.5',
-        end: '1704153600',
-        granularity: 'ONE_DAY',
-      };
-      const result = { candles: [] };
-      mockPublicService.getProductCandles.mockResolvedValueOnce(result);
-
-      const response = await client.callTool({
-        name: 'get_public_product_candles',
-        arguments: args,
-      });
-
-      expect(mockPublicService.getProductCandles).toHaveBeenCalledWith({
-        productId: 'BTC-USD',
-        start: '1704067200.5',
-        end: '1704153600',
-        granularity: 'ONE_DAY',
-      });
-      expectResponseToContain(response, result);
     });
   });
 });

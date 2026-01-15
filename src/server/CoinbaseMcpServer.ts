@@ -13,7 +13,6 @@ import {
   PortfoliosService,
   FuturesService,
   PerpetualsService,
-  PublicService,
   DataService,
 } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
 import * as z from 'zod';
@@ -23,6 +22,8 @@ import { ContractExpiryType } from '@coinbase-sample/advanced-trade-sdk-ts/dist/
 import { ProductVenue } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/ProductVenue.js';
 import { StopPriceDirection } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/StopPriceDirection.js';
 import { ProductsService } from './ProductsService';
+import { PublicService } from './PublicService';
+import { Granularity } from './ProductCandles';
 
 export class CoinbaseMcpServer {
   private readonly app: Express;
@@ -293,9 +294,7 @@ export class CoinbaseMcpServer {
         title: 'Get Product',
         description: 'Get details of a specific product',
         inputSchema: {
-          productId: z
-            .string()
-            .describe('The ID of the product to retrieve (e.g., BTC-USD)'),
+          productId: z.string().describe('Trading pair (e.g., BTC-USD)'),
         },
       },
       this.call(this.products.getProduct.bind(this.products)),
@@ -307,9 +306,7 @@ export class CoinbaseMcpServer {
         title: 'Get Product Book',
         description: 'Get the order book for a product',
         inputSchema: {
-          productId: z
-            .string()
-            .describe('The ID of the product (e.g., BTC-USD)'),
+          productId: z.string().describe('Trading pair (e.g., BTC-USD)'),
           limit: z
             .number()
             .optional()
@@ -323,33 +320,48 @@ export class CoinbaseMcpServer {
       'get_product_candles',
       {
         title: 'Get Product Candles',
-        description: 'Get historic rates (candles) for a product',
+        description:
+          'Get historic rates (candles) for a product. Use get_product_candles_batch for multiple products.',
         inputSchema: {
-          productId: z
-            .string()
-            .describe('The ID of the product (e.g., BTC-USD)'),
+          productId: z.string().describe('Trading pair (e.g., BTC-USD)'),
           start: z.string().describe('Start time (ISO 8601 format)'),
           end: z.string().describe('End time (ISO 8601 format)'),
           granularity: z
-            .string()
+            .nativeEnum(Granularity)
             .describe(
               'Granularity (e.g., ONE_MINUTE, FIVE_MINUTE, ONE_HOUR, ONE_DAY)',
             ),
         },
       },
-      this.call(
-        (input: {
-          productId: string;
-          start: string;
-          end: string;
-          granularity: string;
-        }) =>
-          this.products.getProductCandles({
-            ...input,
-            start: this.toUnixTimestamp(input.start),
-            end: this.toUnixTimestamp(input.end),
-          }),
-      ),
+      this.call(this.products.getProductCandlesFixed.bind(this.products)),
+    );
+
+    server.registerTool(
+      'get_product_candles_batch',
+      {
+        title: 'Get Product Candles Batch',
+        description:
+          'Get historic candle data for multiple trading pairs in a single call. ' +
+          'More efficient than calling get_product_candles multiple times. ' +
+          'Returns the last N candles (specified by limit) for each product.',
+        inputSchema: {
+          productIds: z
+            .array(z.string())
+            .min(1)
+            .max(10)
+            .describe(
+              "Trading pairs to query (e.g., ['BTC-EUR', 'ETH-EUR', 'SOL-EUR']). Max 10 pairs.",
+            ),
+          start: z.string().describe('Start time (ISO 8601 format)'),
+          end: z.string().describe('End time (ISO 8601 format)'),
+          granularity: z
+            .nativeEnum(Granularity)
+            .describe(
+              'Granularity (e.g., ONE_MINUTE, FIVE_MINUTE, ONE_HOUR, ONE_DAY)',
+            ),
+        },
+      },
+      this.call(this.products.getProductCandlesBatch.bind(this.products)),
     );
 
     server.registerTool(
@@ -358,9 +370,7 @@ export class CoinbaseMcpServer {
         title: 'Get Market Trades',
         description: 'Get recent trades for a product',
         inputSchema: {
-          productId: z
-            .string()
-            .describe('The ID of the product (e.g., BTC-USD)'),
+          productId: z.string().describe('Trading pair (e.g., BTC-USD)'),
           limit: z.number().describe('Limit of trades to return'),
         },
       },
@@ -600,7 +610,7 @@ export class CoinbaseMcpServer {
         description: 'Close an open position for a product',
         inputSchema: {
           clientOrderId: z.string().describe('Unique client order ID'),
-          productId: z.string().describe('Trading pair (e.g., BTC-PERP)'),
+          productId: z.string().describe('Trading pair (e.g., BTC-USD)'),
           size: z.string().optional().describe('Size to close (optional)'),
         },
       },
@@ -669,7 +679,7 @@ export class CoinbaseMcpServer {
         title: 'Get Public Product',
         description: 'Get public product information (no auth required)',
         inputSchema: {
-          productId: z.string().describe('The product ID (e.g., BTC-USD)'),
+          productId: z.string().describe('Trading pair (e.g., BTC-USD)'),
         },
       },
       this.call(this.publicService.getProduct.bind(this.publicService)),
@@ -694,7 +704,7 @@ export class CoinbaseMcpServer {
         title: 'Get Public Product Book',
         description: 'Get public order book (no auth required)',
         inputSchema: {
-          productId: z.string().describe('The product ID'),
+          productId: z.string().describe('Trading pair (e.g., BTC-USD)'),
           limit: z.number().optional().describe('Optional limit'),
         },
       },
@@ -707,24 +717,18 @@ export class CoinbaseMcpServer {
         title: 'Get Public Product Candles',
         description: 'Get public candle data (no auth required)',
         inputSchema: {
-          productId: z.string().describe('The product ID'),
+          productId: z.string().describe('Trading pair (e.g., BTC-USD)'),
           start: z.string().describe('Start time (ISO 8601)'),
           end: z.string().describe('End time (ISO 8601)'),
-          granularity: z.string().describe('Granularity'),
+          granularity: z
+            .nativeEnum(Granularity)
+            .describe(
+              'Granularity (e.g., ONE_MINUTE, FIVE_MINUTE, ONE_HOUR, ONE_DAY)',
+            ),
         },
       },
       this.call(
-        (input: {
-          productId: string;
-          start: string;
-          end: string;
-          granularity: string;
-        }) =>
-          this.publicService.getProductCandles({
-            ...input,
-            start: this.toUnixTimestamp(input.start),
-            end: this.toUnixTimestamp(input.end),
-          }),
+        this.publicService.getProductCandlesFixed.bind(this.publicService),
       ),
     );
 
@@ -734,7 +738,7 @@ export class CoinbaseMcpServer {
         title: 'Get Public Market Trades',
         description: 'Get public market trades (no auth required)',
         inputSchema: {
-          productId: z.string().describe('The product ID'),
+          productId: z.string().describe('Trading pair (e.g., BTC-USD)'),
           limit: z.number().describe('Limit'),
         },
       },
@@ -849,7 +853,7 @@ export class CoinbaseMcpServer {
         title: 'Get Futures Position',
         description: 'Get a specific futures position',
         inputSchema: {
-          productId: z.string().describe('The product ID'),
+          productId: z.string().describe('Trading pair (e.g., BTC-USD)'),
         },
       },
       this.call(this.futures.getPosition.bind(this.futures)),
@@ -954,10 +958,10 @@ export class CoinbaseMcpServer {
                 type: 'text',
                 text: `You are a Coinbase Advanced Trade assistant.
 
-TOOL CATEGORIES (45 total):
+TOOL CATEGORIES (46 total):
 - Accounts (2): list_accounts, get_account
 - Orders (9): create_order, preview_order, list_orders, get_order, cancel_orders, edit_order, preview_edit_order, list_fills, close_position
-- Products (7): list_products, get_product, get_product_candles, get_best_bid_ask, get_market_snapshot, get_product_book, get_market_trades
+- Products (8): list_products, get_product, get_product_candles, get_product_candles_batch, get_best_bid_ask, get_market_snapshot, get_product_book, get_market_trades
 - Portfolios (6): list_portfolios, create_portfolio, get_portfolio, edit_portfolio, delete_portfolio, move_portfolio_funds
 - Conversions (3): create_convert_quote, commit_convert_trade, get_convert_trade
 - Public Data (6): get_server_time, list_public_products, get_public_product, get_public_product_book, get_public_product_candles, get_public_market_trades
@@ -1017,35 +1021,6 @@ BEST PRACTICES:
     this.app.listen(port, () => {
       console.log(`Coinbase MCP Server listening on port ${port}`);
     });
-  }
-
-  /**
-   * Converts ISO 8601 timestamp strings to Unix timestamps for Product Candles API compatibility.
-   *
-   * The Coinbase Advanced Trade SDK accepts ISO 8601 formatted timestamps (e.g., "2025-12-31T23:59:59Z")
-   * in its method signatures. While most Coinbase REST API endpoints accept ISO 8601, the Product Candles
-   * endpoints specifically require Unix timestamps (seconds since epoch). This method handles the conversion
-   * while also supporting already-formatted Unix timestamps to allow flexibility in how timestamps are provided.
-   *
-   * @param value - ISO 8601 string (e.g., "2025-12-31T23:59:59Z") or Unix timestamp string (e.g., "1704067200")
-   * @returns Unix timestamp as a string (seconds since epoch)
-   * @throws Error if the timestamp string is invalid
-   */
-  private toUnixTimestamp(value: string): string {
-    // If the value already looks like a numeric Unix timestamp, return as-is
-    // This supports both integer timestamps (1704067200) and decimal precision (1704067200.5)
-    if (/^\d+(\.\d+)?$/.test(value)) {
-      return value;
-    }
-
-    // Parse ISO 8601 string to milliseconds since epoch
-    const ms = Date.parse(value);
-    if (Number.isNaN(ms)) {
-      throw new Error(`Invalid timestamp: ${value}`);
-    }
-
-    // Convert milliseconds to seconds for Unix timestamp format
-    return Math.floor(ms / 1000).toString();
   }
 
   private call<I, R>(fn: (input: I) => Promise<R>) {

@@ -42,7 +42,10 @@ return {
    - Call pattern: `this.call(this.service.method.bind(this.service))`
 4. Wrap SDK call in try-catch with meaningful error
 5. Write tests (100% coverage) - mock service responses
-6. Update `docs/IMPLEMENTED_TOOLS.md`
+6. Update `docs/IMPLEMENTED_TOOLS.md` incl. tool count
+7. Update `README.md` incl. tool count
+8. Update `src/server/CoinbaseMcpServer.ts` assist prompt incl. tool count
+9. Update `CLAUDE.md` incl. tool count
 
 ## Rate Limits
 - **Public endpoints**: 10 requests/second
