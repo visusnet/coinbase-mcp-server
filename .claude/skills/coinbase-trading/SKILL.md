@@ -40,8 +40,7 @@ The project does NOT need to be built. Just call the tools.
   - Track remaining budget in state file, do NOT exceed it across all cycles
 - **Interval**: From command arguments (e.g., "interval=5m" for 5 minutes, default: 15m)
 - **Strategy**: Aggressive
-- **Take-Profit**: 5%
-- **Stop-Loss**: 10%
+- **Take-Profit / Stop-Loss**: ATR-based (see "Dynamic Stop-Loss / Take-Profit")
 - **Allowed Pairs**: All EUR trading pairs
 
 **Interval formats**: `interval=5m`, `interval=30m`, `interval=1h`, `interval=60s`

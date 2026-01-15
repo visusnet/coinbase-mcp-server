@@ -8,7 +8,7 @@ paths:
 ## Critical Rules
 1. **NEVER exceed budget** - Parse from arguments
 2. **ALWAYS preview_order before create_order**
-3. **Stop-loss is SACRED** (10%) - Execute immediately
+3. **Stop-loss is SACRED** (ATR-based, min 3%, max 15%) - Execute immediately
 4. **When uncertain: DO NOT trade**
 5. **Fees must be considered** - Round-trip ~1.5%
 
