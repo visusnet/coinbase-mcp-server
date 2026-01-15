@@ -16,6 +16,8 @@
       "mcp__coinbase__get_product",
       "mcp__coinbase__get_product_book",
       "mcp__coinbase__get_product_candles",
+      "mcp__coinbase__get_product_candles_batch",
+      "mcp__coinbase__get_market_snapshot",
       "mcp__coinbase__get_market_trades",
       "mcp__coinbase__get_best_bid_ask",
       "mcp__coinbase__get_transaction_summary",
