@@ -64,7 +64,7 @@ MHcCAQEEI...your-key-here...
 npm start
 ```
 
-You should see: `Coinbase MCP Server running on http://localhost:3000/mcp`
+You should see: `Coinbase MCP Server running on http://localhost:3005/mcp`
 
 ### 5. Open Claude Code
 
@@ -103,7 +103,7 @@ COINBASE_API_KEY_NAME=organizations/your-org/apiKeys/your-key-id
 COINBASE_PRIVATE_KEY="-----BEGIN EC PRIVATE KEY-----
 ...your-key...
 -----END EC PRIVATE KEY-----"
-PORT=3000
+PORT=3005
 ```
 
 Or export them in your shell:
@@ -113,7 +113,7 @@ export COINBASE_API_KEY_NAME="organizations/your-org/apiKeys/your-key-id"
 export COINBASE_PRIVATE_KEY="-----BEGIN EC PRIVATE KEY-----
 ...your-key...
 -----END EC PRIVATE KEY-----"
-export PORT=3000
+export PORT=3005
 ```
 
 Then start the server:
@@ -130,7 +130,7 @@ Add the MCP server to your Claude settings (e.g., `~/.claude/settings.json`):
 {
   "mcpServers": {
     "coinbase": {
-      "url": "http://localhost:3000/mcp"
+      "url": "http://localhost:3005/mcp"
     }
   }
 }
@@ -278,7 +278,7 @@ npm run inspect    # Open MCP Inspector for debugging
 
 1. Start the server: `npm run dev`
 2. In another terminal: `npm run inspect`
-3. Connect to `http://localhost:3000/mcp`
+3. Connect to `http://localhost:3005/mcp`
 4. Test any of the 46 tools interactively
 
 ---
