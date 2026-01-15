@@ -50,7 +50,7 @@ See `.claude/rules/` for context-specific guidelines:
 
 ```bash
 npm run inspect    # MCP Inspector at http://localhost:6274
-                   # Connect to http://localhost:3000/mcp
+                   # Connect to http://localhost:3005/mcp
                    # Click "List Tools" to see all 46 tools
 ```
 
