@@ -425,7 +425,34 @@ IF netPnL > 0 AND session.compound.enabled:
 ```
 
 **Risk Controls**:
-- Pause after 2 consecutive losses
+```
+// Track win/loss streak
+IF trade_result == "WIN":
+  session.compound.consecutiveWins++
+  session.compound.consecutiveLosses = 0
+
+  // Un-pause after 2 consecutive wins
+  IF session.compound.paused AND session.compound.consecutiveWins >= 2:
+    session.compound.paused = false
+    session.compound.consecutiveLosses = 0
+    Log: "Compound re-enabled after {wins} consecutive wins"
+
+ELSE IF trade_result == "LOSS":
+  session.compound.consecutiveLosses++
+  session.compound.consecutiveWins = 0
+
+  // Pause after 2 consecutive losses
+  IF session.compound.consecutiveLosses >= 2:
+    session.compound.paused = true
+    Log: "Compound paused after {losses} consecutive losses"
+
+// Apply compound only if not paused
+IF session.compound.paused:
+  Log: "Compound skipped (paused due to losses)"
+  SKIP compound
+```
+
+- Pause after 2 consecutive losses, resume after 2 consecutive wins
 - Reduce rate to 25% after 3 consecutive wins
 - Never compound losses
 
