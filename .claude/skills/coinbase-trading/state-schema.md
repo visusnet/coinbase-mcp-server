@@ -260,6 +260,114 @@ Single Source of Truth for `.claude/trading-state.json` structure.
 - `analysis.sentiment`: "bullish" | "neutral" | "bearish"
 - `exit.trigger`: "stopLoss" | "takeProfit" | "trailingStop" | "rebalance" | "manual"
 
+## State Validation Rules
+
+The following validation rules MUST be enforced to maintain state consistency, especially during session resume and edge cases:
+
+### Position Performance Validation
+
+```
+VALIDATE on every position update:
+  position.performance.peakPnLPercent >= position.performance.unrealizedPnLPercent
+
+IF violation detected:
+  Log warning: "Peak PnL inconsistency detected for {pair}"
+  position.performance.peakPnLPercent = position.performance.unrealizedPnLPercent
+  REASON: Peak can never be lower than current, reset to current value
+```
+
+### Session Resume Timestamp Validation
+
+```
+VALIDATE on session resume (not fresh start):
+  current_time = now()
+  time_since_last_update = current_time - session.lastUpdated
+
+  // Cooldown validation
+  IF session.rebalancing.lastRebalance != null:
+    hours_since_rebalance = (current_time - session.rebalancing.lastRebalance) / 3600
+
+    IF hours_since_rebalance > 24:
+      // More than 1 day passed, reset cooldown and daily counter
+      session.rebalancing.rebalancesToday = 0
+      Log: "Session resume: Rebalancing cooldown reset (24h+ elapsed)"
+
+    IF hours_since_rebalance > session.rebalancing.cooldownHours:
+      Log: "Session resume: Cooldown period expired ({hours_since_rebalance}h elapsed)"
+
+  // Stagnation timer validation
+  FOR EACH position IN openPositions:
+    IF position.rebalancing.stagnantSince != null:
+      hours_stagnant = (current_time - position.rebalancing.stagnantSince) / 3600
+
+      IF hours_stagnant > 48:
+        Log warning: "{pair} stagnant for {hours_stagnant}h (resume detected)"
+        // Stagnation counter preserved, will be handled by rebalancing logic
+```
+
+### Compound State on Manual Actions
+
+```
+RULE: Manual exits do NOT reset compound streaks
+
+ON position closed with trigger = "manual":
+  // Preserve compound state
+  session.compound.consecutiveWins = unchanged
+  session.compound.consecutiveLosses = unchanged
+  session.compound.paused = unchanged
+
+  Log: "Manual exit: Compound state preserved (streaks: {wins}W/{losses}L)"
+  REASON: Manual interventions bypass strategy, should not affect automated compound logic
+
+EXCEPTION: Manual session termination
+ON session manually stopped:
+  // Reset compound state for next session
+  session.compound.consecutiveWins = 0
+  session.compound.consecutiveLosses = 0
+  session.compound.paused = false
+  Log: "Session terminated: Compound state reset for next session"
+```
+
+### Budget Consistency Validation
+
+```
+VALIDATE after every trade:
+  calculated_remaining = session.budget.initial
+                       + session.stats.realizedPnL
+                       - session.stats.totalFeesPaid
+                       - SUM(openPositions[].entry.price × openPositions[].size + openPositions[].entry.fee)
+
+  difference = ABS(calculated_remaining - session.budget.remaining)
+
+  IF difference > 0.01:  // Tolerance for rounding
+    Log error: "Budget inconsistency detected: {difference}€ mismatch"
+    Log detail: "Expected: {calculated_remaining}€, Actual: {session.budget.remaining}€"
+    // DO NOT auto-correct, flag for investigation
+    ALERT: Manual review required
+```
+
+### Division by Zero Protection
+
+```
+VALIDATE before all division operations:
+
+// Spread calculation
+IF best_bid <= 0 OR best_ask <= 0 OR mid_price <= 0:
+  Log error: "Invalid price data for spread: bid={best_bid}, ask={best_ask}"
+  SKIP liquidity check
+  result = "price_data_invalid"
+
+// ATR-based calculations
+IF entry_atr <= 0:
+  Log error: "Invalid ATR value: {entry_atr}"
+  FALLBACK to percentage-based SL/TP (2%/3% from strategies.md)
+
+// PnL calculations
+IF entry_price <= 0:
+  Log error: "Invalid entry price: {entry_price}"
+  SKIP trade (critical error)
+```
+
 ## Operations
 
 ### Initialize Session
