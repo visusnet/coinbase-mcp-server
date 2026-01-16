@@ -179,8 +179,8 @@ A built-in Claude command that runs an autonomous trading bot:
 ```
 
 **What it does:**
-- Technical analysis (RSI, MACD, Bollinger Bands, ATR, and more)
-- Sentiment analysis (Fear & Greed Index, news search)
+- Technical analysis: 20+ indicators across 6 weighted categories (Momentum 25%, Trend 30%, Volatility 15%, Volume 15%, S/R 10%, Patterns 5%)
+- Sentiment analysis (Fear & Greed Index with 7 regions, news search)
 - Automatic order execution with preview
 - Dynamic ATR-based stop-loss/take-profit
 - Trailing stop (locks in profits)
