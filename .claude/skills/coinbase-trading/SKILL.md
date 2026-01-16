@@ -239,11 +239,13 @@ Perform a web search:
 - Search for "[COIN] price prediction today" for top candidates
 
 **Fear & Greed Interpretation**:
-- 0-25 (Extreme Fear): Contrarian BUY signal
-- 25-45 (Fear): Slight BUY signal
-- 45-55 (Neutral): No signal
-- 55-75 (Greed): Slight SELL signal
-- 75-100 (Extreme Greed): Contrarian SELL signal
+- 0-10 (Extreme Fear): Contrarian BUY signal (+2 modifier)
+- 10-25 (Fear): BUY bias (+1 modifier)
+- 25-45 (Slight Fear): Slight BUY (+0.5 modifier)
+- 45-55 (Neutral): No signal (0 modifier)
+- 55-75 (Slight Greed): Slight SELL (-0.5 modifier)
+- 75-90 (Greed): SELL bias (-1 modifier)
+- 90-100 (Extreme Greed): Contrarian SELL (-2 modifier)
 
 ### 5. Check Stop-Loss / Take-Profit
 
