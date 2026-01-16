@@ -251,6 +251,50 @@ Single Source of Truth for `.claude/trading-state.json` structure.
 | `result.totalFees` | number | Entry + exit fees |
 | `result.holdingTimeHours` | number | Total hold duration |
 
+## Rebalancing History Entry Fields
+
+Each entry in `session.rebalancing.rebalanceHistory[]` has the following structure:
+
+| Field | Type | Purpose |
+|-------|------|---------|
+| `timestamp` | string | ISO 8601, when rebalancing occurred |
+| `from` | string | Source trading pair (e.g., "BTC-EUR") |
+| `to` | string | Destination trading pair (e.g., "ETH-EUR") |
+| `reason` | enum | Trigger reason (see Rebalancing Reason Enum below) |
+| `exitPrice` | number | Exit price for source position (EUR) |
+| `entryPrice` | number | Entry price for destination position (EUR) |
+| `holdingTimeHours` | number | How long source position was held |
+| `grossPnL` | number | P/L before fees (EUR) |
+| `exitFee` | number | Fee for exiting source position (EUR) |
+| `entryFee` | number | Fee for entering destination position (EUR) |
+| `netPnL` | number | P/L after all fees (EUR) |
+| `signalDelta` | number | Score difference (destination - source) |
+| `sourceScore` | number | Signal score of exited position (0-100) |
+| `destinationScore` | number | Signal score of new position (0-100) |
+| `stagnationHours` | number | Hours source was stagnant (null if not stagnant) |
+
+**Example Entry**:
+
+```json
+{
+  "timestamp": "2026-01-12T15:30:00Z",
+  "from": "SOL-EUR",
+  "to": "AVAX-EUR",
+  "reason": "stagnant",
+  "exitPrice": 121.50,
+  "entryPrice": 38.20,
+  "holdingTimeHours": 18.5,
+  "grossPnL": 1.20,
+  "exitFee": 0.04,
+  "entryFee": 0.04,
+  "netPnL": 1.12,
+  "signalDelta": 53,
+  "sourceScore": 25,
+  "destinationScore": 78,
+  "stagnationHours": 18.5
+}
+```
+
 ## Enums
 
 - `entry.orderType`: "limit" | "market"
@@ -259,6 +303,10 @@ Single Source of Truth for `.claude/trading-state.json` structure.
 - `analysis.confidence`: "high" | "medium" | "low"
 - `analysis.sentiment`: "bullish" | "neutral" | "bearish"
 - `exit.trigger`: "stopLoss" | "takeProfit" | "trailingStop" | "rebalance" | "manual"
+- `rebalancingHistory[].reason`: "stagnant" | "urgent_delta" | "profitable_delta"
+  - `stagnant`: Position stagnant >12h with <3% movement, alternative delta >40
+  - `urgent_delta`: Alternative delta >60, regardless of stagnation
+  - `profitable_delta`: Position stagnant, profitable (>0%), alternative delta >30
 
 ## State Validation Rules
 
