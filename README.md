@@ -184,7 +184,7 @@ A built-in Claude command that runs an autonomous trading bot:
 - Automatic order execution with preview
 - Dynamic ATR-based stop-loss/take-profit
 - Trailing stop (locks in profits)
-- Liquidity check before altcoin entries
+- Liquidity check before altcoin entries (spread >0.5%: skip, 0.2-0.5%: reduce to 50%)
 - Compound mode (reinvest profits)
 - Opportunity rebalancing (exit stagnant positions)
 - Continuous loop until you stop it
