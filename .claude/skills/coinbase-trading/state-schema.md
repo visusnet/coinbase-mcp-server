@@ -15,10 +15,12 @@ Single Source of Truth for `.claude/trading-state.json` structure.
     "startTime": "2026-01-12T13:15:00Z",
     "lastUpdated": "2026-01-13T14:32:00Z",
     "budget": {
-      "initial": 5.00,
+      "initial": 9.50,
       "remaining": 0.11,
       "currency": "EUR",
-      "source": "BTC"
+      "source": "BTC",
+      "sourceAmount": 0.0001,
+      "sourcePrice": 95000
     },
     "stats": {
       "tradesOpened": 2,
@@ -149,10 +151,12 @@ Single Source of Truth for `.claude/trading-state.json` structure.
 | `session.id` | string | Unique session identifier (= startTime) |
 | `session.startTime` | string | ISO 8601 timestamp |
 | `session.lastUpdated` | string | ISO 8601, last state change |
-| `session.budget.initial` | number | Starting budget in base currency |
-| `session.budget.remaining` | number | Available budget in base currency |
-| `session.budget.currency` | string | Base currency ("EUR", "USD", "GBP", etc.) |
+| `session.budget.initial` | number | Starting budget in EUR (converted if needed) |
+| `session.budget.remaining` | number | Available budget in EUR |
+| `session.budget.currency` | string | Always "EUR" (accounting currency) |
 | `session.budget.source` | string | Funding source ("EUR", "BTC", etc.) |
+| `session.budget.sourceAmount` | number? | Original amount if non-EUR source (e.g., 0.0001 BTC) |
+| `session.budget.sourcePrice` | number? | Conversion rate if non-EUR source (e.g., 95000 EUR/BTC) |
 | `session.stats.tradesOpened` | number | Total entries |
 | `session.stats.tradesClosed` | number | Total exits |
 | `session.stats.wins` | number | Profitable closes |
@@ -258,10 +262,32 @@ Single Source of Truth for `.claude/trading-state.json` structure.
 session.id = current timestamp
 session.startTime = current timestamp
 session.lastUpdated = current timestamp
-session.budget.initial = parsed from arguments
-session.budget.remaining = same as initial
-session.budget.currency = parsed from arguments (default: "EUR")
-session.budget.source = parsed from arguments (e.g., "EUR", "BTC")
+
+// Budget initialization with non-EUR source handling
+budget_amount = parsed from arguments (e.g., "10 EUR" or "0.0001 BTC")
+source_currency = parsed from arguments (e.g., "EUR", "BTC")
+
+IF source_currency != "EUR":
+  // Convert non-EUR funding source to EUR at session start
+  source_balance = budget_amount  // e.g., 0.0001 BTC
+  current_price = get current EUR price for source (e.g., BTC-EUR = 95000)
+  eur_equivalent = source_balance × current_price  // 0.0001 × 95000 = 9.50 EUR
+
+  session.budget.initial = eur_equivalent
+  session.budget.remaining = eur_equivalent
+  session.budget.currency = "EUR"  // All accounting in EUR
+  session.budget.source = source_currency  // Track original source
+  session.budget.sourceAmount = source_balance  // Track original amount
+  session.budget.sourcePrice = current_price  // Track conversion rate
+
+  Log: "Budget: {eur_equivalent}€ (from {source_balance} {source_currency} @ {current_price}€)"
+ELSE:
+  // EUR source: direct assignment
+  session.budget.initial = budget_amount
+  session.budget.remaining = budget_amount
+  session.budget.currency = "EUR"
+  session.budget.source = "EUR"
+
 session.stats.* = all 0
 session.config.strategy = "aggressive" (default)
 session.config.interval = parsed or "15m"
@@ -269,6 +295,9 @@ session.config.dryRun = true if "dry-run" in arguments
 openPositions = []
 tradeHistory = [] (or keep existing)
 ```
+
+**Note**: All budget tracking is in EUR regardless of source. Non-EUR sources are
+converted to EUR at session start and tracked in sourceAmount/sourcePrice fields.
 
 ### Open Position
 
