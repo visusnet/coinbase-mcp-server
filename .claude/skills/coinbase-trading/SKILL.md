@@ -271,8 +271,16 @@ entry_atr = position.riskManagement.entryATR
 dynamic_tp = position.riskManagement.dynamicTP
 dynamic_sl = position.riskManagement.dynamicSL
 
-// Or recalculate if position > 24h old:
-ATR_PERCENT = ATR(14) / entry_price × 100
+// Or recalculate if position > 24h old (with validation):
+IF entry_price <= 0:
+  → Log: "Invalid entry_price: {entry_price}, using stored values"
+  → Use position.riskManagement.dynamicTP/SL
+  → SKIP recalculation
+ELSE IF ATR(14) < 0.001:
+  → Log: "ATR too low: {atr}, insufficient volatility data"
+  → Use default: ATR_PERCENT = 2.0
+ELSE:
+  ATR_PERCENT = ATR(14) / entry_price × 100
 
 TP_PERCENT = max(2.0, ATR_PERCENT × 2.0)  // Floor at 2%
 SL_PERCENT = clamp(ATR_PERCENT × 2.0, 3.0, 15.0)  // Between 3-15%
@@ -300,8 +308,13 @@ IF current_price >= take_profit_price:
 IF current_price > position.riskManagement.trailingStop.highestPrice:
   position.riskManagement.trailingStop.highestPrice = current_price
 
-// Check activation
-current_profit_pct = (current_price - entry_price) / entry_price × 100
+// Check activation (with validation)
+IF entry_price > 0:
+  current_profit_pct = (current_price - entry_price) / entry_price × 100
+ELSE:
+  → Log: "Invalid entry_price for trailing stop: {entry_price}"
+  → SKIP trailing stop check
+  → current_profit_pct = 0
 
 IF current_profit_pct >= 3.0:
   position.riskManagement.trailingStop.active = true
@@ -521,7 +534,22 @@ Fees:
 For altcoin market order entries only (skip for BTC-EUR, ETH-EUR, limit orders, exits):
 
 1. Call `get_product_book` for target pair
-2. Calculate: `spread = (best_ask - best_bid) / best_bid`
+2. Calculate spread with validation:
+```
+// Defensive validation against invalid data
+IF best_bid <= 0 OR best_ask <= 0:
+  → SKIP trade
+  → Log: "Invalid order book data: bid={bid}, ask={ask}"
+  → STOP
+
+spread = (best_ask - best_bid) / max(best_bid, 0.0001)
+
+// Sanity check for suspicious spreads
+IF spread > 10.0:
+  → SKIP trade
+  → Log: "Suspicious spread: {spread}% (likely data error)"
+  → STOP
+```
 3. Decision:
    - Spread > 0.5% → SKIP trade, log "Spread too high: {X}%"
    - Spread 0.2% - 0.5% → Reduce position to 50%
