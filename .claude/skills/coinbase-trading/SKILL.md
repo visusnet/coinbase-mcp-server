@@ -715,7 +715,8 @@ IF best_bid <= 0 OR best_ask <= 0:
   → Log: "Invalid order book data: bid={bid}, ask={ask}"
   → STOP
 
-spread = (best_ask - best_bid) / max(best_bid, 0.0001)
+mid_price = (best_ask + best_bid) / 2
+spread = (best_ask - best_bid) / max(mid_price, 0.0001)
 
 // Sanity check for suspicious spreads
 IF spread > 10.0:
