@@ -198,9 +198,9 @@ For a complete list of all trading features, see **[SKILL_FEATURES.md](docs/SKIL
 | Strategy | Aggressive | No |
 | Take-Profit | ATR-based (min 2%) | Via ATR |
 | Stop-Loss | ATR-based (3-15%) | Via ATR |
-| Trailing Stop | 1.5% trail after +3% | No |
+| Trailing Stop | 1.5% trail after +3%, min lock-in 1.0% | No |
 | Check Interval | 15 minutes | Yes (`interval=5m`) |
-| Compound | 50% of profits | Yes (`compound=75`, `no-compound`) |
+| Compound | 50% of profits (min €0.10, max 2× initial, pauses after 2 losses, resumes after 2 wins) | Yes (`compound=75`, `compound-cap=15`, `no-compound`) |
 | Rebalancing | After 12h if <3% move, delta >40, max loss -2%, cooldown 4h, max 3/day | Yes (`no-rebalance`, `rebalance-delta=50`, `rebalance-max=2`) |
 | Pairs | All EUR pairs | No |
 
