@@ -27,7 +27,7 @@ Automatically adjusts SL/TP based on current volatility.
 | Parameter     | Value      | Description               |
 |---------------|------------|---------------------------|
 | ATR Period    | 14 Candles | Calculation period        |
-| TP Multiplier | 2.0× ATR   | Take-Profit distance      |
+| TP Multiplier | 1.5× ATR   | Take-Profit distance      |
 | SL Multiplier | 2.0× ATR   | Stop-Loss distance        |
 | Min TP        | 2.0%       | Minimum TP (covers fees)  |
 | Max SL        | 15.0%      | Maximum loss              |
