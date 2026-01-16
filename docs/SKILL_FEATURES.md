@@ -139,6 +139,34 @@ Direct: 2.0%, Indirect: 3.2%
 
 ---
 
+### 5. Trading Decision Logic
+
+Signal aggregation determines trade execution:
+
+**Signal Strength Thresholds:**
+
+| Signal Range | Classification | Action | Position Size |
+|--------------|----------------|--------|---------------|
+| > +60% | Strong BUY | Execute | 100% of budget |
+| +40% to +60% | BUY | Execute | 75% of budget |
+| +20% to +40% | Weak BUY | Execute if sentiment bullish | 50% of budget |
+| -20% to +20% | Neutral | HOLD | - |
+| -40% to -20% | Weak SELL | Execute if sentiment bearish | 50% position |
+| -60% to -40% | SELL | Execute | 75% position |
+| < -60% | Strong SELL | Execute | 100% position |
+
+**Trade Filters (Skip if):**
+- ADX < 20 (no clear trend)
+- Conflicting signals between categories
+- ATR > 3× average (extreme volatility)
+- Volume below average
+
+**Position Sizing Adjustments:**
+- Volatility: Low (<1× ATR) +10%, Moderate (1-2×) -10%, High (>2×) -50%
+- Exposure limits: Max 33% per asset, max 3 positions, max 2% risk per trade
+
+---
+
 ## 📈 Technical Analysis
 
 ### Signal Categories with Weighting
