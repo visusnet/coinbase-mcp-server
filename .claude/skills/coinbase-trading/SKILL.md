@@ -528,20 +528,51 @@ See [strategies.md](strategies.md) for strategy configurations.
 
 Call `get_transaction_summary` and calculate:
 
+**Stage 1: Initial Check (Optimistic - Limit Order fees)**
 ```
 maker_fee = fee_tier.maker_fee_rate  // e.g., 0.004
 taker_fee = fee_tier.taker_fee_rate  // e.g., 0.006
 
-// For Limit Order (Entry) + Market Order (Exit)
-round_trip_fee = maker_fee + taker_fee  // ~1.0%
+// Signal strength determines likely order type
+IF signal_strength > 70:
+  // Strong signal → Market order likely
+  entry_fee = taker_fee
+ELSE:
+  // Normal signal → Limit order attempted
+  entry_fee = maker_fee
 
-// Minimum Profit must exceed Round-Trip + Buffer
-MIN_PROFIT_DIRECT = round_trip_fee × 2  // ~2.0%
-MIN_PROFIT_INDIRECT = round_trip_fee × 4  // ~3.2% (for BTC→EUR→X routes)
+exit_fee = taker_fee  // Exits typically market orders
+
+// Minimum Profit calculation
+round_trip_fee = entry_fee + exit_fee
+slippage_buffer = 0.003  // 0.3% average slippage
+
+MIN_PROFIT_DIRECT = (round_trip_fee + slippage_buffer) × 2  // ~2.2-2.4%
+MIN_PROFIT_INDIRECT = (round_trip_fee + slippage_buffer) × 4  // ~3.8-4.2%
 
 // Check before trading
 IF expected_move < MIN_PROFIT:
-  → "Trade unprofitable after fees - SKIP"
+  → Log: "Trade unprofitable: expected {expected_move}% < required {MIN_PROFIT}%"
+  → SKIP trade
+```
+
+**Stage 2: Fallback Re-Check (Conservative - if Limit Order times out)**
+```
+// At limit order fallback (after 120s timeout)
+// Re-calculate with Market Order fees
+entry_fee_market = taker_fee
+exit_fee = taker_fee
+round_trip_fee_market = entry_fee_market + exit_fee
+slippage = 0.003
+
+MIN_PROFIT_FALLBACK = (round_trip_fee_market + slippage) × 2  // ~3.0%
+
+IF expected_move < MIN_PROFIT_FALLBACK:
+  → Log: "Fallback unprofitable: expected {expected_move}% < required {MIN_PROFIT_FALLBACK}%"
+  → Cancel limit order, SKIP fallback
+  → Position: None (limit order was not filled)
+ELSE:
+  → Proceed with Market Order fallback
 ```
 
 **Fee Report Section**:
@@ -624,17 +655,27 @@ When a signal is present and expected profit exceeds MIN_PROFIT threshold:
      remaining_size = intended_size - filled_size
 
      IF remaining_size >= min_order_size:
-       → Cancel original limit order
-       → Place Market Order for remaining_size ONLY
-       → Log: "Partial fill {filled_size}, fallback for {remaining_size}"
+       // Stage 2: Re-check profitability with Market Order fees
+       IF expected_move >= MIN_PROFIT_FALLBACK:
+         → Cancel original limit order
+         → Place Market Order for remaining_size ONLY
+         → Log: "Partial fill {filled_size}, fallback for {remaining_size}"
+       ELSE:
+         → Cancel order, accept partial fill only
+         → Log: "Partial fill accepted: fallback unprofitable ({expected_move}% < {MIN_PROFIT_FALLBACK}%)"
      ELSE:
        → Accept partial fill, cancel order
        → Log: "Partial fill accepted: {filled_size} (remaining below minimum)"
 
    ELSE IF order_status == "OPEN":
-     → Cancel order
-     → Place Market Order for full intended_size
-     → Log: "Limit order timeout, fallback to market"
+     // Stage 2: Re-check profitability with Market Order fees
+     IF expected_move >= MIN_PROFIT_FALLBACK:
+       → Cancel order
+       → Place Market Order for full intended_size
+       → Log: "Limit order timeout, fallback to market"
+     ELSE:
+       → Cancel order, SKIP fallback
+       → Log: "Fallback skipped: unprofitable with market fees ({expected_move}% < {MIN_PROFIT_FALLBACK}%)"
    ```
 8. Record position (coin, amount, entry price, orderType)
 9. Save state to trading-state.json
