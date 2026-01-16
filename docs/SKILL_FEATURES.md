@@ -123,8 +123,8 @@ Prefers direct pairs to save fees.
 
 | Route | Fees | Min Profit Required |
 |-------|------|---------------------|
-| BTC→SOL (direct) | ~0.8% | 2.0% |
-| BTC→EUR→SOL (indirect) | ~1.6% | 3.2% |
+| BTC→SOL (direct) | ~1.0% (maker 0.4% + taker 0.6%) | 2.0% |
+| BTC→EUR→SOL (indirect) | ~2.0% (2× trades) | 3.2% |
 
 ---
 
