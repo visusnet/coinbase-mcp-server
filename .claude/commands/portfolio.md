@@ -61,6 +61,7 @@ Use this EXACT format template (no deviation, no explanatory text before/after):
 ## Error Handling
 
 If API calls fail, show:
+
 ```
 ═══════════════════════════════════════════════════════════
                     PORTFOLIO STATUS

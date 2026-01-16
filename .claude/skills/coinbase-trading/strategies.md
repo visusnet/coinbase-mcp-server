@@ -16,6 +16,7 @@
 ### Signal Scoring System
 
 Each indicator provides a score from -3 to +3:
+
 - **+3**: Strong BUY signal
 - **+2**: BUY signal
 - **+1**: Weak BUY signal
@@ -117,6 +118,7 @@ Each indicator provides a score from -3 to +3:
 ### News Sentiment Analysis
 
 Search for recent news and categorize:
+
 - **Very Bullish**: Major adoption, ETF approval, positive regulation (+2)
 - **Bullish**: Positive earnings, partnerships, upgrades (+1)
 - **Neutral**: Mixed news, no significant events (0)
@@ -163,6 +165,7 @@ IF profit_ratio < MIN_PROFIT_THRESHOLD:
 ```
 
 **Minimum Profit Thresholds**:
+
 - Direct route (e.g., BTC→SOL): 2.0%
 - Indirect route (e.g., BTC→EUR→SOL): 3.2%
 
@@ -206,6 +209,7 @@ spread_pct = (best_ask - best_bid) / best_bid × 100
 ### Example
 
 Orderbook for SOL-EUR:
+
 - Best Bid: €119.50
 - Best Ask: €119.65
 - Spread: (119.65 - 119.50) / 119.50 = 0.126%
@@ -215,7 +219,7 @@ Orderbook for SOL-EUR:
 
 ## Trade Filters
 
-### Conditions to AVOID trading:
+### Conditions to AVOID trading
 
 1. **Low ADX** (< 20): No clear trend
 2. **Bollinger Squeeze**: Await breakout direction
@@ -226,7 +230,7 @@ Orderbook for SOL-EUR:
 7. **Sentiment Extreme**: Unless contrarian strategy active
 8. **Major News Pending**: Earnings, FOMC, etc.
 
-### Conditions that STRENGTHEN signals:
+### Conditions that STRENGTHEN signals
 
 1. **Volume Confirmation**: Above average volume
 2. **Multiple Timeframe Agreement**: 15m + 1h + 4h align
@@ -340,5 +344,6 @@ stop_loss_price = entry_price × (1 - SL_PERCENT / 100)
 | Daily | Long-term trend |
 
 **Rule**: Only trade in direction of higher timeframe trend.
+
 - Daily bullish + 4h bullish + 1h pullback → BUY opportunity
 - Daily bearish + 4h bearish + 1h rally → SELL opportunity

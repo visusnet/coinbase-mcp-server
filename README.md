@@ -11,6 +11,7 @@ With this project, AI assistants like Claude can not only check account balances
 **This MCP server and the included Autonomous Trading Bot will execute real trades on your Coinbase account if you use them with valid API keys. Your actual funds can be bought, sold, or lost automatically.**
 
 > **Never use this software with funds you cannot afford to lose.**
+>
 > - Always test with `dry-run` mode first.
 > - Use read-only or test API keys for development.
 > - Automated trading is risky and can result in significant financial loss.
@@ -76,7 +77,7 @@ The MCP server is **automatically configured** (via `.claude/settings.json` in t
 
 ### 6. Start Trading
 
-```
+```bash
 /trade 10 EUR from BTC dry-run
 ```
 
@@ -159,11 +160,12 @@ For a complete list of all trading skill features, see **[SKILL_FEATURES.md](doc
 
 A built-in prompt that provides comprehensive guidance for trading on Coinbase:
 
-```
+```bash
 /coinbase:assist
 ```
 
 **What it provides:**
+
 - Complete overview of all available tools and capabilities
 - Trading best practices and safety guidelines
 - Fee considerations and market context
@@ -173,12 +175,13 @@ A built-in prompt that provides comprehensive guidance for trading on Coinbase:
 
 A built-in Claude command that runs an autonomous trading bot:
 
-```
+```bash
 /trade 10 EUR from BTC
 /trade 5 EUR dry-run
 ```
 
 **What it does:**
+
 - Technical analysis: 20+ indicators across 6 weighted categories (Momentum 25%, Trend 30%, Volatility 15%, Volume 15%, S/R 10%, Patterns 5%)
 - Sentiment analysis (Fear & Greed Index with 7 regions, news search)
 - Automatic order execution with preview
@@ -193,16 +196,16 @@ For a complete list of all trading features, see **[SKILL_FEATURES.md](docs/SKIL
 
 **Configuration:**
 
-| Setting | Default | Customizable |
-|---------|---------|--------------|
-| Strategy | Aggressive | No |
-| Take-Profit | ATR-based (min 2%) | Via ATR |
-| Stop-Loss | ATR-based (3-15%) | Via ATR |
-| Trailing Stop | 1.5% trail after +3%, min lock-in 1.0% | No |
-| Check Interval | 15 minutes | Yes (`interval=5m`) |
-| Compound | 50% of profits (min €0.10, max 2× initial, pauses after 2 losses, resumes after 2 wins) | Yes (`compound=75`, `compound-cap=15`, `no-compound`) |
-| Rebalancing | After 12h if <3% move, delta >40, max loss -2%, cooldown 4h, max 3/day | Yes (`no-rebalance`, `rebalance-delta=50`, `rebalance-max=2`) |
-| Pairs | All EUR pairs | No |
+| Setting        | Default                                                                                          | Customizable                                                   |
+|----------------|--------------------------------------------------------------------------------------------------|----------------------------------------------------------------|
+| Strategy       | Aggressive                                                                                       | No                                                             |
+| Take-Profit    | ATR-based (min 2%)                                                                               | Via ATR                                                        |
+| Stop-Loss      | ATR-based (3-15%)                                                                                | Via ATR                                                        |
+| Trailing Stop  | 1.5% trail after +3%, min lock-in 1.0%                                                           | No                                                             |
+| Check Interval | 15 minutes                                                                                       | Yes (`interval=5m`)                                            |
+| Compound       | 50% of profits (min €0.10, max 2× initial, pauses after 2 losses, resumes after 2 wins)         | Yes (`compound=75`, `compound-cap=15`, `no-compound`)          |
+| Rebalancing    | After 12h if <3% move, delta >40, max loss -2%, cooldown 4h, max 3/day                          | Yes (`no-rebalance`, `rebalance-delta=50`, `rebalance-max=2`) |
+| Pairs          | All EUR pairs                                                                                    | No                                                             |
 
 **Stop the agent**: Press `Ctrl+C`
 
@@ -214,7 +217,7 @@ For a complete list of all trading features, see **[SKILL_FEATURES.md](docs/SKIL
 
 Just ask Claude:
 
-```
+```bash
 "What are my account balances?"
 "Show me the current BTC-EUR price"
 "Buy 0.001 BTC at market price"
@@ -249,7 +252,7 @@ Just ask Claude:
 
 ### Project Structure
 
-```
+```text
 coinbase-mcp-server/
 ├── src/
 │   ├── index.ts                 # HTTP server entry point
@@ -297,12 +300,12 @@ npm run inspect    # Open MCP Inspector for debugging
 
 ## Troubleshooting
 
-| Problem | Solution |
-|---------|----------|
-| "Authentication failed" | Check API key and private key format (PEM with newlines) |
-| "Server not responding" | Ensure `npm start` is running, check `.env` |
-| "/trade not found" | Restart Claude Code to reload commands |
-| Tools not showing | Verify `.claude/settings.json` exists, restart Claude |
+| Problem                 | Solution                                                      |
+|-------------------------|---------------------------------------------------------------|
+| "Authentication failed" | Check API key and private key format (PEM with newlines)     |
+| "Server not responding" | Ensure `npm start` is running, check `.env`                  |
+| "/trade not found"      | Restart Claude Code to reload commands                        |
+| Tools not showing       | Verify `.claude/settings.json` exists, restart Claude         |
 
 ## Resources
 

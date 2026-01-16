@@ -3,6 +3,7 @@
 Essential standards that apply to all code in this project.
 
 ## TypeScript
+
 - Strict mode enabled
 - No `any` or `unknown` types - use proper types
 - Explicit return types on public methods
@@ -13,11 +14,13 @@ Essential standards that apply to all code in this project.
 - ES modules (import/export), not CommonJS
 
 ## Code Style
+
 - Classes: PascalCase (`CoinbaseMcpServer`)
 - Methods: camelCase (`listAccounts()`)
 - Constants: SCREAMING_SNAKE_CASE (`DEFAULT_PORT`)
 
 ## Design Principles
+
 - **YAGNI**: No abstraction until needed
 - **Deep Modules**: Simple interface, significant functionality
 - **Information Hiding**: Hide design decisions, not just data
@@ -36,6 +39,7 @@ Essential standards that apply to all code in this project.
 - Helper functions are placed outside the class, not as methods. This keeps them reusable across different parts of the codebase and separates pure utility logic from class business logic.
 
 ## Error Handling
+
 - Never swallow errors
 - Wrap SDK calls in try-catch
 - Meaningful error messages with context
@@ -43,17 +47,20 @@ Essential standards that apply to all code in this project.
 - Consistent MCP error format
 
 ## Git
+
 - Conventional commits: `feat:`, `fix:`, `docs:`, `test:`, `refactor:`
 - Run tests before commit
 - 100% coverage required
 
 ## Security Best Practices
+
 - **Never log credentials**: Filter API keys from all logs
 - **Validate all inputs**: Use Zod schema validation
 - **Environment variables**: Store secrets in `.env`, never hardcode
 - **No credentials in repository**: `.env` in `.gitignore`
 
 ## Common Pitfalls
+
 1. Forgetting tests → Always maintain 100% coverage
 2. Not handling errors → Wrap all SDK calls in try-catch
 3. Hardcoding values → Use environment variables or constants

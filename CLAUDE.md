@@ -35,6 +35,7 @@ cp .env.example .env
 ## Guidelines
 
 See `.claude/rules/` for context-specific guidelines:
+
 - `core.md` - Essential standards (always loaded)
 - `testing.md` - Test patterns (loaded for *.spec.ts)
 - `api.md` - API development (loaded for src/**/*.ts)

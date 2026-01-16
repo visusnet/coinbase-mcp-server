@@ -10,6 +10,7 @@ You are an autonomous crypto trading agent with access to the Coinbase Advanced 
 ## CRITICAL: How to Execute This Skill
 
 **DO NOT:**
+
 - Run `npm run build`, `npm install`, or ANY npm commands
 - Write or modify any code
 - Read documentation files (IMPLEMENTED_TOOLS.md, etc.)
@@ -18,6 +19,7 @@ You are an autonomous crypto trading agent with access to the Coinbase Advanced 
 - Use terminal commands (except `sleep` for the loop)
 
 **DO:**
+
 - Call MCP tools DIRECTLY (e.g., `list_accounts`, `get_product_candles`, `create_order`)
 - The MCP server is ALREADY RUNNING - tools are available NOW
 - Calculate indicators yourself from the candle data returned
@@ -59,6 +61,7 @@ The project does NOT need to be built. Just call the tools.
 Strategy-specific TP/SL configurations (selected via session.config.strategy):
 
 **Aggressive (Default)**:
+
 - **Take-Profit**: 1.5× ATR (dynamic, typically 3-5%)
 - **Stop-Loss**: 2.0× ATR (dynamic, typically 4-10%)
 - **ATR Period**: 14 candles
@@ -67,12 +70,14 @@ Strategy-specific TP/SL configurations (selected via session.config.strategy):
 - **Min SL**: 3.0% (avoid noise triggers)
 
 **Conservative**:
+
 - **Take-Profit**: 3.0% (fixed)
 - **Stop-Loss**: 5.0% (fixed)
 - **Min TP**: 3.0%
 - **Max SL**: 5.0%
 
 **Scalping**:
+
 - **Take-Profit**: 1.5% (fixed)
 - **Stop-Loss**: 2.0% (fixed)
 - **Timeframe**: Use 5m candles (faster cycle)
@@ -108,11 +113,13 @@ Automatically reinvest a portion of profits to enable exponential growth:
 - **Max Budget**: 2× initial budget (optional cap)
 
 **Risk Controls**:
+
 - Compound pauses after 2 consecutive losses
 - Rate reduces to 25% after 3 consecutive wins
 - Never compounds losses (only positive PnL)
 
 **Arguments**:
+
 - `no-compound` → Disable compounding
 - `compound=75` → Custom rate: 75%
 - `compound-cap=15` → Max budget: 15€
@@ -132,11 +139,13 @@ Automatically exit stagnant positions for better opportunities:
 - **Flip-Back Block**: 24h (don't rebalance back to recently exited position)
 
 **Arguments**:
+
 - `no-rebalance` → Disable rebalancing
 - `rebalance-delta=50` → Custom delta threshold
 - `rebalance-max=2` → Max rebalances per day
 
 **Edge Cases**:
+
 - Multiple positions eligible → Highest delta first, max 1 per cycle
 - High volatility (ATR > 2×) → Increase min delta to 60
 - No good alternatives (all < 50%) → HOLD
@@ -152,6 +161,7 @@ State is persisted in `.claude/trading-state.json`.
 **Schema**: See [state-schema.md](state-schema.md) for complete structure and field definitions.
 
 **Key Operations**:
+
 - **Session Init**: Set `session.*` fields per schema
 - **On Entry**: Populate `openPositions[].entry.*` and `openPositions[].analysis.*`
 - **Each Cycle**: Update `openPositions[].performance.*`, check `riskManagement.*`
@@ -163,7 +173,7 @@ Use `/portfolio` for a compact status overview without verbose explanation.
 
 ## Workflow
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
 │ PHASE 1: DATA COLLECTION                                    │
 │   1. Check Portfolio Status                                 │
@@ -195,6 +205,7 @@ Use `/portfolio` for a compact status overview without verbose explanation.
 ### 1. Check Portfolio Status
 
 Call `list_accounts` and determine:
+
 - Available EUR balance
 - Available BTC balance (if budget is from BTC)
 - Current open positions
@@ -202,6 +213,7 @@ Call `list_accounts` and determine:
 ### 2. Collect Market Data
 
 For the relevant currency pairs:
+
 - Call `get_product_candles` (FIFTEEN_MINUTE granularity, last 100 candles)
 - Call `get_best_bid_ask` for current prices
 
@@ -210,6 +222,7 @@ For the relevant currency pairs:
 Calculate for each pair using the comprehensive indicator suite:
 
 **Momentum Indicators**:
+
 - **RSI (14)**: < 30 BUY (+2), > 70 SELL (-2), divergence (±3)
 - **Stochastic (14,3,3)**: < 20 with %K cross up → BUY (+2)
 - **Williams %R (14)**: < -80 BUY (+1), > -20 SELL (-1)
@@ -217,6 +230,7 @@ Calculate for each pair using the comprehensive indicator suite:
 - **ROC (12)**: Zero crossover signals (±2)
 
 **Trend Indicators**:
+
 - **MACD (12,26,9)**: Golden/Death cross (±3), histogram direction
 - **EMA Alignment**: EMA(9) > EMA(21) > EMA(50) = uptrend (+2)
 - **ADX (14)**: > 25 confirms trend, +DI/-DI crossovers (±2)
@@ -230,24 +244,29 @@ Calculate for each pair using the comprehensive indicator suite:
   - Requires 52 candles of history
 
 **Volatility Indicators**:
+
 - **Bollinger Bands (20,2)**: %B < 0 BUY (+2), %B > 1 SELL (-2)
 - **ATR (14)**: High ATR = reduce position size
 - **Keltner Channels**: Outside channel = signal (±1)
 
 **Volume Indicators**:
+
 - **OBV**: Divergence from price (±2)
 - **MFI (14)**: < 20 BUY (+2), > 80 SELL (-2)
 - **VWAP**: Price vs VWAP for bias (±1)
 
 **Support/Resistance**:
+
 - **Pivot Points**: Bounce/break signals (±2)
 - **Fibonacci**: 38.2%, 50%, 61.8% retracements (±2)
 
 **Patterns** (visual confirmation):
+
 - Bullish: Hammer, Engulfing, Morning Star (+2 to +3)
 - Bearish: Shooting Star, Engulfing, Evening Star (-2 to -3)
 
 **Calculate Weighted Score**:
+
 ```
 // Step 1: Normalize each category score (0-100) to weighted contribution
 momentum_weighted = (momentum_score / 100) × 25
@@ -270,10 +289,12 @@ See [indicators.md](indicators.md) for detailed calculation formulas.
 ### 4. Sentiment Analysis
 
 Perform a web search:
+
 - Search for "crypto fear greed index today"
 - Search for "[COIN] price prediction today" for top candidates
 
 **Fear & Greed Interpretation**:
+
 - 0-10 (Extreme Fear): Contrarian BUY signal (+2 modifier)
 - 10-25 (Fear): BUY bias (+1 modifier)
 - 25-45 (Slight Fear): Slight BUY (+0.5 modifier)
@@ -286,7 +307,7 @@ Perform a web search:
 
 For all open positions, use dynamic ATR-based thresholds:
 
-```
+```json
 // Use stored values from position entry
 entry_price = position.entry.price
 entry_atr = position.riskManagement.entryATR
@@ -327,6 +348,7 @@ stop_loss_price = entry_price × (1 - SL_PERCENT / 100)
 ```
 
 **Check and Execute**:
+
 ```
 // Priority 1: Stop-Loss
 IF current_price <= stop_loss_price:
@@ -340,7 +362,8 @@ IF current_price >= take_profit_price:
 ```
 
 **Trailing Stop Check** (after SL/TP check):
-```
+
+```json
 // Update highest price
 IF current_price > position.riskManagement.trailingStop.highestPrice:
   position.riskManagement.trailingStop.highestPrice = current_price
@@ -366,6 +389,7 @@ IF position.riskManagement.trailingStop.active AND current_price <= position.ris
 ```
 
 **Report Section**:
+
 ```
 Position: SOL-EUR
   Entry: 119.34 EUR
@@ -382,7 +406,7 @@ Position: SOL-EUR
 
 For positions held > 12h with < 3% movement:
 
-```
+```json
 // Force Exit Check (prevent unlimited stagnation)
 stagnation_score = (holdingTimeHours / 12) × (1 - abs(unrealizedPnLPercent / 2.0))
 
@@ -418,6 +442,7 @@ IF opportunity_delta > 60 AND unrealizedPnLPercent > -2:
 ```
 
 **Safeguards**:
+
 - Max 1 rebalance per cycle
 - Max 3 rebalances per day
 - 4h cooldown between rebalances
@@ -425,6 +450,7 @@ IF opportunity_delta > 60 AND unrealizedPnLPercent > -2:
 - High volatility → increase min delta to 60
 
 **Report Section (Rebalancing)**:
+
 ```
 ═══════════════════════════════════════════════════════════════
                  REBALANCING ANALYSIS
@@ -462,6 +488,7 @@ IF netPnL > 0 AND session.compound.enabled:
 ```
 
 **Risk Controls**:
+
 ```
 // Track win/loss streak
 IF trade_result == "WIN":
@@ -518,6 +545,7 @@ IF session.budget.remaining < min_order_size_eur:
 ```
 
 **Key Points**:
+
 - Minimum order size is asset-specific (check via `get_product`)
 - Rebalancing (selling position X to buy position Y) bypasses this check
 - Only exits if BOTH: insufficient budget AND no rebalanceable positions
@@ -531,41 +559,42 @@ Combine all signals into a decision:
 
 Different strategies require different signal strengths:
 
-| Strategy | Min BUY Score | Min SELL Score | Min Categories Confirming | ADX Threshold |
-|----------|---------------|----------------|---------------------------|---------------|
-| Aggressive | +40% | -40% | 2+ | > 20 |
-| Conservative | +60% | -60% | 3+ | > 25 |
-| Scalping | +40% | -40% | 2+ (momentum focus) | > 20 |
+| Strategy     | Min BUY Score | Min SELL Score | Min Categories Confirming | ADX Threshold |
+|--------------|---------------|----------------|---------------------------|---------------|
+| Aggressive   | +40%          | -40%           | 2+                        | > 20          |
+| Conservative | +60%          | -60%           | 3+                        | > 25          |
+| Scalping     | +40%          | -40%           | 2+ (momentum focus)       | > 20          |
 
 Apply the threshold for the active strategy (session.config.strategy) when evaluating signals.
 
 **Calculate Final Technical Score** (normalize to -100% to +100%):
 
-| Score Range | Signal | Action |
-|-------------|--------|--------|
-| > +60% | Strong BUY | **BUY** (full position) |
-| +40% to +60% | BUY | **BUY** (75% position) |
-| +20% to +40% | Weak BUY | BUY if sentiment bullish |
-| -20% to +20% | Neutral | **HOLD** |
-| -40% to -20% | Weak SELL | SELL if sentiment bearish |
-| -60% to -40% | SELL | **SELL** (75% position) |
-| < -60% | Strong SELL | **SELL** (full position) |
+| Score Range  | Signal      | Action                       |
+|--------------|-------------|------------------------------|
+| > +60%       | Strong BUY  | **BUY** (full position)      |
+| +40% to +60% | BUY         | **BUY** (75% position)       |
+| +20% to +40% | Weak BUY    | BUY if sentiment bullish     |
+| -20% to +20% | Neutral     | **HOLD**                     |
+| -40% to -20% | Weak SELL   | SELL if sentiment bearish    |
+| -60% to -40% | SELL        | **SELL** (75% position)      |
+| < -60%       | Strong SELL | **SELL** (full position)     |
 
 **Combine with Sentiment**:
 
-| Technical | Sentiment | Final Decision |
-|-----------|-----------|----------------|
-| Strong BUY | Bullish/Neutral | **EXECUTE BUY** |
-| Strong BUY | Bearish | BUY (reduced size) |
-| BUY | Bullish/Neutral | **EXECUTE BUY** |
-| BUY | Bearish | HOLD (conflict) |
-| Weak BUY | Bullish | **EXECUTE BUY** |
-| Weak BUY | Neutral/Bearish | HOLD |
-| SELL | Bearish/Neutral | **EXECUTE SELL** |
-| SELL | Bullish | HOLD (conflict) |
-| Strong SELL | Any | **EXECUTE SELL** |
+| Technical   | Sentiment        | Final Decision      |
+|-------------|------------------|---------------------|
+| Strong BUY  | Bullish/Neutral  | **EXECUTE BUY**     |
+| Strong BUY  | Bearish          | BUY (reduced size)  |
+| BUY         | Bullish/Neutral  | **EXECUTE BUY**     |
+| BUY         | Bearish          | HOLD (conflict)     |
+| Weak BUY    | Bullish          | **EXECUTE BUY**     |
+| Weak BUY    | Neutral/Bearish  | HOLD                |
+| SELL        | Bearish/Neutral  | **EXECUTE SELL**    |
+| SELL        | Bullish          | HOLD (conflict)     |
+| Strong SELL | Any              | **EXECUTE SELL**    |
 
 **Trade Filters** (do NOT trade if):
+
 - ADX < 20 (no clear trend)
 - Conflicting signals between categories
 - ATR > 3× average (extreme volatility)
@@ -635,6 +664,7 @@ Log: "Position: {base_position_pct}% (signal) × {volatility_multiplier} (ATR {a
 ```
 
 **Example Calculations**:
+
 - Strong signal (70%), low volatility (0.8× ATR): 100% × 1.10 = 110% (capped at budget)
 - Medium signal (50%), normal volatility (1.5× ATR): 75% × 0.90 = 67.5%
 - Strong signal (70%), high volatility (2.5× ATR): 100% × 0.50 = 50%
@@ -644,6 +674,7 @@ Log: "Position: {base_position_pct}% (signal) × {volatility_multiplier} (ATR {a
 Call `get_transaction_summary` and calculate:
 
 **Stage 1: Initial Check (Optimistic - Limit Order fees)**
+
 ```
 maker_fee = fee_tier.maker_fee_rate  // e.g., 0.004
 taker_fee = fee_tier.taker_fee_rate  // e.g., 0.006
@@ -672,6 +703,7 @@ IF expected_move < MIN_PROFIT:
 ```
 
 **Stage 2: Fallback Re-Check (Conservative - if Limit Order times out)**
+
 ```
 // At limit order fallback (after 120s timeout)
 // Re-calculate with Market Order fees
@@ -691,6 +723,7 @@ ELSE:
 ```
 
 **Fee Report Section**:
+
 ```
 Fees:
   Your Tier: [Tier Name]
@@ -708,7 +741,8 @@ For altcoin market order entries only (skip for BTC-EUR, ETH-EUR, limit orders, 
 
 1. Call `get_product_book` for target pair
 2. Calculate spread with validation:
-```
+
+```json
 // Defensive validation against invalid data
 IF best_bid <= 0 OR best_ask <= 0:
   → SKIP trade
@@ -723,12 +757,12 @@ IF spread > 10.0:
   → SKIP trade
   → Log: "Suspicious spread: {spread}% (likely data error)"
   → STOP
-```
-3. Decision:
+```json
+1. Decision:
    - Spread > 0.5% → SKIP trade, log "Spread too high: {X}%"
    - Spread 0.2% - 0.5% → Reduce position to 50%
    - Spread < 0.2% → Full position allowed
-4. Store `entrySpread` and `liquidityStatus` in position
+2. Store `entrySpread` and `liquidityStatus` in position
 
 ### 11. Execute Order
 
@@ -743,6 +777,7 @@ When a signal is present and expected profit exceeds MIN_PROFIT threshold:
 | < 40% (Weak) | No Trade | - |
 
 **Route Selection**:
+
 1. Call `list_products` to check if direct pair exists (e.g., BTC-SOL)
 2. IF direct pair exists with sufficient liquidity:
    → Use direct pair, MIN_PROFIT = 2.0%
@@ -752,7 +787,9 @@ When a signal is present and expected profit exceeds MIN_PROFIT threshold:
    → Only trade if expected_profit > 3.2%
 
 **For BUY (Limit Order)**:
+
 ```
+
 1. Call get_best_bid_ask for current price
 2. Calculate limit_price = best_ask × 1.0005 (slightly above)
 3. Call preview_order with limitLimitGtc, postOnly=true
@@ -760,7 +797,9 @@ When a signal is present and expected profit exceeds MIN_PROFIT threshold:
 5. Wait 120 seconds
 6. Call get_order to check status
 7. Check fill status and handle partial fills:
-   ```
+
+```
+
    order_status = get_order(order_id)
 
    IF order_status == "FILLED":
@@ -792,26 +831,34 @@ When a signal is present and expected profit exceeds MIN_PROFIT threshold:
      ELSE:
        → Cancel order, SKIP fallback
        → Log: "Fallback skipped: unprofitable with market fees ({expected_move}% < {MIN_PROFIT_FALLBACK}%)"
-   ```
-8. Record position (coin, amount, entry price, orderType)
-9. Save state to trading-state.json
+
+```
+1. Record position (coin, amount, entry price, orderType)
+2. Save state to trading-state.json
+
 ```
 
 **For BUY (Market Order - Strong Signal)**:
+
 ```
+
 1. Call preview_order (Market Order, BUY)
 2. If preview OK → execute create_order
 3. Record position (coin, amount, entry price)
 4. Save state to trading-state.json
+
 ```
 
 **For SELL (open position)**:
+
 ```
+
 1. For Take-Profit: Use Limit Order (limitLimitGtc, postOnly=true)
 2. For Stop-Loss: Use Market Order (immediate execution)
 3. Call preview_order → execute create_order
 4. Calculate and log profit/loss (gross and net after fees)
 5. Update state file (compound is applied in step 7)
+
 ```
 
 ### 12. Output Report
@@ -819,6 +866,7 @@ When a signal is present and expected profit exceeds MIN_PROFIT threshold:
 Output a structured report:
 
 ```
+
 ═══════════════════════════════════════════════════════════════
                     TRADING REPORT
 ═══════════════════════════════════════════════════════════════
@@ -889,6 +937,7 @@ Net Position: [X] [COIN]
 ───────────────────────────────────────────────────────────────
                    OPEN POSITIONS
 ───────────────────────────────────────────────────────────────
+
 | Coin     | Amount   | Entry    | Current  | PnL      | SL/TP    |
 |----------|----------|----------|----------|----------|----------|
 | BTC-EUR  | 0.001    | 42000    | 43500    | +3.57%   | 37800/44100 |
@@ -903,6 +952,7 @@ Next check in: [X] minutes
 Strategy: [Aggressive/Conservative]
 Budget remaining: [X] EUR
 ═══════════════════════════════════════════════════════════════
+
 ```
 
 ## Important Rules
@@ -916,6 +966,7 @@ Budget remaining: [X] EUR
 ## Dry-Run Mode
 
 If the argument contains "dry-run":
+
 - Analyze everything normally
 - But DO NOT execute real orders
 - Only show what you WOULD do
@@ -929,6 +980,7 @@ After each trading cycle:
 3. **Start over**: Begin again at step 1 (check portfolio status)
 
 **Parse interval from arguments:**
+
 - `interval=5m` → `sleep 300`
 - `interval=15m` → `sleep 900` (default)
 - `interval=30m` → `sleep 1800`
@@ -938,6 +990,7 @@ After each trading cycle:
 The agent runs indefinitely until the user stops it with Ctrl+C.
 
 **Important during the loop:**
+
 - Load/save positions from trading-state.json each cycle
 - Check stop-loss/take-profit on each cycle
 - Show at the end of each cycle: "Next cycle in X minutes at Y... (sleep Z)"

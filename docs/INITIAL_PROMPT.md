@@ -29,6 +29,7 @@ Design the server with pragmatic architecture and clear separation of concerns:
 2. **MCP Server Layer**: Handle MCP protocol (tool registration, request/response handling, JSON Schema validation), interface directly with Coinbase Advanced Trade SDK services (no intermediate abstraction layers)
 
 Keep the architecture simple and direct:
+
 - Use SDK services directly without unnecessary abstraction layers
 - Add intermediate layers only when complexity or requirements demand it
 - Dependency injection via constructor for testability
@@ -92,10 +93,12 @@ Implement comprehensive MCP tools covering all major Coinbase Advanced Trading A
 ### Tool Categories
 
 **Accounts**
+
 - List all accounts with balances
 - Get specific account details
 
 **Orders**
+
 - List orders with filtering
 - Get order details
 - Create buy/sell orders
@@ -107,6 +110,7 @@ Implement comprehensive MCP tools covering all major Coinbase Advanced Trading A
 - Get executed trades (fills)
 
 **Products & Market Data**
+
 - List all tradable products
 - Get product details
 - Get order books
@@ -115,39 +119,48 @@ Implement comprehensive MCP tools covering all major Coinbase Advanced Trading A
 - Get best bid/ask prices
 
 **Public Data (No Authentication)**
+
 - Public versions of product data endpoints
 - Server time
 
 **Portfolios**
+
 - List, create, get, edit, delete portfolios
 - Move funds between portfolios
 
 **Currency Conversion**
+
 - Create conversion quotes
 - Commit conversion trades
 - Get conversion details
 
 **Fees**
+
 - Get transaction summary and fee tiers
 
 **Payment Methods**
+
 - List and get payment method details
 
 **Futures**
+
 - List positions, get specific positions
 - Balance summary
 - Futures sweeps
 
 **Perpetuals**
+
 - List positions, get specific positions
 - Portfolio summary and balance
 
 **API Information**
+
 - Get current API key permissions
 
 ## Built-in Trading Prompt
 
 Create a built-in prompt that helps users understand how to use the trading tools effectively. It should include:
+
 - Overview of available capabilities
 - Trading best practices (preview before creating orders, check balances first, etc.)
 - Fee considerations
@@ -156,7 +169,9 @@ Create a built-in prompt that helps users understand how to use the trading tool
 ## Critical Requirements
 
 ### Authentication
+
 Use environment variables for Coinbase API credentials:
+
 - API Key Name (format: `organizations/xxx/apiKeys/yyy`)
 - Private Key (PEM format)
 - Optional PORT configuration (default: 3000)
@@ -164,19 +179,23 @@ Use environment variables for Coinbase API credentials:
 Store credentials in `.env` file, never commit them to version control.
 
 ### Error Handling
+
 - Wrap all Coinbase SDK calls in proper error handling
 - Return errors in consistent MCP format
 - Provide meaningful error messages for debugging
 
 ### Response Format
+
 All MCP tools should return responses in the standard MCP format with JSON-serialized content.
 
 ### API Quirks
+
 Be aware that some Coinbase endpoints may have specific requirements (e.g., timestamp formats). Handle these appropriately based on the API documentation.
 
 ## Testing Requirements
 
 Implement comprehensive testing with Jest:
+
 - Aim for 100% code coverage across all metrics
 - Test all MCP tools
 - Test error handling and edge cases
@@ -187,17 +206,20 @@ Implement comprehensive testing with Jest:
 ## Code Quality Standards
 
 ### TypeScript
+
 - Enable strict mode for maximum type safety
 - Avoid `any` types
 - Provide explicit return types on public methods
 - Follow standard TypeScript conventions
 
 ### Code Style
+
 - Use ESLint with TypeScript plugin
 - Use Prettier for consistent formatting
 - Follow common naming conventions (PascalCase for classes, camelCase for methods, etc.)
 
 ### Documentation
+
 - Add JSDoc comments to public APIs
 - Document any non-obvious behavior
 - Include links to Coinbase API documentation where relevant
@@ -205,6 +227,7 @@ Implement comprehensive testing with Jest:
 ## Project Configuration
 
 ### Package Configuration
+
 - Project name: `coinbase-mcp-server`
 - License: MIT
 - Author: Alexander Rose
@@ -212,24 +235,29 @@ Implement comprehensive testing with Jest:
 - Include appropriate scripts: build, start, test, lint, format
 
 ### TypeScript Configuration
+
 - Target ES2022
 - Strict mode enabled
 - Generate declaration files
 - Output to dist directory
 
 ### Development Tools
+
 - Configure Jest for TypeScript with ESM support
 - Set up coverage thresholds (aim for 100%)
 - Configure build tool (Rollup or similar)
 - Set up ESLint and Prettier
 
 ### Claude Code Integration
+
 Create `.claude/settings.json` to automatically connect the MCP server when using Claude Code in this project directory.
 
 ## Documentation
 
 ### README.md
+
 Create a comprehensive README with:
+
 - Quick start guide (from getting Coinbase credentials to running first trade)
 - Installation instructions
 - Configuration details
@@ -239,7 +267,9 @@ Create a comprehensive README with:
 - Development instructions
 
 ### CONTRIBUTING.md
+
 Include contributor guidelines:
+
 - Setup instructions
 - Testing requirements
 - Code style
@@ -247,19 +277,23 @@ Include contributor guidelines:
 - How to add new tools
 
 ### LICENSE
+
 Use MIT License with copyright attribution to Alexander Rose.
 
 ### Claude Code Memory
+
 Set up `.claude/CLAUDE.md` as project memory for team instructions, and use `.claude/rules/` for modular guidelines on architecture, code style, testing, and workflows.
 
 ## Development Experience
 
 ### Local Development
+
 - Provide a development mode with hot-reload using `tsx --watch`
 - Support MCP Inspector for testing tools interactively
 - Use environment variables for configuration
 
 ### Express Server
+
 - Create HTTP server listening on configurable port (default: 3000)
 - Expose MCP endpoint for Claude Code to connect to
 - Use Express with minimal middleware
@@ -267,14 +301,18 @@ Set up `.claude/CLAUDE.md` as project memory for team instructions, and use `.cl
 ## Testing & Validation
 
 ### MCP Inspector
+
 Use the [MCP Inspector](https://github.com/modelcontextprotocol/inspector) tool to test the server interactively:
+
 - Verify tool registration and schemas
 - Test tool invocations with various parameters
 - Debug error handling
 - Validate response formats
 
 ### Integration Testing
+
 Once the server is built:
+
 1. Test with MCP Inspector first
 2. Connect to Claude Code and validate basic operations
 3. Test error scenarios and edge cases
@@ -284,6 +322,7 @@ Once the server is built:
 ## User Experience
 
 The end result should allow users to:
+
 1. Get Coinbase API credentials
 2. Clone the repo and run `npm install`
 3. Create `.env` with their credentials
@@ -327,6 +366,7 @@ This project follows the iterative development approach recommended by the MCP d
 ## Success Criteria
 
 The project is complete when:
+
 - All major Coinbase Advanced Trading API endpoints are accessible via MCP tools
 - Comprehensive test coverage with all tests passing
 - TypeScript compiles without errors
