@@ -564,10 +564,22 @@ ELSE:
 // Step 4: Calculate final position size
 final_position_pct = base_position_pct × volatility_multiplier
 
-// Step 5: Apply exposure limits (see strategies.md for details)
-// - Max 33% per asset
-// - Max 3 simultaneous positions
-// - Max 2% risk per trade
+// Step 5: Apply exposure limits (from strategies.md Risk Per Trade section)
+// Check ALL limits before finalizing position size:
+//
+// 1. Max exposure per asset: 33% of budget
+//    - Sum existing positions in same asset + new position
+//    - If total > 33%: reduce new position or SKIP
+//
+// 2. Max simultaneous positions: 3
+//    - Count open positions
+//    - If already at 3: SKIP trade (or force rebalancing first)
+//
+// 3. Max risk per trade: 2% of total portfolio
+//    - Calculate: position_size × (SL_distance / entry_price)
+//    - If risk > 2% of initial budget: reduce position size
+//
+// See strategies.md lines 145-149 for complete exposure limit definitions
 
 final_position_size_eur = session.budget.remaining × (final_position_pct / 100)
 
