@@ -201,7 +201,7 @@ For a complete list of all trading features, see **[SKILL_FEATURES.md](docs/SKIL
 | Trailing Stop | 1.5% trail after +3% | No |
 | Check Interval | 15 minutes | Yes (`interval=5m`) |
 | Compound | 50% of profits | Yes (`compound=75`, `no-compound`) |
-| Rebalancing | After 12h stagnation | Yes (`no-rebalance`) |
+| Rebalancing | After 12h if <3% move, delta >40, max loss -2%, cooldown 4h, max 3/day | Yes (`no-rebalance`, `rebalance-delta=50`, `rebalance-max=2`) |
 | Pairs | All EUR pairs | No |
 
 **Stop the agent**: Press `Ctrl+C`
