@@ -161,6 +161,7 @@ Use `/portfolio` for a compact status overview without verbose explanation.
 │   5. Check SL/TP/Trailing                                   │
 │   6. Rebalancing Check                                      │
 │   7. Apply Compound (after exits)                           │
+│  7a. Budget Exhaustion Check                                │
 ├─────────────────────────────────────────────────────────────┤
 │ PHASE 3: NEW ENTRIES (uses freed capital)                   │
 │   8. Signal Aggregation                                     │
@@ -398,6 +399,36 @@ IF netPnL > 0 AND session.compound.enabled:
 - Pause after 2 consecutive losses
 - Reduce rate to 25% after 3 consecutive wins
 - Never compound losses
+
+### 7a. Budget Exhaustion Check
+
+Before seeking new entries, verify sufficient budget for trading:
+
+```
+// Step 1: Get minimum order sizes for potential trades
+min_order_size_eur = 2.00  // Typical Coinbase minimum in EUR
+min_order_size_btc = 0.00001  // Example BTC minimum
+
+// Step 2: Check if budget allows ANY trade
+IF session.budget.remaining < min_order_size_eur:
+
+  // Step 3: Check if rebalancing is possible
+  IF hasOpenPositions AND anyPositionEligibleForRebalancing:
+    // Continue to rebalancing logic (Step 6)
+    // Rebalancing can free up capital for new trades
+    SKIP to Step 8 (Signal Aggregation) after rebalancing
+  ELSE:
+    // No positions to rebalance, insufficient budget for new entry
+    Log: "Budget exhausted: {remaining}€ < minimum {min}€, no positions to rebalance"
+    EXIT session with status "Budget Exhausted"
+    STOP
+```
+
+**Key Points**:
+- Minimum order size is asset-specific (check via `get_product`)
+- Rebalancing (selling position X to buy position Y) bypasses this check
+- Only exits if BOTH: insufficient budget AND no rebalanceable positions
+- This prevents deadlock while allowing capital reallocation
 
 ### 8. Signal Aggregation
 
