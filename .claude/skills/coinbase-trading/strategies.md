@@ -78,8 +78,8 @@ Each indicator provides a score from -3 to +3:
 
 ## Strategy: Aggressive (Default)
 
-- **Take-Profit**: 5%
-- **Stop-Loss**: 10%
+- **Take-Profit**: 1.5× ATR (dynamic, typically 3-5%)
+- **Stop-Loss**: 2.0× ATR (dynamic, typically 4-10%)
 - **Min Signal Strength**: 2+ categories with confirming signals
 - **Min Technical Score**: > +40% for BUY, < -40% for SELL
 - **ADX Threshold**: > 20 (allow moderate trends)

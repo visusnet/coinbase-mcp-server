@@ -382,8 +382,8 @@ Stored in `.claude/trading-state.json`
 
 | Parameter | Value |
 |-----------|-------|
-| Take-Profit | 5% |
-| Stop-Loss | 10% |
+| Take-Profit | 1.5× ATR (dynamic, typically 3-5%) |
+| Stop-Loss | 2.0× ATR (dynamic, typically 4-10%) |
 | Min Signal | > +40% |
 | ADX Threshold | > 20 |
 
