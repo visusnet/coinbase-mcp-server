@@ -585,7 +585,30 @@ When a signal is present and expected profit exceeds MIN_PROFIT threshold:
 4. If preview OK → execute create_order
 5. Wait 120 seconds
 6. Call get_order to check status
-7. If not filled → cancel_orders + Market Order Fallback
+7. Check fill status and handle partial fills:
+   ```
+   order_status = get_order(order_id)
+
+   IF order_status == "FILLED":
+     → Continue (fully filled, no action needed)
+
+   ELSE IF order_status == "PARTIALLY_FILLED":
+     filled_size = order.filled_size
+     remaining_size = intended_size - filled_size
+
+     IF remaining_size >= min_order_size:
+       → Cancel original limit order
+       → Place Market Order for remaining_size ONLY
+       → Log: "Partial fill {filled_size}, fallback for {remaining_size}"
+     ELSE:
+       → Accept partial fill, cancel order
+       → Log: "Partial fill accepted: {filled_size} (remaining below minimum)"
+
+   ELSE IF order_status == "OPEN":
+     → Cancel order
+     → Place Market Order for full intended_size
+     → Log: "Limit order timeout, fallback to market"
+   ```
 8. Record position (coin, amount, entry price, orderType)
 9. Save state to trading-state.json
 ```
