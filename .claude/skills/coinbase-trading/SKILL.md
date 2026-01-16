@@ -56,14 +56,28 @@ The project does NOT need to be built. Just call the tools.
 
 ### Dynamic Stop-Loss / Take-Profit
 
-Use ATR-based dynamic thresholds instead of fixed percentages:
+Strategy-specific TP/SL configurations (selected via session.config.strategy):
 
+**Aggressive (Default)**:
+- **Take-Profit**: 1.5× ATR (dynamic, typically 3-5%)
+- **Stop-Loss**: 2.0× ATR (dynamic, typically 4-10%)
 - **ATR Period**: 14 candles
-- **TP Multiplier**: 2.0× ATR
-- **SL Multiplier**: 2.0× ATR
 - **Min TP**: 2.0% (must exceed fees)
 - **Max SL**: 15.0% (capital protection)
 - **Min SL**: 3.0% (avoid noise triggers)
+
+**Conservative**:
+- **Take-Profit**: 3.0% (fixed)
+- **Stop-Loss**: 5.0% (fixed)
+- **Min TP**: 3.0%
+- **Max SL**: 5.0%
+
+**Scalping**:
+- **Take-Profit**: 1.5% (fixed)
+- **Stop-Loss**: 2.0% (fixed)
+- **Timeframe**: Use 5m candles (faster cycle)
+- **Min TP**: 1.5%
+- **Max SL**: 2.0%
 
 ### Trailing Stop
 
@@ -283,8 +297,23 @@ ELSE IF ATR(14) < 0.001:
 ELSE:
   ATR_PERCENT = ATR(14) / entry_price × 100
 
-TP_PERCENT = max(2.0, ATR_PERCENT × 2.0)  // Floor at 2%
-SL_PERCENT = clamp(ATR_PERCENT × 2.0, 3.0, 15.0)  // Between 3-15%
+// Calculate TP/SL based on strategy
+IF session.config.strategy == "aggressive":
+  TP_PERCENT = max(2.0, ATR_PERCENT × 1.5)  // 1.5× ATR, floor at 2%
+  SL_PERCENT = clamp(ATR_PERCENT × 2.0, 3.0, 15.0)  // 2.0× ATR, 3-15%
+
+ELSE IF session.config.strategy == "conservative":
+  TP_PERCENT = 3.0  // Fixed 3%
+  SL_PERCENT = 5.0  // Fixed 5%
+
+ELSE IF session.config.strategy == "scalping":
+  TP_PERCENT = 1.5  // Fixed 1.5%
+  SL_PERCENT = 2.0  // Fixed 2.0%
+
+ELSE:
+  // Default to aggressive if strategy not recognized
+  TP_PERCENT = max(2.0, ATR_PERCENT × 1.5)
+  SL_PERCENT = clamp(ATR_PERCENT × 2.0, 3.0, 15.0)
 
 take_profit_price = entry_price × (1 + TP_PERCENT / 100)
 stop_loss_price = entry_price × (1 - SL_PERCENT / 100)
@@ -490,6 +519,18 @@ IF session.budget.remaining < min_order_size_eur:
 ### 8. Signal Aggregation
 
 Combine all signals into a decision:
+
+**Strategy-Specific Signal Thresholds**:
+
+Different strategies require different signal strengths:
+
+| Strategy | Min BUY Score | Min SELL Score | Min Categories Confirming | ADX Threshold |
+|----------|---------------|----------------|---------------------------|---------------|
+| Aggressive | +40% | -40% | 2+ | > 20 |
+| Conservative | +60% | -60% | 3+ | > 25 |
+| Scalping | +40% | -40% | 2+ (momentum focus) | > 20 |
+
+Apply the threshold for the active strategy (session.config.strategy) when evaluating signals.
 
 **Calculate Final Technical Score** (normalize to -100% to +100%):
 
