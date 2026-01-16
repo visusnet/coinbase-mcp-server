@@ -165,6 +165,7 @@ Use `/portfolio` for a compact status overview without verbose explanation.
 ├─────────────────────────────────────────────────────────────┤
 │ PHASE 3: NEW ENTRIES (uses freed capital)                   │
 │   8. Signal Aggregation                                     │
+│  8a. Apply Volatility-Based Position Sizing                 │
 │   9. Check Fees & Profit Threshold                          │
 │  10. Pre-Trade Liquidity Check                              │
 │  11. Execute Order                                          │
@@ -523,6 +524,60 @@ Combine all signals into a decision:
 - Volume below average
 
 See [strategies.md](strategies.md) for strategy configurations.
+
+### 8a. Apply Volatility-Based Position Sizing
+
+After determining base position size from signal strength, adjust for volatility:
+
+```
+// Step 1: Calculate base position size from signal strength (from Step 8)
+IF signal_strength > 60:
+  base_position_pct = 100  // Full position
+ELSE IF signal_strength >= 40:
+  base_position_pct = 75   // 75% position
+ELSE IF signal_strength >= 20:
+  base_position_pct = 50   // 50% position
+ELSE:
+  → SKIP trade (signal too weak)
+
+// Step 2: Get current ATR and calculate average ATR
+current_atr = ATR(14)
+atr_average = calculate 14-day moving average of ATR(14)
+
+// Defensive check
+IF atr_average <= 0:
+  atr_ratio = 1.0  // Default to normal volatility
+ELSE:
+  atr_ratio = current_atr / atr_average
+
+// Step 3: Apply volatility adjustment
+IF atr_ratio < 1.0:
+  // Low volatility: increase position
+  volatility_multiplier = 1.10  // +10%
+ELSE IF atr_ratio <= 2.0:
+  // Normal to moderate volatility: reduce slightly
+  volatility_multiplier = 0.90  // -10%
+ELSE:
+  // High volatility: reduce significantly
+  volatility_multiplier = 0.50  // -50%
+
+// Step 4: Calculate final position size
+final_position_pct = base_position_pct × volatility_multiplier
+
+// Step 5: Apply exposure limits (see strategies.md for details)
+// - Max 33% per asset
+// - Max 3 simultaneous positions
+// - Max 2% risk per trade
+
+final_position_size_eur = session.budget.remaining × (final_position_pct / 100)
+
+Log: "Position: {base_position_pct}% (signal) × {volatility_multiplier} (ATR {atr_ratio:.2f}×) = {final_position_pct}% ({final_position_size_eur}€)"
+```
+
+**Example Calculations**:
+- Strong signal (70%), low volatility (0.8× ATR): 100% × 1.10 = 110% (capped at budget)
+- Medium signal (50%), normal volatility (1.5× ATR): 75% × 0.90 = 67.5%
+- Strong signal (70%), high volatility (2.5× ATR): 100% × 0.50 = 50%
 
 ### 9. Check Fees & Profit Threshold
 
