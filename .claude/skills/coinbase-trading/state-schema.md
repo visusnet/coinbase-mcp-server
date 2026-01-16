@@ -40,6 +40,9 @@ Single Source of Truth for `.claude/trading-state.json` structure.
       "enabled": true,
       "rate": 0.50,
       "maxBudget": 10.00,
+      "paused": false,
+      "consecutiveWins": 0,
+      "consecutiveLosses": 0,
       "totalCompounded": 0.00,
       "compoundEvents": []
     },
@@ -170,6 +173,9 @@ Single Source of Truth for `.claude/trading-state.json` structure.
 | `session.compound.enabled` | boolean | Is compound mode active (default: true) |
 | `session.compound.rate` | number | Reinvestment rate (0.0-1.0, default: 0.50) |
 | `session.compound.maxBudget` | number | Budget cap (default: 2× initial) |
+| `session.compound.paused` | boolean | Is compound paused due to losses (default: false) |
+| `session.compound.consecutiveWins` | number | Current consecutive win streak |
+| `session.compound.consecutiveLosses` | number | Current consecutive loss streak |
 | `session.compound.totalCompounded` | number | Total amount reinvested (EUR) |
 | `session.compound.compoundEvents` | array | History of compound actions |
 | `session.rebalancing.enabled` | boolean | Is rebalancing active (default: true) |
