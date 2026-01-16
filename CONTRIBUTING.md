@@ -6,15 +6,20 @@ Thank you for your interest in contributing! This project welcomes contributions
 
 1. **Fork the repository** on GitHub
 2. **Clone your fork** locally:
+
    ```bash
    git clone https://github.com/YOUR_USERNAME/coinbase-mcp-server.git
    cd coinbase-mcp-server
    ```
+
 3. **Install dependencies**:
+
    ```bash
    npm install
    ```
+
 4. **Set up your environment**:
+
    ```bash
    cp .env.example .env
    # Add your Coinbase API credentials to .env
@@ -51,6 +56,7 @@ npm run knip         # Check for dependency issues
 ```
 
 Before submitting a PR, ensure:
+
 - ✅ All tests pass (`npm test`)
 - ✅ Test coverage is maintained at 100% (`npm run test:coverage`)
 - ✅ No dependency issues (`npm run knip`)
@@ -61,6 +67,7 @@ Before submitting a PR, ensure:
 ## Making Changes
 
 1. **Create a branch** for your changes:
+
    ```bash
    git checkout -b feature/your-feature-name
    ```
@@ -80,6 +87,7 @@ Before submitting a PR, ensure:
    - Update tool descriptions if adding new MCP tools
 
 5. **Commit your changes**:
+
    ```bash
    git add .
    git commit -m "feat: add new feature"
@@ -94,6 +102,7 @@ Before submitting a PR, ensure:
    - `chore:` - Maintenance tasks
 
 6. **Push to your fork**:
+
    ```bash
    git push origin feature/your-feature-name
    ```
@@ -113,6 +122,7 @@ Before submitting a PR, ensure:
 When adding new tools to interact with Coinbase API:
 
 1. **Register the tool** in `registerToolsForServer()`:
+
    ```typescript
    server.registerTool(
      'tool_name',

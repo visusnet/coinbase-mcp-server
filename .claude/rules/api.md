@@ -6,6 +6,7 @@ paths:
 # API Development
 
 ## Tool Registration Pattern
+
 ```typescript
 server.registerTool(
   'tool_name',
@@ -15,6 +16,7 @@ server.registerTool(
 ```
 
 ## Response Format
+
 ```typescript
 return {
   content: [{ type: 'text', text: JSON.stringify(result, null, 2) }]
@@ -22,6 +24,7 @@ return {
 ```
 
 ## Error Format
+
 ```typescript
 return {
   content: [{ type: 'text', text: JSON.stringify({ error: message }) }],
@@ -30,10 +33,12 @@ return {
 ```
 
 ## Timestamp Handling
+
 - **Most endpoints**: ISO 8601 (`2024-01-01T00:00:00Z`)
 - **Product Candles**: Unix timestamps only - use `toUnixTimestamp()`
 
 ## Adding New Tool
+
 1. Check Coinbase SDK docs for endpoint
 2. Add service method to `CoinbaseService.ts`
 3. Register tool with Zod schema in `registerToolsForServer()`:
@@ -48,6 +53,7 @@ return {
 9. Update `CLAUDE.md` incl. tool count
 
 ## Rate Limits
+
 - **Public endpoints**: 10 requests/second
 - **Private endpoints**: 15 requests/second
 - Consider caching product lists and static data
