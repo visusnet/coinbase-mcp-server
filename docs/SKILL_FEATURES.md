@@ -8,7 +8,7 @@ Complete overview of all features of the autonomous trading agent.
 
 | Category             | Features      |
 |----------------------|---------------|
-| Risk Management      | 5             |
+| Risk Management      | 6             |
 | Order Management     | 4             |
 | Technical Analysis   | 6 Categories  |
 | Sentiment Analysis   | 2             |
@@ -90,6 +90,32 @@ Price drops to €110 → SELL @ ~€110 (+10% instead of fixed +5%)
 | Max Risk per Trade         | 2% Portfolio |
 | Max Simultaneous Positions | 3            |
 | Max Exposure per Asset     | 33% Budget   |
+
+---
+
+### 6. Force Exit (Stagnation Score)
+
+Prevents indefinite capital lockup by forcefully closing positions that stagnate for too long.
+
+**Stagnation Score Formula**:
+
+```
+score = (hours_held / 12) × (1 - ABS(pnl_percent / 2%))
+```
+
+**Force Exit Threshold**: Score > 2.0
+
+**Examples**:
+
+| Hours Held | PnL    | Score | Action             |
+|------------|--------|-------|--------------------|
+| 24h        | +0.5%  | 1.75  | Keep (monitoring)  |
+| 24h        | -0.5%  | 1.75  | Keep (monitoring)  |
+| 30h        | +0.2%  | 2.40  | **Force Close**    |
+| 36h        | +1.0%  | 2.25  | **Force Close**    |
+| 12h        | +5.0%  | 0     | Keep (profitable)  |
+
+**Impact**: Positions with minimal movement and extended holding time are automatically exited via market order, freeing capital for better opportunities. The score-based approach balances patience with preventing capital stagnation.
 
 ---
 
