@@ -333,6 +333,22 @@ Position: SOL-EUR
 For positions held > 12h with < 3% movement:
 
 ```
+// Force Exit Check (prevent unlimited stagnation)
+stagnation_score = (holdingTimeHours / 12) × (1 - abs(unrealizedPnLPercent / 2.0))
+
+IF stagnation_score > 2.0:
+  → FORCE CLOSE (market order)
+  → Reason: "Maximum stagnation threshold exceeded"
+  → Log: "Force closed {PAIR} after {hours}h: stagnation_score={score}, PnL={pnl}%"
+  → SKIP to next cycle (no rebalancing, position is closed)
+
+// Example scenarios:
+// - 24h hold, 0% PnL: (24/12) × (1 - 0/2) = 2.0 × 1.0 = 2.0 (threshold)
+// - 30h hold, 0.5% PnL: (30/12) × (1 - 0.25) = 2.5 × 0.875 = 2.19 (FORCE CLOSE)
+// - 24h hold, 1.5% PnL: (24/12) × (1 - 0.75) = 2.0 × 0.25 = 0.5 (continue)
+// - 36h hold, -1% PnL: (36/12) × (1 - 0.5) = 3.0 × 0.5 = 1.5 (continue, try rebalance)
+// - 48h hold, 0% PnL: (48/12) × (1 - 0) = 4.0 × 1.0 = 4.0 (FORCE CLOSE)
+
 // Calculate opportunity delta
 current_signal = position.analysis.signalStrength
 best_alternative = max(all_pairs.filter(not_held AND score > 50).signalStrength)
