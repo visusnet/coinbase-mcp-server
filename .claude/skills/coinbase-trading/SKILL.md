@@ -226,9 +226,21 @@ Calculate for each pair using the comprehensive indicator suite:
 
 **Calculate Weighted Score**:
 ```
-Score = (Momentum × 0.25) + (Trend × 0.30) + (Volatility × 0.15)
-      + (Volume × 0.15) + (S/R × 0.10) + (Patterns × 0.05)
+// Step 1: Normalize each category score (0-100) to weighted contribution
+momentum_weighted = (momentum_score / 100) × 25
+trend_weighted = (trend_score / 100) × 30
+volatility_weighted = (volatility_score / 100) × 15
+volume_weighted = (volume_score / 100) × 15
+sr_weighted = (sr_score / 100) × 10
+patterns_weighted = (patterns_score / 100) × 5
+
+// Step 2: Sum all weighted contributions (result: 0-100 range)
+Final_Score = momentum_weighted + trend_weighted + volatility_weighted
+            + volume_weighted + sr_weighted + patterns_weighted
 ```
+
+**Note**: Each category's raw score (0-100) is first normalized by dividing by 100,
+then multiplied by its weight percentage to get its contribution to the final score.
 
 See [indicators.md](indicators.md) for detailed calculation formulas.
 
