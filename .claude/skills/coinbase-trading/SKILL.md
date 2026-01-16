@@ -221,6 +221,13 @@ Calculate for each pair using the comprehensive indicator suite:
 - **EMA Alignment**: EMA(9) > EMA(21) > EMA(50) = uptrend (+2)
 - **ADX (14)**: > 25 confirms trend, +DI/-DI crossovers (±2)
 - **Parabolic SAR**: SAR flip signals (±2)
+- **Ichimoku Cloud**:
+  - Tenkan-sen: (9-high + 9-low) / 2
+  - Kijun-sen: (26-high + 26-low) / 2
+  - Senkou Span A: (Tenkan + Kijun) / 2
+  - Senkou Span B: (52-high + 52-low) / 2
+  - Signals: Price above cloud (+1), Tenkan crosses Kijun above cloud (+3)
+  - Requires 52 candles of history
 
 **Volatility Indicators**:
 - **Bollinger Bands (20,2)**: %B < 0 BUY (+2), %B > 1 SELL (-2)
