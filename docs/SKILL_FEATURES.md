@@ -473,6 +473,16 @@ Stored in `.claude/trading-state.json`
 
 ## 🎮 Strategies
 
+**Strategy Comparison**:
+
+| Strategy     | Min BUY Score | Min SELL Score | Min Categories | ADX Threshold | Use Case          |
+|--------------|---------------|----------------|----------------|---------------|-------------------|
+| Aggressive   | +40%          | -40%           | 2+             | > 20          | Default, balanced |
+| Conservative | +60%          | -60%           | 3+             | > 25          | Risk-averse       |
+| Scalping     | +40%          | -40%           | 2+ (momentum)  | > 20          | Fast trades       |
+
+---
+
 ### Aggressive (Default)
 
 | Parameter     | Value                                 |
