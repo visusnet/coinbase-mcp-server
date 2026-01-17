@@ -534,8 +534,8 @@ Stored in `.claude/trading-state.json`
 
 | Parameter   | Value     |
 |-------------|-----------|
-| Take-Profit | 1-2%      |
-| Stop-Loss   | 1-2%      |
+| Take-Profit | 1.5%      |
+| Stop-Loss   | 2.0%      |
 | Timeframe   | 1-5 min   |
 | Focus       | Momentum  |
 
