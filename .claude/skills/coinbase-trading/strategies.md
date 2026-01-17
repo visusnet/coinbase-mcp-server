@@ -310,7 +310,7 @@ stop_loss_price = entry_price × (1 - SL_PERCENT / 100)
 
 | Parameter | Value | Reasoning |
 |-----------|-------|-----------|
-| TP_MULTIPLIER | 2.0 | Achievable within 1-2 days |
+| TP_MULTIPLIER | 1.5 | Achievable within 1-2 days |
 | SL_MULTIPLIER | 2.0 | Room for normal volatility |
 | MIN_TP | 2.0% | Must exceed round-trip fees |
 | MIN_SL | 3.0% | Avoid noise-triggered stops |
