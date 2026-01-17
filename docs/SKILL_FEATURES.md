@@ -13,7 +13,7 @@ Complete overview of all features of the autonomous trading agent.
 | Technical Analysis   | 6 Categories  |
 | Sentiment Analysis   | 2             |
 | Liquidity Management | 1             |
-| Capital Management   | 3             |
+| Capital Management   | 4             |
 | State Management     | 1             |
 
 ---
@@ -409,6 +409,35 @@ Delta: 78 - 25 = 53 (> 40 ✓)
 /trade 5 EUR from BTC rebalance-delta=50 → Custom delta threshold
 /trade 5 EUR from BTC rebalance-max=2    → Max 2 per day
 ```
+
+---
+
+### 4. Budget Exhaustion Check
+
+Prevents deadlock when budget runs low.
+
+**Logic**:
+
+Before seeking new entries, check if `remaining < minimum order size` (typically €2.00):
+
+- **Insufficient budget BUT positions eligible for rebalancing** → Continue (sell X to buy Y)
+- **Insufficient budget AND no rebalanceable positions** → Exit session gracefully
+- Escapes deadlock by allowing capital reallocation even with €0 remaining
+
+**Example**:
+
+```
+Budget: €0.15 remaining, 3 positions open
+- BTC: Stagnant 15h, PnL -0.50€
+- ETH: Strong +5.00€, not stagnant → Keep
+- SOL: Stagnant 13h, PnL +1.20€, alternative delta +55
+
+→ Rebalance SOL to AVAX frees 3.15€ capital
+→ New budget: 0.15€ + 3.15€ - 0.04€ fees = 3.26€
+→ Session continues
+```
+
+**Impact**: Maximizes capital efficiency through position rotation, prevents premature session termination.
 
 ---
 
