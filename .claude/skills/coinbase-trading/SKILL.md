@@ -214,8 +214,31 @@ Call `list_accounts` and determine:
 
 For the relevant currency pairs:
 
-- Call `get_product_candles` (FIFTEEN_MINUTE granularity, last 100 candles)
-- Call `get_best_bid_ask` for current prices
+**Multi-Timeframe Data Collection**:
+
+Fetch candles for multiple timeframes to enable trend alignment analysis:
+
+```
+// Primary timeframe (15 min) - for entry/exit signals
+candles_15m = get_product_candles(pair, FIFTEEN_MINUTE, 100)
+
+// Higher timeframes - for trend confirmation
+candles_1h = get_product_candles(pair, ONE_HOUR, 100)
+candles_4h = get_product_candles(pair, FOUR_HOUR, 60)
+candles_daily = get_product_candles(pair, ONE_DAY, 30)
+
+// Current price
+current_price = get_best_bid_ask(pair)
+```
+
+**Timeframe Purpose**:
+
+| Timeframe | Candles | Purpose |
+|-----------|---------|---------|
+| 15 min | 100 | Entry/Exit timing, primary signals |
+| 1 hour | 100 | Short-term trend confirmation |
+| 4 hour | 60 | Medium-term trend confirmation |
+| Daily | 30 | Long-term trend confirmation |
 
 ### 3. Technical Analysis
 
@@ -285,6 +308,41 @@ Final_Score = momentum_weighted + trend_weighted + volatility_weighted
 then multiplied by its weight percentage to get its contribution to the final score.
 
 See [indicators.md](indicators.md) for detailed calculation formulas.
+
+**Multi-Timeframe Trend Analysis**:
+
+After calculating indicators on the primary 15m timeframe, determine trend direction for higher timeframes:
+
+```
+// For each higher timeframe (1h, 4h, daily):
+//
+// 1. Calculate MACD (12, 26, 9)
+// 2. Calculate EMA alignment (EMA9 > EMA21 > EMA50)
+// 3. Calculate ADX (14) with +DI/-DI
+
+// Determine trend:
+IF MACD > Signal AND EMA(9) > EMA(21) > EMA(50) AND +DI > -DI:
+  trend = "bullish"
+ELSE IF MACD < Signal AND EMA(9) < EMA(21) < EMA(50) AND -DI > +DI:
+  trend = "bearish"
+ELSE:
+  trend = "neutral"
+
+// Store trend for each timeframe:
+trend_1h = calculate_trend(candles_1h)
+trend_4h = calculate_trend(candles_4h)
+trend_daily = calculate_trend(candles_daily)
+```
+
+**Trend Results Example**:
+
+```
+BTC-EUR Trend Analysis:
+  15m: MACD bullish, EMA aligned up, RSI 65
+  1h: BULLISH (MACD +120, EMA 9>21>50, +DI>-DI)
+  4h: BULLISH (MACD +80, EMA aligned, ADX 28)
+  Daily: NEUTRAL (MACD near zero, sideways)
+```
 
 ### 4. Sentiment Analysis
 
@@ -608,12 +666,60 @@ Apply the threshold for the active strategy (session.config.strategy) when evalu
 | SELL        | Bullish          | HOLD (conflict)     |
 | Strong SELL | Any              | **EXECUTE SELL**    |
 
+**Multi-Timeframe Alignment Filter**:
+
+Apply trend alignment rules BEFORE executing trades:
+
+```
+// Rule: Only trade in direction of higher timeframe trend
+
+// For BUY signals (score > +40):
+IF signal_15m > 40:  // BUY signal detected
+
+  // Check higher timeframe alignment
+  IF trend_daily == "bearish" OR trend_4h == "bearish":
+    Log: "BUY signal rejected: conflicts with higher timeframe trend"
+    Log: "  Daily: {trend_daily}, 4h: {trend_4h}, 1h: {trend_1h}"
+    signal_strength = signal_strength × 0.3  // Reduce by 70%
+
+  ELSE IF trend_1h == "bearish":
+    Log: "BUY signal weakened: 1h trend bearish (pullback zone)"
+    signal_strength = signal_strength × 0.7  // Reduce by 30%
+
+  ELSE IF trend_daily == "bullish" AND trend_4h == "bullish":
+    Log: "BUY signal CONFIRMED: aligned with higher timeframes ✓"
+    // No reduction, proceed with full strength
+
+// For SELL signals (score < -40):
+IF signal_15m < -40:  // SELL signal detected
+
+  // Check higher timeframe alignment
+  IF trend_daily == "bullish" OR trend_4h == "bullish":
+    Log: "SELL signal rejected: conflicts with higher timeframe trend"
+    Log: "  Daily: {trend_daily}, 4h: {trend_4h}, 1h: {trend_1h}"
+    signal_strength = signal_strength × 0.3  // Reduce by 70%
+
+  ELSE IF trend_1h == "bullish":
+    Log: "SELL signal weakened: 1h trend bullish (rally in downtrend)"
+    signal_strength = signal_strength × 0.7  // Reduce by 30%
+
+  ELSE IF trend_daily == "bearish" AND trend_4h == "bearish":
+    Log: "SELL signal CONFIRMED: aligned with higher timeframes ✓"
+    // No reduction, proceed with full strength
+```
+
+**Ideal Entry Scenarios**:
+
+- **BUY**: Daily bullish + 4h bullish + 1h pullback (bearish) → Strong BUY on 15m reversal
+- **SELL**: Daily bearish + 4h bearish + 1h rally (bullish) → Strong SELL on 15m reversal
+
 **Trade Filters** (do NOT trade if):
 
 - ADX < 20 (no clear trend)
 - Conflicting signals between categories
 - ATR > 3× average (extreme volatility)
 - Volume below average
+- Higher timeframe trend conflicts with signal (reduced by 70%)
 
 See [strategies.md](strategies.md) for strategy configurations.
 
