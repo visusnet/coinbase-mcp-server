@@ -95,8 +95,8 @@ Each indicator provides a score from -3 to +3:
 
 ## Strategy: Scalping
 
-- **Take-Profit**: 1-2%
-- **Stop-Loss**: 1-2%
+- **Take-Profit**: 1.5%
+- **Stop-Loss**: 2.0%
 - **Timeframe**: 1-5 minute candles
 - **Focus**: Momentum indicators (RSI, Stochastic)
 - **Volume confirmation required**
