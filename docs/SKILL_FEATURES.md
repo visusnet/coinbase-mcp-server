@@ -810,6 +810,86 @@ Real-world examples demonstrating feature interactions:
 
 ---
 
+### Scenario 9: Multi-Timeframe Conflicts
+
+**Initial State**:
+
+- BTC-EUR Analysis
+- 15m: Strong BUY Signal (65%)
+- 1h: BULLISH (aligned)
+- 4h: BEARISH (conflict detected)
+- Daily: BEARISH (conflict detected)
+
+**Multi-Timeframe Filter Applied**:
+
+1. Original Signal: 65% BUY
+2. Conflict Detection: 4h and daily show BEARISH
+3. Log: "BUY signal rejected: conflicts with higher timeframe trend"
+4. Log: "  Daily: bearish, 4h: bearish, 1h: bullish"
+5. Signal Reduction: 65% × 0.3 = 19.5% (70% reduction for 4h/daily conflict)
+6. Threshold Check: 19.5% < 40% (minimum for trade execution)
+
+**Result**: Trade SKIPPED due to higher timeframe trend conflict. Multi-Timeframe Alignment prevents counter-trend entries, avoiding trades against major market direction.
+
+---
+
+### Scenario 10: Force Exit via Stagnation Score
+
+**Initial State**:
+
+- SOL-EUR Position
+- Entry: 119.34 EUR @ 2026-01-12 13:17:00
+- Current: 119.58 EUR (+0.20%)
+- Holding Time: 30 hours
+
+**Stagnation Score Calculation**:
+
+1. Formula: `stagnation_score = (holdingTimeHours / 12) × (1 - abs(unrealizedPnLPercent / 2.0))`
+2. Calculation: `(30 / 12) × (1 - abs(0.20 / 2.0))`
+3. Calculation: `2.5 × (1 - 0.10)`
+4. Result: `stagnation_score = 2.25`
+5. Threshold Check: 2.25 > 2.0 → FORCE EXIT triggered
+
+**Exit Execution**:
+
+- Action: Market Order SELL SOL-EUR
+- Reason: "Maximum stagnation threshold exceeded"
+- Log: "Force closed SOL-EUR after 30h: stagnation_score=2.25, PnL=+0.20%"
+
+**Result**: Force Exit prevents indefinite capital lockup. Position with minimal profit and extended holding time is automatically closed to free capital for better opportunities.
+
+---
+
+### Scenario 11: Manual Exit Preserving Compound State
+
+**Initial State**:
+
+- Session Compound State:
+  - consecutiveWins: 3
+  - consecutiveLosses: 0
+  - paused: false
+  - rate: 0.25 (reduced from 0.50 after 3 consecutive wins)
+- SOL-EUR Position: 119.34 EUR → 125.00 EUR (+4.74%)
+
+**User Action**:
+
+1. User: "Exit SOL position now, take profit manually"
+2. System: Market Order SELL SOL-EUR @ 125.00 EUR
+3. Net PnL: +5.66 EUR (after fees)
+4. Exit Trigger: "manual"
+
+**Compound State After Manual Exit**:
+
+- consecutiveWins: 3 (UNCHANGED)
+- consecutiveLosses: 0 (UNCHANGED)
+- paused: false (UNCHANGED)
+- rate: 0.25 (UNCHANGED)
+- Log: "Manual exit: Compound state preserved (streaks: 3W/0L)"
+
+**Result**: Manual interventions do NOT reset compound streaks. User can take manual profits when needed without disrupting automated compound strategy. Streaks remain intact for next automated exit.
+
+---
+
 ## � References
 
 - [SKILL.md](../.claude/skills/coinbase-trading/SKILL.md) - Main documentation
