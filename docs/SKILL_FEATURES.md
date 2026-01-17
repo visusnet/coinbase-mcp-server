@@ -9,7 +9,7 @@ Complete overview of all features of the autonomous trading agent.
 | Category             | Features      |
 |----------------------|---------------|
 | Risk Management      | 6             |
-| Order Management     | 4             |
+| Order Management     | 5             |
 | Technical Analysis   | 6 Categories  |
 | Sentiment Analysis   | 2             |
 | Liquidity Management | 1             |
@@ -194,6 +194,34 @@ Signal aggregation determines trade execution:
 
 - Volatility: Low (<1× ATR) +10%, Moderate (1-2×) -10%, High (>2×) -50%
 - Exposure limits: Max 33% per asset, max 3 positions, max 2% risk per trade
+
+---
+
+### 6. Two-Stage Profit Verification
+
+Prevents unprofitable market order fallbacks.
+
+**Stage 1** (Limit Order):
+
+- Calculate min profit with limit fees (0.4% × 2 = 0.8%)
+- If expected profit > 1.6% (2× fees) → Place limit order
+- Wait 120 seconds for fill
+
+**Stage 2** (Fallback Check):
+
+- If limit not filled after timeout → Re-check with market fees (0.4% + 0.6% = 1.0%, total 2.0%)
+- If expected profit > 4.0% (2× fees) → Execute market order
+- If expected profit < 4.0% → **Cancel order, skip trade**
+
+**Example**:
+
+| Signal Strength | Expected Move | Stage 1 Check | Limit Filled | Stage 2 Check | Result                 |
+|-----------------|---------------|---------------|--------------|---------------|------------------------|
+| 72% (Strong)    | +4.5%         | ✓ (>1.6%)     | No           | ✓ (>4.0%)     | Market order executed  |
+| 55% (Medium)    | +3.2%         | ✓ (>1.6%)     | No           | ✗ (<4.0%)     | Order cancelled        |
+| 80% (Strong)    | +5.0%         | ✓ (>1.6%)     | Yes          | N/A           | Limit order filled     |
+
+**Impact**: Optimizes fees by preferring limit orders, but prevents executing unprofitable market fallbacks when signals are marginal.
 
 ---
 
