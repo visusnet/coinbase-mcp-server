@@ -514,10 +514,25 @@ ELSE IF trade_result == "LOSS":
 IF session.compound.paused:
   Log: "Compound skipped (paused due to losses)"
   SKIP compound
+
+// Determine effective compound rate
+IF session.compound.consecutiveWins >= 3:
+  effective_rate = session.compound.rate × 0.5  // 50% → 25%
+  Log: "Compound rate reduced to {effective_rate}% after {wins} consecutive wins (risk control)"
+ELSE:
+  effective_rate = session.compound.rate
+
+// Calculate compound amount with effective rate
+IF net_pnl > 0:
+  compound_amount = net_pnl × effective_rate
+  IF compound_amount >= MIN_COMPOUND_AMOUNT:  // e.g., 0.10 EUR
+    session.budget.remaining += compound_amount
+    session.compound.totalCompounded += compound_amount
+    Log: "Compounded {compound_amount}€ at {effective_rate}% rate"
 ```
 
 - Pause after 2 consecutive losses, resume after 2 consecutive wins
-- Reduce rate to 25% after 3 consecutive wins
+- Reduce rate to 25% after 3 consecutive wins (risk control)
 - Never compound losses
 
 ### 7a. Budget Exhaustion Check
