@@ -375,6 +375,7 @@ Automatic reinvestment of profits for exponential growth.
 - Pauses after 2 consecutive losses
 - Rate reduces to 25% after 3 consecutive wins
 - Only compounds positive PnL
+- Manual exits preserve compound state (streaks unchanged)
 
 **CLI Arguments**:
 
