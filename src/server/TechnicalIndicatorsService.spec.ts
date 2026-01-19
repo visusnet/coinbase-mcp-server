@@ -3,6 +3,12 @@ import {
   TechnicalIndicatorsService,
   CandleInput,
 } from './TechnicalIndicatorsService';
+import type {
+  StandardPivotPointsOutput,
+  FibonacciPivotPointsOutput,
+  WoodiePivotPointsOutput,
+  CamarillaPivotPointsOutput,
+} from './indicators/pivotPoints';
 
 describe('TechnicalIndicatorsService', () => {
   let service: TechnicalIndicatorsService;
@@ -2086,18 +2092,21 @@ describe('TechnicalIndicatorsService', () => {
       // PP = (110 + 100 + 105) / 3 = 105
       expect(result.type).toBe('standard');
       expect(result.pivotPoint).toBeCloseTo(105, 2);
+
+      // Type assertion for standard pivot points
+      const std = result as StandardPivotPointsOutput;
       // R1 = 2 * 105 - 100 = 110
-      expect(result.resistance1).toBeCloseTo(110, 2);
+      expect(std.resistance1).toBeCloseTo(110, 2);
       // R2 = 105 + 10 = 115
-      expect(result.resistance2).toBeCloseTo(115, 2);
+      expect(std.resistance2).toBeCloseTo(115, 2);
       // R3 = 110 + 2 * (105 - 100) = 120
-      expect(result.resistance3).toBeCloseTo(120, 2);
+      expect(std.resistance3).toBeCloseTo(120, 2);
       // S1 = 2 * 105 - 110 = 100
-      expect(result.support1).toBeCloseTo(100, 2);
+      expect(std.support1).toBeCloseTo(100, 2);
       // S2 = 105 - 10 = 95
-      expect(result.support2).toBeCloseTo(95, 2);
+      expect(std.support2).toBeCloseTo(95, 2);
       // S3 = 100 - 2 * (110 - 105) = 90
-      expect(result.support3).toBeCloseTo(90, 2);
+      expect(std.support3).toBeCloseTo(90, 2);
     });
 
     it('should use standard type when no type specified', () => {
@@ -2134,18 +2143,21 @@ describe('TechnicalIndicatorsService', () => {
       // PP = 105 (same as standard)
       expect(result.type).toBe('fibonacci');
       expect(result.pivotPoint).toBeCloseTo(105, 2);
+
+      // Type assertion for fibonacci pivot points
+      const fib = result as FibonacciPivotPointsOutput;
       // R1 = 105 + 0.382 * 10 = 108.82
-      expect(result.resistance1).toBeCloseTo(108.82, 2);
+      expect(fib.resistance1).toBeCloseTo(108.82, 2);
       // R2 = 105 + 0.618 * 10 = 111.18
-      expect(result.resistance2).toBeCloseTo(111.18, 2);
+      expect(fib.resistance2).toBeCloseTo(111.18, 2);
       // R3 = 105 + 10 = 115
-      expect(result.resistance3).toBeCloseTo(115, 2);
+      expect(fib.resistance3).toBeCloseTo(115, 2);
       // S1 = 105 - 0.382 * 10 = 101.18
-      expect(result.support1).toBeCloseTo(101.18, 2);
+      expect(fib.support1).toBeCloseTo(101.18, 2);
       // S2 = 105 - 0.618 * 10 = 98.82
-      expect(result.support2).toBeCloseTo(98.82, 2);
+      expect(fib.support2).toBeCloseTo(98.82, 2);
       // S3 = 105 - 10 = 95
-      expect(result.support3).toBeCloseTo(95, 2);
+      expect(fib.support3).toBeCloseTo(95, 2);
     });
 
     it('should calculate Woodie pivot points correctly', () => {
@@ -2157,15 +2169,18 @@ describe('TechnicalIndicatorsService', () => {
       // PP = (110 + 100 + 2*105) / 4 = 105
       expect(result.type).toBe('woodie');
       expect(result.pivotPoint).toBeCloseTo(105, 2);
+
+      // Type assertion for woodie pivot points
+      const woodie = result as WoodiePivotPointsOutput;
       // R1 = 2 * 105 - 100 = 110
-      expect(result.resistance1).toBeCloseTo(110, 2);
+      expect(woodie.resistance1).toBeCloseTo(110, 2);
       // R2 = 105 + 10 = 115
-      expect(result.resistance2).toBeCloseTo(115, 2);
+      expect(woodie.resistance2).toBeCloseTo(115, 2);
       // Woodie traditionally only defines R1/R2 and S1/S2 - no R3/S3
       // S1 = 2 * 105 - 110 = 100
-      expect(result.support1).toBeCloseTo(100, 2);
+      expect(woodie.support1).toBeCloseTo(100, 2);
       // S2 = 105 - 10 = 95
-      expect(result.support2).toBeCloseTo(95, 2);
+      expect(woodie.support2).toBeCloseTo(95, 2);
     });
 
     it('should calculate Camarilla pivot points correctly', () => {
@@ -2177,25 +2192,25 @@ describe('TechnicalIndicatorsService', () => {
       // PP = close = 105 (Camarilla uses close as pivot)
       expect(result.type).toBe('camarilla');
       expect(result.pivotPoint).toBeCloseTo(105, 2);
+
+      // Type assertion for camarilla pivot points
+      const cam = result as CamarillaPivotPointsOutput;
       // R1 = 105 + (10 * 1.1) / 12 = 105.917
-      expect(result.resistance1).toBeCloseTo(105.917, 2);
+      expect(cam.resistance1).toBeCloseTo(105.917, 2);
       // R2 = 105 + (10 * 1.1) / 6 = 106.833
-      expect(result.resistance2).toBeCloseTo(106.833, 2);
+      expect(cam.resistance2).toBeCloseTo(106.833, 2);
       // R3 = 105 + (10 * 1.1) / 4 = 107.75
-      expect(result.resistance3).toBeCloseTo(107.75, 2);
+      expect(cam.resistance3).toBeCloseTo(107.75, 2);
       // R4 = 105 + (10 * 1.1) / 2 = 110.5 (breakout level)
-      // Camarilla includes R4/S4 - cast to access them
-      const camarillaResult =
-        result as import('./indicators/pivotPoints').CamarillaPivotPointsOutput;
-      expect(camarillaResult.resistance4).toBeCloseTo(110.5, 2);
+      expect(cam.resistance4).toBeCloseTo(110.5, 2);
       // S1 = 105 - (10 * 1.1) / 12 = 104.083
-      expect(result.support1).toBeCloseTo(104.083, 2);
+      expect(cam.support1).toBeCloseTo(104.083, 2);
       // S2 = 105 - (10 * 1.1) / 6 = 103.167
-      expect(result.support2).toBeCloseTo(103.167, 2);
+      expect(cam.support2).toBeCloseTo(103.167, 2);
       // S3 = 105 - (10 * 1.1) / 4 = 102.25
-      expect(result.support3).toBeCloseTo(102.25, 2);
+      expect(cam.support3).toBeCloseTo(102.25, 2);
       // S4 = 105 - (10 * 1.1) / 2 = 99.5 (breakout level)
-      expect(camarillaResult.support4).toBeCloseTo(99.5, 2);
+      expect(cam.support4).toBeCloseTo(99.5, 2);
     });
 
     it('should calculate DeMark pivot points when close < open', () => {

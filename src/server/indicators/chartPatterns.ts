@@ -56,11 +56,8 @@ const MIN_TREND_LENGTH = 5;
  */
 function adjustConfidence(
   baseConfidence: 'low' | 'medium' | 'high',
-  volumeConfirmed: boolean | undefined,
+  volumeConfirmed: boolean,
 ): 'low' | 'medium' | 'high' {
-  if (volumeConfirmed === undefined) {
-    return baseConfidence;
-  }
   if (volumeConfirmed) {
     // Upgrade confidence when volume confirms
     return baseConfidence === 'medium' ? 'high' : baseConfidence;
