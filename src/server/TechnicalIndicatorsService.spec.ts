@@ -289,7 +289,7 @@ describe('TechnicalIndicatorsService', () => {
       expect(result.values.length).toBeGreaterThan(0);
     });
 
-    it('should return middle, upper, lower bands and %B', () => {
+    it('should return middle, upper, lower bands, %B, and bandwidth', () => {
       const closePrices = Array.from({ length: 25 }, (_, i) => 100 + i);
       const candles = generateCandles(closePrices);
 
@@ -301,15 +301,19 @@ describe('TechnicalIndicatorsService', () => {
       expect(latestValue).toHaveProperty('upper');
       expect(latestValue).toHaveProperty('lower');
       expect(latestValue).toHaveProperty('pb');
+      expect(latestValue).toHaveProperty('bandwidth');
       // Upper should be greater than middle, middle greater than lower
       // These values are guaranteed to exist after the not.toBeNull check
-      const { upper, middle, lower } = latestValue as {
+      const { upper, middle, lower, bandwidth } = latestValue as {
         upper: number;
         middle: number;
         lower: number;
+        bandwidth: number;
       };
       expect(upper).toBeGreaterThan(middle);
       expect(middle).toBeGreaterThan(lower);
+      // Bandwidth = (upper - lower) / middle
+      expect(bandwidth).toBeCloseTo((upper - lower) / middle, 10);
     });
 
     it('should return null latestValue when not enough data', () => {
