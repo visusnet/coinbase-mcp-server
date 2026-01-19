@@ -1017,8 +1017,16 @@ describe('CoinbaseMcpServer Integration Tests', () => {
         const result = {
           period: 20,
           stdDev: 2,
-          values: [{ middle: 101.5, upper: 105, lower: 98, pb: 0.5 }],
-          latestValue: { middle: 101.5, upper: 105, lower: 98, pb: 0.5 },
+          values: [
+            { middle: 101.5, upper: 105, lower: 98, pb: 0.5, bandwidth: 0.069 },
+          ],
+          latestValue: {
+            middle: 101.5,
+            upper: 105,
+            lower: 98,
+            pb: 0.5,
+            bandwidth: 0.069,
+          },
         };
         mockTechnicalIndicatorsService.calculateBollingerBands.mockReturnValueOnce(
           result,
