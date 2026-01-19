@@ -694,4 +694,58 @@ describe('TechnicalIndicatorsService', () => {
       expect(result.latestValue).toBeNull();
     });
   });
+
+  describe('calculateVwap', () => {
+    const generateCandles = (
+      data: { high: number; low: number; close: number; volume: number }[],
+    ): CandleInput[] => {
+      return data.map(({ high, low, close, volume }) => ({
+        open: close.toString(),
+        high: high.toString(),
+        low: low.toString(),
+        close: close.toString(),
+        volume: volume.toString(),
+      }));
+    };
+
+    it('should calculate VWAP from candle data', () => {
+      const data = [
+        { high: 102, low: 98, close: 100, volume: 1000 },
+        { high: 103, low: 99, close: 101, volume: 1100 },
+        { high: 104, low: 100, close: 102, volume: 1200 },
+      ];
+      const candles = generateCandles(data);
+
+      const result = service.calculateVwap({ candles });
+
+      expect(result.values.length).toBeGreaterThan(0);
+      expect(result.latestValue).not.toBeNull();
+    });
+
+    it('should weight by volume correctly', () => {
+      // High volume at high price should pull VWAP up
+      const data = [
+        { high: 102, low: 98, close: 100, volume: 100 },
+        { high: 112, low: 108, close: 110, volume: 10000 },
+      ];
+      const candles = generateCandles(data);
+
+      const result = service.calculateVwap({ candles });
+
+      expect(result.latestValue).not.toBeNull();
+      // VWAP should be closer to 110 than 100 due to higher volume
+      expect(result.latestValue!).toBeGreaterThan(105);
+    });
+
+    it('should handle single candle', () => {
+      const candles = generateCandles([
+        { high: 102, low: 98, close: 100, volume: 1000 },
+      ]);
+
+      const result = service.calculateVwap({ candles });
+
+      expect(result.values.length).toBeGreaterThan(0);
+      expect(result.latestValue).not.toBeNull();
+    });
+  });
 });

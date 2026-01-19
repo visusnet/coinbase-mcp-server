@@ -7,6 +7,7 @@ import {
   Stochastic,
   ADX,
   OBV,
+  VWAP,
 } from 'technicalindicators';
 
 /**
@@ -197,6 +198,21 @@ export interface CalculateObvInput {
  * Output for OBV calculation
  */
 export interface CalculateObvOutput {
+  readonly values: readonly number[];
+  readonly latestValue: number | null;
+}
+
+/**
+ * Input for VWAP calculation
+ */
+export interface CalculateVwapInput {
+  readonly candles: readonly CandleInput[];
+}
+
+/**
+ * Output for VWAP calculation
+ */
+export interface CalculateVwapOutput {
   readonly values: readonly number[];
   readonly latestValue: number | null;
 }
@@ -429,6 +445,32 @@ export class TechnicalIndicatorsService {
     return {
       values: obvValues,
       latestValue: obvValues.length > 0 ? obvValues[obvValues.length - 1] : null,
+    };
+  }
+
+  /**
+   * Calculate VWAP (Volume Weighted Average Price) from candle data.
+   *
+   * @param input - Candles with OHLCV data
+   * @returns VWAP values array and latest value
+   */
+  public calculateVwap(input: CalculateVwapInput): CalculateVwapOutput {
+    const high = extractHighPrices(input.candles);
+    const low = extractLowPrices(input.candles);
+    const close = extractClosePrices(input.candles);
+    const volume = extractVolumes(input.candles);
+
+    const vwapValues = VWAP.calculate({
+      high,
+      low,
+      close,
+      volume,
+    });
+
+    return {
+      values: vwapValues,
+      latestValue:
+        vwapValues.length > 0 ? vwapValues[vwapValues.length - 1] : null,
     };
   }
 }

@@ -1199,6 +1199,46 @@ describe('CoinbaseMcpServer Integration Tests', () => {
         expectResponseToContain(response, result);
       });
     });
+
+    describe('calculate_vwap', () => {
+      it('should call calculateVwap via MCP tool calculate_vwap', async () => {
+        const args = {
+          candles: [
+            {
+              open: '100',
+              high: '102',
+              low: '98',
+              close: '100',
+              volume: '1000',
+            },
+            {
+              open: '100',
+              high: '103',
+              low: '99',
+              close: '101',
+              volume: '1100',
+            },
+          ],
+        };
+        const result = {
+          values: [100, 100.52],
+          latestValue: 100.52,
+        };
+        mockTechnicalIndicatorsService.calculateVwap.mockReturnValueOnce(
+          result,
+        );
+
+        const response = await client.callTool({
+          name: 'calculate_vwap',
+          arguments: args,
+        });
+
+        expect(
+          mockTechnicalIndicatorsService.calculateVwap,
+        ).toHaveBeenCalledWith(args);
+        expectResponseToContain(response, result);
+      });
+    });
   });
 
   describe('Prompts', () => {
