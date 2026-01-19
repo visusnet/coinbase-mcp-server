@@ -4,7 +4,7 @@
 
 This server now uses the official `@coinbase-sample/advanced-trade-sdk-ts` SDK directly, eliminating all custom domain/repository layers.
 
-**Total Tools: 64**
+**Total Tools: 65**
 
 ## Accounts (2)
 
@@ -85,7 +85,7 @@ This server now uses the official `@coinbase-sample/advanced-trade-sdk-ts` SDK d
 
 - ✅ `get_api_key_permissions` - Get current API key permissions
 
-## Technical Indicators (18)
+## Technical Indicators (19)
 
 - ✅ `calculate_rsi` - Calculate RSI (Relative Strength Index)
 - ✅ `calculate_macd` - Calculate MACD (Moving Average Convergence Divergence)
@@ -105,3 +105,4 @@ This server now uses the official `@coinbase-sample/advanced-trade-sdk-ts` SDK d
 - ✅ `calculate_keltner_channels` - Calculate Keltner Channels
 - ✅ `calculate_fibonacci_retracement` - Calculate Fibonacci Retracement levels
 - ✅ `detect_candlestick_patterns` - Detect candlestick patterns (31 patterns)
+- ✅ `calculate_volume_profile` - Calculate Volume Profile with POC and Value Area

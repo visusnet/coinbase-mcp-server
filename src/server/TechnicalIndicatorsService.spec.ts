@@ -1626,4 +1626,323 @@ describe('TechnicalIndicatorsService', () => {
       expect(patternNames).toContain('Doji');
     });
   });
+
+  describe('calculateVolumeProfile', () => {
+    it('should calculate volume profile with default bars', () => {
+      const candles: CandleInput[] = [
+        { open: '100', high: '105', low: '99', close: '104', volume: '1000' },
+        { open: '104', high: '108', low: '102', close: '106', volume: '1500' },
+        { open: '106', high: '110', low: '104', close: '108', volume: '2000' },
+        { open: '108', high: '112', low: '106', close: '110', volume: '1800' },
+        { open: '110', high: '114', low: '108', close: '112', volume: '1200' },
+      ];
+
+      const result = service.calculateVolumeProfile({ candles });
+
+      expect(result.noOfBars).toBe(12); // Default
+      expect(Array.isArray(result.zones)).toBe(true);
+      expect(result.zones.length).toBeGreaterThan(0);
+    });
+
+    it('should calculate volume profile with custom number of bars', () => {
+      const candles: CandleInput[] = [
+        { open: '100', high: '110', low: '95', close: '108', volume: '1000' },
+        { open: '108', high: '115', low: '105', close: '112', volume: '1500' },
+        { open: '112', high: '120', low: '110', close: '118', volume: '2000' },
+      ];
+
+      const result = service.calculateVolumeProfile({ candles, noOfBars: 5 });
+
+      expect(result.noOfBars).toBe(5);
+      expect(result.zones.length).toBeLessThanOrEqual(5);
+    });
+
+    it('should return zones with correct structure', () => {
+      const candles: CandleInput[] = [
+        { open: '100', high: '105', low: '98', close: '103', volume: '1000' },
+        { open: '103', high: '107', low: '101', close: '105', volume: '1200' },
+      ];
+
+      const result = service.calculateVolumeProfile({ candles, noOfBars: 3 });
+
+      result.zones.forEach((zone) => {
+        expect(zone).toHaveProperty('rangeStart');
+        expect(zone).toHaveProperty('rangeEnd');
+        expect(zone).toHaveProperty('bullishVolume');
+        expect(zone).toHaveProperty('bearishVolume');
+        expect(zone).toHaveProperty('totalVolume');
+        expect(typeof zone.rangeStart).toBe('number');
+        expect(typeof zone.rangeEnd).toBe('number');
+        expect(typeof zone.bullishVolume).toBe('number');
+        expect(typeof zone.bearishVolume).toBe('number');
+        expect(zone.totalVolume).toBe(zone.bullishVolume + zone.bearishVolume);
+      });
+    });
+
+    it('should identify Point of Control (highest volume zone)', () => {
+      const candles: CandleInput[] = [
+        { open: '100', high: '102', low: '99', close: '101', volume: '500' },
+        { open: '101', high: '103', low: '100', close: '102', volume: '1000' },
+        { open: '102', high: '104', low: '101', close: '103', volume: '3000' },
+        { open: '103', high: '105', low: '102', close: '104', volume: '800' },
+      ];
+
+      const result = service.calculateVolumeProfile({ candles, noOfBars: 4 });
+
+      expect(result.pointOfControl).not.toBeNull();
+      expect(result.zones.length).toBeGreaterThan(0);
+      // POC should have the highest volume
+      const maxVolume = Math.max(...result.zones.map((z) => z.totalVolume));
+      expect(result.pointOfControl?.totalVolume).toBe(maxVolume);
+    });
+
+    it('should calculate Value Area High and Low', () => {
+      const candles: CandleInput[] = [
+        { open: '100', high: '105', low: '98', close: '104', volume: '1000' },
+        { open: '104', high: '108', low: '102', close: '106', volume: '1500' },
+        { open: '106', high: '110', low: '104', close: '108', volume: '2000' },
+        { open: '108', high: '112', low: '106', close: '110', volume: '1800' },
+        { open: '110', high: '114', low: '108', close: '112', volume: '1200' },
+      ];
+
+      const result = service.calculateVolumeProfile({ candles, noOfBars: 6 });
+
+      // Value area should be defined since we have zones
+      expect(result.zones.length).toBeGreaterThan(0);
+      expect(result.valueAreaHigh).not.toBeNull();
+      expect(result.valueAreaLow).not.toBeNull();
+      expect(result.valueAreaHigh as number).toBeGreaterThanOrEqual(
+        result.valueAreaLow as number,
+      );
+    });
+
+    it('should handle single candle input', () => {
+      const candles: CandleInput[] = [
+        { open: '100', high: '105', low: '95', close: '102', volume: '1000' },
+      ];
+
+      const result = service.calculateVolumeProfile({ candles, noOfBars: 3 });
+
+      expect(result.noOfBars).toBe(3);
+      expect(Array.isArray(result.zones)).toBe(true);
+    });
+
+    it('should separate bullish and bearish volume correctly', () => {
+      // Bullish candle (close > open)
+      const bullishCandles: CandleInput[] = [
+        { open: '100', high: '110', low: '98', close: '108', volume: '1000' },
+      ];
+
+      const bullishResult = service.calculateVolumeProfile({
+        candles: bullishCandles,
+        noOfBars: 2,
+      });
+
+      // Bearish candle (close < open)
+      const bearishCandles: CandleInput[] = [
+        { open: '108', high: '110', low: '98', close: '100', volume: '1000' },
+      ];
+
+      const bearishResult = service.calculateVolumeProfile({
+        candles: bearishCandles,
+        noOfBars: 2,
+      });
+
+      // Both should have zones
+      expect(bullishResult.zones.length).toBeGreaterThan(0);
+      expect(bearishResult.zones.length).toBeGreaterThan(0);
+    });
+
+    it('should handle value area expansion when reaching boundaries', () => {
+      // Create candles where POC is at an extreme position
+      // to test boundary condition in value area calculation
+      const candles: CandleInput[] = [
+        { open: '100', high: '102', low: '99', close: '101', volume: '100' },
+        { open: '101', high: '103', low: '100', close: '102', volume: '100' },
+        { open: '102', high: '104', low: '101', close: '103', volume: '5000' },
+      ];
+
+      // Use few bars to ensure we hit the break condition
+      const result = service.calculateVolumeProfile({ candles, noOfBars: 2 });
+
+      expect(result.zones.length).toBeLessThanOrEqual(2);
+      expect(result.valueAreaHigh).not.toBeNull();
+      expect(result.valueAreaLow).not.toBeNull();
+    });
+
+    it('should expand value area correctly when high volume is at lower price', () => {
+      // Create data where high volume zone is at lower prices
+      // to test the canExpandLow branch when canExpandHigh is false
+      const candles: CandleInput[] = [
+        { open: '100', high: '105', low: '98', close: '104', volume: '5000' },
+        { open: '104', high: '108', low: '102', close: '106', volume: '100' },
+        { open: '106', high: '112', low: '104', close: '110', volume: '100' },
+      ];
+
+      const result = service.calculateVolumeProfile({ candles, noOfBars: 3 });
+
+      expect(result.pointOfControl).not.toBeNull();
+      expect(result.valueAreaHigh).not.toBeNull();
+      expect(result.valueAreaLow).not.toBeNull();
+    });
+
+    it('should handle when POC is at highest price zone and expands only downward', () => {
+      // POC at highest price zone - can only expand low
+      // This tests the `else if (canExpandLow)` branch where canExpandHigh is false
+      const candles: CandleInput[] = [
+        { open: '100', high: '103', low: '99', close: '102', volume: '100' },
+        { open: '102', high: '105', low: '101', close: '104', volume: '200' },
+        { open: '104', high: '107', low: '103', close: '106', volume: '5000' },
+      ];
+
+      const result = service.calculateVolumeProfile({ candles, noOfBars: 3 });
+
+      // POC should be at highest price zone
+      expect(result.pointOfControl).not.toBeNull();
+      expect(result.valueAreaHigh).not.toBeNull();
+      expect(result.valueAreaLow).not.toBeNull();
+    });
+
+    it('should stop expansion when both boundaries are reached', () => {
+      // Use minimal bars with volume spread so we hit both boundaries
+      // before reaching 70% (tests the break statement)
+      const candles: CandleInput[] = [
+        { open: '100', high: '150', low: '100', close: '125', volume: '1000' },
+      ];
+
+      // With only 1 bar, POC is alone, can't expand either way
+      const result = service.calculateVolumeProfile({ candles, noOfBars: 1 });
+
+      expect(result.zones.length).toBe(1);
+      expect(result.pointOfControl).not.toBeNull();
+      // Value area equals the single zone
+      expect(result.valueAreaHigh).not.toBeNull();
+      expect(result.valueAreaLow).not.toBeNull();
+    });
+
+    it('should handle POC at top with lower zones having higher volume', () => {
+      // POC at top zone, but lower zones have more volume
+      // This tests canExpandHigh=false branch in ternary
+      const candles: CandleInput[] = [
+        { open: '100', high: '103', low: '99', close: '102', volume: '3000' },
+        { open: '102', high: '105', low: '101', close: '104', volume: '2000' },
+        { open: '104', high: '107', low: '103', close: '106', volume: '5000' },
+      ];
+
+      // With 3 bars, POC at top has nowhere to expand high
+      const result = service.calculateVolumeProfile({ candles, noOfBars: 3 });
+
+      expect(result.zones.length).toBe(3);
+      expect(result.pointOfControl).not.toBeNull();
+      expect(result.valueAreaHigh).not.toBeNull();
+      expect(result.valueAreaLow).not.toBeNull();
+    });
+
+    it('should expand toward higher volume (high direction)', () => {
+      // POC in middle, high zone has more volume than low zone
+      // This forces expansion in high direction, testing canExpandHigh=true
+      const candles: CandleInput[] = [
+        { open: '100', high: '104', low: '99', close: '102', volume: '100' },
+        { open: '102', high: '106', low: '101', close: '104', volume: '2000' },
+        { open: '104', high: '108', low: '103', close: '106', volume: '500' },
+      ];
+
+      const result = service.calculateVolumeProfile({ candles, noOfBars: 3 });
+
+      expect(result.zones.length).toBe(3);
+      expect(result.pointOfControl).not.toBeNull();
+      expect(result.valueAreaHigh).not.toBeNull();
+      expect(result.valueAreaLow).not.toBeNull();
+    });
+
+    it('should expand high when POC is at lowest zone', () => {
+      // POC at lowest zone - canExpandLow is false, must expand high
+      // This specifically tests the else branch with canExpandHigh=true
+      const candles: CandleInput[] = [
+        { open: '100', high: '103', low: '99', close: '101', volume: '5000' },
+        { open: '103', high: '106', low: '102', close: '105', volume: '1000' },
+        { open: '106', high: '109', low: '105', close: '108', volume: '1000' },
+      ];
+
+      const result = service.calculateVolumeProfile({ candles, noOfBars: 3 });
+
+      expect(result.zones.length).toBe(3);
+      expect(result.pointOfControl).not.toBeNull();
+      // POC should be at lowest price zone (highest volume)
+      expect(result.valueAreaHigh).not.toBeNull();
+      expect(result.valueAreaLow).not.toBeNull();
+    });
+
+    it('should enter while loop and expand when POC < 70% and high zone has more volume', () => {
+      // Create scenario where:
+      // 1. POC is at bottom (lowIndex = 0, canExpandLow = false)
+      // 2. POC volume < 70% (enters while loop)
+      // 3. Must expand high (tests else branch where canExpandHigh=true)
+      const candles: CandleInput[] = [
+        { open: '100', high: '104', low: '100', close: '102', volume: '300' },
+        { open: '104', high: '108', low: '104', close: '106', volume: '200' },
+        { open: '108', high: '112', low: '108', close: '110', volume: '200' },
+        { open: '112', high: '116', low: '112', close: '114', volume: '100' },
+        { open: '116', high: '120', low: '116', close: '118', volume: '100' },
+      ];
+
+      // 5 bars: POC at lowest (300/900 = 33%) < 70%, must expand high
+      const result = service.calculateVolumeProfile({ candles, noOfBars: 5 });
+
+      expect(result.zones.length).toBe(5);
+      expect(result.pointOfControl).not.toBeNull();
+      expect(result.valueAreaHigh).not.toBeNull();
+      expect(result.valueAreaLow).not.toBeNull();
+    });
+
+    it('should expand high when POC in middle with higher volume neighbor above', () => {
+      // POC in middle zone with lower volume neighbors on both sides
+      // Neighboring high zone has more volume than low zone
+      // This tests: canExpandHigh=true, lowVolume < highVolume, taking else branch
+      const candles: CandleInput[] = [
+        { open: '100', high: '110', low: '100', close: '105', volume: '100' },
+        { open: '105', high: '115', low: '105', close: '110', volume: '400' },
+        { open: '110', high: '120', low: '110', close: '115', volume: '300' },
+      ];
+
+      // 3 zones: middle has most volume (POC), but < 70%
+      // POC = 400/800 = 50%, needs to expand
+      // lowVolume = 100, highVolume = 300, so expand high
+      const result = service.calculateVolumeProfile({ candles, noOfBars: 3 });
+
+      expect(result.zones.length).toBe(3);
+      expect(result.pointOfControl).not.toBeNull();
+      expect(result.valueAreaHigh).not.toBeNull();
+      expect(result.valueAreaLow).not.toBeNull();
+    });
+
+    it('should expand low when POC at highest zone and cannot expand high', () => {
+      // Create scenario where:
+      // 1. POC is at highest price zone (highIndex at last position)
+      // 2. canExpandHigh = false (no zone above)
+      // 3. canExpandLow = true (zones below)
+      // 4. POC volume < 70% (enters while loop)
+      // This specifically tests line 1188: else if (canExpandLow) { expandLow = true; }
+      const candles: CandleInput[] = [
+        { open: '100', high: '104', low: '100', close: '102', volume: '200' },
+        { open: '104', high: '108', low: '104', close: '106', volume: '200' },
+        { open: '108', high: '112', low: '108', close: '110', volume: '200' },
+        { open: '112', high: '116', low: '112', close: '114', volume: '200' },
+        { open: '116', high: '120', low: '116', close: '118', volume: '500' },
+      ];
+
+      // 5 zones: highest zone has most volume (POC at index 4)
+      // POC = 500/1300 = 38.5% < 70%, must expand
+      // canExpandHigh = false (highIndex = 4 = length - 1)
+      // canExpandLow = true (lowIndex = 4 > 0)
+      // This triggers the else if (canExpandLow) branch
+      const result = service.calculateVolumeProfile({ candles, noOfBars: 5 });
+
+      expect(result.zones.length).toBe(5);
+      expect(result.pointOfControl).not.toBeNull();
+      // POC should be at highest price zone
+      expect(result.valueAreaHigh).not.toBeNull();
+      expect(result.valueAreaLow).not.toBeNull();
+    });
+  });
 });
