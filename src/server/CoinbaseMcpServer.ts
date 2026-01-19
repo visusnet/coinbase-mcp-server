@@ -1032,6 +1032,43 @@ export class CoinbaseMcpServer {
     );
 
     server.registerTool(
+      'calculate_sma',
+      {
+        title: 'Calculate SMA',
+        description:
+          'Calculate Simple Moving Average (SMA) from candle data. ' +
+          'SMA equally weights all prices in the period, providing a smoothed trend line. ' +
+          'Common periods: 10 (short-term), 20/50 (medium-term), 200 (long-term trend).',
+        inputSchema: {
+          candles: z
+            .array(
+              z.object({
+                open: z.string().describe('Opening price'),
+                high: z.string().describe('High price'),
+                low: z.string().describe('Low price'),
+                close: z.string().describe('Closing price'),
+                volume: z.string().describe('Volume'),
+              }),
+            )
+            .min(1)
+            .describe('Array of candle data'),
+          period: z
+            .number()
+            .int()
+            .min(1)
+            .optional()
+            .describe(
+              'Number of candles for SMA calculation (default: 20). ' +
+                'Common values: 10, 20, 50, 100, 200.',
+            ),
+        },
+      },
+      this.call(
+        this.technicalIndicators.calculateSma.bind(this.technicalIndicators),
+      ),
+    );
+
+    server.registerTool(
       'calculate_ema',
       {
         title: 'Calculate EMA',
@@ -1815,7 +1852,7 @@ TOOL CATEGORIES (68 total):
 - Futures (4): list_futures_positions, get_futures_position, get_futures_balance_summary, list_futures_sweeps
 - Perpetuals (4): list_perpetuals_positions, get_perpetuals_position, get_perpetuals_portfolio_summary, get_perpetuals_portfolio_balance
 - Info (2): get_api_key_permissions, get_transaction_summary
-- Technical Indicators (22): calculate_rsi, calculate_macd, calculate_ema, calculate_bollinger_bands, calculate_atr, calculate_stochastic, calculate_adx, calculate_obv, calculate_vwap, calculate_cci, calculate_williams_r, calculate_roc, calculate_mfi, calculate_psar, calculate_ichimoku_cloud, calculate_keltner_channels, calculate_fibonacci_retracement, detect_candlestick_patterns, calculate_volume_profile, calculate_pivot_points, detect_rsi_divergence, detect_chart_patterns
+- Technical Indicators (23): calculate_rsi, calculate_macd, calculate_sma, calculate_ema, calculate_bollinger_bands, calculate_atr, calculate_stochastic, calculate_adx, calculate_obv, calculate_vwap, calculate_cci, calculate_williams_r, calculate_roc, calculate_mfi, calculate_psar, calculate_ichimoku_cloud, calculate_keltner_channels, calculate_fibonacci_retracement, detect_candlestick_patterns, calculate_volume_profile, calculate_pivot_points, detect_rsi_divergence, detect_chart_patterns
 
 BEST PRACTICES:
 1. Always preview_order before create_order

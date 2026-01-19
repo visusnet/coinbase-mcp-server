@@ -256,6 +256,7 @@ export const mockTechnicalIndicatorsService: {
 } = {
   calculateRsi: jest.fn(),
   calculateMacd: jest.fn(),
+  calculateSma: jest.fn(),
   calculateEma: jest.fn(),
   calculateBollingerBands: jest.fn(),
   calculateAtr: jest.fn(),

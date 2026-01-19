@@ -196,6 +196,59 @@ describe('TechnicalIndicatorsService', () => {
     });
   });
 
+  describe('calculateSma', () => {
+    const generateCandles = (closePrices: number[]): CandleInput[] => {
+      return closePrices.map((close) => ({
+        open: close.toString(),
+        high: (close + 1).toString(),
+        low: (close - 1).toString(),
+        close: close.toString(),
+        volume: '1000',
+      }));
+    };
+
+    it('should calculate SMA with default period of 20', () => {
+      const closePrices = Array.from({ length: 25 }, (_, i) => 100 + i);
+      const candles = generateCandles(closePrices);
+
+      const result = service.calculateSma({ candles });
+
+      expect(result.period).toBe(20);
+      expect(result.values.length).toBeGreaterThan(0);
+      expect(result.latestValue).not.toBeNull();
+    });
+
+    it('should calculate SMA with custom period', () => {
+      const closePrices = Array.from({ length: 15 }, (_, i) => 100 + i);
+      const candles = generateCandles(closePrices);
+
+      const result = service.calculateSma({ candles, period: 10 });
+
+      expect(result.period).toBe(10);
+      expect(result.values.length).toBeGreaterThan(0);
+      expect(result.latestValue).not.toBeNull();
+    });
+
+    it('should return null latestValue when not enough data', () => {
+      const candles = generateCandles([100, 101]);
+
+      const result = service.calculateSma({ candles, period: 50 });
+
+      expect(result.values.length).toBe(0);
+      expect(result.latestValue).toBeNull();
+    });
+
+    it('should calculate simple average correctly', () => {
+      // SMA of 5 values 100,101,102,103,104 with period 5 = (100+101+102+103+104)/5 = 102
+      const closePrices = [100, 101, 102, 103, 104];
+      const candles = generateCandles(closePrices);
+
+      const result = service.calculateSma({ candles, period: 5 });
+
+      expect(result.latestValue).toBeCloseTo(102, 2);
+    });
+  });
+
   describe('calculateEma', () => {
     const generateCandles = (closePrices: number[]): CandleInput[] => {
       return closePrices.map((close) => ({
@@ -2120,13 +2173,17 @@ describe('TechnicalIndicatorsService', () => {
       });
 
       // close (101) < open (108), so x = H + 2*L + C = 110 + 200 + 101 = 411
-      // PP = 411 / 4 = 102.75
+      // PP = 411 / 4 = 102.75, range = 10
       expect(result.type).toBe('demark');
       expect(result.pivotPoint).toBeCloseTo(102.75, 2);
-      // R1 = 411/2 - 100 = 105.5
-      expect(result.resistance1).toBeCloseTo(105.5, 2);
-      // S1 = 411/2 - 110 = 95.5
-      expect(result.support1).toBeCloseTo(95.5, 2);
+      // DeMark R1/S1
+      expect(result.resistance1).toBeCloseTo(105.5, 2); // 411/2 - 100
+      expect(result.support1).toBeCloseTo(95.5, 2); // 411/2 - 110
+      // Extended levels (Standard formulas with DeMark PP)
+      expect(result.resistance2).toBeCloseTo(112.75, 2); // PP + range
+      expect(result.resistance3).toBeCloseTo(115.5, 2); // H + 2*(PP - L)
+      expect(result.support2).toBeCloseTo(92.75, 2); // PP - range
+      expect(result.support3).toBeCloseTo(85.5, 2); // L - 2*(H - PP)
     });
 
     it('should calculate DeMark pivot points when close > open', () => {
@@ -2140,13 +2197,17 @@ describe('TechnicalIndicatorsService', () => {
       });
 
       // close (108) > open (101), so x = 2*H + L + C = 220 + 100 + 108 = 428
-      // PP = 428 / 4 = 107
+      // PP = 428 / 4 = 107, range = 10
       expect(result.type).toBe('demark');
       expect(result.pivotPoint).toBeCloseTo(107, 2);
-      // R1 = 428/2 - 100 = 114
-      expect(result.resistance1).toBeCloseTo(114, 2);
-      // S1 = 428/2 - 110 = 104
-      expect(result.support1).toBeCloseTo(104, 2);
+      // DeMark R1/S1
+      expect(result.resistance1).toBeCloseTo(114, 2); // 428/2 - 100
+      expect(result.support1).toBeCloseTo(104, 2); // 428/2 - 110
+      // Extended levels (Standard formulas with DeMark PP)
+      expect(result.resistance2).toBeCloseTo(117, 2); // PP + range
+      expect(result.resistance3).toBeCloseTo(124, 2); // H + 2*(PP - L)
+      expect(result.support2).toBeCloseTo(97, 2); // PP - range
+      expect(result.support3).toBeCloseTo(94, 2); // L - 2*(H - PP)
     });
 
     it('should calculate DeMark pivot points when close === open', () => {
@@ -2160,13 +2221,17 @@ describe('TechnicalIndicatorsService', () => {
       });
 
       // close === open, so x = H + L + 2*C = 110 + 100 + 210 = 420
-      // PP = 420 / 4 = 105
+      // PP = 420 / 4 = 105, range = 10
       expect(result.type).toBe('demark');
       expect(result.pivotPoint).toBeCloseTo(105, 2);
-      // R1 = 420/2 - 100 = 110
-      expect(result.resistance1).toBeCloseTo(110, 2);
-      // S1 = 420/2 - 110 = 100
-      expect(result.support1).toBeCloseTo(100, 2);
+      // DeMark R1/S1
+      expect(result.resistance1).toBeCloseTo(110, 2); // 420/2 - 100
+      expect(result.support1).toBeCloseTo(100, 2); // 420/2 - 110
+      // Extended levels (Standard formulas with DeMark PP)
+      expect(result.resistance2).toBeCloseTo(115, 2); // PP + range
+      expect(result.resistance3).toBeCloseTo(120, 2); // H + 2*(PP - L)
+      expect(result.support2).toBeCloseTo(95, 2); // PP - range
+      expect(result.support3).toBeCloseTo(90, 2); // L - 2*(H - PP)
     });
 
     it('should handle explicit standard type', () => {

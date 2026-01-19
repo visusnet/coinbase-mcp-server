@@ -4,7 +4,7 @@
 
 This server now uses the official `@coinbase-sample/advanced-trade-sdk-ts` SDK directly, eliminating all custom domain/repository layers.
 
-**Total Tools: 68**
+**Total Tools: 69**
 
 ## Accounts (2)
 
@@ -85,10 +85,11 @@ This server now uses the official `@coinbase-sample/advanced-trade-sdk-ts` SDK d
 
 - ✅ `get_api_key_permissions` - Get current API key permissions
 
-## Technical Indicators (22)
+## Technical Indicators (23)
 
 - ✅ `calculate_rsi` - Calculate RSI (Relative Strength Index)
 - ✅ `calculate_macd` - Calculate MACD (Moving Average Convergence Divergence)
+- ✅ `calculate_sma` - Calculate SMA (Simple Moving Average)
 - ✅ `calculate_ema` - Calculate EMA (Exponential Moving Average)
 - ✅ `calculate_bollinger_bands` - Calculate Bollinger Bands
 - ✅ `calculate_atr` - Calculate ATR (Average True Range)
