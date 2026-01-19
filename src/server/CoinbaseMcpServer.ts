@@ -1626,8 +1626,8 @@ export class CoinbaseMcpServer {
         title: 'Detect Candlestick Patterns',
         description:
           'Detect candlestick patterns from candle data. ' +
-          'Identifies 19 patterns including bullish (Hammer, Engulfing, Morning Star, etc.), ' +
-          'bearish (Shooting Star, Evening Star, Three Black Crows, etc.), and neutral (Doji). ' +
+          'Identifies 31 patterns including bullish (Hammer, Engulfing, Morning Star, Marubozu, Harami Cross, etc.), ' +
+          'bearish (Shooting Star, Evening Star, Three Black Crows, Marubozu, Harami Cross, etc.), and neutral (Doji). ' +
           'Returns overall bullish/bearish bias and list of detected patterns. ' +
           'Useful for identifying potential reversals and continuation signals.',
         inputSchema: {

@@ -104,4 +104,4 @@ This server now uses the official `@coinbase-sample/advanced-trade-sdk-ts` SDK d
 - ✅ `calculate_ichimoku_cloud` - Calculate Ichimoku Cloud
 - ✅ `calculate_keltner_channels` - Calculate Keltner Channels
 - ✅ `calculate_fibonacci_retracement` - Calculate Fibonacci Retracement levels
-- ✅ `detect_candlestick_patterns` - Detect candlestick patterns (19 patterns)
+- ✅ `detect_candlestick_patterns` - Detect candlestick patterns (31 patterns)
