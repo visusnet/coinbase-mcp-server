@@ -489,7 +489,6 @@ describe('TechnicalIndicatorsService', () => {
 
       expect(result.kPeriod).toBe(14);
       expect(result.dPeriod).toBe(3);
-      expect(result.stochPeriod).toBe(3);
       expect(result.values.length).toBeGreaterThan(0);
       expect(result.latestValue).not.toBeNull();
     });
@@ -506,12 +505,10 @@ describe('TechnicalIndicatorsService', () => {
         candles,
         kPeriod: 5,
         dPeriod: 2,
-        stochPeriod: 2,
       });
 
       expect(result.kPeriod).toBe(5);
       expect(result.dPeriod).toBe(2);
-      expect(result.stochPeriod).toBe(2);
       expect(result.values.length).toBeGreaterThan(0);
     });
 
