@@ -984,6 +984,52 @@ export class CoinbaseMcpServer {
         this.technicalIndicators.calculateRsi.bind(this.technicalIndicators),
       ),
     );
+
+    server.registerTool(
+      'calculate_macd',
+      {
+        title: 'Calculate MACD',
+        description:
+          'Calculate Moving Average Convergence Divergence (MACD) from candle data. ' +
+          'MACD shows trend direction and momentum. Bullish when MACD crosses above signal line, ' +
+          'bearish when it crosses below. Histogram shows the difference between MACD and signal.',
+        inputSchema: {
+          candles: z
+            .array(
+              z.object({
+                open: z.string().describe('Opening price'),
+                high: z.string().describe('High price'),
+                low: z.string().describe('Low price'),
+                close: z.string().describe('Closing price'),
+                volume: z.string().describe('Volume'),
+              }),
+            )
+            .min(2)
+            .describe('Array of candle data'),
+          fastPeriod: z
+            .number()
+            .int()
+            .min(2)
+            .optional()
+            .describe('Fast EMA period (default: 12)'),
+          slowPeriod: z
+            .number()
+            .int()
+            .min(2)
+            .optional()
+            .describe('Slow EMA period (default: 26)'),
+          signalPeriod: z
+            .number()
+            .int()
+            .min(2)
+            .optional()
+            .describe('Signal line period (default: 9)'),
+        },
+      },
+      this.call(
+        this.technicalIndicators.calculateMacd.bind(this.technicalIndicators),
+      ),
+    );
   }
 
   private registerPromptsForServer(server: McpServer): void {
@@ -1001,7 +1047,7 @@ export class CoinbaseMcpServer {
                 type: 'text',
                 text: `You are a Coinbase Advanced Trade assistant.
 
-TOOL CATEGORIES (47 total):
+TOOL CATEGORIES (48 total):
 - Accounts (2): list_accounts, get_account
 - Orders (9): create_order, preview_order, list_orders, get_order, cancel_orders, edit_order, preview_edit_order, list_fills, close_position
 - Products (8): list_products, get_product, get_product_candles, get_product_candles_batch, get_best_bid_ask, get_market_snapshot, get_product_book, get_market_trades
@@ -1012,7 +1058,7 @@ TOOL CATEGORIES (47 total):
 - Futures (4): list_futures_positions, get_futures_position, get_futures_balance_summary, list_futures_sweeps
 - Perpetuals (4): list_perpetuals_positions, get_perpetuals_position, get_perpetuals_portfolio_summary, get_perpetuals_portfolio_balance
 - Info (2): get_api_key_permissions, get_transaction_summary
-- Technical Indicators (1): calculate_rsi
+- Technical Indicators (2): calculate_rsi, calculate_macd
 
 BEST PRACTICES:
 1. Always preview_order before create_order

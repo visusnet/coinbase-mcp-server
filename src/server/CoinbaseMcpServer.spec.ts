@@ -910,6 +910,50 @@ describe('CoinbaseMcpServer Integration Tests', () => {
         ).toHaveBeenCalledWith(args);
         expectResponseToContain(response, result);
       });
+
+      it('should call calculateMacd via MCP tool calculate_macd', async () => {
+        const args = {
+          candles: [
+            {
+              open: '100',
+              high: '102',
+              low: '99',
+              close: '101',
+              volume: '1000',
+            },
+            {
+              open: '101',
+              high: '103',
+              low: '100',
+              close: '102',
+              volume: '1100',
+            },
+          ],
+          fastPeriod: 12,
+          slowPeriod: 26,
+          signalPeriod: 9,
+        };
+        const result = {
+          fastPeriod: 12,
+          slowPeriod: 26,
+          signalPeriod: 9,
+          values: [{ MACD: 0.5, signal: 0.3, histogram: 0.2 }],
+          latestValue: { MACD: 0.5, signal: 0.3, histogram: 0.2 },
+        };
+        mockTechnicalIndicatorsService.calculateMacd.mockReturnValueOnce(
+          result,
+        );
+
+        const response = await client.callTool({
+          name: 'calculate_macd',
+          arguments: args,
+        });
+
+        expect(
+          mockTechnicalIndicatorsService.calculateMacd,
+        ).toHaveBeenCalledWith(args);
+        expectResponseToContain(response, result);
+      });
     });
   });
 
