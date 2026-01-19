@@ -321,4 +321,104 @@ describe('TechnicalIndicatorsService', () => {
       expect(result.latestValue).toBeNull();
     });
   });
+
+  describe('calculateAtr', () => {
+    const generateCandles = (
+      data: { high: number; low: number; close: number }[],
+    ): CandleInput[] => {
+      return data.map(({ high, low, close }) => ({
+        open: close.toString(),
+        high: high.toString(),
+        low: low.toString(),
+        close: close.toString(),
+        volume: '1000',
+      }));
+    };
+
+    it('should calculate ATR with default period of 14', () => {
+      // Generate 20 candles with varying ranges
+      const data = Array.from({ length: 20 }, (_, i) => ({
+        high: 105 + i,
+        low: 95 + i,
+        close: 100 + i,
+      }));
+      const candles = generateCandles(data);
+
+      const result = service.calculateAtr({ candles });
+
+      expect(result.period).toBe(14);
+      expect(result.values.length).toBeGreaterThan(0);
+      expect(result.latestValue).not.toBeNull();
+    });
+
+    it('should calculate ATR with custom period', () => {
+      const data = Array.from({ length: 15 }, (_, i) => ({
+        high: 110 + i,
+        low: 90 + i,
+        close: 100 + i,
+      }));
+      const candles = generateCandles(data);
+
+      const result = service.calculateAtr({ candles, period: 5 });
+
+      expect(result.period).toBe(5);
+      expect(result.values.length).toBeGreaterThan(0);
+      expect(result.latestValue).not.toBeNull();
+    });
+
+    it('should return higher ATR for more volatile prices', () => {
+      // Low volatility data (tight range)
+      const lowVolData = Array.from({ length: 20 }, (_, i) => ({
+        high: 101 + i,
+        low: 99 + i,
+        close: 100 + i,
+      }));
+      const lowVolCandles = generateCandles(lowVolData);
+
+      // High volatility data (wide range)
+      const highVolData = Array.from({ length: 20 }, (_, i) => ({
+        high: 120 + i,
+        low: 80 + i,
+        close: 100 + i,
+      }));
+      const highVolCandles = generateCandles(highVolData);
+
+      const lowVolResult = service.calculateAtr({ candles: lowVolCandles });
+      const highVolResult = service.calculateAtr({ candles: highVolCandles });
+
+      expect(lowVolResult.latestValue).not.toBeNull();
+      expect(highVolResult.latestValue).not.toBeNull();
+      expect(highVolResult.latestValue!).toBeGreaterThan(lowVolResult.latestValue!);
+    });
+
+    it('should return null latestValue when not enough data', () => {
+      const data = [
+        { high: 105, low: 95, close: 100 },
+        { high: 106, low: 96, close: 101 },
+      ];
+      const candles = generateCandles(data);
+
+      const result = service.calculateAtr({ candles });
+
+      expect(result.period).toBe(14);
+      expect(result.values.length).toBe(0);
+      expect(result.latestValue).toBeNull();
+    });
+
+    it('should handle candles with string values correctly', () => {
+      const candles: CandleInput[] = [
+        { open: '100', high: '110.5', low: '95.25', close: '105.75', volume: '1000' },
+        { open: '105', high: '115.5', low: '100.25', close: '110.75', volume: '1100' },
+        { open: '110', high: '120.5', low: '105.25', close: '115.75', volume: '1200' },
+        { open: '115', high: '125.5', low: '110.25', close: '120.75', volume: '1300' },
+        { open: '120', high: '130.5', low: '115.25', close: '125.75', volume: '1400' },
+        { open: '125', high: '135.5', low: '120.25', close: '130.75', volume: '1500' },
+      ];
+
+      const result = service.calculateAtr({ candles, period: 3 });
+
+      expect(result.values.length).toBeGreaterThan(0);
+      expect(result.latestValue).not.toBeNull();
+    });
+  });
 });

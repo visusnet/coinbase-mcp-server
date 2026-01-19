@@ -1,4 +1,4 @@
-import { RSI, MACD, EMA, BollingerBands } from 'technicalindicators';
+import { RSI, MACD, EMA, BollingerBands, ATR } from 'technicalindicators';
 
 /**
  * Candle data structure matching Coinbase API output.
@@ -105,6 +105,23 @@ export interface CalculateBollingerBandsOutput {
   readonly latestValue: BollingerBandsValue | null;
 }
 
+/**
+ * Input for ATR calculation
+ */
+export interface CalculateAtrInput {
+  readonly candles: readonly CandleInput[];
+  readonly period?: number;
+}
+
+/**
+ * Output for ATR calculation
+ */
+export interface CalculateAtrOutput {
+  readonly period: number;
+  readonly values: readonly number[];
+  readonly latestValue: number | null;
+}
+
 const DEFAULT_RSI_PERIOD = 14;
 const DEFAULT_EMA_PERIOD = 20;
 const DEFAULT_MACD_FAST_PERIOD = 12;
@@ -112,6 +129,7 @@ const DEFAULT_MACD_SLOW_PERIOD = 26;
 const DEFAULT_MACD_SIGNAL_PERIOD = 9;
 const DEFAULT_BOLLINGER_PERIOD = 20;
 const DEFAULT_BOLLINGER_STD_DEV = 2;
+const DEFAULT_ATR_PERIOD = 14;
 
 /**
  * Service for calculating technical indicators from candle data.
@@ -221,6 +239,33 @@ export class TechnicalIndicatorsService {
       latestValue: bbValues.length > 0 ? bbValues[bbValues.length - 1] : null,
     };
   }
+
+  /**
+   * Calculate ATR (Average True Range) from candle data.
+   *
+   * @param input - Candles and optional period (default: 14)
+   * @returns ATR values array and latest value
+   */
+  public calculateAtr(input: CalculateAtrInput): CalculateAtrOutput {
+    const period = input.period ?? DEFAULT_ATR_PERIOD;
+    const high = extractHighPrices(input.candles);
+    const low = extractLowPrices(input.candles);
+    const close = extractClosePrices(input.candles);
+
+    const atrValues = ATR.calculate({
+      period,
+      high,
+      low,
+      close,
+    });
+
+    return {
+      period,
+      values: atrValues,
+      latestValue:
+        atrValues.length > 0 ? atrValues[atrValues.length - 1] : null,
+    };
+  }
 }
 
 /**
@@ -229,3 +274,18 @@ export class TechnicalIndicatorsService {
 function extractClosePrices(candles: readonly CandleInput[]): number[] {
   return candles.map((candle) => parseFloat(candle.close));
 }
+
+/**
+ * Extract high prices from candle data as numbers.
+ */
+function extractHighPrices(candles: readonly CandleInput[]): number[] {
+  return candles.map((candle) => parseFloat(candle.high));
+}
+
+/**
+ * Extract low prices from candle data as numbers.
+ */
+function extractLowPrices(candles: readonly CandleInput[]): number[] {
+  return candles.map((candle) => parseFloat(candle.low));
+}
+
