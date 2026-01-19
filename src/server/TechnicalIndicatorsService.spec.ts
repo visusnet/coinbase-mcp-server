@@ -1100,4 +1100,76 @@ describe('TechnicalIndicatorsService', () => {
       expect(result.latestValue).toBeNull();
     });
   });
+
+  describe('calculatePsar', () => {
+    const generateCandles = (
+      data: { high: number; low: number; close: number }[],
+    ): CandleInput[] => {
+      return data.map(({ high, low, close }) => ({
+        open: close.toString(),
+        high: high.toString(),
+        low: low.toString(),
+        close: close.toString(),
+        volume: '1000',
+      }));
+    };
+
+    it('should calculate PSAR with default parameters (0.02/0.2)', () => {
+      const data = Array.from({ length: 20 }, (_, i) => ({
+        high: 105 + i,
+        low: 95 + i,
+        close: 100 + i,
+      }));
+      const candles = generateCandles(data);
+
+      const result = service.calculatePsar({ candles });
+
+      expect(result.step).toBe(0.02);
+      expect(result.max).toBe(0.2);
+      expect(result.values.length).toBeGreaterThan(0);
+      expect(result.latestValue).not.toBeNull();
+    });
+
+    it('should calculate PSAR with custom parameters', () => {
+      const data = Array.from({ length: 20 }, (_, i) => ({
+        high: 110 + i,
+        low: 90 + i,
+        close: 100 + i,
+      }));
+      const candles = generateCandles(data);
+
+      const result = service.calculatePsar({ candles, step: 0.01, max: 0.1 });
+
+      expect(result.step).toBe(0.01);
+      expect(result.max).toBe(0.1);
+      expect(result.values.length).toBeGreaterThan(0);
+    });
+
+    it('should return SAR values below price in uptrend', () => {
+      // Strong consistent uptrend
+      const data = Array.from({ length: 30 }, (_, i) => ({
+        high: 100 + i * 3,
+        low: 95 + i * 3,
+        close: 98 + i * 3,
+      }));
+      const candles = generateCandles(data);
+
+      const result = service.calculatePsar({ candles });
+
+      expect(result.latestValue).not.toBeNull();
+      const latestSar = result.latestValue as number;
+      const latestClose = 98 + 29 * 3; // Last close price
+      // In uptrend, SAR should be below price
+      expect(latestSar).toBeLessThan(latestClose);
+    });
+
+    it('should return null latestValue when no data provided', () => {
+      const candles: ReturnType<typeof generateCandles> = [];
+
+      const result = service.calculatePsar({ candles });
+
+      expect(result.values.length).toBe(0);
+      expect(result.latestValue).toBeNull();
+    });
+  });
 });
