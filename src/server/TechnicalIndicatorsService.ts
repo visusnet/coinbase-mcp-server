@@ -401,14 +401,20 @@ export interface CalculateIchimokuCloudInput {
 }
 
 /**
- * Single Ichimoku Cloud data point
+ * Single Ichimoku Cloud data point.
+ *
+ * Note: The Chikou Span (Lagging Span) is the current closing price plotted
+ * `displacement` periods (default: 26) in the past. For the most recent
+ * `displacement` data points, chikou will be null because we cannot know
+ * future closing prices. This matches the industry standard behavior of
+ * TradingView, MetaTrader, and other professional charting platforms.
  */
 interface IchimokuCloudDataPoint {
   readonly conversion: number;
   readonly base: number;
   readonly spanA: number;
   readonly spanB: number;
-  readonly chikou: number;
+  readonly chikou: number | null;
 }
 
 /**
@@ -1032,15 +1038,21 @@ export class TechnicalIndicatorsService {
       displacement,
     });
 
-    // Add chikou span (closing price at each position)
+    // Chikou Span: Current close plotted `displacement` periods in the past.
+    // For position i in the output array, the chikou value comes from the close
+    // at index (offset + i + displacement). For the last `displacement` values,
+    // chikou is null because we don't have future closing prices.
     const offset = close.length - ichimokuRaw.length;
-    const values = ichimokuRaw.map((value, i) => ({
-      conversion: value.conversion,
-      base: value.base,
-      spanA: value.spanA,
-      spanB: value.spanB,
-      chikou: close[offset + i],
-    }));
+    const values = ichimokuRaw.map((value, i) => {
+      const chikouIndex = offset + i + displacement;
+      return {
+        conversion: value.conversion,
+        base: value.base,
+        spanA: value.spanA,
+        spanB: value.spanB,
+        chikou: chikouIndex < close.length ? close[chikouIndex] : null,
+      };
+    });
 
     return {
       conversionPeriod,
