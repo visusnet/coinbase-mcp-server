@@ -28,6 +28,19 @@ export interface ChartPattern {
   readonly confidence: 'low' | 'medium' | 'high';
   readonly priceTarget: number | null;
   readonly neckline: number | null;
+  /**
+   * Whether volume confirms the pattern (optional - only present when volume data provided).
+   *
+   * Volume confirmation rules by pattern type:
+   * - Double Top: Second peak should have lower volume than first
+   * - Double Bottom: Second bottom should have lower volume, breakout higher
+   * - Head & Shoulders: Volume should decrease on each successive peak
+   * - Inverse H&S: Volume should increase on breakout
+   * - Triangles: Breakout should have above-average volume
+   * - Flags: Consolidation should have decreasing volume
+   * - Cup & Handle: Handle should have lower volume, breakout higher
+   */
+  readonly volumeConfirmed?: boolean;
 }
 
 /** Minimum pattern length in candles */
@@ -40,13 +53,63 @@ const PRICE_TOLERANCE = 0.02;
 const MIN_TREND_LENGTH = 5;
 
 /**
+ * Adjust confidence level based on volume confirmation.
+ * - Volume confirmed: upgrade medium → high
+ * - Volume not confirmed: downgrade high → medium
+ */
+function adjustConfidence(
+  baseConfidence: 'low' | 'medium' | 'high',
+  volumeConfirmed: boolean | undefined,
+): 'low' | 'medium' | 'high' {
+  if (volumeConfirmed === undefined) {
+    return baseConfidence;
+  }
+  if (volumeConfirmed) {
+    // Upgrade confidence when volume confirms
+    return baseConfidence === 'medium' ? 'high' : baseConfidence;
+  } else {
+    // Downgrade confidence when volume doesn't confirm
+    return baseConfidence === 'high' ? 'medium' : baseConfidence;
+  }
+}
+
+/**
+ * Calculate average volume over a range.
+ * Reserved for future use with triangle and flag patterns.
+ */
+function _avgVolume(
+  volume: readonly number[],
+  startIdx: number,
+  endIdx: number,
+): number {
+  let sum = 0;
+  let count = 0;
+  for (let i = startIdx; i <= endIdx && i < volume.length; i++) {
+    sum += volume[i];
+    count++;
+  }
+  return count > 0 ? sum / count : 0;
+}
+
+/**
  * Detect chart patterns in price data.
+ *
+ * @param high - Array of high prices
+ * @param low - Array of low prices
+ * @param close - Array of close prices
+ * @param lookbackPeriod - Number of candles to analyze
+ * @param volume - Optional array of volume data. When provided, patterns include
+ *                 `volumeConfirmed` field indicating whether volume confirms the pattern.
+ *                 Volume confirmation adjusts pattern confidence:
+ *                 - Confirmed: confidence may be upgraded (medium → high)
+ *                 - Not confirmed: confidence may be downgraded (high → medium)
  */
 export function detectChartPatterns(
   high: readonly number[],
   low: readonly number[],
   close: readonly number[],
   lookbackPeriod: number,
+  volume?: readonly number[],
 ): ChartPattern[] {
   const patterns: ChartPattern[] = [];
   const startIdx = Math.max(0, close.length - lookbackPeriod);
@@ -56,10 +119,20 @@ export function detectChartPatterns(
   const troughs = findTroughs(low, 3);
 
   // Detect various patterns
-  patterns.push(...detectDoubleTop(high, low, close, peaks, startIdx));
-  patterns.push(...detectDoubleBottom(high, low, close, troughs, startIdx));
+  patterns.push(...detectDoubleTop(high, low, close, peaks, startIdx, volume));
   patterns.push(
-    ...detectHeadAndShoulders(high, low, close, peaks, troughs, startIdx),
+    ...detectDoubleBottom(high, low, close, troughs, startIdx, volume),
+  );
+  patterns.push(
+    ...detectHeadAndShoulders(
+      high,
+      low,
+      close,
+      peaks,
+      troughs,
+      startIdx,
+      volume,
+    ),
   );
   patterns.push(
     ...detectInverseHeadAndShoulders(
@@ -69,18 +142,35 @@ export function detectChartPatterns(
       peaks,
       troughs,
       startIdx,
+      volume,
     ),
   );
   patterns.push(
-    ...detectAscendingTriangle(high, low, close, peaks, troughs, startIdx),
+    ...detectAscendingTriangle(
+      high,
+      low,
+      close,
+      peaks,
+      troughs,
+      startIdx,
+      volume,
+    ),
   );
   patterns.push(
-    ...detectDescendingTriangle(high, low, close, peaks, troughs, startIdx),
+    ...detectDescendingTriangle(
+      high,
+      low,
+      close,
+      peaks,
+      troughs,
+      startIdx,
+      volume,
+    ),
   );
-  patterns.push(...detectBullFlag(high, low, close, startIdx));
-  patterns.push(...detectBearFlag(high, low, close, startIdx));
+  patterns.push(...detectBullFlag(high, low, close, startIdx, volume));
+  patterns.push(...detectBearFlag(high, low, close, startIdx, volume));
   patterns.push(
-    ...detectCupAndHandle(high, low, close, peaks, troughs, startIdx),
+    ...detectCupAndHandle(high, low, close, peaks, troughs, startIdx, volume),
   );
 
   // Sort by end index (most recent first)
@@ -140,6 +230,7 @@ function pricesEqual(
 
 /**
  * Detect Double Top pattern (bearish reversal).
+ * Volume confirmation: Second peak should have lower volume than first peak.
  */
 function detectDoubleTop(
   high: readonly number[],
@@ -147,6 +238,7 @@ function detectDoubleTop(
   close: readonly number[],
   peaks: readonly number[],
   startIdx: number,
+  volume?: readonly number[],
 ): ChartPattern[] {
   const patterns: ChartPattern[] = [];
 
@@ -180,17 +272,27 @@ function detectDoubleTop(
 
       // Confidence based on pattern clarity
       const peakDiff = Math.abs(firstHigh - secondHigh) / firstHigh;
-      const confidence =
+      let baseConfidence: 'low' | 'medium' | 'high' =
         peakDiff < 0.01 ? 'high' : peakDiff < 0.02 ? 'medium' : 'low';
+
+      // Volume confirmation: second peak should have lower volume
+      let volumeConfirmed: boolean | undefined;
+      if (volume && volume.length >= secondPeak) {
+        const firstPeakVol = volume[firstPeak];
+        const secondPeakVol = volume[secondPeak];
+        volumeConfirmed = secondPeakVol < firstPeakVol;
+        baseConfidence = adjustConfidence(baseConfidence, volumeConfirmed);
+      }
 
       patterns.push({
         type: 'double_top',
         direction: 'bearish',
         startIndex: firstPeak,
         endIndex: secondPeak,
-        confidence,
+        confidence: baseConfidence,
         priceTarget,
         neckline,
+        ...(volumeConfirmed !== undefined && { volumeConfirmed }),
       });
     }
   }
@@ -200,6 +302,7 @@ function detectDoubleTop(
 
 /**
  * Detect Double Bottom pattern (bullish reversal).
+ * Volume confirmation: Second bottom should have lower volume than first.
  */
 function detectDoubleBottom(
   _high: readonly number[],
@@ -207,6 +310,7 @@ function detectDoubleBottom(
   close: readonly number[],
   troughs: readonly number[],
   startIdx: number,
+  volume?: readonly number[],
 ): ChartPattern[] {
   const patterns: ChartPattern[] = [];
 
@@ -239,17 +343,27 @@ function detectDoubleBottom(
       const priceTarget = neckline + patternHeight;
 
       const troughDiff = Math.abs(firstLow - secondLow) / firstLow;
-      const confidence =
+      let baseConfidence: 'low' | 'medium' | 'high' =
         troughDiff < 0.01 ? 'high' : troughDiff < 0.02 ? 'medium' : 'low';
+
+      // Volume confirmation: second bottom should have lower volume
+      let volumeConfirmed: boolean | undefined;
+      if (volume && volume.length >= secondTrough) {
+        const firstTroughVol = volume[firstTrough];
+        const secondTroughVol = volume[secondTrough];
+        volumeConfirmed = secondTroughVol < firstTroughVol;
+        baseConfidence = adjustConfidence(baseConfidence, volumeConfirmed);
+      }
 
       patterns.push({
         type: 'double_bottom',
         direction: 'bullish',
         startIndex: firstTrough,
         endIndex: secondTrough,
-        confidence,
+        confidence: baseConfidence,
         priceTarget,
         neckline,
+        ...(volumeConfirmed !== undefined && { volumeConfirmed }),
       });
     }
   }
@@ -259,6 +373,7 @@ function detectDoubleBottom(
 
 /**
  * Detect Head and Shoulders pattern (bearish reversal).
+ * Volume confirmation: Volume should decrease on each successive peak.
  */
 function detectHeadAndShoulders(
   high: readonly number[],
@@ -267,6 +382,7 @@ function detectHeadAndShoulders(
   peaks: readonly number[],
   troughs: readonly number[],
   startIdx: number,
+  volume?: readonly number[],
 ): ChartPattern[] {
   const patterns: ChartPattern[] = [];
 
@@ -313,17 +429,28 @@ function detectHeadAndShoulders(
 
     const shoulderDiff =
       Math.abs(leftShoulderHigh - rightShoulderHigh) / leftShoulderHigh;
-    const confidence =
+    let baseConfidence: 'low' | 'medium' | 'high' =
       shoulderDiff < 0.015 ? 'high' : shoulderDiff < 0.025 ? 'medium' : 'low';
+
+    // Volume confirmation: volume should decrease on each successive peak
+    let volumeConfirmed: boolean | undefined;
+    if (volume && volume.length >= rightShoulder) {
+      const leftShoulderVol = volume[leftShoulder];
+      const headVol = volume[head];
+      const rightShoulderVol = volume[rightShoulder];
+      volumeConfirmed = headVol < leftShoulderVol && rightShoulderVol < headVol;
+      baseConfidence = adjustConfidence(baseConfidence, volumeConfirmed);
+    }
 
     patterns.push({
       type: 'head_and_shoulders',
       direction: 'bearish',
       startIndex: leftShoulder,
       endIndex: rightShoulder,
-      confidence,
+      confidence: baseConfidence,
       priceTarget,
       neckline,
+      ...(volumeConfirmed !== undefined && { volumeConfirmed }),
     });
   }
 
@@ -332,6 +459,7 @@ function detectHeadAndShoulders(
 
 /**
  * Detect Inverse Head and Shoulders pattern (bullish reversal).
+ * Volume confirmation: Volume should increase on breakout above neckline.
  */
 function detectInverseHeadAndShoulders(
   high: readonly number[],
@@ -340,6 +468,7 @@ function detectInverseHeadAndShoulders(
   peaks: readonly number[],
   troughs: readonly number[],
   startIdx: number,
+  volume?: readonly number[],
 ): ChartPattern[] {
   const patterns: ChartPattern[] = [];
 
@@ -384,17 +513,27 @@ function detectInverseHeadAndShoulders(
 
     const shoulderDiff =
       Math.abs(leftShoulderLow - rightShoulderLow) / leftShoulderLow;
-    const confidence =
+    let baseConfidence: 'low' | 'medium' | 'high' =
       shoulderDiff < 0.015 ? 'high' : shoulderDiff < 0.025 ? 'medium' : 'low';
+
+    // Volume confirmation: volume should increase on right shoulder (building momentum)
+    let volumeConfirmed: boolean | undefined;
+    if (volume && volume.length >= rightShoulder) {
+      const headVol = volume[head];
+      const rightShoulderVol = volume[rightShoulder];
+      volumeConfirmed = rightShoulderVol > headVol;
+      baseConfidence = adjustConfidence(baseConfidence, volumeConfirmed);
+    }
 
     patterns.push({
       type: 'inverse_head_and_shoulders',
       direction: 'bullish',
       startIndex: leftShoulder,
       endIndex: rightShoulder,
-      confidence,
+      confidence: baseConfidence,
       priceTarget,
       neckline,
+      ...(volumeConfirmed !== undefined && { volumeConfirmed }),
     });
   }
 
@@ -403,6 +542,7 @@ function detectInverseHeadAndShoulders(
 
 /**
  * Detect Ascending Triangle pattern (bullish).
+ * Volume confirmation: Breakout should have above-average volume.
  */
 function detectAscendingTriangle(
   high: readonly number[],
@@ -411,6 +551,7 @@ function detectAscendingTriangle(
   peaks: readonly number[],
   troughs: readonly number[],
   startIdx: number,
+  _volume?: readonly number[],
 ): ChartPattern[] {
   const patterns: ChartPattern[] = [];
 
@@ -468,6 +609,7 @@ function detectDescendingTriangle(
   peaks: readonly number[],
   troughs: readonly number[],
   startIdx: number,
+  _volume?: readonly number[],
 ): ChartPattern[] {
   const patterns: ChartPattern[] = [];
 
@@ -602,6 +744,7 @@ function detectBullFlag(
   low: readonly number[],
   close: readonly number[],
   startIdx: number,
+  _volume?: readonly number[],
 ): ChartPattern[] {
   const patterns: ChartPattern[] = [];
 
@@ -670,6 +813,7 @@ function detectBearFlag(
   low: readonly number[],
   close: readonly number[],
   startIdx: number,
+  _volume?: readonly number[],
 ): ChartPattern[] {
   const patterns: ChartPattern[] = [];
 
@@ -745,6 +889,7 @@ function detectCupAndHandle(
   peaks: readonly number[],
   troughs: readonly number[],
   startIdx: number,
+  _volume?: readonly number[],
 ): ChartPattern[] {
   const patterns: ChartPattern[] = [];
 
