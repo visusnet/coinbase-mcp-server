@@ -150,16 +150,16 @@ ema_50 = calculate_ema(candles, period=50)
 → ema_9.latestValue > ema_21.latestValue > ema_50.latestValue: Uptrend (+2)
 
 adx = calculate_adx(candles)
-→ adx.adx > 25: Strong trend (confirms signals)
-→ adx.ppiValue > adx.mdiValue: Bullish (+2)
+→ adx.latestValue.adx > 25: Strong trend (confirms signals)
+→ adx.latestValue.pdi > adx.latestValue.mdi: Bullish (+2)
 
 psar = calculate_psar(candles)
 → price > psar.latestValue: Uptrend (+1)
 → SAR flip: ±2
 
 ichimoku = calculate_ichimoku_cloud(candles)
-→ price > ichimoku.senkouSpanA && price > ichimoku.senkouSpanB: Bullish (+1)
-→ tenkanSen crosses kijunSen above cloud: +3
+→ price > ichimoku.latestValue.spanA && price > ichimoku.latestValue.spanB: Bullish (+1)
+→ ichimoku.latestValue.conversion crosses ichimoku.latestValue.base above cloud: +3
 ```
 ```
 
@@ -171,8 +171,8 @@ ichimoku = calculate_ichimoku_cloud(candles)
 
 ```
 bb = calculate_bollinger_bands(candles)
-→ bb.percentB < 0: Oversold, BUY (+2)
-→ bb.percentB > 1: Overbought, SELL (-2)
+→ bb.latestValue.pb < 0: Oversold, BUY (+2)
+→ bb.latestValue.pb > 1: Overbought, SELL (-2)
 
 atr = calculate_atr(candles)
 → Use for position sizing: High ATR = smaller position
@@ -197,7 +197,7 @@ mfi = calculate_mfi(candles)
 → mfi.latestValue < 20: BUY (+2), > 80: SELL (-2)
 
 vwap = calculate_vwap(candles)
-→ price > vwap.vwap: Bullish bias (+1)
+→ price > vwap.latestValue: Bullish bias (+1)
 
 volume_profile = calculate_volume_profile(candles)
 → price near POC: Strong support/resistance
@@ -228,8 +228,9 @@ fib = calculate_fibonacci_retracement(candles, swingHigh, swingLow)
 
 ```
 candle_patterns = detect_candlestick_patterns(candles)
-→ Bullish patterns (hammer, engulfing, morning_star): +2 to +3
-→ Bearish patterns (shooting_star, engulfing, evening_star): -2 to -3
+→ candle_patterns.bullish == true: Overall bullish bias (+2)
+→ candle_patterns.bearish == true: Overall bearish bias (-2)
+→ Check candle_patterns.detectedPatterns for specific patterns (e.g., ["Hammer", "Morning Star"])
 
 chart_patterns = detect_chart_patterns(candles)
 → double_bottom, inverse_head_and_shoulders: Bullish (+3)
@@ -407,11 +408,11 @@ In jeder Strategie-Beschreibung hinzufügen:
 ```
 1. get_product_candles("BTC-EUR", "FIFTEEN_MINUTE", 100)
 2. calculate_rsi(candles) → { latestValue: 35 } → "Weak BUY" (+1)
-3. calculate_macd(candles) → { histogram: 150 } → "Bullish" (+2)
+3. calculate_macd(candles) → { latestValue: { histogram: 150 } } → "Bullish" (+2)
 4. calculate_ema(candles, period=9) → { latestValue: 45000 }
 5. calculate_ema(candles, period=21) → { latestValue: 44500 }
-6. calculate_adx(candles) → { adx: 32, pdiValue: 25, mdiValue: 18 } → "Strong uptrend" (+2)
-7. detect_candlestick_patterns(candles) → { bullish: ["hammer"] } → +2
+6. calculate_adx(candles) → { latestValue: { adx: 32, pdi: 25, mdi: 18 } } → "Strong uptrend" (+2)
+7. detect_candlestick_patterns(candles) → { bullish: true, detectedPatterns: ["Hammer"] } → +2
 8. Aggregate: momentum=+1, trend=+4, patterns=+2 → Final Score: 65 → BUY
 ```
 
@@ -441,3 +442,80 @@ Nach der Migration können folgende Sektionen entfernt/vereinfacht werden:
 - [ ] Fibonacci Calculation
 
 **Total**: ~40 manuelle Berechnungsformeln werden durch 22 MCP Tool-Aufrufe ersetzt.
+
+---
+
+## Null-Safety Hinweise
+
+Alle MCP Indikator-Tools können `latestValue: null` zurückgeben, wenn nicht genügend Daten vorhanden sind. Der Skill MUSS dies berücksichtigen:
+
+```
+// FALSCH - kann zu Runtime-Fehlern führen:
+if (rsi.latestValue < 30) { ... }
+
+// RICHTIG - Null-Check:
+if (rsi.latestValue !== null && rsi.latestValue < 30) { ... }
+```
+
+**Betroffene Tools mit `latestValue: T | null`:**
+- `calculate_rsi` → `latestValue: number | null`
+- `calculate_macd` → `latestValue: MacdValue | null`
+- `calculate_ema` → `latestValue: number | null`
+- `calculate_bollinger_bands` → `latestValue: BollingerBandsValue | null`
+- `calculate_atr` → `latestValue: number | null`
+- `calculate_stochastic` → `latestValue: StochasticValue | null`
+- `calculate_adx` → `latestValue: AdxValue | null`
+- `calculate_obv` → `latestValue: number | null`
+- `calculate_vwap` → `latestValue: number | null`
+- `calculate_cci` → `latestValue: number | null`
+- `calculate_williams_r` → `latestValue: number | null`
+- `calculate_roc` → `latestValue: number | null`
+- `calculate_mfi` → `latestValue: number | null`
+- `calculate_psar` → `latestValue: number | null`
+- `calculate_ichimoku_cloud` → `latestValue: IchimokuCloudDataPoint | null`
+- `calculate_keltner_channels` → `latestValue: KeltnerChannelsDataPoint | null`
+- `calculate_volume_profile` → `pointOfControl: VolumeProfileZone | null`
+- `detect_rsi_divergence` → `latestDivergence: RsiDivergence | null`
+- `detect_chart_patterns` → `latestPattern: ChartPattern | null`
+
+---
+
+## Rollback-Strategie
+
+Falls die Migration Probleme verursacht, kann sie schrittweise rückgängig gemacht werden:
+
+### Sofort-Rollback (Phase 1)
+Ändere in SKILL.md Zeile 37 zurück zu:
+```markdown
+- Calculate indicators yourself from the candle data returned
+```
+
+### Partieller Rollback
+Falls nur bestimmte Indikatoren Probleme machen:
+1. Behalte funktionierende MCP-Tool-Aufrufe
+2. Füge manuelle Berechnung nur für problematische Indikatoren hinzu
+3. Dokumentiere in indicators.md welche Indikatoren manuell berechnet werden
+
+### Vollständiger Rollback
+1. Git revert der SKILL.md Änderungen
+2. Git revert der indicators.md Änderungen
+3. Behalte state-schema.md Cache-Sektion (schadet nicht)
+
+---
+
+## Verifizierung: Formel-Obsoleszenz
+
+**Ergebnis der Analyse:** 95% der manuellen Berechnungsformeln werden obsolet.
+
+| Kategorie | Formeln | Status |
+|-----------|---------|--------|
+| Momentum (RSI, Stochastic, Williams %R, CCI, ROC, RSI Divergence) | 6 | ✅ Alle obsolet |
+| Trend (MACD, EMA, ADX, PSAR, Ichimoku) | 5 | ✅ Alle obsolet |
+| Volatility (Bollinger, ATR, Keltner) | 3 | ✅ Alle obsolet |
+| Volume (OBV, MFI, VWAP, Volume Profile) | 4 | ✅ Alle obsolet |
+| Support/Resistance (Pivots, Fibonacci) | 2 | ✅ Alle obsolet |
+| Patterns (31 Candlestick, 9 Chart) | 2 | ✅ Alle obsolet |
+
+**Einzige Lücke:** Bollinger Bandwidth (trivial: `(upper - lower) / middle`)
+
+**Signal Aggregation bleibt erhalten** - Dies ist beabsichtigte Trading-Strategie-Logik, keine Indikator-Berechnung.
