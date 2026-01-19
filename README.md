@@ -258,7 +258,7 @@ coinbase-mcp-server/
 ├── src/
 │   ├── index.ts                 # HTTP server entry point
 │   └── server/
-│       └── CoinbaseMcpServer.ts # MCP server with 55 tools
+│       └── CoinbaseMcpServer.ts # MCP server with 56 tools
 ├── .claude/
 │   ├── settings.json            # MCP server config (auto-loaded)
 │   └── commands/
@@ -283,7 +283,7 @@ npm run inspect    # Open MCP Inspector for debugging
 1. Start the server: `npm run dev`
 2. In another terminal: `npm run inspect`
 3. Connect to `http://localhost:3005/mcp`
-4. Test any of the 55 tools interactively
+4. Test any of the 56 tools interactively
 
 ---
 

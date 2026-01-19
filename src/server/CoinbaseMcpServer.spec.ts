@@ -1239,6 +1239,46 @@ describe('CoinbaseMcpServer Integration Tests', () => {
         expectResponseToContain(response, result);
       });
     });
+
+    describe('calculate_cci', () => {
+      it('should call calculateCci via MCP tool calculate_cci', async () => {
+        const args = {
+          candles: [
+            {
+              open: '100',
+              high: '110',
+              low: '95',
+              close: '105',
+              volume: '1000',
+            },
+            {
+              open: '105',
+              high: '115',
+              low: '100',
+              close: '110',
+              volume: '1100',
+            },
+          ],
+          period: 20,
+        };
+        const result = {
+          period: 20,
+          values: [66.67],
+          latestValue: 66.67,
+        };
+        mockTechnicalIndicatorsService.calculateCci.mockReturnValueOnce(result);
+
+        const response = await client.callTool({
+          name: 'calculate_cci',
+          arguments: args,
+        });
+
+        expect(
+          mockTechnicalIndicatorsService.calculateCci,
+        ).toHaveBeenCalledWith(args);
+        expectResponseToContain(response, result);
+      });
+    });
   });
 
   describe('Prompts', () => {
