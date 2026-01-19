@@ -704,6 +704,11 @@ result = detect_candlestick_patterns(candles)
 result = detect_chart_patterns(candles, lookbackPeriod=50)
 ```
 
+**With Volume Confirmation** (recommended):
+```
+result = detect_chart_patterns(candles, lookbackPeriod=50, volume=candles.volume)
+```
+
 **Output Structure**:
 ```json
 {
@@ -712,10 +717,11 @@ result = detect_chart_patterns(candles, lookbackPeriod=50)
     {
       "type": "double_bottom",
       "direction": "bullish",
-      "confidence": 0.85,
+      "confidence": "high",
       "startIndex": 10,
       "endIndex": 45,
-      "priceTarget": 48500.0
+      "priceTarget": 48500.0,
+      "volumeConfirmed": true
     }
   ],
   "bullishPatterns": [...],
@@ -724,12 +730,29 @@ result = detect_chart_patterns(candles, lookbackPeriod=50)
 }
 ```
 
+**Volume Confirmation**:
+
+When volume data is provided, the tool validates patterns using industry-standard volume analysis:
+
+- **Double Top/Bottom**: Second peak/trough should have lower volume than the first (confirmation)
+- **Head & Shoulders**: Volume typically decreases from left shoulder → head → right shoulder
+
+The `volumeConfirmed` field indicates whether the pattern follows expected volume behavior:
+- `true`: Volume confirms the pattern → Higher confidence
+- `false`: Volume contradicts the pattern → Lower confidence
+- `undefined`: No volume data provided → Confidence unchanged
+
+Volume confirmation adjusts pattern confidence:
+- Confirmed pattern: `medium` → `high`
+- Unconfirmed pattern: `high` → `medium`
+
 **Interpretation**:
 
 - Check `bullishPatterns` for: double_bottom, inverse_head_and_shoulders, ascending_triangle, bull_flag → +2 to +3
 - Check `bearishPatterns` for: double_top, head_and_shoulders, descending_triangle, bear_flag → -2 to -3
 - Use `priceTarget` for take-profit calculation
 - Higher `confidence` = more reliable signal
+- `volumeConfirmed: true` adds +1 to signal strength
 
 ---
 
