@@ -1,102 +1,161 @@
-# Technical Indicators
+# Technical Indicators - MCP Tool Reference
+
+This document describes how to interpret the outputs from MCP indicator tools.
+**Do NOT calculate indicators manually** - use the MCP tools instead.
 
 ## Momentum Indicators
 
 ### RSI (Relative Strength Index)
 
-**Period**: 14 candles
+**MCP Tool**: `calculate_rsi`
 
-**Calculation**:
+**Usage**:
+```
+result = calculate_rsi(candles, period=14)
+```
 
-1. Calculate price changes: `change = close[i] - close[i-1]`
-2. Separate gains (positive) and losses (negative, absolute)
-3. Average gain = SMA(gains, 14)
-4. Average loss = SMA(losses, 14)
-5. RS = Average gain / Average loss
-6. RSI = 100 - (100 / (1 + RS))
+**Output Structure**:
+```json
+{
+  "period": 14,
+  "values": [65.2, 68.1, 62.4, ...],
+  "latestValue": 62.4
+}
+```
+
+**Interpretation** (use `latestValue`):
+
+- < 30: Oversold → **BUY signal** (+2)
+- < 40: Slightly oversold → **Weak BUY** (+1)
+- 40-60: Neutral → No signal (0)
+- > 60: Slightly overbought → **Weak SELL** (-1)
+- > 70: Overbought → **SELL signal** (-2)
+
+**RSI Divergence** - use `detect_rsi_divergence`:
+
+**Usage**:
+```
+div_result = detect_rsi_divergence(candles)
+```
+
+**Output Structure**:
+```json
+{
+  "hasBullishDivergence": true,
+  "hasBearishDivergence": false,
+  "latestDivergence": { "type": "bullish", "strength": 0.8 }
+}
+```
 
 **Interpretation**:
-
-- RSI < 30: Oversold → **BUY signal** (+2)
-- RSI < 40: Slightly oversold → **Weak BUY** (+1)
-- RSI 40-60: Neutral → No signal (0)
-- RSI > 60: Slightly overbought → **Weak SELL** (-1)
-- RSI > 70: Overbought → **SELL signal** (-2)
-
-**RSI Divergence** (advanced):
-
-- Bullish divergence: Price makes lower low, RSI makes higher low → **Strong BUY** (+3)
-- Bearish divergence: Price makes higher high, RSI makes lower high → **Strong SELL** (-3)
+- `hasBullishDivergence: true` → **Strong BUY** (+3)
+- `hasBearishDivergence: true` → **Strong SELL** (-3)
 
 ---
 
 ### Stochastic Oscillator
 
-**Parameters**: %K period=14, %D period=3, slowing=3
+**MCP Tool**: `calculate_stochastic`
 
-**Calculation**:
+**Usage**:
+```
+result = calculate_stochastic(candles, kPeriod=14, dPeriod=3)
+```
 
-1. %K = 100 × (Close - Lowest Low) / (Highest High - Lowest Low)
-2. %D = SMA(%K, 3)
+**Output Structure**:
+```json
+{
+  "kPeriod": 14,
+  "dPeriod": 3,
+  "latestValue": { "k": 25.5, "d": 28.3 }
+}
+```
 
-**Interpretation**:
+**Interpretation** (use `latestValue.k` and `latestValue.d`):
 
-- %K < 20 AND %K crosses above %D → **BUY signal** (+2)
-- %K > 80 AND %K crosses below %D → **SELL signal** (-2)
-- %K < 20: Oversold zone → **Weak BUY** (+1)
-- %K > 80: Overbought zone → **Weak SELL** (-1)
+- k < 20 AND k crosses above d → **BUY signal** (+2)
+- k > 80 AND k crosses below d → **SELL signal** (-2)
+- k < 20: Oversold zone → **Weak BUY** (+1)
+- k > 80: Overbought zone → **Weak SELL** (-1)
 
 ---
 
 ### Williams %R
 
-**Period**: 14 candles
+**MCP Tool**: `calculate_williams_r`
 
-**Calculation**:
+**Usage**:
+```
+result = calculate_williams_r(candles, period=14)
+```
 
-1. %R = (Highest High - Close) / (Highest High - Lowest Low) × -100
+**Output Structure**:
+```json
+{
+  "period": 14,
+  "values": [-45.2, -38.1, -82.4, ...],
+  "latestValue": -82.4
+}
+```
 
-**Interpretation**:
+**Interpretation** (use `latestValue`):
 
-- %R < -80: Oversold → **BUY signal** (+1)
-- %R > -20: Overbought → **SELL signal** (-1)
+- < -80: Oversold → **BUY signal** (+1)
+- > -20: Overbought → **SELL signal** (-1)
 
 ---
 
 ### ROC (Rate of Change)
 
-**Period**: 12 candles
+**MCP Tool**: `calculate_roc`
 
-**Calculation**:
+**Usage**:
+```
+result = calculate_roc(candles, period=12)
+```
 
-1. ROC = ((Close - Close[12]) / Close[12]) × 100
+**Output Structure**:
+```json
+{
+  "period": 12,
+  "values": [2.5, 3.1, -1.2, ...],
+  "latestValue": -1.2
+}
+```
 
-**Interpretation**:
+**Interpretation** (use `latestValue` and `values` for trend):
 
-- ROC > 0 and rising → Bullish momentum (+1)
-- ROC < 0 and falling → Bearish momentum (-1)
-- ROC crosses zero upward → **BUY signal** (+2)
-- ROC crosses zero downward → **SELL signal** (-2)
+- > 0 and rising → Bullish momentum (+1)
+- < 0 and falling → Bearish momentum (-1)
+- crosses zero upward → **BUY signal** (+2)
+- crosses zero downward → **SELL signal** (-2)
 
 ---
 
 ### CCI (Commodity Channel Index)
 
-**Period**: 20 candles
+**MCP Tool**: `calculate_cci`
 
-**Calculation**:
+**Usage**:
+```
+result = calculate_cci(candles, period=20)
+```
 
-1. Typical Price (TP) = (High + Low + Close) / 3
-2. SMA of TP over 20 periods
-3. Mean Deviation = average of |TP - SMA|
-4. CCI = (TP - SMA) / (0.015 × Mean Deviation)
+**Output Structure**:
+```json
+{
+  "period": 20,
+  "values": [85.2, 110.5, -105.3, ...],
+  "latestValue": -105.3
+}
+```
 
-**Interpretation**:
+**Interpretation** (use `latestValue`):
 
-- CCI < -100: Oversold → **BUY signal** (+2)
-- CCI > +100: Overbought → **SELL signal** (-2)
-- CCI crosses -100 from below → Strong BUY (+3)
-- CCI crosses +100 from above → Strong SELL (-3)
+- < -100: Oversold → **BUY signal** (+2)
+- > +100: Overbought → **SELL signal** (-2)
+- crosses -100 from below → Strong BUY (+3)
+- crosses +100 from above → Strong SELL (-3)
 
 ---
 
@@ -104,34 +163,60 @@
 
 ### MACD (Moving Average Convergence Divergence)
 
-**Components**:
+**MCP Tool**: `calculate_macd`
 
-- Fast EMA: 12 periods
-- Slow EMA: 26 periods
-- Signal line: 9-period EMA of MACD
+**Usage**:
+```
+result = calculate_macd(candles, fastPeriod=12, slowPeriod=26, signalPeriod=9)
+```
 
-**Calculation**:
+**Output Structure**:
+```json
+{
+  "fastPeriod": 12,
+  "slowPeriod": 26,
+  "signalPeriod": 9,
+  "latestValue": {
+    "MACD": 125.5,
+    "signal": 98.2,
+    "histogram": 27.3
+  }
+}
+```
 
-1. MACD line = EMA(12) - EMA(26)
-2. Signal line = EMA(MACD, 9)
-3. Histogram = MACD - Signal
+**Interpretation** (use `latestValue`):
 
-**Interpretation**:
-
-- MACD above signal + positive histogram → **BUY signal** (+2)
-- MACD below signal + negative histogram → **SELL signal** (-2)
+- MACD > signal + positive histogram → **BUY signal** (+2)
+- MACD < signal + negative histogram → **SELL signal** (-2)
 - MACD crosses signal from below (Golden Cross) → **Strong BUY** (+3)
 - MACD crosses signal from above (Death Cross) → **Strong SELL** (-3)
-- Histogram increasing → Momentum strengthening
-- Histogram decreasing → Momentum weakening
+- histogram increasing → Momentum strengthening
+- histogram decreasing → Momentum weakening
 
 ---
 
-### EMA Crossovers
+### EMA (Exponential Moving Average)
 
-**Parameters**: EMA(9), EMA(21), EMA(50), EMA(200)
+**MCP Tool**: `calculate_ema`
 
-**Interpretation**:
+**Usage** (call multiple times for different periods):
+```
+ema_9 = calculate_ema(candles, period=9)
+ema_21 = calculate_ema(candles, period=21)
+ema_50 = calculate_ema(candles, period=50)
+ema_200 = calculate_ema(candles, period=200)
+```
+
+**Output Structure**:
+```json
+{
+  "period": 9,
+  "values": [45120.5, 45180.2, 45250.8, ...],
+  "latestValue": 45250.8
+}
+```
+
+**Interpretation** (compare `latestValue` from multiple EMAs):
 
 - EMA(9) > EMA(21) > EMA(50) → Strong uptrend (+2)
 - EMA(9) < EMA(21) < EMA(50) → Strong downtrend (-2)
@@ -144,34 +229,56 @@
 
 ### ADX (Average Directional Index)
 
-**Period**: 14 candles
+**MCP Tool**: `calculate_adx`
 
-**Calculation**:
+**Usage**:
+```
+result = calculate_adx(candles, period=14)
+```
 
-1. +DM = Current High - Previous High (if positive)
-2. -DM = Previous Low - Current Low (if positive)
-3. TR = max(High-Low, |High-PrevClose|, |Low-PrevClose|)
-4. +DI = 100 × EMA(+DM) / EMA(TR)
-5. -DI = 100 × EMA(-DM) / EMA(TR)
-6. DX = 100 × |+DI - -DI| / (+DI + -DI)
-7. ADX = EMA(DX, 14)
+**Output Structure**:
+```json
+{
+  "period": 14,
+  "latestValue": {
+    "adx": 28.5,
+    "pdi": 25.2,
+    "mdi": 18.8
+  }
+}
+```
 
-**Interpretation**:
+**Interpretation** (use `latestValue`):
 
-- ADX > 25: Strong trend (confirms other signals)
-- ADX < 20: Weak/no trend (avoid trading)
-- +DI > -DI with ADX > 25 → **BUY signal** (+2)
-- -DI > +DI with ADX > 25 → **SELL signal** (-2)
-- +DI crosses above -DI → **BUY signal** (+2)
-- -DI crosses above +DI → **SELL signal** (-2)
+- adx > 25: Strong trend (confirms other signals)
+- adx < 20: Weak/no trend (avoid trading)
+- pdi > mdi with adx > 25 → **BUY signal** (+2)
+- mdi > pdi with adx > 25 → **SELL signal** (-2)
+- pdi crosses above mdi → **BUY signal** (+2)
+- mdi crosses above pdi → **SELL signal** (-2)
 
 ---
 
 ### Parabolic SAR
 
-**Parameters**: AF start=0.02, AF max=0.2
+**MCP Tool**: `calculate_psar`
 
-**Interpretation**:
+**Usage**:
+```
+result = calculate_psar(candles, step=0.02, max=0.2)
+```
+
+**Output Structure**:
+```json
+{
+  "step": 0.02,
+  "max": 0.2,
+  "values": [44850.2, 44920.5, 45010.8, ...],
+  "latestValue": 45010.8
+}
+```
+
+**Interpretation** (compare `latestValue` to current price):
 
 - SAR below price → Uptrend → **BUY signal** (+1)
 - SAR above price → Downtrend → **SELL signal** (-1)
@@ -182,23 +289,38 @@
 
 ### Ichimoku Cloud
 
-**Components**:
+**MCP Tool**: `calculate_ichimoku_cloud`
 
-- Tenkan-sen (Conversion): (9-period high + 9-period low) / 2
-- Kijun-sen (Base): (26-period high + 26-period low) / 2
-- Senkou Span A: (Tenkan + Kijun) / 2, plotted 26 periods ahead
-- Senkou Span B: (52-period high + 52-period low) / 2, plotted 26 periods ahead
-- Cloud (Kumo): Area between Senkou Span A and B
+**Usage**:
+```
+result = calculate_ichimoku_cloud(candles, conversionPeriod=9, basePeriod=26, spanPeriod=52, displacement=26)
+```
 
-**Interpretation**:
+**Output Structure**:
+```json
+{
+  "conversionPeriod": 9,
+  "basePeriod": 26,
+  "spanPeriod": 52,
+  "displacement": 26,
+  "latestValue": {
+    "conversion": 45100.5,
+    "base": 44850.2,
+    "spanA": 44975.35,
+    "spanB": 44500.8
+  }
+}
+```
 
-- Price above cloud → Bullish (+1)
-- Price below cloud → Bearish (-1)
+**Interpretation** (use `latestValue`):
+
+- Price above spanA AND spanB → Bullish (+1)
+- Price below spanA AND spanB → Bearish (-1)
 - Price enters cloud from below → Potential reversal, wait
-- Tenkan crosses Kijun upward above cloud → **Strong BUY** (+3)
-- Tenkan crosses Kijun downward below cloud → **Strong SELL** (-3)
-- Future cloud green (A > B) → Bullish bias (+1)
-- Future cloud red (B > A) → Bearish bias (-1)
+- conversion crosses base upward above cloud → **Strong BUY** (+3)
+- conversion crosses base downward below cloud → **Strong SELL** (-3)
+- spanA > spanB (green cloud) → Bullish bias (+1)
+- spanB > spanA (red cloud) → Bearish bias (-1)
 
 ---
 
@@ -206,38 +328,56 @@
 
 ### Bollinger Bands
 
-**Parameters**:
+**MCP Tool**: `calculate_bollinger_bands`
 
-- Period: 20 candles
-- Standard deviations: 2
+**Usage**:
+```
+result = calculate_bollinger_bands(candles, period=20, stdDev=2)
+```
 
-**Calculation**:
+**Output Structure**:
+```json
+{
+  "period": 20,
+  "stdDev": 2,
+  "latestValue": {
+    "middle": 45000.0,
+    "upper": 46200.5,
+    "lower": 43799.5,
+    "pb": 0.65,
+    "bandwidth": 0.0534
+  }
+}
+```
 
-1. Middle band = SMA(close, 20)
-2. Upper band = Middle + 2 × StdDev(close, 20)
-3. Lower band = Middle - 2 × StdDev(close, 20)
-4. %B = (Price - Lower) / (Upper - Lower)
-5. Bandwidth = (Upper - Lower) / Middle
+**Interpretation** (use `latestValue`):
 
-**Interpretation**:
-
-- Price touches/below lower band (%B < 0) → **BUY signal** (+2)
-- Price touches/above upper band (%B > 1) → **SELL signal** (-2)
+- pb < 0 (price below lower band) → **BUY signal** (+2)
+- pb > 1 (price above upper band) → **SELL signal** (-2)
 - Price crosses middle band upward → Bullish (+1)
 - Price crosses middle band downward → Bearish (-1)
-- Bandwidth squeeze (low volatility) → Breakout imminent, prepare
-- Bandwidth expansion → Trend continuation
+- bandwidth low (squeeze) → Breakout imminent, prepare
+- bandwidth expanding → Trend continuation
 
 ---
 
 ### ATR (Average True Range)
 
-**Period**: 14 candles
+**MCP Tool**: `calculate_atr`
 
-**Calculation**:
+**Usage**:
+```
+result = calculate_atr(candles, period=14)
+```
 
-1. TR = max(High-Low, |High-PrevClose|, |Low-PrevClose|)
-2. ATR = SMA(TR, 14)
+**Output Structure**:
+```json
+{
+  "period": 14,
+  "values": [1250.5, 1320.2, 1180.8, ...],
+  "latestValue": 1180.8
+}
+```
 
 **Use for**:
 
@@ -245,7 +385,7 @@
 - Position sizing: Smaller positions when ATR high
 - Volatility filter: High ATR = risky conditions
 
-**Interpretation**:
+**Interpretation** (compare `latestValue` to historical average):
 
 - ATR increasing → Increasing volatility, larger moves expected
 - ATR decreasing → Decreasing volatility, consolidation
@@ -255,15 +395,28 @@
 
 ### Keltner Channels
 
-**Parameters**: EMA period=20, ATR multiplier=2
+**MCP Tool**: `calculate_keltner_channels`
 
-**Calculation**:
+**Usage**:
+```
+result = calculate_keltner_channels(candles, maPeriod=20, atrPeriod=10, multiplier=2)
+```
 
-1. Middle = EMA(close, 20)
-2. Upper = Middle + 2 × ATR(10)
-3. Lower = Middle - 2 × ATR(10)
+**Output Structure**:
+```json
+{
+  "maPeriod": 20,
+  "atrPeriod": 10,
+  "multiplier": 2,
+  "latestValue": {
+    "middle": 45000.0,
+    "upper": 47500.5,
+    "lower": 42499.5
+  }
+}
+```
 
-**Interpretation**:
+**Interpretation** (compare price to `latestValue`):
 
 - Price below lower channel → **BUY signal** (+1)
 - Price above upper channel → **SELL signal** (-1)
@@ -275,13 +428,22 @@
 
 ### OBV (On-Balance Volume)
 
-**Calculation**:
+**MCP Tool**: `calculate_obv`
 
-1. If close > prev close: OBV = prev OBV + volume
-2. If close < prev close: OBV = prev OBV - volume
-3. If close = prev close: OBV = prev OBV
+**Usage**:
+```
+result = calculate_obv(candles)
+```
 
-**Interpretation**:
+**Output Structure**:
+```json
+{
+  "values": [125000, 128500, 126200, ...],
+  "latestValue": 126200
+}
+```
+
+**Interpretation** (analyze `values` trend vs price trend):
 
 - OBV rising with price rising → Trend confirmed (+1)
 - OBV falling with price rising → **Bearish divergence** (-2)
@@ -292,41 +454,80 @@
 
 ### Volume Profile
 
+**MCP Tool**: `calculate_volume_profile`
+
+**Usage**:
+```
+result = calculate_volume_profile(candles, noOfBars=12)
+```
+
+**Output Structure**:
+```json
+{
+  "noOfBars": 12,
+  "zones": [
+    { "priceFrom": 44000, "priceTo": 44500, "volume": 125000 },
+    ...
+  ],
+  "pointOfControl": { "priceFrom": 45000, "priceTo": 45500, "volume": 250000 },
+  "valueAreaHigh": 46000,
+  "valueAreaLow": 44000
+}
+```
+
 **Interpretation**:
 
-- Volume increasing on up moves → Bullish (+1)
-- Volume increasing on down moves → Bearish (-1)
-- Volume spike > 2× average → Significant move, confirms direction
-- Decreasing volume during trend → Trend weakening
+- Price near `pointOfControl` → Strong support/resistance level
+- Price above `valueAreaHigh` → Bullish breakout (+1)
+- Price below `valueAreaLow` → Bearish breakdown (-1)
+- High volume zones act as support/resistance
 
 ---
 
 ### MFI (Money Flow Index)
 
-**Period**: 14 candles
+**MCP Tool**: `calculate_mfi`
 
-**Calculation**:
+**Usage**:
+```
+result = calculate_mfi(candles, period=14)
+```
 
-1. Typical Price = (High + Low + Close) / 3
-2. Raw Money Flow = TP × Volume
-3. Positive/Negative MF based on TP direction
-4. MFI = 100 - (100 / (1 + Positive MF / Negative MF))
+**Output Structure**:
+```json
+{
+  "period": 14,
+  "values": [55.2, 62.1, 18.5, ...],
+  "latestValue": 18.5
+}
+```
 
-**Interpretation**:
+**Interpretation** (use `latestValue`):
 
-- MFI < 20: Oversold → **BUY signal** (+2)
-- MFI > 80: Overbought → **SELL signal** (-2)
+- < 20: Oversold → **BUY signal** (+2)
+- > 80: Overbought → **SELL signal** (-2)
 - MFI divergence from price → Reversal signal (±3)
 
 ---
 
 ### VWAP (Volume Weighted Average Price)
 
-**Calculation**:
+**MCP Tool**: `calculate_vwap`
 
-1. VWAP = Σ(Price × Volume) / Σ(Volume)
+**Usage**:
+```
+result = calculate_vwap(candles)
+```
 
-**Interpretation**:
+**Output Structure**:
+```json
+{
+  "values": [45120.5, 45180.2, 45250.8, ...],
+  "latestValue": 45250.8
+}
+```
+
+**Interpretation** (compare price to `latestValue`):
 
 - Price above VWAP → Bullish, buyers in control (+1)
 - Price below VWAP → Bearish, sellers in control (-1)
@@ -339,28 +540,66 @@
 
 ### Pivot Points
 
-**Calculation**:
+**MCP Tool**: `calculate_pivot_points`
 
-1. Pivot = (High + Low + Close) / 3
-2. R1 = 2 × Pivot - Low
-3. S1 = 2 × Pivot - High
-4. R2 = Pivot + (High - Low)
-5. S2 = Pivot - (High - Low)
+**Usage**:
+```
+result = calculate_pivot_points(high, low, close, type="standard")
+```
+
+**Types available**: standard, fibonacci, woodie, camarilla, demark
+
+**Output Structure**:
+```json
+{
+  "type": "standard",
+  "pivotPoint": 45000.0,
+  "resistance1": 45500.0,
+  "resistance2": 46200.0,
+  "resistance3": 46700.0,
+  "support1": 44300.0,
+  "support2": 43800.0,
+  "support3": 43100.0
+}
+```
 
 **Interpretation**:
 
-- Price bouncing off S1/S2 → **BUY signal** (+2)
-- Price rejected at R1/R2 → **SELL signal** (-2)
-- Price breaks above R1 → Bullish breakout (+2)
-- Price breaks below S1 → Bearish breakdown (-2)
+- Price bouncing off support1/support2 → **BUY signal** (+2)
+- Price rejected at resistance1/resistance2 → **SELL signal** (-2)
+- Price breaks above resistance1 → Bullish breakout (+2)
+- Price breaks below support1 → Bearish breakdown (-2)
 
 ---
 
 ### Fibonacci Retracement
 
-**Key Levels**: 23.6%, 38.2%, 50%, 61.8%, 78.6%
+**MCP Tool**: `calculate_fibonacci_retracement`
 
-**Interpretation**:
+**Usage**:
+```
+result = calculate_fibonacci_retracement(start=43000, end=47000)
+```
+
+**Output Structure**:
+```json
+{
+  "start": 43000,
+  "end": 47000,
+  "trend": "uptrend",
+  "levels": [
+    { "level": 0, "price": 43000 },
+    { "level": 23.6, "price": 43944 },
+    { "level": 38.2, "price": 44528 },
+    { "level": 50, "price": 45000 },
+    { "level": 61.8, "price": 45472 },
+    { "level": 78.6, "price": 46144 },
+    { "level": 100, "price": 47000 }
+  ]
+}
+```
+
+**Interpretation** (use `levels` for key price levels):
 
 - Price bounces at 38.2% or 50% retracement → **BUY in uptrend** (+2)
 - Price bounces at 61.8% retracement → **Strong BUY** (+3)
@@ -373,42 +612,73 @@
 
 ### Candlestick Patterns
 
-**Bullish Patterns** (BUY signals):
+**MCP Tool**: `detect_candlestick_patterns`
 
-- Hammer / Inverted Hammer at support → +2
-- Bullish Engulfing → +3
-- Morning Star → +3
-- Three White Soldiers → +3
-- Piercing Line → +2
-- Doji after downtrend → +1 (reversal warning)
+**Usage**:
+```
+result = detect_candlestick_patterns(candles)
+```
 
-**Bearish Patterns** (SELL signals):
+**Output Structure**:
+```json
+{
+  "bullish": true,
+  "bearish": false,
+  "patterns": [
+    { "name": "Hammer", "type": "bullish", "detected": true },
+    { "name": "Bullish Engulfing", "type": "bullish", "detected": true },
+    { "name": "Shooting Star", "type": "bearish", "detected": false },
+    ...
+  ],
+  "detectedPatterns": ["Hammer", "Bullish Engulfing"]
+}
+```
 
-- Shooting Star / Hanging Man at resistance → -2
-- Bearish Engulfing → -3
-- Evening Star → -3
-- Three Black Crows → -3
-- Dark Cloud Cover → -2
-- Doji after uptrend → -1 (reversal warning)
+**Interpretation**:
+
+- `bullish: true` → Overall bullish bias (+2)
+- `bearish: true` → Overall bearish bias (-2)
+- Check `detectedPatterns` for specific patterns:
+  - Bullish: Hammer, Bullish Engulfing, Morning Star → +2 to +3
+  - Bearish: Shooting Star, Bearish Engulfing, Evening Star → -2 to -3
 
 ---
 
 ### Chart Patterns
 
-**Bullish Patterns**:
+**MCP Tool**: `detect_chart_patterns`
 
-- Double Bottom → +3
-- Inverse Head & Shoulders → +3
-- Ascending Triangle breakout → +2
-- Bull Flag breakout → +2
-- Cup and Handle → +2
+**Usage**:
+```
+result = detect_chart_patterns(candles, lookbackPeriod=50)
+```
 
-**Bearish Patterns**:
+**Output Structure**:
+```json
+{
+  "lookbackPeriod": 50,
+  "patterns": [
+    {
+      "type": "double_bottom",
+      "direction": "bullish",
+      "confidence": 0.85,
+      "startIndex": 10,
+      "endIndex": 45,
+      "priceTarget": 48500.0
+    }
+  ],
+  "bullishPatterns": [...],
+  "bearishPatterns": [...],
+  "latestPattern": { "type": "double_bottom", ... }
+}
+```
 
-- Double Top → -3
-- Head & Shoulders → -3
-- Descending Triangle breakdown → -2
-- Bear Flag breakdown → -2
+**Interpretation**:
+
+- Check `bullishPatterns` for: double_bottom, inverse_head_and_shoulders, ascending_triangle, bull_flag → +2 to +3
+- Check `bearishPatterns` for: double_top, head_and_shoulders, descending_triangle, bear_flag → -2 to -3
+- Use `priceTarget` for take-profit calculation
+- Higher `confidence` = more reliable signal
 
 ---
 
@@ -428,7 +698,7 @@
 ### Final Signal Calculation
 
 ```
-Total Score = (Momentum × 0.25) + (Trend × 0.30) + (Volatility × 0.15) 
+Total Score = (Momentum × 0.25) + (Trend × 0.30) + (Volatility × 0.15)
             + (Volume × 0.15) + (S/R × 0.10) + (Patterns × 0.05)
 
 Normalized = Total Score / Max Possible Score × 100
@@ -454,3 +724,15 @@ Normalized = Total Score / Max Possible Score × 100
 4. **Volume confirmation required for breakouts**
 5. **Avoid trading during low volatility (ATR squeeze)**
 6. **Multiple timeframe confirmation increases confidence**
+
+### Null-Safety
+
+Many MCP tools return `latestValue: null` when insufficient data is available. Always check for null before using:
+
+```
+// WRONG - can cause errors:
+if (rsi.latestValue < 30) { ... }
+
+// CORRECT - null check first:
+if (rsi.latestValue !== null && rsi.latestValue < 30) { ... }
+```

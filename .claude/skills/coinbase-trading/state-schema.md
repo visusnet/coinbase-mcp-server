@@ -60,6 +60,23 @@ Single Source of Truth for `.claude/trading-state.json` structure.
       "lastRebalance": null,
       "recentlyExited": [],
       "rebalanceHistory": []
+    },
+    "indicatorCache": {
+      "BTC-EUR": {
+        "15m": {
+          "timestamp": "2026-01-19T10:30:00Z",
+          "rsi": { "latestValue": 65, "signal": "neutral" },
+          "macd": { "histogram": 120, "signal": "bullish" },
+          "adx": { "adx": 28, "pdi": 25, "mdi": 18, "trend": "strong" },
+          "scores": {
+            "momentum": 55,
+            "trend": 70,
+            "volatility": 45,
+            "volume": 60,
+            "final": 58
+          }
+        }
+      }
     }
   },
   "openPositions": [
@@ -191,6 +208,12 @@ Single Source of Truth for `.claude/trading-state.json` structure.
 | `session.rebalancing.lastRebalance` | string | ISO 8601, last rebalance time |
 | `session.rebalancing.recentlyExited` | array | Pairs exited in last 24h (no flip-back) |
 | `session.rebalancing.rebalanceHistory` | array | History of rebalance events |
+| `session.indicatorCache` | object | Cached indicator results by pair and timeframe |
+| `session.indicatorCache[pair][timeframe].timestamp` | string | ISO 8601, when cache was updated |
+| `session.indicatorCache[pair][timeframe].rsi` | object | RSI indicator result |
+| `session.indicatorCache[pair][timeframe].macd` | object | MACD indicator result |
+| `session.indicatorCache[pair][timeframe].adx` | object | ADX indicator result |
+| `session.indicatorCache[pair][timeframe].scores` | object | Category scores (momentum, trend, etc.) |
 
 ## Open Position Object Fields
 
