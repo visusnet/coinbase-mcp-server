@@ -1,5 +1,21 @@
 import { describe, it, expect } from '@jest/globals';
-import { detectChartPatterns } from './chartPatterns';
+import { detectChartPatterns, ChartPattern } from './chartPatterns';
+
+/**
+ * Helper to find a pattern by type and throw a descriptive error if not found.
+ * This ensures tests fail with clear messages when expected patterns aren't detected.
+ */
+function findPatternOrFail(
+  patterns: ChartPattern[],
+  type: ChartPattern['type'],
+): ChartPattern {
+  const pattern = patterns.find((p) => p.type === type);
+  if (!pattern) {
+    const found = patterns.map((p) => p.type).join(', ') || 'none';
+    throw new Error(`Expected to find pattern '${type}' but found: [${found}]`);
+  }
+  return pattern;
+}
 
 describe('chartPatterns', () => {
   describe('detectChartPatterns', () => {
@@ -48,11 +64,10 @@ describe('chartPatterns', () => {
 
       const result = detectChartPatterns(high, low, close, 50);
 
-      const doubleTop = result.find((p) => p.type === 'double_top');
-      expect(doubleTop).toBeDefined();
-      expect(doubleTop?.direction).toBe('bearish');
-      expect(doubleTop?.priceTarget).toBeDefined();
-      expect(doubleTop?.neckline).toBeDefined();
+      const doubleTop = findPatternOrFail(result, 'double_top');
+      expect(doubleTop.direction).toBe('bearish');
+      expect(doubleTop.priceTarget).toBeDefined();
+      expect(doubleTop.neckline).toBeDefined();
     });
 
     it('should detect head and shoulders pattern', () => {
@@ -242,13 +257,11 @@ describe('chartPatterns', () => {
 
       const result = detectChartPatterns(high, low, close, 50);
 
-      // Check if H&S is detected
-      const hs = result.find((p) => p.type === 'head_and_shoulders');
-      expect(hs).toBeDefined();
-      expect(hs?.direction).toBe('bearish');
-      expect(hs?.neckline).toBeDefined();
-      expect(hs?.priceTarget).toBeDefined();
-      expect(typeof hs?.neckline).toBe('number');
+      const hs = findPatternOrFail(result, 'head_and_shoulders');
+      expect(hs.direction).toBe('bearish');
+      expect(hs.neckline).toBeDefined();
+      expect(hs.priceTarget).toBeDefined();
+      expect(typeof hs.neckline).toBe('number');
     });
 
     it('should detect inverse head and shoulders pattern', () => {
@@ -486,13 +499,11 @@ describe('chartPatterns', () => {
 
       const result = detectChartPatterns(high, low, close, 50);
 
-      // Check if Inverse H&S is detected
-      const ihs = result.find((p) => p.type === 'inverse_head_and_shoulders');
-      expect(ihs).toBeDefined();
-      expect(ihs?.direction).toBe('bullish');
-      expect(ihs?.neckline).toBeDefined();
-      expect(ihs?.priceTarget).toBeDefined();
-      expect(typeof ihs?.neckline).toBe('number');
+      const ihs = findPatternOrFail(result, 'inverse_head_and_shoulders');
+      expect(ihs.direction).toBe('bullish');
+      expect(ihs.neckline).toBeDefined();
+      expect(ihs.priceTarget).toBeDefined();
+      expect(typeof ihs.neckline).toBe('number');
     });
 
     it('should detect double bottom pattern', () => {
@@ -530,11 +541,10 @@ describe('chartPatterns', () => {
 
       const result = detectChartPatterns(high, low, close, 50);
 
-      const doubleBottom = result.find((p) => p.type === 'double_bottom');
-      expect(doubleBottom).toBeDefined();
-      expect(doubleBottom?.direction).toBe('bullish');
-      expect(doubleBottom?.priceTarget).toBeDefined();
-      expect(doubleBottom?.neckline).toBeDefined();
+      const doubleBottom = findPatternOrFail(result, 'double_bottom');
+      expect(doubleBottom.direction).toBe('bullish');
+      expect(doubleBottom.priceTarget).toBeDefined();
+      expect(doubleBottom.neckline).toBeDefined();
     });
 
     it('should detect ascending triangle pattern when conditions are met', () => {
@@ -767,9 +777,8 @@ describe('chartPatterns', () => {
         }
 
         const result = detectChartPatterns(high, low, close, 50);
-        const doubleTop = result.find((p) => p.type === 'double_top');
-        expect(doubleTop).toBeDefined();
-        expect(doubleTop?.confidence).toBe('medium');
+        const doubleTop = findPatternOrFail(result, 'double_top');
+        expect(doubleTop.confidence).toBe('medium');
       });
 
       it('should assign low confidence to double top when peak diff is ~2%', () => {
@@ -807,10 +816,8 @@ describe('chartPatterns', () => {
         }
 
         const result = detectChartPatterns(high, low, close, 50);
-        const doubleTop = result.find((p) => p.type === 'double_top');
-        // Pattern must be detected for this test to be meaningful
-        expect(doubleTop).toBeDefined();
-        expect(doubleTop?.confidence).toBe('low');
+        const doubleTop = findPatternOrFail(result, 'double_top');
+        expect(doubleTop.confidence).toBe('low');
       });
 
       it('should assign medium confidence to double bottom when trough diff is 1-2%', () => {
@@ -846,9 +853,8 @@ describe('chartPatterns', () => {
         }
 
         const result = detectChartPatterns(high, low, close, 50);
-        const doubleBottom = result.find((p) => p.type === 'double_bottom');
-        expect(doubleBottom).toBeDefined();
-        expect(doubleBottom?.confidence).toBe('medium');
+        const doubleBottom = findPatternOrFail(result, 'double_bottom');
+        expect(doubleBottom.confidence).toBe('medium');
       });
 
       it('should assign low confidence to double bottom when trough diff is ~2%', () => {
@@ -884,9 +890,8 @@ describe('chartPatterns', () => {
         }
 
         const result = detectChartPatterns(high, low, close, 50);
-        const doubleBottom = result.find((p) => p.type === 'double_bottom');
-        expect(doubleBottom).toBeDefined();
-        expect(doubleBottom?.confidence).toBe('low');
+        const doubleBottom = findPatternOrFail(result, 'double_bottom');
+        expect(doubleBottom.confidence).toBe('low');
       });
 
       it('should assign high confidence to H&S when shoulder diff is < 1.5%', () => {
@@ -929,9 +934,8 @@ describe('chartPatterns', () => {
         }
 
         const result = detectChartPatterns(high, low, close, 50);
-        const hs = result.find((p) => p.type === 'head_and_shoulders');
-        expect(hs).toBeDefined();
-        expect(hs?.confidence).toBe('high');
+        const hs = findPatternOrFail(result, 'head_and_shoulders');
+        expect(hs.confidence).toBe('high');
       });
 
       it('should assign medium confidence to H&S when shoulder diff is 1.5-2.5%', () => {
@@ -974,9 +978,8 @@ describe('chartPatterns', () => {
         }
 
         const result = detectChartPatterns(high, low, close, 50);
-        const hs = result.find((p) => p.type === 'head_and_shoulders');
-        expect(hs).toBeDefined();
-        expect(hs?.confidence).toBe('medium');
+        const hs = findPatternOrFail(result, 'head_and_shoulders');
+        expect(hs.confidence).toBe('medium');
       });
 
       it('should assign low confidence to H&S when shoulder diff is >= 2.5%', () => {
@@ -1019,10 +1022,9 @@ describe('chartPatterns', () => {
         }
 
         const result = detectChartPatterns(high, low, close, 50);
-        const hs = result.find((p) => p.type === 'head_and_shoulders');
-        expect(hs).toBeDefined();
-        expect(hs?.direction).toBe('bearish');
-        expect(hs?.confidence).toBe('low');
+        const hs = findPatternOrFail(result, 'head_and_shoulders');
+        expect(hs.direction).toBe('bearish');
+        expect(hs.confidence).toBe('low');
       });
 
       it('should assign high confidence to inverse H&S when shoulder diff is < 1.5%', () => {
@@ -1065,9 +1067,8 @@ describe('chartPatterns', () => {
         }
 
         const result = detectChartPatterns(high, low, close, 50);
-        const ihs = result.find((p) => p.type === 'inverse_head_and_shoulders');
-        expect(ihs).toBeDefined();
-        expect(ihs?.confidence).toBe('high');
+        const ihs = findPatternOrFail(result, 'inverse_head_and_shoulders');
+        expect(ihs.confidence).toBe('high');
       });
 
       it('should assign medium confidence to inverse H&S when shoulder diff is 1.5-2.5%', () => {
@@ -1110,9 +1111,8 @@ describe('chartPatterns', () => {
         }
 
         const result = detectChartPatterns(high, low, close, 50);
-        const ihs = result.find((p) => p.type === 'inverse_head_and_shoulders');
-        expect(ihs).toBeDefined();
-        expect(ihs?.confidence).toBe('medium');
+        const ihs = findPatternOrFail(result, 'inverse_head_and_shoulders');
+        expect(ihs.confidence).toBe('medium');
       });
 
       it('should assign low confidence to inverse H&S when shoulder diff is >= 2.5%', () => {
@@ -1159,10 +1159,9 @@ describe('chartPatterns', () => {
         }
 
         const result = detectChartPatterns(high, low, close, 50);
-        const ihs = result.find((p) => p.type === 'inverse_head_and_shoulders');
-        expect(ihs).toBeDefined();
-        expect(ihs?.direction).toBe('bullish');
-        expect(ihs?.confidence).toBe('low');
+        const ihs = findPatternOrFail(result, 'inverse_head_and_shoulders');
+        expect(ihs.direction).toBe('bullish');
+        expect(ihs.confidence).toBe('low');
       });
 
       it('should assign high confidence to bull flag when pole gain > 10%', () => {
@@ -1188,9 +1187,8 @@ describe('chartPatterns', () => {
         }
 
         const result = detectChartPatterns(high, low, close, 30);
-        const bullFlag = result.find((p) => p.type === 'bull_flag');
-        expect(bullFlag).toBeDefined();
-        expect(bullFlag?.confidence).toBe('high');
+        const bullFlag = findPatternOrFail(result, 'bull_flag');
+        expect(bullFlag.confidence).toBe('high');
       });
 
       it('should assign high confidence to bear flag when pole loss > 10%', () => {
@@ -1216,9 +1214,8 @@ describe('chartPatterns', () => {
         }
 
         const result = detectChartPatterns(high, low, close, 30);
-        const bearFlag = result.find((p) => p.type === 'bear_flag');
-        expect(bearFlag).toBeDefined();
-        expect(bearFlag?.confidence).toBe('high');
+        const bearFlag = findPatternOrFail(result, 'bear_flag');
+        expect(bearFlag.confidence).toBe('high');
       });
 
       it('should skip patterns when pole start is before analysis window', () => {
