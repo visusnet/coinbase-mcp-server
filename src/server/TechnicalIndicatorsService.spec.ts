@@ -1263,15 +1263,18 @@ describe('TechnicalIndicatorsService', () => {
         base: number;
         spanA: number;
         spanB: number;
+        chikou: number;
       };
       expect(latestValue).toHaveProperty('conversion');
       expect(latestValue).toHaveProperty('base');
       expect(latestValue).toHaveProperty('spanA');
       expect(latestValue).toHaveProperty('spanB');
+      expect(latestValue).toHaveProperty('chikou');
       expect(typeof latestValue.conversion).toBe('number');
       expect(typeof latestValue.base).toBe('number');
       expect(typeof latestValue.spanA).toBe('number');
       expect(typeof latestValue.spanB).toBe('number');
+      expect(typeof latestValue.chikou).toBe('number');
     });
 
     it('should accept custom period parameters', () => {
