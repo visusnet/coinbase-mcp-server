@@ -96,17 +96,20 @@ export function calculateWoodiePivotPoints(
 
 /**
  * Calculate Camarilla Pivot Points.
+ *
+ * Note: The original Camarilla method does not define a traditional pivot point.
+ * Following common industry practice (TradingView, many trading platforms),
+ * we use the closing price as the pivot point reference level.
  */
 export function calculateCamarillaPivotPoints(
   high: number,
   low: number,
   close: number,
 ): PivotPointsOutput {
-  const pp = (high + low + close) / 3;
   const range = high - low;
   return {
     type: 'camarilla' as PivotPointsType,
-    pivotPoint: pp,
+    pivotPoint: close, // Camarilla uses close as reference point
     resistance1: close + (range * 1.1) / 12,
     resistance2: close + (range * 1.1) / 6,
     resistance3: close + (range * 1.1) / 4,
