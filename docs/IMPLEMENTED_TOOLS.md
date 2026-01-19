@@ -4,7 +4,7 @@
 
 This server now uses the official `@coinbase-sample/advanced-trade-sdk-ts` SDK directly, eliminating all custom domain/repository layers.
 
-**Total Tools: 56**
+**Total Tools: 57**
 
 ## Accounts (2)
 
@@ -85,7 +85,7 @@ This server now uses the official `@coinbase-sample/advanced-trade-sdk-ts` SDK d
 
 - ✅ `get_api_key_permissions` - Get current API key permissions
 
-## Technical Indicators (10)
+## Technical Indicators (11)
 
 - ✅ `calculate_rsi` - Calculate RSI (Relative Strength Index)
 - ✅ `calculate_macd` - Calculate MACD (Moving Average Convergence Divergence)
@@ -97,3 +97,4 @@ This server now uses the official `@coinbase-sample/advanced-trade-sdk-ts` SDK d
 - ✅ `calculate_obv` - Calculate OBV (On-Balance Volume)
 - ✅ `calculate_vwap` - Calculate VWAP (Volume Weighted Average Price)
 - ✅ `calculate_cci` - Calculate CCI (Commodity Channel Index)
+- ✅ `calculate_williams_r` - Calculate Williams %R

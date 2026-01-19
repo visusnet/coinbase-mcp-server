@@ -881,4 +881,77 @@ describe('TechnicalIndicatorsService', () => {
       expect(result.latestValue).toBeNull();
     });
   });
+
+  describe('calculateWilliamsR', () => {
+    const generateCandles = (
+      data: { high: number; low: number; close: number }[],
+    ): CandleInput[] => {
+      return data.map(({ high, low, close }) => ({
+        open: close.toString(),
+        high: high.toString(),
+        low: low.toString(),
+        close: close.toString(),
+        volume: '1000',
+      }));
+    };
+
+    it('should calculate Williams %R with default period of 14', () => {
+      const data = Array.from({ length: 20 }, (_, i) => ({
+        high: 105 + i,
+        low: 95 + i,
+        close: 100 + i,
+      }));
+      const candles = generateCandles(data);
+
+      const result = service.calculateWilliamsR({ candles });
+
+      expect(result.period).toBe(14);
+      expect(result.values.length).toBeGreaterThan(0);
+      expect(result.latestValue).not.toBeNull();
+    });
+
+    it('should calculate Williams %R with custom period', () => {
+      const data = Array.from({ length: 15 }, (_, i) => ({
+        high: 110 + i,
+        low: 90 + i,
+        close: 100 + i,
+      }));
+      const candles = generateCandles(data);
+
+      const result = service.calculateWilliamsR({ candles, period: 5 });
+
+      expect(result.period).toBe(5);
+      expect(result.values.length).toBeGreaterThan(0);
+    });
+
+    it('should return values between -100 and 0', () => {
+      const data = Array.from({ length: 20 }, (_, i) => ({
+        high: 105 + i,
+        low: 95 + i,
+        close: 100 + i,
+      }));
+      const candles = generateCandles(data);
+
+      const result = service.calculateWilliamsR({ candles });
+
+      expect(result.latestValue).not.toBeNull();
+      const latestValue = result.latestValue as number;
+      // Williams %R ranges from -100 to 0
+      expect(latestValue).toBeLessThanOrEqual(0);
+      expect(latestValue).toBeGreaterThanOrEqual(-100);
+    });
+
+    it('should return null latestValue when not enough data', () => {
+      const data = [
+        { high: 105, low: 95, close: 100 },
+        { high: 106, low: 96, close: 101 },
+      ];
+      const candles = generateCandles(data);
+
+      const result = service.calculateWilliamsR({ candles });
+
+      expect(result.values.length).toBe(0);
+      expect(result.latestValue).toBeNull();
+    });
+  });
 });

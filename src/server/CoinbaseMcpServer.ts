@@ -1335,6 +1335,43 @@ export class CoinbaseMcpServer {
         this.technicalIndicators.calculateCci.bind(this.technicalIndicators),
       ),
     );
+
+    server.registerTool(
+      'calculate_williams_r',
+      {
+        title: 'Calculate Williams %R',
+        description:
+          'Calculate Williams %R from candle data. ' +
+          'Momentum indicator similar to Stochastic but inverted scale (-100 to 0). ' +
+          'Readings above -20 suggest overbought, below -80 suggest oversold. ' +
+          'Useful for identifying potential reversal points.',
+        inputSchema: {
+          candles: z
+            .array(
+              z.object({
+                open: z.string().describe('Opening price'),
+                high: z.string().describe('High price'),
+                low: z.string().describe('Low price'),
+                close: z.string().describe('Closing price'),
+                volume: z.string().describe('Volume'),
+              }),
+            )
+            .min(2)
+            .describe('Array of candle data'),
+          period: z
+            .number()
+            .int()
+            .min(1)
+            .optional()
+            .describe('Period for Williams %R calculation (default: 14)'),
+        },
+      },
+      this.call(
+        this.technicalIndicators.calculateWilliamsR.bind(
+          this.technicalIndicators,
+        ),
+      ),
+    );
   }
 
   private registerPromptsForServer(server: McpServer): void {
@@ -1363,7 +1400,7 @@ TOOL CATEGORIES (55 total):
 - Futures (4): list_futures_positions, get_futures_position, get_futures_balance_summary, list_futures_sweeps
 - Perpetuals (4): list_perpetuals_positions, get_perpetuals_position, get_perpetuals_portfolio_summary, get_perpetuals_portfolio_balance
 - Info (2): get_api_key_permissions, get_transaction_summary
-- Technical Indicators (10): calculate_rsi, calculate_macd, calculate_ema, calculate_bollinger_bands, calculate_atr, calculate_stochastic, calculate_adx, calculate_obv, calculate_vwap, calculate_cci
+- Technical Indicators (11): calculate_rsi, calculate_macd, calculate_ema, calculate_bollinger_bands, calculate_atr, calculate_stochastic, calculate_adx, calculate_obv, calculate_vwap, calculate_cci, calculate_williams_r
 
 BEST PRACTICES:
 1. Always preview_order before create_order
