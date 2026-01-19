@@ -1075,6 +1075,52 @@ describe('CoinbaseMcpServer Integration Tests', () => {
         expectResponseToContain(response, result);
       });
     });
+
+    describe('calculate_stochastic', () => {
+      it('should call calculateStochastic via MCP tool calculate_stochastic', async () => {
+        const args = {
+          candles: [
+            {
+              open: '100',
+              high: '110',
+              low: '95',
+              close: '105',
+              volume: '1000',
+            },
+            {
+              open: '105',
+              high: '115',
+              low: '100',
+              close: '110',
+              volume: '1100',
+            },
+          ],
+          kPeriod: 14,
+          dPeriod: 3,
+          stochPeriod: 3,
+        };
+        const result = {
+          kPeriod: 14,
+          dPeriod: 3,
+          stochPeriod: 3,
+          values: [{ k: 75, d: 70 }],
+          latestValue: { k: 75, d: 70 },
+        };
+        mockTechnicalIndicatorsService.calculateStochastic.mockReturnValueOnce(
+          result,
+        );
+
+        const response = await client.callTool({
+          name: 'calculate_stochastic',
+          arguments: args,
+        });
+
+        expect(
+          mockTechnicalIndicatorsService.calculateStochastic,
+        ).toHaveBeenCalledWith(args);
+        expectResponseToContain(response, result);
+      });
+    });
   });
 
   describe('Prompts', () => {

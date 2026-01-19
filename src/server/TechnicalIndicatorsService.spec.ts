@@ -421,4 +421,102 @@ describe('TechnicalIndicatorsService', () => {
       expect(result.latestValue).not.toBeNull();
     });
   });
+
+  describe('calculateStochastic', () => {
+    const generateCandles = (
+      data: { high: number; low: number; close: number }[],
+    ): CandleInput[] => {
+      return data.map(({ high, low, close }) => ({
+        open: close.toString(),
+        high: high.toString(),
+        low: low.toString(),
+        close: close.toString(),
+        volume: '1000',
+      }));
+    };
+
+    it('should calculate Stochastic with default periods (14/3/3)', () => {
+      const data = Array.from({ length: 20 }, (_, i) => ({
+        high: 105 + i,
+        low: 95 + i,
+        close: 100 + i,
+      }));
+      const candles = generateCandles(data);
+
+      const result = service.calculateStochastic({ candles });
+
+      expect(result.kPeriod).toBe(14);
+      expect(result.dPeriod).toBe(3);
+      expect(result.stochPeriod).toBe(3);
+      expect(result.values.length).toBeGreaterThan(0);
+      expect(result.latestValue).not.toBeNull();
+    });
+
+    it('should calculate Stochastic with custom periods', () => {
+      const data = Array.from({ length: 15 }, (_, i) => ({
+        high: 110 + i,
+        low: 90 + i,
+        close: 100 + i,
+      }));
+      const candles = generateCandles(data);
+
+      const result = service.calculateStochastic({
+        candles,
+        kPeriod: 5,
+        dPeriod: 2,
+        stochPeriod: 2,
+      });
+
+      expect(result.kPeriod).toBe(5);
+      expect(result.dPeriod).toBe(2);
+      expect(result.stochPeriod).toBe(2);
+      expect(result.values.length).toBeGreaterThan(0);
+    });
+
+    it('should return %K and %D values', () => {
+      const data = Array.from({ length: 20 }, (_, i) => ({
+        high: 105 + i,
+        low: 95 + i,
+        close: 100 + i,
+      }));
+      const candles = generateCandles(data);
+
+      const result = service.calculateStochastic({ candles });
+
+      expect(result.latestValue).not.toBeNull();
+      expect(result.latestValue).toHaveProperty('k');
+      expect(result.latestValue).toHaveProperty('d');
+    });
+
+    it('should return values between 0 and 100', () => {
+      const data = Array.from({ length: 20 }, (_, i) => ({
+        high: 105 + i * 2,
+        low: 95 + i,
+        close: 100 + i + (i % 2 === 0 ? 3 : -3),
+      }));
+      const candles = generateCandles(data);
+
+      const result = service.calculateStochastic({ candles, kPeriod: 5 });
+
+      expect(result.latestValue).not.toBeNull();
+      const { k, d } = result.latestValue as { k: number; d: number };
+      expect(k).toBeGreaterThanOrEqual(0);
+      expect(k).toBeLessThanOrEqual(100);
+      expect(d).toBeGreaterThanOrEqual(0);
+      expect(d).toBeLessThanOrEqual(100);
+    });
+
+    it('should return null latestValue when not enough data', () => {
+      const data = [
+        { high: 105, low: 95, close: 100 },
+        { high: 106, low: 96, close: 101 },
+      ];
+      const candles = generateCandles(data);
+
+      const result = service.calculateStochastic({ candles });
+
+      expect(result.values.length).toBe(0);
+      expect(result.latestValue).toBeNull();
+    });
+  });
 });
