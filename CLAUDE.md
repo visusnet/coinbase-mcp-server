@@ -1,6 +1,6 @@
 # Coinbase MCP Server
 
-MCP server with 60 tools (46 Coinbase Advanced Trade API + 14 technical indicators).
+MCP server with 61 tools (46 Coinbase Advanced Trade API + 15 technical indicators).
 
 ## Commands
 
@@ -56,7 +56,7 @@ See `.claude/rules/` for context-specific guidelines:
 ```bash
 npm run inspect    # MCP Inspector at http://localhost:6274
                    # Connect to http://localhost:3005/mcp
-                   # Click "List Tools" to see all 60 tools
+                   # Click "List Tools" to see all 61 tools
 ```
 
 ## Code Quality
@@ -72,5 +72,5 @@ npm run test:coverage # Tests with 100% coverage
 ## Resources
 
 - [CONTRIBUTING.md](CONTRIBUTING.md) - Development guide
-- [docs/IMPLEMENTED_TOOLS.md](docs/IMPLEMENTED_TOOLS.md) - All 60 tools
+- [docs/IMPLEMENTED_TOOLS.md](docs/IMPLEMENTED_TOOLS.md) - All 61 tools
 - [Coinbase API Docs](https://docs.cdp.coinbase.com/advanced-trade/)

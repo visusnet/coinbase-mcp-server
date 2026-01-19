@@ -1445,6 +1445,46 @@ describe('CoinbaseMcpServer Integration Tests', () => {
         expectResponseToContain(response, result);
       });
     });
+
+    describe('calculate_ichimoku_cloud', () => {
+      it('should call calculateIchimokuCloud via MCP tool calculate_ichimoku_cloud', async () => {
+        const candles = Array.from({ length: 52 }, (_, i) => ({
+          open: String(100 + i),
+          high: String(105 + i),
+          low: String(95 + i),
+          close: String(102 + i),
+          volume: String(1000 + i * 10),
+        }));
+        const args = {
+          candles,
+          conversionPeriod: 9,
+          basePeriod: 26,
+          spanPeriod: 52,
+          displacement: 26,
+        };
+        const result = {
+          conversionPeriod: 9,
+          basePeriod: 26,
+          spanPeriod: 52,
+          displacement: 26,
+          values: [{ conversion: 120, base: 115, spanA: 117.5, spanB: 110 }],
+          latestValue: { conversion: 120, base: 115, spanA: 117.5, spanB: 110 },
+        };
+        mockTechnicalIndicatorsService.calculateIchimokuCloud.mockReturnValueOnce(
+          result,
+        );
+
+        const response = await client.callTool({
+          name: 'calculate_ichimoku_cloud',
+          arguments: args,
+        });
+
+        expect(
+          mockTechnicalIndicatorsService.calculateIchimokuCloud,
+        ).toHaveBeenCalledWith(args);
+        expectResponseToContain(response, result);
+      });
+    });
   });
 
   describe('Prompts', () => {

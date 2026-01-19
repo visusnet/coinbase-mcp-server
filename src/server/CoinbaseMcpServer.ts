@@ -1483,6 +1483,63 @@ export class CoinbaseMcpServer {
         this.technicalIndicators.calculatePsar.bind(this.technicalIndicators),
       ),
     );
+
+    server.registerTool(
+      'calculate_ichimoku_cloud',
+      {
+        title: 'Calculate Ichimoku Cloud',
+        description:
+          'Calculate Ichimoku Cloud (Ichimoku Kinko Hyo) from candle data. ' +
+          'Comprehensive trend indicator with 5 components. ' +
+          'Returns conversion line (Tenkan-sen), base line (Kijun-sen), ' +
+          'leading span A (Senkou Span A), and leading span B (Senkou Span B). ' +
+          'Price above cloud is bullish, below is bearish. ' +
+          'Cloud color (green/red) indicates future trend direction.',
+        inputSchema: {
+          candles: z
+            .array(
+              z.object({
+                open: z.string().describe('Opening price'),
+                high: z.string().describe('High price'),
+                low: z.string().describe('Low price'),
+                close: z.string().describe('Closing price'),
+                volume: z.string().describe('Volume'),
+              }),
+            )
+            .min(52)
+            .describe('Array of candle data (minimum 52 for span period)'),
+          conversionPeriod: z
+            .number()
+            .int()
+            .min(1)
+            .optional()
+            .describe('Tenkan-sen period (default: 9)'),
+          basePeriod: z
+            .number()
+            .int()
+            .min(1)
+            .optional()
+            .describe('Kijun-sen period (default: 26)'),
+          spanPeriod: z
+            .number()
+            .int()
+            .min(1)
+            .optional()
+            .describe('Senkou Span B period (default: 52)'),
+          displacement: z
+            .number()
+            .int()
+            .min(1)
+            .optional()
+            .describe('Cloud displacement (default: 26)'),
+        },
+      },
+      this.call(
+        this.technicalIndicators.calculateIchimokuCloud.bind(
+          this.technicalIndicators,
+        ),
+      ),
+    );
   }
 
   private registerPromptsForServer(server: McpServer): void {
@@ -1500,7 +1557,7 @@ export class CoinbaseMcpServer {
                 type: 'text',
                 text: `You are a Coinbase Advanced Trade assistant.
 
-TOOL CATEGORIES (60 total):
+TOOL CATEGORIES (61 total):
 - Accounts (2): list_accounts, get_account
 - Orders (9): create_order, preview_order, list_orders, get_order, cancel_orders, edit_order, preview_edit_order, list_fills, close_position
 - Products (8): list_products, get_product, get_product_candles, get_product_candles_batch, get_best_bid_ask, get_market_snapshot, get_product_book, get_market_trades
@@ -1511,7 +1568,7 @@ TOOL CATEGORIES (60 total):
 - Futures (4): list_futures_positions, get_futures_position, get_futures_balance_summary, list_futures_sweeps
 - Perpetuals (4): list_perpetuals_positions, get_perpetuals_position, get_perpetuals_portfolio_summary, get_perpetuals_portfolio_balance
 - Info (2): get_api_key_permissions, get_transaction_summary
-- Technical Indicators (14): calculate_rsi, calculate_macd, calculate_ema, calculate_bollinger_bands, calculate_atr, calculate_stochastic, calculate_adx, calculate_obv, calculate_vwap, calculate_cci, calculate_williams_r, calculate_roc, calculate_mfi, calculate_psar
+- Technical Indicators (15): calculate_rsi, calculate_macd, calculate_ema, calculate_bollinger_bands, calculate_atr, calculate_stochastic, calculate_adx, calculate_obv, calculate_vwap, calculate_cci, calculate_williams_r, calculate_roc, calculate_mfi, calculate_psar, calculate_ichimoku_cloud
 
 BEST PRACTICES:
 1. Always preview_order before create_order

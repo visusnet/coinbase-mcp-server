@@ -268,6 +268,7 @@ export const mockTechnicalIndicatorsService: {
   calculateRoc: jest.fn(),
   calculateMfi: jest.fn(),
   calculatePsar: jest.fn(),
+  calculateIchimokuCloud: jest.fn(),
 };
 
 export function mockServices() {
