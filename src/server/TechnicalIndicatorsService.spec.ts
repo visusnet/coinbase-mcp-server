@@ -388,7 +388,9 @@ describe('TechnicalIndicatorsService', () => {
 
       expect(lowVolResult.latestValue).not.toBeNull();
       expect(highVolResult.latestValue).not.toBeNull();
-      expect(highVolResult.latestValue!).toBeGreaterThan(lowVolResult.latestValue!);
+      const lowVolValue = lowVolResult.latestValue as number;
+      const highVolValue = highVolResult.latestValue as number;
+      expect(highVolValue).toBeGreaterThan(lowVolValue);
     });
 
     it('should return null latestValue when not enough data', () => {
@@ -407,12 +409,48 @@ describe('TechnicalIndicatorsService', () => {
 
     it('should handle candles with string values correctly', () => {
       const candles: CandleInput[] = [
-        { open: '100', high: '110.5', low: '95.25', close: '105.75', volume: '1000' },
-        { open: '105', high: '115.5', low: '100.25', close: '110.75', volume: '1100' },
-        { open: '110', high: '120.5', low: '105.25', close: '115.75', volume: '1200' },
-        { open: '115', high: '125.5', low: '110.25', close: '120.75', volume: '1300' },
-        { open: '120', high: '130.5', low: '115.25', close: '125.75', volume: '1400' },
-        { open: '125', high: '135.5', low: '120.25', close: '130.75', volume: '1500' },
+        {
+          open: '100',
+          high: '110.5',
+          low: '95.25',
+          close: '105.75',
+          volume: '1000',
+        },
+        {
+          open: '105',
+          high: '115.5',
+          low: '100.25',
+          close: '110.75',
+          volume: '1100',
+        },
+        {
+          open: '110',
+          high: '120.5',
+          low: '105.25',
+          close: '115.75',
+          volume: '1200',
+        },
+        {
+          open: '115',
+          high: '125.5',
+          low: '110.25',
+          close: '120.75',
+          volume: '1300',
+        },
+        {
+          open: '120',
+          high: '130.5',
+          low: '115.25',
+          close: '125.75',
+          volume: '1400',
+        },
+        {
+          open: '125',
+          high: '135.5',
+          low: '120.25',
+          close: '130.75',
+          volume: '1500',
+        },
       ];
 
       const result = service.calculateAtr({ candles, period: 3 });
@@ -589,8 +627,13 @@ describe('TechnicalIndicatorsService', () => {
       const result = service.calculateAdx({ candles });
 
       expect(result.latestValue).not.toBeNull();
-      expect(result.latestValue!.adx).toBeGreaterThanOrEqual(0);
-      expect(result.latestValue!.adx).toBeLessThanOrEqual(100);
+      const latestValue = result.latestValue as {
+        adx: number;
+        pdi: number;
+        mdi: number;
+      };
+      expect(latestValue.adx).toBeGreaterThanOrEqual(0);
+      expect(latestValue.adx).toBeLessThanOrEqual(100);
     });
 
     it('should indicate strong trend for consistently rising prices', () => {
@@ -608,10 +651,15 @@ describe('TechnicalIndicatorsService', () => {
       });
 
       expect(result.latestValue).not.toBeNull();
+      const adxValue = result.latestValue as {
+        adx: number;
+        pdi: number;
+        mdi: number;
+      };
       // Strong uptrend should have ADX above 25 (traditional threshold)
-      expect(result.latestValue!.adx).toBeGreaterThan(25);
+      expect(adxValue.adx).toBeGreaterThan(25);
       // +DI should be greater than -DI in uptrend
-      expect(result.latestValue!.pdi).toBeGreaterThan(result.latestValue!.mdi);
+      expect(adxValue.pdi).toBeGreaterThan(adxValue.mdi);
     });
 
     it('should return null latestValue when not enough data', () => {
@@ -681,8 +729,10 @@ describe('TechnicalIndicatorsService', () => {
 
       expect(upResult.latestValue).not.toBeNull();
       expect(downResult.latestValue).not.toBeNull();
+      const upObv = upResult.latestValue as number;
+      const downObv = downResult.latestValue as number;
       // Up trend should have higher OBV than down trend
-      expect(upResult.latestValue!).toBeGreaterThan(downResult.latestValue!);
+      expect(upObv).toBeGreaterThan(downObv);
     });
 
     it('should return empty values when not enough data', () => {
@@ -733,8 +783,9 @@ describe('TechnicalIndicatorsService', () => {
       const result = service.calculateVwap({ candles });
 
       expect(result.latestValue).not.toBeNull();
+      const latestVwap = result.latestValue as number;
       // VWAP should be closer to 110 than 100 due to higher volume
-      expect(result.latestValue!).toBeGreaterThan(105);
+      expect(latestVwap).toBeGreaterThan(105);
     });
 
     it('should handle single candle', () => {
@@ -746,6 +797,88 @@ describe('TechnicalIndicatorsService', () => {
 
       expect(result.values.length).toBeGreaterThan(0);
       expect(result.latestValue).not.toBeNull();
+    });
+
+    it('should return null latestValue when no candles', () => {
+      const candles: CandleInput[] = [];
+
+      const result = service.calculateVwap({ candles });
+
+      expect(result.values.length).toBe(0);
+      expect(result.latestValue).toBeNull();
+    });
+  });
+
+  describe('calculateCci', () => {
+    const generateCandles = (
+      data: { high: number; low: number; close: number }[],
+    ): CandleInput[] => {
+      return data.map(({ high, low, close }) => ({
+        open: close.toString(),
+        high: high.toString(),
+        low: low.toString(),
+        close: close.toString(),
+        volume: '1000',
+      }));
+    };
+
+    it('should calculate CCI with default period of 20', () => {
+      const data = Array.from({ length: 25 }, (_, i) => ({
+        high: 105 + i,
+        low: 95 + i,
+        close: 100 + i,
+      }));
+      const candles = generateCandles(data);
+
+      const result = service.calculateCci({ candles });
+
+      expect(result.period).toBe(20);
+      expect(result.values.length).toBeGreaterThan(0);
+      expect(result.latestValue).not.toBeNull();
+    });
+
+    it('should calculate CCI with custom period', () => {
+      const data = Array.from({ length: 15 }, (_, i) => ({
+        high: 110 + i,
+        low: 90 + i,
+        close: 100 + i,
+      }));
+      const candles = generateCandles(data);
+
+      const result = service.calculateCci({ candles, period: 10 });
+
+      expect(result.period).toBe(10);
+      expect(result.values.length).toBeGreaterThan(0);
+    });
+
+    it('should return positive CCI for uptrending prices', () => {
+      // Strong uptrend
+      const data = Array.from({ length: 25 }, (_, i) => ({
+        high: 100 + i * 3,
+        low: 95 + i * 3,
+        close: 98 + i * 3,
+      }));
+      const candles = generateCandles(data);
+
+      const result = service.calculateCci({ candles });
+
+      expect(result.latestValue).not.toBeNull();
+      // CCI should be positive for uptrend
+      const latestValue = result.latestValue as number;
+      expect(latestValue).toBeGreaterThan(0);
+    });
+
+    it('should return null latestValue when not enough data', () => {
+      const data = [
+        { high: 105, low: 95, close: 100 },
+        { high: 106, low: 96, close: 101 },
+      ];
+      const candles = generateCandles(data);
+
+      const result = service.calculateCci({ candles });
+
+      expect(result.values.length).toBe(0);
+      expect(result.latestValue).toBeNull();
     });
   });
 });

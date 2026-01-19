@@ -1300,6 +1300,41 @@ export class CoinbaseMcpServer {
         this.technicalIndicators.calculateVwap.bind(this.technicalIndicators),
       ),
     );
+
+    server.registerTool(
+      'calculate_cci',
+      {
+        title: 'Calculate CCI (Commodity Channel Index)',
+        description:
+          'Calculate CCI from candle data. ' +
+          'Measures price deviation from statistical mean. ' +
+          'Readings above +100 suggest overbought, below -100 suggest oversold. ' +
+          'Useful for identifying cyclical trends in commodities and stocks.',
+        inputSchema: {
+          candles: z
+            .array(
+              z.object({
+                open: z.string().describe('Opening price'),
+                high: z.string().describe('High price'),
+                low: z.string().describe('Low price'),
+                close: z.string().describe('Closing price'),
+                volume: z.string().describe('Volume'),
+              }),
+            )
+            .min(2)
+            .describe('Array of candle data'),
+          period: z
+            .number()
+            .int()
+            .min(1)
+            .optional()
+            .describe('Period for CCI calculation (default: 20)'),
+        },
+      },
+      this.call(
+        this.technicalIndicators.calculateCci.bind(this.technicalIndicators),
+      ),
+    );
   }
 
   private registerPromptsForServer(server: McpServer): void {
@@ -1328,7 +1363,7 @@ TOOL CATEGORIES (55 total):
 - Futures (4): list_futures_positions, get_futures_position, get_futures_balance_summary, list_futures_sweeps
 - Perpetuals (4): list_perpetuals_positions, get_perpetuals_position, get_perpetuals_portfolio_summary, get_perpetuals_portfolio_balance
 - Info (2): get_api_key_permissions, get_transaction_summary
-- Technical Indicators (9): calculate_rsi, calculate_macd, calculate_ema, calculate_bollinger_bands, calculate_atr, calculate_stochastic, calculate_adx, calculate_obv, calculate_vwap
+- Technical Indicators (10): calculate_rsi, calculate_macd, calculate_ema, calculate_bollinger_bands, calculate_atr, calculate_stochastic, calculate_adx, calculate_obv, calculate_vwap, calculate_cci
 
 BEST PRACTICES:
 1. Always preview_order before create_order

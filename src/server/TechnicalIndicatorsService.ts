@@ -8,6 +8,7 @@ import {
   ADX,
   OBV,
   VWAP,
+  CCI,
 } from 'technicalindicators';
 
 /**
@@ -52,7 +53,7 @@ export interface CalculateMacdInput {
 /**
  * Single MACD data point
  */
-export interface MacdValue {
+interface MacdValue {
   readonly MACD?: number;
   readonly signal?: number;
   readonly histogram?: number;
@@ -98,7 +99,7 @@ export interface CalculateBollingerBandsInput {
 /**
  * Single Bollinger Bands data point
  */
-export interface BollingerBandsValue {
+interface BollingerBandsValue {
   readonly middle: number;
   readonly upper: number;
   readonly lower: number;
@@ -145,7 +146,7 @@ export interface CalculateStochasticInput {
 /**
  * Single Stochastic data point
  */
-export interface StochasticValue {
+interface StochasticValue {
   readonly k: number;
   readonly d: number;
 }
@@ -172,7 +173,7 @@ export interface CalculateAdxInput {
 /**
  * Single ADX data point
  */
-export interface AdxValue {
+interface AdxValue {
   readonly adx: number;
   readonly pdi: number;
   readonly mdi: number;
@@ -217,6 +218,23 @@ export interface CalculateVwapOutput {
   readonly latestValue: number | null;
 }
 
+/**
+ * Input for CCI calculation
+ */
+export interface CalculateCciInput {
+  readonly candles: readonly CandleInput[];
+  readonly period?: number;
+}
+
+/**
+ * Output for CCI calculation
+ */
+export interface CalculateCciOutput {
+  readonly period: number;
+  readonly values: readonly number[];
+  readonly latestValue: number | null;
+}
+
 const DEFAULT_RSI_PERIOD = 14;
 const DEFAULT_EMA_PERIOD = 20;
 const DEFAULT_MACD_FAST_PERIOD = 12;
@@ -229,6 +247,7 @@ const DEFAULT_STOCHASTIC_K_PERIOD = 14;
 const DEFAULT_STOCHASTIC_D_PERIOD = 3;
 const DEFAULT_STOCHASTIC_STOCH_PERIOD = 3;
 const DEFAULT_ADX_PERIOD = 14;
+const DEFAULT_CCI_PERIOD = 20;
 
 /**
  * Service for calculating technical indicators from candle data.
@@ -444,7 +463,8 @@ export class TechnicalIndicatorsService {
 
     return {
       values: obvValues,
-      latestValue: obvValues.length > 0 ? obvValues[obvValues.length - 1] : null,
+      latestValue:
+        obvValues.length > 0 ? obvValues[obvValues.length - 1] : null,
     };
   }
 
@@ -471,6 +491,33 @@ export class TechnicalIndicatorsService {
       values: vwapValues,
       latestValue:
         vwapValues.length > 0 ? vwapValues[vwapValues.length - 1] : null,
+    };
+  }
+
+  /**
+   * Calculate CCI (Commodity Channel Index) from candle data.
+   *
+   * @param input - Candles and optional period (default: 20)
+   * @returns CCI values array and latest value
+   */
+  public calculateCci(input: CalculateCciInput): CalculateCciOutput {
+    const period = input.period ?? DEFAULT_CCI_PERIOD;
+    const high = extractHighPrices(input.candles);
+    const low = extractLowPrices(input.candles);
+    const close = extractClosePrices(input.candles);
+
+    const cciValues = CCI.calculate({
+      period,
+      high,
+      low,
+      close,
+    });
+
+    return {
+      period,
+      values: cciValues,
+      latestValue:
+        cciValues.length > 0 ? cciValues[cciValues.length - 1] : null,
     };
   }
 }
@@ -502,4 +549,3 @@ function extractLowPrices(candles: readonly CandleInput[]): number[] {
 function extractVolumes(candles: readonly CandleInput[]): number[] {
   return candles.map((candle) => parseFloat(candle.volume));
 }
-
