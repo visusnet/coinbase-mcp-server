@@ -1445,8 +1445,8 @@ describe('TechnicalIndicatorsService', () => {
       expect(typeof result.bearish).toBe('boolean');
       expect(Array.isArray(result.patterns)).toBe(true);
       expect(Array.isArray(result.detectedPatterns)).toBe(true);
-      // Should have 19 patterns checked
-      expect(result.patterns.length).toBe(19);
+      // Should have 31 patterns checked
+      expect(result.patterns.length).toBe(31);
       // Each pattern should have name, type, and detected properties
       result.patterns.forEach((pattern) => {
         expect(pattern).toHaveProperty('name');
@@ -1575,7 +1575,7 @@ describe('TechnicalIndicatorsService', () => {
 
       const result = service.detectCandlestickPatterns({ candles });
 
-      expect(result.patterns.length).toBe(19);
+      expect(result.patterns.length).toBe(31);
       expect(typeof result.bullish).toBe('boolean');
       expect(typeof result.bearish).toBe('boolean');
     });
@@ -1590,27 +1590,39 @@ describe('TechnicalIndicatorsService', () => {
       const result = service.detectCandlestickPatterns({ candles });
 
       const patternNames = result.patterns.map((p) => p.name);
-      // Bullish patterns
+      // Bullish patterns (15)
       expect(patternNames).toContain('Hammer');
       expect(patternNames).toContain('Inverted Hammer');
       expect(patternNames).toContain('Bullish Engulfing');
       expect(patternNames).toContain('Morning Star');
+      expect(patternNames).toContain('Morning Doji Star');
       expect(patternNames).toContain('Three White Soldiers');
       expect(patternNames).toContain('Piercing Line');
       expect(patternNames).toContain('Bullish Harami');
+      expect(patternNames).toContain('Bullish Harami Cross');
+      expect(patternNames).toContain('Bullish Marubozu');
+      expect(patternNames).toContain('Bullish Spinning Top');
       expect(patternNames).toContain('Tweezer Bottom');
       expect(patternNames).toContain('Dragonfly Doji');
-      // Bearish patterns
+      expect(patternNames).toContain('Abandoned Baby');
+      expect(patternNames).toContain('Downside Tasuki Gap');
+      // Bearish patterns (15)
       expect(patternNames).toContain('Shooting Star');
       expect(patternNames).toContain('Hanging Man');
+      expect(patternNames).toContain('Bearish Hammer');
+      expect(patternNames).toContain('Bearish Inverted Hammer');
       expect(patternNames).toContain('Bearish Engulfing');
       expect(patternNames).toContain('Evening Star');
+      expect(patternNames).toContain('Evening Doji Star');
       expect(patternNames).toContain('Three Black Crows');
       expect(patternNames).toContain('Dark Cloud Cover');
       expect(patternNames).toContain('Bearish Harami');
+      expect(patternNames).toContain('Bearish Harami Cross');
+      expect(patternNames).toContain('Bearish Marubozu');
+      expect(patternNames).toContain('Bearish Spinning Top');
       expect(patternNames).toContain('Tweezer Top');
       expect(patternNames).toContain('Gravestone Doji');
-      // Neutral patterns
+      // Neutral patterns (1)
       expect(patternNames).toContain('Doji');
     });
   });
