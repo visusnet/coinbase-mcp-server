@@ -1146,6 +1146,64 @@ export class CoinbaseMcpServer {
         this.technicalIndicators.calculateAtr.bind(this.technicalIndicators),
       ),
     );
+
+    server.registerTool(
+      'calculate_stochastic',
+      {
+        title: 'Calculate Stochastic Oscillator',
+        description:
+          'Calculate Stochastic oscillator from candle data. ' +
+          'Returns %K (fast line) and %D (signal line) values. ' +
+          '%K above %D is bullish, below is bearish. ' +
+          'Values above 80 indicate overbought, below 20 indicate oversold.',
+        inputSchema: {
+          candles: z
+            .array(
+              z.object({
+                open: z.string().describe('Opening price'),
+                high: z.string().describe('High price'),
+                low: z.string().describe('Low price'),
+                close: z.string().describe('Closing price'),
+                volume: z.string().describe('Volume'),
+              }),
+            )
+            .min(2)
+            .describe('Array of candle data'),
+          kPeriod: z
+            .number()
+            .int()
+            .min(1)
+            .optional()
+            .describe(
+              'Period for %K line calculation (default: 14). ' +
+                'Number of periods to use for the raw stochastic calculation.',
+            ),
+          dPeriod: z
+            .number()
+            .int()
+            .min(1)
+            .optional()
+            .describe(
+              'Period for %D signal line smoothing (default: 3). ' +
+                'Moving average period applied to %K to create %D.',
+            ),
+          stochPeriod: z
+            .number()
+            .int()
+            .min(1)
+            .optional()
+            .describe(
+              'Slow stochastic smoothing period (default: 3). ' +
+                'Additional smoothing applied to the stochastic values.',
+            ),
+        },
+      },
+      this.call(
+        this.technicalIndicators.calculateStochastic.bind(
+          this.technicalIndicators,
+        ),
+      ),
+    );
   }
 
   private registerPromptsForServer(server: McpServer): void {
@@ -1163,7 +1221,7 @@ export class CoinbaseMcpServer {
                 type: 'text',
                 text: `You are a Coinbase Advanced Trade assistant.
 
-TOOL CATEGORIES (51 total):
+TOOL CATEGORIES (52 total):
 - Accounts (2): list_accounts, get_account
 - Orders (9): create_order, preview_order, list_orders, get_order, cancel_orders, edit_order, preview_edit_order, list_fills, close_position
 - Products (8): list_products, get_product, get_product_candles, get_product_candles_batch, get_best_bid_ask, get_market_snapshot, get_product_book, get_market_trades
@@ -1174,7 +1232,7 @@ TOOL CATEGORIES (51 total):
 - Futures (4): list_futures_positions, get_futures_position, get_futures_balance_summary, list_futures_sweeps
 - Perpetuals (4): list_perpetuals_positions, get_perpetuals_position, get_perpetuals_portfolio_summary, get_perpetuals_portfolio_balance
 - Info (2): get_api_key_permissions, get_transaction_summary
-- Technical Indicators (5): calculate_rsi, calculate_macd, calculate_ema, calculate_bollinger_bands, calculate_atr
+- Technical Indicators (6): calculate_rsi, calculate_macd, calculate_ema, calculate_bollinger_bands, calculate_atr, calculate_stochastic
 
 BEST PRACTICES:
 1. Always preview_order before create_order

@@ -1,4 +1,11 @@
-import { RSI, MACD, EMA, BollingerBands, ATR } from 'technicalindicators';
+import {
+  RSI,
+  MACD,
+  EMA,
+  BollingerBands,
+  ATR,
+  Stochastic,
+} from 'technicalindicators';
 
 /**
  * Candle data structure matching Coinbase API output.
@@ -122,6 +129,35 @@ export interface CalculateAtrOutput {
   readonly latestValue: number | null;
 }
 
+/**
+ * Input for Stochastic oscillator calculation
+ */
+export interface CalculateStochasticInput {
+  readonly candles: readonly CandleInput[];
+  readonly kPeriod?: number;
+  readonly dPeriod?: number;
+  readonly stochPeriod?: number;
+}
+
+/**
+ * Single Stochastic data point
+ */
+export interface StochasticValue {
+  readonly k: number;
+  readonly d: number;
+}
+
+/**
+ * Output for Stochastic calculation
+ */
+export interface CalculateStochasticOutput {
+  readonly kPeriod: number;
+  readonly dPeriod: number;
+  readonly stochPeriod: number;
+  readonly values: readonly StochasticValue[];
+  readonly latestValue: StochasticValue | null;
+}
+
 const DEFAULT_RSI_PERIOD = 14;
 const DEFAULT_EMA_PERIOD = 20;
 const DEFAULT_MACD_FAST_PERIOD = 12;
@@ -130,6 +166,9 @@ const DEFAULT_MACD_SIGNAL_PERIOD = 9;
 const DEFAULT_BOLLINGER_PERIOD = 20;
 const DEFAULT_BOLLINGER_STD_DEV = 2;
 const DEFAULT_ATR_PERIOD = 14;
+const DEFAULT_STOCHASTIC_K_PERIOD = 14;
+const DEFAULT_STOCHASTIC_D_PERIOD = 3;
+const DEFAULT_STOCHASTIC_STOCH_PERIOD = 3;
 
 /**
  * Service for calculating technical indicators from candle data.
@@ -264,6 +303,40 @@ export class TechnicalIndicatorsService {
       values: atrValues,
       latestValue:
         atrValues.length > 0 ? atrValues[atrValues.length - 1] : null,
+    };
+  }
+
+  /**
+   * Calculate Stochastic oscillator from candle data.
+   *
+   * @param input - Candles and optional periods (default: 14/3/3)
+   * @returns %K and %D values array and latest value
+   */
+  public calculateStochastic(
+    input: CalculateStochasticInput,
+  ): CalculateStochasticOutput {
+    const kPeriod = input.kPeriod ?? DEFAULT_STOCHASTIC_K_PERIOD;
+    const dPeriod = input.dPeriod ?? DEFAULT_STOCHASTIC_D_PERIOD;
+    const stochPeriod = input.stochPeriod ?? DEFAULT_STOCHASTIC_STOCH_PERIOD;
+    const high = extractHighPrices(input.candles);
+    const low = extractLowPrices(input.candles);
+    const close = extractClosePrices(input.candles);
+
+    const stochValues = Stochastic.calculate({
+      high,
+      low,
+      close,
+      period: kPeriod,
+      signalPeriod: dPeriod,
+    });
+
+    return {
+      kPeriod,
+      dPeriod,
+      stochPeriod,
+      values: stochValues,
+      latestValue:
+        stochValues.length > 0 ? stochValues[stochValues.length - 1] : null,
     };
   }
 }
