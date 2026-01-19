@@ -1525,6 +1525,40 @@ describe('CoinbaseMcpServer Integration Tests', () => {
         expectResponseToContain(response, result);
       });
     });
+
+    describe('calculate_fibonacci_retracement', () => {
+      it('should call calculateFibonacciRetracement via MCP tool calculate_fibonacci_retracement', async () => {
+        const args = {
+          start: 100,
+          end: 200,
+        };
+        const result = {
+          start: 100,
+          end: 200,
+          trend: 'uptrend' as const,
+          levels: [
+            { level: 0, price: 100 },
+            { level: 38.2, price: 138.2 },
+            { level: 50, price: 150 },
+            { level: 61.8, price: 161.8 },
+            { level: 100, price: 200 },
+          ],
+        };
+        mockTechnicalIndicatorsService.calculateFibonacciRetracement.mockReturnValueOnce(
+          result,
+        );
+
+        const response = await client.callTool({
+          name: 'calculate_fibonacci_retracement',
+          arguments: args,
+        });
+
+        expect(
+          mockTechnicalIndicatorsService.calculateFibonacciRetracement,
+        ).toHaveBeenCalledWith(args);
+        expectResponseToContain(response, result);
+      });
+    });
   });
 
   describe('Prompts', () => {

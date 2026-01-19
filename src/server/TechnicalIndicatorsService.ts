@@ -15,6 +15,7 @@ import {
   PSAR,
   IchimokuCloud,
   KeltnerChannels,
+  fibonacciretracement,
 } from 'technicalindicators';
 
 /**
@@ -374,6 +375,27 @@ export interface CalculateKeltnerChannelsOutput {
   readonly useSMA: boolean;
   readonly values: readonly KeltnerChannelsDataPoint[];
   readonly latestValue: KeltnerChannelsDataPoint | null;
+}
+
+/**
+ * Input for Fibonacci Retracement calculation
+ */
+export interface CalculateFibonacciRetracementInput {
+  readonly start: number;
+  readonly end: number;
+}
+
+/**
+ * Output for Fibonacci Retracement calculation
+ */
+export interface CalculateFibonacciRetracementOutput {
+  readonly start: number;
+  readonly end: number;
+  readonly trend: 'uptrend' | 'downtrend';
+  readonly levels: {
+    readonly level: number;
+    readonly price: number;
+  }[];
 }
 
 const DEFAULT_RSI_PERIOD = 14;
@@ -858,6 +880,37 @@ export class TechnicalIndicatorsService {
         keltnerValues.length > 0
           ? keltnerValues[keltnerValues.length - 1]
           : null,
+    };
+  }
+
+  /**
+   * Calculate Fibonacci Retracement levels from start and end prices.
+   *
+   * @param input - Start and end prices (low to high for uptrend, high to low for downtrend)
+   * @returns Fibonacci retracement levels with corresponding prices
+   */
+  public calculateFibonacciRetracement(
+    input: CalculateFibonacciRetracementInput,
+  ): CalculateFibonacciRetracementOutput {
+    const { start, end } = input;
+    const trend = end > start ? 'uptrend' : 'downtrend';
+
+    // Library returns percentage levels: [0, 23.6, 38.2, 50, 61.8, 78.6, 100, 127.2, 161.8, 261.8, 423.6]
+    const retracementPrices = fibonacciretracement(start, end);
+    const percentLevels = [
+      0, 23.6, 38.2, 50, 61.8, 78.6, 100, 127.2, 161.8, 261.8, 423.6,
+    ];
+
+    const levels = percentLevels.map((level, index) => ({
+      level,
+      price: retracementPrices[index],
+    }));
+
+    return {
+      start,
+      end,
+      trend,
+      levels,
     };
   }
 }
