@@ -12,6 +12,7 @@ import {
   WilliamsR,
   ROC,
   MFI,
+  PSAR,
 } from 'technicalindicators';
 
 /**
@@ -289,6 +290,25 @@ export interface CalculateMfiOutput {
   readonly latestValue: number | null;
 }
 
+/**
+ * Input for Parabolic SAR calculation
+ */
+export interface CalculatePsarInput {
+  readonly candles: readonly CandleInput[];
+  readonly step?: number;
+  readonly max?: number;
+}
+
+/**
+ * Output for Parabolic SAR calculation
+ */
+export interface CalculatePsarOutput {
+  readonly step: number;
+  readonly max: number;
+  readonly values: readonly number[];
+  readonly latestValue: number | null;
+}
+
 const DEFAULT_RSI_PERIOD = 14;
 const DEFAULT_EMA_PERIOD = 20;
 const DEFAULT_MACD_FAST_PERIOD = 12;
@@ -305,6 +325,8 @@ const DEFAULT_CCI_PERIOD = 20;
 const DEFAULT_WILLIAMS_R_PERIOD = 14;
 const DEFAULT_ROC_PERIOD = 12;
 const DEFAULT_MFI_PERIOD = 14;
+const DEFAULT_PSAR_STEP = 0.02;
+const DEFAULT_PSAR_MAX = 0.2;
 
 /**
  * Service for calculating technical indicators from candle data.
@@ -655,6 +677,34 @@ export class TechnicalIndicatorsService {
       values: mfiValues,
       latestValue:
         mfiValues.length > 0 ? mfiValues[mfiValues.length - 1] : null,
+    };
+  }
+
+  /**
+   * Calculate Parabolic SAR from candle data.
+   *
+   * @param input - Candles and optional step/max parameters
+   * @returns PSAR values array and latest value
+   */
+  public calculatePsar(input: CalculatePsarInput): CalculatePsarOutput {
+    const step = input.step ?? DEFAULT_PSAR_STEP;
+    const max = input.max ?? DEFAULT_PSAR_MAX;
+    const high = extractHighPrices(input.candles);
+    const low = extractLowPrices(input.candles);
+
+    const psarValues = PSAR.calculate({
+      step,
+      max,
+      high,
+      low,
+    });
+
+    return {
+      step,
+      max,
+      values: psarValues,
+      latestValue:
+        psarValues.length > 0 ? psarValues[psarValues.length - 1] : null,
     };
   }
 }

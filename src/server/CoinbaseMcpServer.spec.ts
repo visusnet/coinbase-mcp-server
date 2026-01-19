@@ -1401,6 +1401,50 @@ describe('CoinbaseMcpServer Integration Tests', () => {
         expectResponseToContain(response, result);
       });
     });
+
+    describe('calculate_psar', () => {
+      it('should call calculatePsar via MCP tool calculate_psar', async () => {
+        const args = {
+          candles: [
+            {
+              open: '100',
+              high: '110',
+              low: '95',
+              close: '105',
+              volume: '1000',
+            },
+            {
+              open: '105',
+              high: '115',
+              low: '100',
+              close: '110',
+              volume: '1100',
+            },
+          ],
+          step: 0.02,
+          max: 0.2,
+        };
+        const result = {
+          step: 0.02,
+          max: 0.2,
+          values: [94.5],
+          latestValue: 94.5,
+        };
+        mockTechnicalIndicatorsService.calculatePsar.mockReturnValueOnce(
+          result,
+        );
+
+        const response = await client.callTool({
+          name: 'calculate_psar',
+          arguments: args,
+        });
+
+        expect(
+          mockTechnicalIndicatorsService.calculatePsar,
+        ).toHaveBeenCalledWith(args);
+        expectResponseToContain(response, result);
+      });
+    });
   });
 
   describe('Prompts', () => {
