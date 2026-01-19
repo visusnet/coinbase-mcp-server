@@ -93,6 +93,11 @@ export function calculateValueArea(
     const canExpandLow = lowIndex > 0;
     const canExpandHigh = highIndex < sortedZones.length - 1;
 
+    // Guard: Stop if we cannot expand in either direction (all zones included)
+    if (!canExpandLow && !canExpandHigh) {
+      break;
+    }
+
     const expandLow = shouldExpandLow(
       sortedZones,
       lowIndex,
