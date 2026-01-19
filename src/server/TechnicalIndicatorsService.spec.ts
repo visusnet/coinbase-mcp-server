@@ -250,4 +250,75 @@ describe('TechnicalIndicatorsService', () => {
       expect(result.latestValue).toBeGreaterThan(100);
     });
   });
+
+  describe('calculateBollingerBands', () => {
+    const generateCandles = (closePrices: number[]): CandleInput[] => {
+      return closePrices.map((close) => ({
+        open: close.toString(),
+        high: (close + 1).toString(),
+        low: (close - 1).toString(),
+        close: close.toString(),
+        volume: '1000',
+      }));
+    };
+
+    it('should calculate Bollinger Bands with default settings (20/2)', () => {
+      const closePrices = Array.from({ length: 25 }, (_, i) => 100 + i * 0.5);
+      const candles = generateCandles(closePrices);
+
+      const result = service.calculateBollingerBands({ candles });
+
+      expect(result.period).toBe(20);
+      expect(result.stdDev).toBe(2);
+      expect(result.values.length).toBeGreaterThan(0);
+      expect(result.latestValue).not.toBeNull();
+    });
+
+    it('should calculate Bollinger Bands with custom period and stdDev', () => {
+      const closePrices = Array.from({ length: 20 }, (_, i) => 100 + i);
+      const candles = generateCandles(closePrices);
+
+      const result = service.calculateBollingerBands({
+        candles,
+        period: 10,
+        stdDev: 1.5,
+      });
+
+      expect(result.period).toBe(10);
+      expect(result.stdDev).toBe(1.5);
+      expect(result.values.length).toBeGreaterThan(0);
+    });
+
+    it('should return middle, upper, lower bands and %B', () => {
+      const closePrices = Array.from({ length: 25 }, (_, i) => 100 + i);
+      const candles = generateCandles(closePrices);
+
+      const result = service.calculateBollingerBands({ candles });
+
+      const latestValue = result.latestValue;
+      expect(latestValue).not.toBeNull();
+      expect(latestValue).toHaveProperty('middle');
+      expect(latestValue).toHaveProperty('upper');
+      expect(latestValue).toHaveProperty('lower');
+      expect(latestValue).toHaveProperty('pb');
+      // Upper should be greater than middle, middle greater than lower
+      // These values are guaranteed to exist after the not.toBeNull check
+      const { upper, middle, lower } = latestValue as {
+        upper: number;
+        middle: number;
+        lower: number;
+      };
+      expect(upper).toBeGreaterThan(middle);
+      expect(middle).toBeGreaterThan(lower);
+    });
+
+    it('should return null latestValue when not enough data', () => {
+      const candles = generateCandles([100, 101, 102]);
+
+      const result = service.calculateBollingerBands({ candles });
+
+      expect(result.values.length).toBe(0);
+      expect(result.latestValue).toBeNull();
+    });
+  });
 });
