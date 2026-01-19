@@ -1105,12 +1105,10 @@ describe('CoinbaseMcpServer Integration Tests', () => {
           ],
           kPeriod: 14,
           dPeriod: 3,
-          stochPeriod: 3,
         };
         const result = {
           kPeriod: 14,
           dPeriod: 3,
-          stochPeriod: 3,
           values: [{ k: 75, d: 70 }],
           latestValue: { k: 75, d: 70 },
         };

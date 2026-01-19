@@ -1187,15 +1187,6 @@ export class CoinbaseMcpServer {
               'Period for %D signal line smoothing (default: 3). ' +
                 'Moving average period applied to %K to create %D.',
             ),
-          stochPeriod: z
-            .number()
-            .int()
-            .min(1)
-            .optional()
-            .describe(
-              'Slow stochastic smoothing period (default: 3). ' +
-                'Additional smoothing applied to the stochastic values.',
-            ),
         },
       },
       this.call(

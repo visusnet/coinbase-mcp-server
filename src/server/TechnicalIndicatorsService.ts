@@ -208,7 +208,6 @@ export interface CalculateStochasticInput {
   readonly candles: readonly CandleInput[];
   readonly kPeriod?: number;
   readonly dPeriod?: number;
-  readonly stochPeriod?: number;
 }
 
 /**
@@ -225,7 +224,6 @@ interface StochasticValue {
 export interface CalculateStochasticOutput {
   readonly kPeriod: number;
   readonly dPeriod: number;
-  readonly stochPeriod: number;
   readonly values: readonly StochasticValue[];
   readonly latestValue: StochasticValue | null;
 }
@@ -561,7 +559,6 @@ const DEFAULT_BOLLINGER_STD_DEV = 2;
 const DEFAULT_ATR_PERIOD = 14;
 const DEFAULT_STOCHASTIC_K_PERIOD = 14;
 const DEFAULT_STOCHASTIC_D_PERIOD = 3;
-const DEFAULT_STOCHASTIC_STOCH_PERIOD = 3;
 const DEFAULT_ADX_PERIOD = 14;
 const DEFAULT_CCI_PERIOD = 20;
 const DEFAULT_WILLIAMS_R_PERIOD = 14;
@@ -725,7 +722,7 @@ export class TechnicalIndicatorsService {
   /**
    * Calculate Stochastic oscillator from candle data.
    *
-   * @param input - Candles and optional periods (default: 14/3/3)
+   * @param input - Candles and optional periods (default: 14/3)
    * @returns %K and %D values array and latest value
    */
   public calculateStochastic(
@@ -733,7 +730,6 @@ export class TechnicalIndicatorsService {
   ): CalculateStochasticOutput {
     const kPeriod = input.kPeriod ?? DEFAULT_STOCHASTIC_K_PERIOD;
     const dPeriod = input.dPeriod ?? DEFAULT_STOCHASTIC_D_PERIOD;
-    const stochPeriod = input.stochPeriod ?? DEFAULT_STOCHASTIC_STOCH_PERIOD;
     const high = extractHighPrices(input.candles);
     const low = extractLowPrices(input.candles);
     const close = extractClosePrices(input.candles);
@@ -749,7 +745,6 @@ export class TechnicalIndicatorsService {
     return {
       kPeriod,
       dPeriod,
-      stochPeriod,
       values: stochValues,
       latestValue:
         stochValues.length > 0 ? stochValues[stochValues.length - 1] : null,
