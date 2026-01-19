@@ -6,6 +6,7 @@ import {
   ATR,
   Stochastic,
   ADX,
+  OBV,
 } from 'technicalindicators';
 
 /**
@@ -183,6 +184,21 @@ export interface CalculateAdxOutput {
   readonly period: number;
   readonly values: readonly AdxValue[];
   readonly latestValue: AdxValue | null;
+}
+
+/**
+ * Input for OBV calculation
+ */
+export interface CalculateObvInput {
+  readonly candles: readonly CandleInput[];
+}
+
+/**
+ * Output for OBV calculation
+ */
+export interface CalculateObvOutput {
+  readonly values: readonly number[];
+  readonly latestValue: number | null;
 }
 
 const DEFAULT_RSI_PERIOD = 14;
@@ -394,6 +410,27 @@ export class TechnicalIndicatorsService {
         adxValues.length > 0 ? adxValues[adxValues.length - 1] : null,
     };
   }
+
+  /**
+   * Calculate OBV (On-Balance Volume) from candle data.
+   *
+   * @param input - Candles with close prices and volume
+   * @returns OBV values array and latest value
+   */
+  public calculateObv(input: CalculateObvInput): CalculateObvOutput {
+    const close = extractClosePrices(input.candles);
+    const volume = extractVolumes(input.candles);
+
+    const obvValues = OBV.calculate({
+      close,
+      volume,
+    });
+
+    return {
+      values: obvValues,
+      latestValue: obvValues.length > 0 ? obvValues[obvValues.length - 1] : null,
+    };
+  }
 }
 
 /**
@@ -415,5 +452,12 @@ function extractHighPrices(candles: readonly CandleInput[]): number[] {
  */
 function extractLowPrices(candles: readonly CandleInput[]): number[] {
   return candles.map((candle) => parseFloat(candle.low));
+}
+
+/**
+ * Extract volume from candle data as numbers.
+ */
+function extractVolumes(candles: readonly CandleInput[]): number[] {
+  return candles.map((candle) => parseFloat(candle.volume));
 }
 

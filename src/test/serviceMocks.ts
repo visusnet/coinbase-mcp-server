@@ -261,6 +261,7 @@ export const mockTechnicalIndicatorsService: {
   calculateAtr: jest.fn(),
   calculateStochastic: jest.fn(),
   calculateAdx: jest.fn(),
+  calculateObv: jest.fn(),
 };
 
 export function mockServices() {
