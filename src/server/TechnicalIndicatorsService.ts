@@ -1,4 +1,4 @@
-import { RSI, MACD } from 'technicalindicators';
+import { RSI, MACD, EMA } from 'technicalindicators';
 
 /**
  * Candle data structure matching Coinbase API output.
@@ -59,7 +59,25 @@ export interface CalculateMacdOutput {
   readonly latestValue: MacdValue | null;
 }
 
+/**
+ * Input for EMA calculation
+ */
+export interface CalculateEmaInput {
+  readonly candles: readonly CandleInput[];
+  readonly period?: number;
+}
+
+/**
+ * Output for EMA calculation
+ */
+export interface CalculateEmaOutput {
+  readonly period: number;
+  readonly values: readonly number[];
+  readonly latestValue: number | null;
+}
+
 const DEFAULT_RSI_PERIOD = 14;
+const DEFAULT_EMA_PERIOD = 20;
 const DEFAULT_MACD_FAST_PERIOD = 12;
 const DEFAULT_MACD_SLOW_PERIOD = 26;
 const DEFAULT_MACD_SIGNAL_PERIOD = 9;
@@ -120,6 +138,29 @@ export class TechnicalIndicatorsService {
       values: macdValues,
       latestValue:
         macdValues.length > 0 ? macdValues[macdValues.length - 1] : null,
+    };
+  }
+
+  /**
+   * Calculate EMA (Exponential Moving Average) from candle data.
+   *
+   * @param input - Candles and optional period (default: 20)
+   * @returns EMA values array and latest value
+   */
+  public calculateEma(input: CalculateEmaInput): CalculateEmaOutput {
+    const period = input.period ?? DEFAULT_EMA_PERIOD;
+    const closePrices = input.candles.map((candle) => parseFloat(candle.close));
+
+    const emaValues = EMA.calculate({
+      period,
+      values: closePrices,
+    });
+
+    return {
+      period,
+      values: emaValues,
+      latestValue:
+        emaValues.length > 0 ? emaValues[emaValues.length - 1] : null,
     };
   }
 }
