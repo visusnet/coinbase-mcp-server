@@ -1,4 +1,4 @@
-import { RSI, MACD, EMA } from 'technicalindicators';
+import { RSI, MACD, EMA, BollingerBands } from 'technicalindicators';
 
 /**
  * Candle data structure matching Coinbase API output.
@@ -76,11 +76,42 @@ export interface CalculateEmaOutput {
   readonly latestValue: number | null;
 }
 
+/**
+ * Input for Bollinger Bands calculation
+ */
+export interface CalculateBollingerBandsInput {
+  readonly candles: readonly CandleInput[];
+  readonly period?: number;
+  readonly stdDev?: number;
+}
+
+/**
+ * Single Bollinger Bands data point
+ */
+export interface BollingerBandsValue {
+  readonly middle: number;
+  readonly upper: number;
+  readonly lower: number;
+  readonly pb: number;
+}
+
+/**
+ * Output for Bollinger Bands calculation
+ */
+export interface CalculateBollingerBandsOutput {
+  readonly period: number;
+  readonly stdDev: number;
+  readonly values: readonly BollingerBandsValue[];
+  readonly latestValue: BollingerBandsValue | null;
+}
+
 const DEFAULT_RSI_PERIOD = 14;
 const DEFAULT_EMA_PERIOD = 20;
 const DEFAULT_MACD_FAST_PERIOD = 12;
 const DEFAULT_MACD_SLOW_PERIOD = 26;
 const DEFAULT_MACD_SIGNAL_PERIOD = 9;
+const DEFAULT_BOLLINGER_PERIOD = 20;
+const DEFAULT_BOLLINGER_STD_DEV = 2;
 
 /**
  * Service for calculating technical indicators from candle data.
@@ -95,7 +126,7 @@ export class TechnicalIndicatorsService {
    */
   public calculateRsi(input: CalculateRsiInput): CalculateRsiOutput {
     const period = input.period ?? DEFAULT_RSI_PERIOD;
-    const closePrices = input.candles.map((candle) => parseFloat(candle.close));
+    const closePrices = extractClosePrices(input.candles);
 
     const rsiValues = RSI.calculate({
       period,
@@ -120,7 +151,7 @@ export class TechnicalIndicatorsService {
     const fastPeriod = input.fastPeriod ?? DEFAULT_MACD_FAST_PERIOD;
     const slowPeriod = input.slowPeriod ?? DEFAULT_MACD_SLOW_PERIOD;
     const signalPeriod = input.signalPeriod ?? DEFAULT_MACD_SIGNAL_PERIOD;
-    const closePrices = input.candles.map((candle) => parseFloat(candle.close));
+    const closePrices = extractClosePrices(input.candles);
 
     const macdValues = MACD.calculate({
       values: closePrices,
@@ -149,7 +180,7 @@ export class TechnicalIndicatorsService {
    */
   public calculateEma(input: CalculateEmaInput): CalculateEmaOutput {
     const period = input.period ?? DEFAULT_EMA_PERIOD;
-    const closePrices = input.candles.map((candle) => parseFloat(candle.close));
+    const closePrices = extractClosePrices(input.candles);
 
     const emaValues = EMA.calculate({
       period,
@@ -163,4 +194,38 @@ export class TechnicalIndicatorsService {
         emaValues.length > 0 ? emaValues[emaValues.length - 1] : null,
     };
   }
+
+  /**
+   * Calculate Bollinger Bands from candle data.
+   *
+   * @param input - Candles and optional period/stdDev (default: 20/2)
+   * @returns Upper, middle, lower bands and %B values
+   */
+  public calculateBollingerBands(
+    input: CalculateBollingerBandsInput,
+  ): CalculateBollingerBandsOutput {
+    const period = input.period ?? DEFAULT_BOLLINGER_PERIOD;
+    const stdDev = input.stdDev ?? DEFAULT_BOLLINGER_STD_DEV;
+    const closePrices = extractClosePrices(input.candles);
+
+    const bbValues = BollingerBands.calculate({
+      period,
+      stdDev,
+      values: closePrices,
+    });
+
+    return {
+      period,
+      stdDev,
+      values: bbValues,
+      latestValue: bbValues.length > 0 ? bbValues[bbValues.length - 1] : null,
+    };
+  }
+}
+
+/**
+ * Extract close prices from candle data as numbers.
+ */
+function extractClosePrices(candles: readonly CandleInput[]): number[] {
+  return candles.map((candle) => parseFloat(candle.close));
 }
