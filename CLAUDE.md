@@ -18,11 +18,14 @@ Direct SDK usage, no abstraction layers (YAGNI).
 
 ```
 src/
-├── index.ts                    # Entry point, credentials validation
+├── index.ts                         # Entry point, credentials validation
 ├── server/
-│   └── CoinbaseMcpServer.ts   # MCP server, 46 tools, SDK integration
+│   ├── CoinbaseMcpServer.ts         # MCP server, tools, SDK integration
+│   ├── TechnicalIndicatorsService.ts # Technical indicator calculations
+│   └── indicators/                   # Manual indicator implementations
+│       └── *.ts                      # Helper functions (e.g., chartPatterns.ts)
 └── test/
-    └── serviceMocks.ts         # Test mocks
+    └── serviceMocks.ts               # Test mocks
 ```
 
 ## Environment
@@ -39,6 +42,7 @@ See `.claude/rules/` for context-specific guidelines:
 - `core.md` - Essential standards (always loaded)
 - `testing.md` - Test patterns (loaded for *.spec.ts)
 - `api.md` - API development (loaded for src/**/*.ts)
+- `indicators.md` - Indicator tools (loaded for TechnicalIndicatorsService.ts)
 - `trading.md` - Trading rules (loaded for trade commands)
 
 ## Key Patterns
@@ -58,7 +62,11 @@ npm run inspect    # MCP Inspector at http://localhost:6274
 ## Code Quality
 
 ```bash
-npm run lint && npm run format && npm test  # All checks before commit
+npm run format        # Format code
+npm run lint          # Lint check
+npm run test:types    # TypeScript type check
+npm run knip          # Unused exports/dependencies
+npm run test:coverage # Tests with 100% coverage
 ```
 
 ## Resources
