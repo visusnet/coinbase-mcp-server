@@ -1024,4 +1024,80 @@ describe('TechnicalIndicatorsService', () => {
       expect(result.latestValue).toBeNull();
     });
   });
+
+  describe('calculateMfi', () => {
+    const generateCandles = (
+      data: { high: number; low: number; close: number; volume: number }[],
+    ): CandleInput[] => {
+      return data.map(({ high, low, close, volume }) => ({
+        open: close.toString(),
+        high: high.toString(),
+        low: low.toString(),
+        close: close.toString(),
+        volume: volume.toString(),
+      }));
+    };
+
+    it('should calculate MFI with default period of 14', () => {
+      const data = Array.from({ length: 20 }, (_, i) => ({
+        high: 105 + i,
+        low: 95 + i,
+        close: 100 + i,
+        volume: 1000 + i * 100,
+      }));
+      const candles = generateCandles(data);
+
+      const result = service.calculateMfi({ candles });
+
+      expect(result.period).toBe(14);
+      expect(result.values.length).toBeGreaterThan(0);
+      expect(result.latestValue).not.toBeNull();
+    });
+
+    it('should calculate MFI with custom period', () => {
+      const data = Array.from({ length: 15 }, (_, i) => ({
+        high: 110 + i,
+        low: 90 + i,
+        close: 100 + i,
+        volume: 1000 + i * 100,
+      }));
+      const candles = generateCandles(data);
+
+      const result = service.calculateMfi({ candles, period: 5 });
+
+      expect(result.period).toBe(5);
+      expect(result.values.length).toBeGreaterThan(0);
+    });
+
+    it('should return MFI values between 0 and 100', () => {
+      const data = Array.from({ length: 20 }, (_, i) => ({
+        high: 105 + i,
+        low: 95 + i,
+        close: 100 + i,
+        volume: 1000 + i * 100,
+      }));
+      const candles = generateCandles(data);
+
+      const result = service.calculateMfi({ candles });
+
+      expect(result.latestValue).not.toBeNull();
+      const latestValue = result.latestValue as number;
+      // MFI ranges from 0 to 100
+      expect(latestValue).toBeGreaterThanOrEqual(0);
+      expect(latestValue).toBeLessThanOrEqual(100);
+    });
+
+    it('should return null latestValue when not enough data', () => {
+      const data = [
+        { high: 105, low: 95, close: 100, volume: 1000 },
+        { high: 106, low: 96, close: 101, volume: 1100 },
+      ];
+      const candles = generateCandles(data);
+
+      const result = service.calculateMfi({ candles });
+
+      expect(result.values.length).toBe(0);
+      expect(result.latestValue).toBeNull();
+    });
+  });
 });

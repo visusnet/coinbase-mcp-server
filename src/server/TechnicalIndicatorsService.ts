@@ -11,6 +11,7 @@ import {
   CCI,
   WilliamsR,
   ROC,
+  MFI,
 } from 'technicalindicators';
 
 /**
@@ -271,6 +272,23 @@ export interface CalculateRocOutput {
   readonly latestValue: number | null;
 }
 
+/**
+ * Input for MFI calculation
+ */
+export interface CalculateMfiInput {
+  readonly candles: readonly CandleInput[];
+  readonly period?: number;
+}
+
+/**
+ * Output for MFI calculation
+ */
+export interface CalculateMfiOutput {
+  readonly period: number;
+  readonly values: readonly number[];
+  readonly latestValue: number | null;
+}
+
 const DEFAULT_RSI_PERIOD = 14;
 const DEFAULT_EMA_PERIOD = 20;
 const DEFAULT_MACD_FAST_PERIOD = 12;
@@ -286,6 +304,7 @@ const DEFAULT_ADX_PERIOD = 14;
 const DEFAULT_CCI_PERIOD = 20;
 const DEFAULT_WILLIAMS_R_PERIOD = 14;
 const DEFAULT_ROC_PERIOD = 12;
+const DEFAULT_MFI_PERIOD = 14;
 
 /**
  * Service for calculating technical indicators from candle data.
@@ -607,6 +626,35 @@ export class TechnicalIndicatorsService {
       values: rocValues,
       latestValue:
         rocValues.length > 0 ? rocValues[rocValues.length - 1] : null,
+    };
+  }
+
+  /**
+   * Calculate MFI (Money Flow Index) from candle data.
+   *
+   * @param input - Candles and optional period (default: 14)
+   * @returns MFI values array and latest value
+   */
+  public calculateMfi(input: CalculateMfiInput): CalculateMfiOutput {
+    const period = input.period ?? DEFAULT_MFI_PERIOD;
+    const high = extractHighPrices(input.candles);
+    const low = extractLowPrices(input.candles);
+    const close = extractClosePrices(input.candles);
+    const volume = extractVolumes(input.candles);
+
+    const mfiValues = MFI.calculate({
+      period,
+      high,
+      low,
+      close,
+      volume,
+    });
+
+    return {
+      period,
+      values: mfiValues,
+      latestValue:
+        mfiValues.length > 0 ? mfiValues[mfiValues.length - 1] : null,
     };
   }
 }

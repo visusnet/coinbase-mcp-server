@@ -266,6 +266,7 @@ export const mockTechnicalIndicatorsService: {
   calculateCci: jest.fn(),
   calculateWilliamsR: jest.fn(),
   calculateRoc: jest.fn(),
+  calculateMfi: jest.fn(),
 };
 
 export function mockServices() {
