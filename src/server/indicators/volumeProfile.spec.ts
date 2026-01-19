@@ -31,6 +31,68 @@ describe('volumeProfile helpers', () => {
       expect(result.valueAreaHigh).toBeNull();
       expect(result.valueAreaLow).toBeNull();
     });
+
+    it('should handle single zone without index out of bounds', () => {
+      // Edge case: single zone where POC is the only zone
+      // The guard should prevent infinite loop or out-of-bounds access
+      const zones: VolumeProfileZone[] = [
+        {
+          rangeStart: 100,
+          rangeEnd: 105,
+          bullishVolume: 500,
+          bearishVolume: 500,
+          totalVolume: 1000,
+        },
+      ];
+      const poc = zones[0];
+
+      const result = calculateValueArea(zones, poc);
+
+      // Should return the single zone's range without crashing
+      expect(result.valueAreaLow).toBe(100);
+      expect(result.valueAreaHigh).toBe(105);
+    });
+
+    it('should stop expansion when all zones are included', () => {
+      // Edge case: POC has low volume relative to neighbors, requiring all zones
+      // to reach the 70% target. Total volume = 1000, target = 700.
+      // POC (middle) = 100, left = 400, right = 500
+      // After POC (100): need 600 more
+      // After right (500): accumulated = 600, need 100 more
+      // After left (400): accumulated = 1000, target reached
+      // This forces expansion to both boundaries.
+      const zones: VolumeProfileZone[] = [
+        {
+          rangeStart: 100,
+          rangeEnd: 105,
+          bullishVolume: 200,
+          bearishVolume: 200,
+          totalVolume: 400,
+        },
+        {
+          rangeStart: 105,
+          rangeEnd: 110,
+          bullishVolume: 50,
+          bearishVolume: 50,
+          totalVolume: 100, // POC (smallest, but still POC for test)
+        },
+        {
+          rangeStart: 110,
+          rangeEnd: 115,
+          bullishVolume: 250,
+          bearishVolume: 250,
+          totalVolume: 500,
+        },
+      ];
+      // Use the middle zone as POC for this test
+      const poc = zones[1];
+
+      const result = calculateValueArea(zones, poc);
+
+      // Should include all zones without crashing
+      expect(result.valueAreaLow).toBe(100);
+      expect(result.valueAreaHigh).toBe(115);
+    });
   });
 
   describe('findPointOfControl', () => {
