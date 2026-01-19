@@ -1428,8 +1428,15 @@ export class TechnicalIndicatorsService {
     const high = extractHighPrices(input.candles);
     const low = extractLowPrices(input.candles);
     const close = extractClosePrices(input.candles);
+    const volume = extractVolumes(input.candles);
 
-    const patterns = detectChartPatterns(high, low, close, lookbackPeriod);
+    const patterns = detectChartPatterns(
+      high,
+      low,
+      close,
+      lookbackPeriod,
+      volume,
+    );
 
     const bullishPatterns = patterns.filter((p) => p.direction === 'bullish');
     const bearishPatterns = patterns.filter((p) => p.direction === 'bearish');

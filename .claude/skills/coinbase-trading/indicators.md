@@ -35,21 +35,37 @@ result = calculate_rsi(candles, period=14)
 
 **Usage**:
 ```
-div_result = detect_rsi_divergence(candles)
+div_result = detect_rsi_divergence(candles, rsiPeriod=14, lookbackPeriod=14)
 ```
 
 **Output Structure**:
 ```json
 {
+  "rsiPeriod": 14,
+  "lookbackPeriod": 14,
+  "rsiValues": [65.2, 68.1, 62.4, ...],
+  "divergences": [
+    {
+      "type": "bullish",
+      "startIndex": 10,
+      "endIndex": 25,
+      "priceStart": 44000,
+      "priceEnd": 43500,
+      "rsiStart": 28,
+      "rsiEnd": 35,
+      "strength": "strong"
+    }
+  ],
+  "latestDivergence": { "type": "bullish", "strength": "strong", ... },
   "hasBullishDivergence": true,
-  "hasBearishDivergence": false,
-  "latestDivergence": { "type": "bullish", "strength": 0.8 }
+  "hasBearishDivergence": false
 }
 ```
 
 **Interpretation**:
 - `hasBullishDivergence: true` → **Strong BUY** (+3)
 - `hasBearishDivergence: true` → **Strong SELL** (-3)
+- Check `strength` field: "strong" > "medium" > "weak"
 
 ---
 
@@ -67,6 +83,7 @@ result = calculate_stochastic(candles, kPeriod=14, dPeriod=3)
 {
   "kPeriod": 14,
   "dPeriod": 3,
+  "values": [{ "k": 22.1, "d": 25.0 }, { "k": 25.5, "d": 28.3 }, ...],
   "latestValue": { "k": 25.5, "d": 28.3 }
 }
 ```
@@ -161,6 +178,37 @@ result = calculate_cci(candles, period=20)
 
 ## Trend Indicators
 
+### SMA (Simple Moving Average)
+
+**MCP Tool**: `calculate_sma`
+
+**Usage** (call multiple times for different periods):
+```
+sma_20 = calculate_sma(candles, period=20)
+sma_50 = calculate_sma(candles, period=50)
+sma_200 = calculate_sma(candles, period=200)
+```
+
+**Output Structure**:
+```json
+{
+  "period": 20,
+  "values": [45100.5, 45150.2, 45200.8, ...],
+  "latestValue": 45200.8
+}
+```
+
+**Interpretation** (compare `latestValue` from multiple SMAs):
+
+- SMA(20) > SMA(50) > SMA(200) → Strong uptrend (+2)
+- SMA(20) < SMA(50) < SMA(200) → Strong downtrend (-2)
+- Price above SMA(200) → Long-term bullish (+1)
+- Price below SMA(200) → Long-term bearish (-1)
+- SMA(50) crosses above SMA(200) (Golden Cross) → **Strong BUY** (+3)
+- SMA(50) crosses below SMA(200) (Death Cross) → **Strong SELL** (-3)
+
+---
+
 ### MACD (Moving Average Convergence Divergence)
 
 **MCP Tool**: `calculate_macd`
@@ -176,6 +224,7 @@ result = calculate_macd(candles, fastPeriod=12, slowPeriod=26, signalPeriod=9)
   "fastPeriod": 12,
   "slowPeriod": 26,
   "signalPeriod": 9,
+  "values": [{ "MACD": 100.2, "signal": 95.0, "histogram": 5.2 }, ...],
   "latestValue": {
     "MACD": 125.5,
     "signal": 98.2,
@@ -240,6 +289,7 @@ result = calculate_adx(candles, period=14)
 ```json
 {
   "period": 14,
+  "values": [{ "adx": 22.1, "pdi": 20.5, "mdi": 15.2 }, { "adx": 28.5, "pdi": 25.2, "mdi": 18.8 }, ...],
   "latestValue": {
     "adx": 28.5,
     "pdi": 25.2,
@@ -303,6 +353,7 @@ result = calculate_ichimoku_cloud(candles, conversionPeriod=9, basePeriod=26, sp
   "basePeriod": 26,
   "spanPeriod": 52,
   "displacement": 26,
+  "values": [{ "conversion": 45000.0, "base": 44800.0, "spanA": 44900.0, "spanB": 44400.0, "chikou": 45200.0 }, ...],
   "latestValue": {
     "conversion": 45100.5,
     "base": 44850.2,
@@ -350,6 +401,7 @@ result = calculate_bollinger_bands(candles, period=20, stdDev=2)
 {
   "period": 20,
   "stdDev": 2,
+  "values": [{ "middle": 44800.0, "upper": 46000.0, "lower": 43600.0, "pb": 0.55, "bandwidth": 0.0536 }, ...],
   "latestValue": {
     "middle": 45000.0,
     "upper": 46200.5,
@@ -418,6 +470,8 @@ result = calculate_keltner_channels(candles, maPeriod=20, atrPeriod=10, multipli
   "maPeriod": 20,
   "atrPeriod": 10,
   "multiplier": 2,
+  "useSMA": false,
+  "values": [{ "middle": 44800.0, "upper": 47200.0, "lower": 42400.0 }, ...],
   "latestValue": {
     "middle": 45000.0,
     "upper": 47500.5,
@@ -704,10 +758,7 @@ result = detect_candlestick_patterns(candles)
 result = detect_chart_patterns(candles, lookbackPeriod=50)
 ```
 
-**With Volume Confirmation** (recommended):
-```
-result = detect_chart_patterns(candles, lookbackPeriod=50, volume=candles.volume)
-```
+Volume confirmation is automatic when candles include volume data (no separate parameter needed).
 
 **Output Structure**:
 ```json
