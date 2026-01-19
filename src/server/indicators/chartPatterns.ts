@@ -79,6 +79,9 @@ export function detectChartPatterns(
   );
   patterns.push(...detectBullFlag(high, low, close, startIdx));
   patterns.push(...detectBearFlag(high, low, close, startIdx));
+  patterns.push(
+    ...detectCupAndHandle(high, low, close, peaks, troughs, startIdx),
+  );
 
   // Sort by end index (most recent first)
   return patterns.sort((a, b) => b.endIndex - a.endIndex);
@@ -722,6 +725,128 @@ function detectBearFlag(
         neckline: minFlag,
       });
     }
+  }
+
+  return patterns;
+}
+
+/**
+ * Detect Cup and Handle pattern (bullish continuation).
+ * The pattern consists of:
+ * 1. Left lip (initial peak)
+ * 2. Cup formation (U-shaped decline and recovery)
+ * 3. Handle (small pullback)
+ * 4. Breakout above the resistance
+ */
+function detectCupAndHandle(
+  high: readonly number[],
+  low: readonly number[],
+  close: readonly number[],
+  peaks: readonly number[],
+  troughs: readonly number[],
+  startIdx: number,
+): ChartPattern[] {
+  const patterns: ChartPattern[] = [];
+
+  // Need at least 2 peaks (left lip and right lip) and 1 trough (cup bottom)
+  for (let i = 0; i < peaks.length - 1; i++) {
+    const leftLip = peaks[i];
+    const rightLip = peaks[i + 1];
+
+    if (leftLip < startIdx) {
+      continue;
+    }
+
+    // Find the lowest trough between the two peaks (cup bottom)
+    const troughsBetween = troughs.filter((t) => t > leftLip && t < rightLip);
+    if (troughsBetween.length === 0) {
+      continue;
+    }
+
+    const cupBottom = troughsBetween.reduce(
+      (minIdx, t) => (low[t] < low[minIdx] ? t : minIdx),
+      troughsBetween[0],
+    );
+
+    const leftLipPrice = high[leftLip];
+    const rightLipPrice = high[rightLip];
+    const cupBottomPrice = low[cupBottom];
+
+    // Cup depth should be 10-35% of the left lip price
+    const cupDepth = (leftLipPrice - cupBottomPrice) / leftLipPrice;
+    if (cupDepth < 0.1 || cupDepth > 0.35) {
+      continue;
+    }
+
+    // Right lip should be within 3% of left lip (resistance level)
+    if (!pricesEqual(leftLipPrice, rightLipPrice, 0.03)) {
+      continue;
+    }
+
+    // Check for U-shape: cup bottom should be roughly in the middle
+    const cupMidpoint = (leftLip + rightLip) / 2;
+    const bottomDeviation =
+      Math.abs(cupBottom - cupMidpoint) / (rightLip - leftLip);
+    if (bottomDeviation > 0.3) {
+      continue; // V-shaped or asymmetric
+    }
+
+    // Look for handle after right lip (small pullback)
+    const handleStart = rightLip;
+    const maxHandleLength = Math.min(
+      (rightLip - leftLip) / 2,
+      close.length - rightLip - 1,
+    );
+
+    if (maxHandleLength < 3) {
+      continue;
+    }
+
+    // Find handle low (pullback)
+    let handleLow = close[handleStart];
+    let handleLowIdx = handleStart;
+    const handleEnd = Math.min(
+      handleStart + Math.floor(maxHandleLength),
+      close.length - 1,
+    );
+
+    for (let j = handleStart; j <= handleEnd; j++) {
+      if (low[j] < handleLow) {
+        handleLow = low[j];
+        handleLowIdx = j;
+      }
+    }
+
+    // Handle should retrace 1/3 to 1/2 of cup height
+    const handleRetracement =
+      (rightLipPrice - handleLow) / (rightLipPrice - cupBottomPrice);
+    if (handleRetracement < 0.1 || handleRetracement > 0.5) {
+      continue;
+    }
+
+    // Handle should stay in upper half of cup
+    const cupMidPrice = (leftLipPrice + cupBottomPrice) / 2;
+    if (handleLow < cupMidPrice) {
+      continue;
+    }
+
+    // Calculate price target (cup depth added to breakout)
+    const cupHeight = leftLipPrice - cupBottomPrice;
+    const priceTarget = leftLipPrice + cupHeight;
+
+    // Confidence based on cup symmetry and handle quality
+    const confidence =
+      bottomDeviation < 0.15 && handleRetracement >= 0.2 ? 'high' : 'medium';
+
+    patterns.push({
+      type: 'cup_and_handle',
+      direction: 'bullish',
+      startIndex: leftLip,
+      endIndex: handleLowIdx,
+      confidence,
+      priceTarget,
+      neckline: leftLipPrice,
+    });
   }
 
   return patterns;
