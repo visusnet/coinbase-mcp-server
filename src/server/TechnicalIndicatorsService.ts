@@ -14,6 +14,7 @@ import {
   MFI,
   PSAR,
   IchimokuCloud,
+  KeltnerChannels,
 } from 'technicalindicators';
 
 /**
@@ -343,6 +344,38 @@ export interface CalculateIchimokuCloudOutput {
   readonly latestValue: IchimokuCloudDataPoint | null;
 }
 
+/**
+ * Input for Keltner Channels calculation
+ */
+export interface CalculateKeltnerChannelsInput {
+  readonly candles: readonly CandleInput[];
+  readonly maPeriod?: number;
+  readonly atrPeriod?: number;
+  readonly multiplier?: number;
+  readonly useSMA?: boolean;
+}
+
+/**
+ * Single Keltner Channels data point
+ */
+interface KeltnerChannelsDataPoint {
+  readonly middle: number;
+  readonly upper: number;
+  readonly lower: number;
+}
+
+/**
+ * Output for Keltner Channels calculation
+ */
+export interface CalculateKeltnerChannelsOutput {
+  readonly maPeriod: number;
+  readonly atrPeriod: number;
+  readonly multiplier: number;
+  readonly useSMA: boolean;
+  readonly values: readonly KeltnerChannelsDataPoint[];
+  readonly latestValue: KeltnerChannelsDataPoint | null;
+}
+
 const DEFAULT_RSI_PERIOD = 14;
 const DEFAULT_EMA_PERIOD = 20;
 const DEFAULT_MACD_FAST_PERIOD = 12;
@@ -365,6 +398,9 @@ const DEFAULT_ICHIMOKU_CONVERSION_PERIOD = 9;
 const DEFAULT_ICHIMOKU_BASE_PERIOD = 26;
 const DEFAULT_ICHIMOKU_SPAN_PERIOD = 52;
 const DEFAULT_ICHIMOKU_DISPLACEMENT = 26;
+const DEFAULT_KELTNER_MA_PERIOD = 20;
+const DEFAULT_KELTNER_ATR_PERIOD = 10;
+const DEFAULT_KELTNER_MULTIPLIER = 2;
 
 /**
  * Service for calculating technical indicators from candle data.
@@ -781,6 +817,46 @@ export class TechnicalIndicatorsService {
       latestValue:
         ichimokuValues.length > 0
           ? ichimokuValues[ichimokuValues.length - 1]
+          : null,
+    };
+  }
+
+  /**
+   * Calculate Keltner Channels from candle data.
+   *
+   * @param input - Candles and optional parameters
+   * @returns Keltner Channels values array and latest value
+   */
+  public calculateKeltnerChannels(
+    input: CalculateKeltnerChannelsInput,
+  ): CalculateKeltnerChannelsOutput {
+    const maPeriod = input.maPeriod ?? DEFAULT_KELTNER_MA_PERIOD;
+    const atrPeriod = input.atrPeriod ?? DEFAULT_KELTNER_ATR_PERIOD;
+    const multiplier = input.multiplier ?? DEFAULT_KELTNER_MULTIPLIER;
+    const useSMA = input.useSMA ?? false;
+    const high = extractHighPrices(input.candles);
+    const low = extractLowPrices(input.candles);
+    const close = extractClosePrices(input.candles);
+
+    const keltnerValues = KeltnerChannels.calculate({
+      maPeriod,
+      atrPeriod,
+      multiplier,
+      useSMA,
+      high,
+      low,
+      close,
+    });
+
+    return {
+      maPeriod,
+      atrPeriod,
+      multiplier,
+      useSMA,
+      values: keltnerValues,
+      latestValue:
+        keltnerValues.length > 0
+          ? keltnerValues[keltnerValues.length - 1]
           : null,
     };
   }

@@ -1485,6 +1485,46 @@ describe('CoinbaseMcpServer Integration Tests', () => {
         expectResponseToContain(response, result);
       });
     });
+
+    describe('calculate_keltner_channels', () => {
+      it('should call calculateKeltnerChannels via MCP tool calculate_keltner_channels', async () => {
+        const candles = Array.from({ length: 30 }, (_, i) => ({
+          open: String(100 + i),
+          high: String(105 + i),
+          low: String(95 + i),
+          close: String(102 + i),
+          volume: String(1000 + i * 10),
+        }));
+        const args = {
+          candles,
+          maPeriod: 20,
+          atrPeriod: 10,
+          multiplier: 2,
+          useSMA: false,
+        };
+        const result = {
+          maPeriod: 20,
+          atrPeriod: 10,
+          multiplier: 2,
+          useSMA: false,
+          values: [{ middle: 115, upper: 125, lower: 105 }],
+          latestValue: { middle: 115, upper: 125, lower: 105 },
+        };
+        mockTechnicalIndicatorsService.calculateKeltnerChannels.mockReturnValueOnce(
+          result,
+        );
+
+        const response = await client.callTool({
+          name: 'calculate_keltner_channels',
+          arguments: args,
+        });
+
+        expect(
+          mockTechnicalIndicatorsService.calculateKeltnerChannels,
+        ).toHaveBeenCalledWith(args);
+        expectResponseToContain(response, result);
+      });
+    });
   });
 
   describe('Prompts', () => {

@@ -1540,6 +1540,59 @@ export class CoinbaseMcpServer {
         ),
       ),
     );
+
+    server.registerTool(
+      'calculate_keltner_channels',
+      {
+        title: 'Calculate Keltner Channels',
+        description:
+          'Calculate Keltner Channels from candle data. ' +
+          'Volatility-based envelope indicator similar to Bollinger Bands but uses ATR. ' +
+          'Returns middle (EMA), upper, and lower channel values. ' +
+          'Price below lower channel suggests oversold, above upper suggests overbought. ' +
+          'BB squeeze inside Keltner signals volatility breakout.',
+        inputSchema: {
+          candles: z
+            .array(
+              z.object({
+                open: z.string().describe('Opening price'),
+                high: z.string().describe('High price'),
+                low: z.string().describe('Low price'),
+                close: z.string().describe('Closing price'),
+                volume: z.string().describe('Volume'),
+              }),
+            )
+            .min(20)
+            .describe('Array of candle data'),
+          maPeriod: z
+            .number()
+            .int()
+            .min(1)
+            .optional()
+            .describe('Moving average period (default: 20)'),
+          atrPeriod: z
+            .number()
+            .int()
+            .min(1)
+            .optional()
+            .describe('ATR period (default: 10)'),
+          multiplier: z
+            .number()
+            .min(0.1)
+            .optional()
+            .describe('ATR multiplier for channel width (default: 2)'),
+          useSMA: z
+            .boolean()
+            .optional()
+            .describe('Use SMA instead of EMA (default: false)'),
+        },
+      },
+      this.call(
+        this.technicalIndicators.calculateKeltnerChannels.bind(
+          this.technicalIndicators,
+        ),
+      ),
+    );
   }
 
   private registerPromptsForServer(server: McpServer): void {
@@ -1557,7 +1610,7 @@ export class CoinbaseMcpServer {
                 type: 'text',
                 text: `You are a Coinbase Advanced Trade assistant.
 
-TOOL CATEGORIES (61 total):
+TOOL CATEGORIES (62 total):
 - Accounts (2): list_accounts, get_account
 - Orders (9): create_order, preview_order, list_orders, get_order, cancel_orders, edit_order, preview_edit_order, list_fills, close_position
 - Products (8): list_products, get_product, get_product_candles, get_product_candles_batch, get_best_bid_ask, get_market_snapshot, get_product_book, get_market_trades
@@ -1568,7 +1621,7 @@ TOOL CATEGORIES (61 total):
 - Futures (4): list_futures_positions, get_futures_position, get_futures_balance_summary, list_futures_sweeps
 - Perpetuals (4): list_perpetuals_positions, get_perpetuals_position, get_perpetuals_portfolio_summary, get_perpetuals_portfolio_balance
 - Info (2): get_api_key_permissions, get_transaction_summary
-- Technical Indicators (15): calculate_rsi, calculate_macd, calculate_ema, calculate_bollinger_bands, calculate_atr, calculate_stochastic, calculate_adx, calculate_obv, calculate_vwap, calculate_cci, calculate_williams_r, calculate_roc, calculate_mfi, calculate_psar, calculate_ichimoku_cloud
+- Technical Indicators (16): calculate_rsi, calculate_macd, calculate_ema, calculate_bollinger_bands, calculate_atr, calculate_stochastic, calculate_adx, calculate_obv, calculate_vwap, calculate_cci, calculate_williams_r, calculate_roc, calculate_mfi, calculate_psar, calculate_ichimoku_cloud, calculate_keltner_channels
 
 BEST PRACTICES:
 1. Always preview_order before create_order
