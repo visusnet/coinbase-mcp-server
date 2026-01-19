@@ -1348,4 +1348,71 @@ describe('TechnicalIndicatorsService', () => {
       expect(result.latestValue).toBeNull();
     });
   });
+
+  describe('calculateFibonacciRetracement', () => {
+    it('should calculate Fibonacci retracement for uptrend', () => {
+      const result = service.calculateFibonacciRetracement({
+        start: 100,
+        end: 200,
+      });
+
+      expect(result.start).toBe(100);
+      expect(result.end).toBe(200);
+      expect(result.trend).toBe('uptrend');
+      expect(result.levels.length).toBe(11);
+
+      // Library calculates retracement from end: 0% = end, 100% = start
+      const levelMap = new Map(result.levels.map((l) => [l.level, l.price]));
+      expect(levelMap.get(0)).toBe(200); // 0% retracement = End (high)
+      expect(levelMap.get(50)).toBeCloseTo(150, 1); // 50% retracement
+      expect(levelMap.get(100)).toBe(100); // 100% retracement = Start (low)
+    });
+
+    it('should calculate Fibonacci retracement for downtrend', () => {
+      const result = service.calculateFibonacciRetracement({
+        start: 200,
+        end: 100,
+      });
+
+      expect(result.start).toBe(200);
+      expect(result.end).toBe(100);
+      expect(result.trend).toBe('downtrend');
+      expect(result.levels.length).toBe(11);
+
+      // Library calculates retracement from end: 0% = end, 100% = start
+      const levelMap = new Map(result.levels.map((l) => [l.level, l.price]));
+      expect(levelMap.get(0)).toBe(100); // 0% retracement = End (low)
+      expect(levelMap.get(50)).toBeCloseTo(150, 1); // 50% retracement
+      expect(levelMap.get(100)).toBe(200); // 100% retracement = Start (high)
+    });
+
+    it('should include extension levels', () => {
+      const result = service.calculateFibonacciRetracement({
+        start: 100,
+        end: 200,
+      });
+
+      const levels = result.levels.map((l) => l.level);
+      expect(levels).toContain(127.2);
+      expect(levels).toContain(161.8);
+      expect(levels).toContain(261.8);
+      expect(levels).toContain(423.6);
+    });
+
+    it('should include standard retracement levels', () => {
+      const result = service.calculateFibonacciRetracement({
+        start: 50,
+        end: 150,
+      });
+
+      const levels = result.levels.map((l) => l.level);
+      expect(levels).toContain(0);
+      expect(levels).toContain(23.6);
+      expect(levels).toContain(38.2);
+      expect(levels).toContain(50);
+      expect(levels).toContain(61.8);
+      expect(levels).toContain(78.6);
+      expect(levels).toContain(100);
+    });
+  });
 });

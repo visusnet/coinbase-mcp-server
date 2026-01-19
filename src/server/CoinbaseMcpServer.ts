@@ -1593,6 +1593,32 @@ export class CoinbaseMcpServer {
         ),
       ),
     );
+
+    server.registerTool(
+      'calculate_fibonacci_retracement',
+      {
+        title: 'Calculate Fibonacci Retracement',
+        description:
+          'Calculate Fibonacci Retracement levels from swing high/low prices. ' +
+          'For uptrend: start=low, end=high. For downtrend: start=high, end=low. ' +
+          'Returns key retracement levels (0%, 23.6%, 38.2%, 50%, 61.8%, 78.6%, 100%) ' +
+          'plus extension levels (127.2%, 161.8%, 261.8%, 423.6%). ' +
+          'Price bouncing at 38.2% or 61.8% suggests support/resistance.',
+        inputSchema: {
+          start: z
+            .number()
+            .describe('Start price (low for uptrend, high for downtrend)'),
+          end: z
+            .number()
+            .describe('End price (high for uptrend, low for downtrend)'),
+        },
+      },
+      this.call(
+        this.technicalIndicators.calculateFibonacciRetracement.bind(
+          this.technicalIndicators,
+        ),
+      ),
+    );
   }
 
   private registerPromptsForServer(server: McpServer): void {
@@ -1610,7 +1636,7 @@ export class CoinbaseMcpServer {
                 type: 'text',
                 text: `You are a Coinbase Advanced Trade assistant.
 
-TOOL CATEGORIES (62 total):
+TOOL CATEGORIES (63 total):
 - Accounts (2): list_accounts, get_account
 - Orders (9): create_order, preview_order, list_orders, get_order, cancel_orders, edit_order, preview_edit_order, list_fills, close_position
 - Products (8): list_products, get_product, get_product_candles, get_product_candles_batch, get_best_bid_ask, get_market_snapshot, get_product_book, get_market_trades
@@ -1621,7 +1647,7 @@ TOOL CATEGORIES (62 total):
 - Futures (4): list_futures_positions, get_futures_position, get_futures_balance_summary, list_futures_sweeps
 - Perpetuals (4): list_perpetuals_positions, get_perpetuals_position, get_perpetuals_portfolio_summary, get_perpetuals_portfolio_balance
 - Info (2): get_api_key_permissions, get_transaction_summary
-- Technical Indicators (16): calculate_rsi, calculate_macd, calculate_ema, calculate_bollinger_bands, calculate_atr, calculate_stochastic, calculate_adx, calculate_obv, calculate_vwap, calculate_cci, calculate_williams_r, calculate_roc, calculate_mfi, calculate_psar, calculate_ichimoku_cloud, calculate_keltner_channels
+- Technical Indicators (17): calculate_rsi, calculate_macd, calculate_ema, calculate_bollinger_bands, calculate_atr, calculate_stochastic, calculate_adx, calculate_obv, calculate_vwap, calculate_cci, calculate_williams_r, calculate_roc, calculate_mfi, calculate_psar, calculate_ichimoku_cloud, calculate_keltner_channels, calculate_fibonacci_retracement
 
 BEST PRACTICES:
 1. Always preview_order before create_order
