@@ -530,10 +530,10 @@ result = calculate_volume_profile(candles, noOfBars=12)
 {
   "noOfBars": 12,
   "zones": [
-    { "priceFrom": 44000, "priceTo": 44500, "volume": 125000 },
+    { "rangeStart": 44000, "rangeEnd": 44500, "bullishVolume": 75000, "bearishVolume": 50000, "totalVolume": 125000 },
     ...
   ],
-  "pointOfControl": { "priceFrom": 45000, "priceTo": 45500, "volume": 250000 },
+  "pointOfControl": { "rangeStart": 45000, "rangeEnd": 45500, "bullishVolume": 150000, "bearishVolume": 100000, "totalVolume": 250000 },
   "valueAreaHigh": 46000,
   "valueAreaLow": 44000
 }

@@ -1841,7 +1841,7 @@ export class CoinbaseMcpServer {
                 type: 'text',
                 text: `You are a Coinbase Advanced Trade assistant.
 
-TOOL CATEGORIES (68 total):
+TOOL CATEGORIES (69 total):
 - Accounts (2): list_accounts, get_account
 - Orders (9): create_order, preview_order, list_orders, get_order, cancel_orders, edit_order, preview_edit_order, list_fills, close_position
 - Products (8): list_products, get_product, get_product_candles, get_product_candles_batch, get_best_bid_ask, get_market_snapshot, get_product_book, get_market_trades
