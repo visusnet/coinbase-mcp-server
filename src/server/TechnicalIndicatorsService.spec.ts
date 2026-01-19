@@ -519,4 +519,112 @@ describe('TechnicalIndicatorsService', () => {
       expect(result.latestValue).toBeNull();
     });
   });
+
+  describe('calculateAdx', () => {
+    const generateCandles = (
+      data: { high: number; low: number; close: number }[],
+    ): CandleInput[] => {
+      return data.map(({ high, low, close }) => ({
+        open: close.toString(),
+        high: high.toString(),
+        low: low.toString(),
+        close: close.toString(),
+        volume: '1000',
+      }));
+    };
+
+    it('should calculate ADX with default period of 14', () => {
+      const data = Array.from({ length: 30 }, (_, i) => ({
+        high: 105 + i,
+        low: 95 + i,
+        close: 100 + i,
+      }));
+      const candles = generateCandles(data);
+
+      const result = service.calculateAdx({ candles });
+
+      expect(result.period).toBe(14);
+      expect(result.values.length).toBeGreaterThan(0);
+      expect(result.latestValue).not.toBeNull();
+    });
+
+    it('should calculate ADX with custom period', () => {
+      const data = Array.from({ length: 20 }, (_, i) => ({
+        high: 110 + i,
+        low: 90 + i,
+        close: 100 + i,
+      }));
+      const candles = generateCandles(data);
+
+      const result = service.calculateAdx({ candles, period: 5 });
+
+      expect(result.period).toBe(5);
+      expect(result.values.length).toBeGreaterThan(0);
+    });
+
+    it('should return ADX, +DI, and -DI values', () => {
+      const data = Array.from({ length: 30 }, (_, i) => ({
+        high: 105 + i,
+        low: 95 + i,
+        close: 100 + i,
+      }));
+      const candles = generateCandles(data);
+
+      const result = service.calculateAdx({ candles });
+
+      expect(result.latestValue).not.toBeNull();
+      expect(result.latestValue).toHaveProperty('adx');
+      expect(result.latestValue).toHaveProperty('pdi');
+      expect(result.latestValue).toHaveProperty('mdi');
+    });
+
+    it('should return ADX values between 0 and 100', () => {
+      const data = Array.from({ length: 30 }, (_, i) => ({
+        high: 105 + i,
+        low: 95 + i,
+        close: 100 + i,
+      }));
+      const candles = generateCandles(data);
+
+      const result = service.calculateAdx({ candles });
+
+      expect(result.latestValue).not.toBeNull();
+      expect(result.latestValue!.adx).toBeGreaterThanOrEqual(0);
+      expect(result.latestValue!.adx).toBeLessThanOrEqual(100);
+    });
+
+    it('should indicate strong trend for consistently rising prices', () => {
+      // Strong consistent uptrend
+      const trendingData = Array.from({ length: 40 }, (_, i) => ({
+        high: 100 + i * 3,
+        low: 95 + i * 3,
+        close: 98 + i * 3,
+      }));
+      const candles = generateCandles(trendingData);
+
+      const result = service.calculateAdx({
+        candles,
+        period: 10,
+      });
+
+      expect(result.latestValue).not.toBeNull();
+      // Strong uptrend should have ADX above 25 (traditional threshold)
+      expect(result.latestValue!.adx).toBeGreaterThan(25);
+      // +DI should be greater than -DI in uptrend
+      expect(result.latestValue!.pdi).toBeGreaterThan(result.latestValue!.mdi);
+    });
+
+    it('should return null latestValue when not enough data', () => {
+      const data = [
+        { high: 105, low: 95, close: 100 },
+        { high: 106, low: 96, close: 101 },
+      ];
+      const candles = generateCandles(data);
+
+      const result = service.calculateAdx({ candles });
+
+      expect(result.values.length).toBe(0);
+      expect(result.latestValue).toBeNull();
+    });
+  });
 });

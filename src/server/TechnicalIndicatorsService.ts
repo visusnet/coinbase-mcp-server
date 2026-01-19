@@ -5,6 +5,7 @@ import {
   BollingerBands,
   ATR,
   Stochastic,
+  ADX,
 } from 'technicalindicators';
 
 /**
@@ -158,6 +159,32 @@ export interface CalculateStochasticOutput {
   readonly latestValue: StochasticValue | null;
 }
 
+/**
+ * Input for ADX calculation
+ */
+export interface CalculateAdxInput {
+  readonly candles: readonly CandleInput[];
+  readonly period?: number;
+}
+
+/**
+ * Single ADX data point
+ */
+export interface AdxValue {
+  readonly adx: number;
+  readonly pdi: number;
+  readonly mdi: number;
+}
+
+/**
+ * Output for ADX calculation
+ */
+export interface CalculateAdxOutput {
+  readonly period: number;
+  readonly values: readonly AdxValue[];
+  readonly latestValue: AdxValue | null;
+}
+
 const DEFAULT_RSI_PERIOD = 14;
 const DEFAULT_EMA_PERIOD = 20;
 const DEFAULT_MACD_FAST_PERIOD = 12;
@@ -169,6 +196,7 @@ const DEFAULT_ATR_PERIOD = 14;
 const DEFAULT_STOCHASTIC_K_PERIOD = 14;
 const DEFAULT_STOCHASTIC_D_PERIOD = 3;
 const DEFAULT_STOCHASTIC_STOCH_PERIOD = 3;
+const DEFAULT_ADX_PERIOD = 14;
 
 /**
  * Service for calculating technical indicators from candle data.
@@ -337,6 +365,33 @@ export class TechnicalIndicatorsService {
       values: stochValues,
       latestValue:
         stochValues.length > 0 ? stochValues[stochValues.length - 1] : null,
+    };
+  }
+
+  /**
+   * Calculate ADX (Average Directional Index) from candle data.
+   *
+   * @param input - Candles and optional period (default: 14)
+   * @returns ADX, +DI, and -DI values array and latest value
+   */
+  public calculateAdx(input: CalculateAdxInput): CalculateAdxOutput {
+    const period = input.period ?? DEFAULT_ADX_PERIOD;
+    const high = extractHighPrices(input.candles);
+    const low = extractLowPrices(input.candles);
+    const close = extractClosePrices(input.candles);
+
+    const adxValues = ADX.calculate({
+      period,
+      high,
+      low,
+      close,
+    });
+
+    return {
+      period,
+      values: adxValues,
+      latestValue:
+        adxValues.length > 0 ? adxValues[adxValues.length - 1] : null,
     };
   }
 }

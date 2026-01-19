@@ -1,6 +1,6 @@
 # Coinbase MCP Server
 
-MCP server providing 52 Coinbase Advanced Trade API tools.
+MCP server with 53 tools (46 Coinbase Advanced Trade API + 7 technical indicators).
 
 ## Commands
 
