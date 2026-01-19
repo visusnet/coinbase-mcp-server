@@ -1,5 +1,9 @@
 # Trading Strategies
 
+> **Note**: All indicators mentioned in this document are available as MCP tools.
+> Use `calculate_rsi`, `calculate_macd`, `calculate_adx`, etc. instead of manual calculation.
+> See [indicators.md](indicators.md) for complete MCP tool reference.
+
 ## Enhanced Signal Aggregation
 
 ### Technical Signal Categories
