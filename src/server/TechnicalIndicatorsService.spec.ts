@@ -2161,14 +2161,11 @@ describe('TechnicalIndicatorsService', () => {
       expect(result.resistance1).toBeCloseTo(110, 2);
       // R2 = 105 + 10 = 115
       expect(result.resistance2).toBeCloseTo(115, 2);
-      // R3 = 110 + 2 * (105 - 100) = 120
-      expect(result.resistance3).toBeCloseTo(120, 2);
+      // Woodie traditionally only defines R1/R2 and S1/S2 - no R3/S3
       // S1 = 2 * 105 - 110 = 100
       expect(result.support1).toBeCloseTo(100, 2);
       // S2 = 105 - 10 = 95
       expect(result.support2).toBeCloseTo(95, 2);
-      // S3 = 100 - 2 * (110 - 105) = 90
-      expect(result.support3).toBeCloseTo(90, 2);
     });
 
     it('should calculate Camarilla pivot points correctly', () => {
@@ -2177,7 +2174,7 @@ describe('TechnicalIndicatorsService', () => {
         type: 'camarilla',
       });
 
-      // PP = 105
+      // PP = close = 105 (Camarilla uses close as pivot)
       expect(result.type).toBe('camarilla');
       expect(result.pivotPoint).toBeCloseTo(105, 2);
       // R1 = 105 + (10 * 1.1) / 12 = 105.917
@@ -2186,12 +2183,19 @@ describe('TechnicalIndicatorsService', () => {
       expect(result.resistance2).toBeCloseTo(106.833, 2);
       // R3 = 105 + (10 * 1.1) / 4 = 107.75
       expect(result.resistance3).toBeCloseTo(107.75, 2);
+      // R4 = 105 + (10 * 1.1) / 2 = 110.5 (breakout level)
+      // Camarilla includes R4/S4 - cast to access them
+      const camarillaResult =
+        result as import('./indicators/pivotPoints').CamarillaPivotPointsOutput;
+      expect(camarillaResult.resistance4).toBeCloseTo(110.5, 2);
       // S1 = 105 - (10 * 1.1) / 12 = 104.083
       expect(result.support1).toBeCloseTo(104.083, 2);
       // S2 = 105 - (10 * 1.1) / 6 = 103.167
       expect(result.support2).toBeCloseTo(103.167, 2);
       // S3 = 105 - (10 * 1.1) / 4 = 102.25
       expect(result.support3).toBeCloseTo(102.25, 2);
+      // S4 = 105 - (10 * 1.1) / 2 = 99.5 (breakout level)
+      expect(camarillaResult.support4).toBeCloseTo(99.5, 2);
     });
 
     it('should calculate DeMark pivot points when close < open', () => {
@@ -2205,17 +2209,12 @@ describe('TechnicalIndicatorsService', () => {
       });
 
       // close (101) < open (108), so x = H + 2*L + C = 110 + 200 + 101 = 411
-      // PP = 411 / 4 = 102.75, range = 10
+      // PP = 411 / 4 = 102.75
       expect(result.type).toBe('demark');
       expect(result.pivotPoint).toBeCloseTo(102.75, 2);
-      // DeMark R1/S1
+      // DeMark only defines R1/S1 - no extended levels
       expect(result.resistance1).toBeCloseTo(105.5, 2); // 411/2 - 100
       expect(result.support1).toBeCloseTo(95.5, 2); // 411/2 - 110
-      // Extended levels (Standard formulas with DeMark PP)
-      expect(result.resistance2).toBeCloseTo(112.75, 2); // PP + range
-      expect(result.resistance3).toBeCloseTo(115.5, 2); // H + 2*(PP - L)
-      expect(result.support2).toBeCloseTo(92.75, 2); // PP - range
-      expect(result.support3).toBeCloseTo(85.5, 2); // L - 2*(H - PP)
     });
 
     it('should calculate DeMark pivot points when close > open', () => {
@@ -2229,17 +2228,12 @@ describe('TechnicalIndicatorsService', () => {
       });
 
       // close (108) > open (101), so x = 2*H + L + C = 220 + 100 + 108 = 428
-      // PP = 428 / 4 = 107, range = 10
+      // PP = 428 / 4 = 107
       expect(result.type).toBe('demark');
       expect(result.pivotPoint).toBeCloseTo(107, 2);
-      // DeMark R1/S1
+      // DeMark only defines R1/S1 - no extended levels
       expect(result.resistance1).toBeCloseTo(114, 2); // 428/2 - 100
       expect(result.support1).toBeCloseTo(104, 2); // 428/2 - 110
-      // Extended levels (Standard formulas with DeMark PP)
-      expect(result.resistance2).toBeCloseTo(117, 2); // PP + range
-      expect(result.resistance3).toBeCloseTo(124, 2); // H + 2*(PP - L)
-      expect(result.support2).toBeCloseTo(97, 2); // PP - range
-      expect(result.support3).toBeCloseTo(94, 2); // L - 2*(H - PP)
     });
 
     it('should calculate DeMark pivot points when close === open', () => {
@@ -2253,17 +2247,12 @@ describe('TechnicalIndicatorsService', () => {
       });
 
       // close === open, so x = H + L + 2*C = 110 + 100 + 210 = 420
-      // PP = 420 / 4 = 105, range = 10
+      // PP = 420 / 4 = 105
       expect(result.type).toBe('demark');
       expect(result.pivotPoint).toBeCloseTo(105, 2);
-      // DeMark R1/S1
+      // DeMark only defines R1/S1 - no extended levels
       expect(result.resistance1).toBeCloseTo(110, 2); // 420/2 - 100
       expect(result.support1).toBeCloseTo(100, 2); // 420/2 - 110
-      // Extended levels (Standard formulas with DeMark PP)
-      expect(result.resistance2).toBeCloseTo(115, 2); // PP + range
-      expect(result.resistance3).toBeCloseTo(120, 2); // H + 2*(PP - L)
-      expect(result.support2).toBeCloseTo(95, 2); // PP - range
-      expect(result.support3).toBeCloseTo(90, 2); // L - 2*(H - PP)
     });
 
     it('should handle explicit standard type', () => {

@@ -559,7 +559,9 @@ result = calculate_pivot_points(high, low, close, type="standard")
 
 **Types available**: standard, fibonacci, woodie, camarilla, demark
 
-**Output Structure**:
+Each type returns a different output structure based on its methodology:
+
+**Standard/Fibonacci Output** (PP, R1-R3, S1-S3):
 ```json
 {
   "type": "standard",
@@ -573,12 +575,51 @@ result = calculate_pivot_points(high, low, close, type="standard")
 }
 ```
 
+**Woodie Output** (PP, R1-R2, S1-S2 only):
+```json
+{
+  "type": "woodie",
+  "pivotPoint": 45000.0,
+  "resistance1": 45500.0,
+  "resistance2": 46200.0,
+  "support1": 44300.0,
+  "support2": 43800.0
+}
+```
+
+**Camarilla Output** (PP, R1-R4, S1-S4 - includes breakout levels):
+```json
+{
+  "type": "camarilla",
+  "pivotPoint": 45000.0,
+  "resistance1": 45091.7,
+  "resistance2": 45183.3,
+  "resistance3": 45275.0,
+  "resistance4": 45550.0,
+  "support1": 44908.3,
+  "support2": 44816.7,
+  "support3": 44725.0,
+  "support4": 44450.0
+}
+```
+
+**DeMark Output** (PP, R1, S1 only):
+```json
+{
+  "type": "demark",
+  "pivotPoint": 45000.0,
+  "resistance1": 45500.0,
+  "support1": 44300.0
+}
+```
+
 **Interpretation**:
 
 - Price bouncing off support1/support2 → **BUY signal** (+2)
 - Price rejected at resistance1/resistance2 → **SELL signal** (-2)
 - Price breaks above resistance1 → Bullish breakout (+2)
 - Price breaks below support1 → Bearish breakdown (-2)
+- Camarilla R4/S4: Breakout levels for trend continuation trades
 
 ---
 

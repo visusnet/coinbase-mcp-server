@@ -62,6 +62,17 @@ import {
   PivotPointsOutput,
 } from './indicators/pivotPoints';
 
+// Re-export pivot point types for external use
+export type {
+  PivotPointsType,
+  PivotPointsOutput,
+  StandardPivotPointsOutput,
+  FibonacciPivotPointsOutput,
+  WoodiePivotPointsOutput,
+  CamarillaPivotPointsOutput,
+  DemarkPivotPointsOutput,
+} from './indicators/pivotPoints';
+
 import {
   calculateRsiValues,
   findLocalPeaks,
