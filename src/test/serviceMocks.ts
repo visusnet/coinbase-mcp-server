@@ -272,6 +272,7 @@ export const mockTechnicalIndicatorsService: {
   calculateKeltnerChannels: jest.fn(),
   calculateFibonacciRetracement: jest.fn(),
   detectCandlestickPatterns: jest.fn(),
+  calculateVolumeProfile: jest.fn(),
 };
 
 export function mockServices() {

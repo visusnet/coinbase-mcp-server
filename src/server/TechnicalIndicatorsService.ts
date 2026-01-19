@@ -15,6 +15,7 @@ import {
   PSAR,
   IchimokuCloud,
   KeltnerChannels,
+  VolumeProfile,
   fibonacciretracement,
   bullish,
   bearish,
@@ -452,6 +453,36 @@ export interface DetectCandlestickPatternsOutput {
   readonly detectedPatterns: string[];
 }
 
+/**
+ * Input for Volume Profile calculation
+ */
+export interface CalculateVolumeProfileInput {
+  readonly candles: readonly CandleInput[];
+  readonly noOfBars?: number;
+}
+
+/**
+ * Single Volume Profile zone
+ */
+interface VolumeProfileZone {
+  readonly rangeStart: number;
+  readonly rangeEnd: number;
+  readonly bullishVolume: number;
+  readonly bearishVolume: number;
+  readonly totalVolume: number;
+}
+
+/**
+ * Output for Volume Profile calculation
+ */
+export interface CalculateVolumeProfileOutput {
+  readonly noOfBars: number;
+  readonly zones: readonly VolumeProfileZone[];
+  readonly pointOfControl: VolumeProfileZone | null;
+  readonly valueAreaHigh: number | null;
+  readonly valueAreaLow: number | null;
+}
+
 const DEFAULT_RSI_PERIOD = 14;
 const DEFAULT_EMA_PERIOD = 20;
 const DEFAULT_MACD_FAST_PERIOD = 12;
@@ -477,6 +508,7 @@ const DEFAULT_ICHIMOKU_DISPLACEMENT = 26;
 const DEFAULT_KELTNER_MA_PERIOD = 20;
 const DEFAULT_KELTNER_ATR_PERIOD = 10;
 const DEFAULT_KELTNER_MULTIPLIER = 2;
+const DEFAULT_VOLUME_PROFILE_BARS = 12;
 
 /**
  * Service for calculating technical indicators from candle data.
@@ -1062,6 +1094,120 @@ export class TechnicalIndicatorsService {
       bearish: Boolean(bearish(stockData)),
       patterns,
       detectedPatterns,
+    };
+  }
+
+  /**
+   * Calculate Volume Profile from candle data.
+   * Divides price range into zones and calculates volume distribution.
+   *
+   * @param input - Candle data and optional number of bars
+   * @returns Volume profile zones with point of control and value area
+   */
+  public calculateVolumeProfile(
+    input: CalculateVolumeProfileInput,
+  ): CalculateVolumeProfileOutput {
+    const noOfBars = input.noOfBars ?? DEFAULT_VOLUME_PROFILE_BARS;
+    const open = extractOpenPrices(input.candles);
+    const high = extractHighPrices(input.candles);
+    const low = extractLowPrices(input.candles);
+    const close = extractClosePrices(input.candles);
+    const volume = extractVolumes(input.candles);
+
+    // Library types are incorrect - it actually returns VolumeProfileOutput[]
+    const result = VolumeProfile.calculate({
+      open,
+      high,
+      low,
+      close,
+      volume,
+      noOfBars,
+    }) as unknown as {
+      rangeStart: number;
+      rangeEnd: number;
+      bullishVolume: number;
+      bearishVolume: number;
+      totalVolume: number;
+    }[];
+
+    // Transform results to our zone format
+    const zones: VolumeProfileZone[] = result.map((zone) => ({
+      rangeStart: zone.rangeStart,
+      rangeEnd: zone.rangeEnd,
+      bullishVolume: zone.bullishVolume,
+      bearishVolume: zone.bearishVolume,
+      totalVolume: zone.totalVolume,
+    }));
+
+    // Find Point of Control (zone with highest total volume)
+    let pointOfControl: VolumeProfileZone | null = null;
+    let maxVolume = 0;
+    for (const zone of zones) {
+      if (zone.totalVolume > maxVolume) {
+        maxVolume = zone.totalVolume;
+        pointOfControl = zone;
+      }
+    }
+
+    // Calculate Value Area (70% of total volume around POC)
+    let valueAreaHigh: number | null = null;
+    let valueAreaLow: number | null = null;
+
+    if (zones.length > 0 && pointOfControl !== null) {
+      const totalVolume = zones.reduce((sum, z) => sum + z.totalVolume, 0);
+      const targetVolume = totalVolume * 0.7;
+
+      // Sort zones by price
+      const sortedZones = [...zones].sort(
+        (a, b) => a.rangeStart - b.rangeStart,
+      );
+      const pocIndex = sortedZones.findIndex(
+        (z) =>
+          z.rangeStart === pointOfControl.rangeStart &&
+          z.rangeEnd === pointOfControl.rangeEnd,
+      );
+
+      let accumulatedVolume = pointOfControl.totalVolume;
+      let lowIndex = pocIndex;
+      let highIndex = pocIndex;
+
+      // Expand outward from POC until we reach 70% volume
+      // Note: Loop always terminates because total of all zones = 100% > 70%
+      while (accumulatedVolume < targetVolume) {
+        const canExpandLow = lowIndex > 0;
+        const canExpandHigh = highIndex < sortedZones.length - 1;
+
+        // Determine which direction to expand based on neighboring volumes
+        let expandLow = false;
+        if (canExpandLow && canExpandHigh) {
+          // Both directions available - choose higher volume
+          const lowVolume = sortedZones[lowIndex - 1].totalVolume;
+          const highVolume = sortedZones[highIndex + 1].totalVolume;
+          expandLow = lowVolume >= highVolume;
+        } else if (canExpandLow) {
+          expandLow = true;
+        }
+        // else: canExpandHigh must be true (loop would have exited otherwise)
+
+        if (expandLow) {
+          lowIndex--;
+          accumulatedVolume += sortedZones[lowIndex].totalVolume;
+        } else {
+          highIndex++;
+          accumulatedVolume += sortedZones[highIndex].totalVolume;
+        }
+      }
+
+      valueAreaLow = sortedZones[lowIndex].rangeStart;
+      valueAreaHigh = sortedZones[highIndex].rangeEnd;
+    }
+
+    return {
+      noOfBars,
+      zones,
+      pointOfControl,
+      valueAreaHigh,
+      valueAreaLow,
     };
   }
 }
