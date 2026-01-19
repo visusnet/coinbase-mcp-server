@@ -408,6 +408,7 @@ interface IchimokuCloudDataPoint {
   readonly base: number;
   readonly spanA: number;
   readonly spanB: number;
+  readonly chikou: number;
 }
 
 /**
@@ -1020,7 +1021,9 @@ export class TechnicalIndicatorsService {
     const high = extractHighPrices(input.candles);
     const low = extractLowPrices(input.candles);
 
-    const ichimokuValues = IchimokuCloud.calculate({
+    const close = extractClosePrices(input.candles);
+
+    const ichimokuRaw = IchimokuCloud.calculate({
       high,
       low,
       conversionPeriod,
@@ -1029,16 +1032,23 @@ export class TechnicalIndicatorsService {
       displacement,
     });
 
+    // Add chikou span (closing price at each position)
+    const offset = close.length - ichimokuRaw.length;
+    const values = ichimokuRaw.map((value, i) => ({
+      conversion: value.conversion,
+      base: value.base,
+      spanA: value.spanA,
+      spanB: value.spanB,
+      chikou: close[offset + i],
+    }));
+
     return {
       conversionPeriod,
       basePeriod,
       spanPeriod,
       displacement,
-      values: ichimokuValues,
-      latestValue:
-        ichimokuValues.length > 0
-          ? ichimokuValues[ichimokuValues.length - 1]
-          : null,
+      values,
+      latestValue: values.length > 0 ? values[values.length - 1] : null,
     };
   }
 

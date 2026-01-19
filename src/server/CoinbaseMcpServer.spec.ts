@@ -1511,8 +1511,22 @@ describe('CoinbaseMcpServer Integration Tests', () => {
           basePeriod: 26,
           spanPeriod: 52,
           displacement: 26,
-          values: [{ conversion: 120, base: 115, spanA: 117.5, spanB: 110 }],
-          latestValue: { conversion: 120, base: 115, spanA: 117.5, spanB: 110 },
+          values: [
+            {
+              conversion: 120,
+              base: 115,
+              spanA: 117.5,
+              spanB: 110,
+              chikou: 102,
+            },
+          ],
+          latestValue: {
+            conversion: 120,
+            base: 115,
+            spanA: 117.5,
+            spanB: 110,
+            chikou: 102,
+          },
         };
         mockTechnicalIndicatorsService.calculateIchimokuCloud.mockReturnValueOnce(
           result,
