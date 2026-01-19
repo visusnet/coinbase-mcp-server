@@ -2501,8 +2501,10 @@ describe('TechnicalIndicatorsService', () => {
     });
 
     it('should filter bullish and bearish patterns correctly', () => {
-      // Create data with a double top (bearish)
+      // Create data with a double top (bearish) pattern
+      // Using proven pattern structure from chartPatterns.spec.ts
       const candles: CandleInput[] = [];
+
       // Initial uptrend
       for (let i = 0; i < 10; i++) {
         candles.push({
@@ -2513,28 +2515,43 @@ describe('TechnicalIndicatorsService', () => {
           volume: '1000',
         });
       }
-      // First peak
+      // First peak (needs lookback=3 structure for peak detection)
       candles.push(
-        { open: '119', high: '121', low: '118', close: '120', volume: '1000' },
-        { open: '120', high: '121', low: '118', close: '119', volume: '1000' },
+        { open: '119', high: '120', low: '118', close: '119', volume: '1000' },
+        { open: '120', high: '121', low: '119', close: '120', volume: '1000' },
+        { open: '119', high: '120', low: '118', close: '119', volume: '1000' },
       );
-      // Pullback
+      // Pullback (enough for MIN_PATTERN_LENGTH)
       for (let i = 0; i < 12; i++) {
         candles.push({
-          open: String(114 - i * 0.5),
+          open: String(115 - i * 0.5),
           high: String(115 - i * 0.5),
           low: String(113 - i * 0.5),
           close: String(114 - i * 0.5),
           volume: '1000',
         });
       }
-      // Second peak
+      // Second peak (similar to first for double top detection)
       candles.push(
-        { open: '119', high: '121', low: '118', close: '120', volume: '1000' },
-        { open: '120', high: '121', low: '118', close: '119', volume: '1000' },
+        { open: '118', high: '119', low: '117', close: '118', volume: '1000' },
+        { open: '119', high: '121', low: '119', close: '120', volume: '1000' },
+        { open: '118', high: '120', low: '118', close: '119', volume: '1000' },
       );
+      // Decline
+      for (let i = 0; i < 5; i++) {
+        candles.push({
+          open: String(118 - i),
+          high: String(118 - i),
+          low: String(116 - i),
+          close: String(117 - i),
+          volume: '1000',
+        });
+      }
 
       const result = service.detectChartPatterns({ candles });
+
+      // Verify patterns were actually detected (needed for filter callback coverage)
+      expect(result.patterns.length).toBeGreaterThan(0);
 
       // All bullish patterns should have direction 'bullish'
       for (const pattern of result.bullishPatterns) {
@@ -2550,6 +2567,8 @@ describe('TechnicalIndicatorsService', () => {
       const candles = generateCandlesForPatterns(5); // Very few candles
       const result = service.detectChartPatterns({ candles });
 
+      // Verify patterns array is empty and latestPattern is null
+      expect(result.patterns).toHaveLength(0);
       expect(result.latestPattern).toBeNull();
     });
 
