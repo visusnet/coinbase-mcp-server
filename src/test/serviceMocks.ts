@@ -269,6 +269,7 @@ export const mockTechnicalIndicatorsService: {
   calculateMfi: jest.fn(),
   calculatePsar: jest.fn(),
   calculateIchimokuCloud: jest.fn(),
+  calculateKeltnerChannels: jest.fn(),
 };
 
 export function mockServices() {

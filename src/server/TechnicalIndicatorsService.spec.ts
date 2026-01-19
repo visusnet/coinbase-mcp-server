@@ -1252,4 +1252,100 @@ describe('TechnicalIndicatorsService', () => {
       expect(result.latestValue).toBeNull();
     });
   });
+
+  describe('calculateKeltnerChannels', () => {
+    const generateCandles = (
+      data: { high: number; low: number; close: number }[],
+    ): CandleInput[] => {
+      return data.map(({ high, low, close }) => ({
+        open: close.toString(),
+        high: high.toString(),
+        low: low.toString(),
+        close: close.toString(),
+        volume: '1000',
+      }));
+    };
+
+    it('should calculate Keltner Channels with default parameters', () => {
+      const data = Array.from({ length: 30 }, (_, i) => ({
+        high: 105 + Math.sin(i / 5) * 5,
+        low: 95 + Math.sin(i / 5) * 5,
+        close: 100 + Math.sin(i / 5) * 5,
+      }));
+      const candles = generateCandles(data);
+
+      const result = service.calculateKeltnerChannels({ candles });
+
+      expect(result.maPeriod).toBe(20);
+      expect(result.atrPeriod).toBe(10);
+      expect(result.multiplier).toBe(2);
+      expect(result.useSMA).toBe(false);
+      expect(result.values.length).toBeGreaterThan(0);
+      expect(result.latestValue).not.toBeNull();
+      // Verify output structure
+      const latestValue = result.latestValue as {
+        middle: number;
+        upper: number;
+        lower: number;
+      };
+      expect(latestValue).toHaveProperty('middle');
+      expect(latestValue).toHaveProperty('upper');
+      expect(latestValue).toHaveProperty('lower');
+      expect(typeof latestValue.middle).toBe('number');
+      expect(typeof latestValue.upper).toBe('number');
+      expect(typeof latestValue.lower).toBe('number');
+    });
+
+    it('should calculate Keltner Channels with custom parameters', () => {
+      const data = Array.from({ length: 30 }, (_, i) => ({
+        high: 110 + i,
+        low: 90 + i,
+        close: 100 + i,
+      }));
+      const candles = generateCandles(data);
+
+      const result = service.calculateKeltnerChannels({
+        candles,
+        maPeriod: 10,
+        atrPeriod: 5,
+        multiplier: 1.5,
+        useSMA: true,
+      });
+
+      expect(result.maPeriod).toBe(10);
+      expect(result.atrPeriod).toBe(5);
+      expect(result.multiplier).toBe(1.5);
+      expect(result.useSMA).toBe(true);
+      expect(result.values.length).toBeGreaterThan(0);
+    });
+
+    it('should return upper band above middle and lower band below middle', () => {
+      const data = Array.from({ length: 30 }, (_, i) => ({
+        high: 105 + i,
+        low: 95 + i,
+        close: 100 + i,
+      }));
+      const candles = generateCandles(data);
+
+      const result = service.calculateKeltnerChannels({ candles });
+
+      expect(result.latestValue).not.toBeNull();
+      const latestValue = result.latestValue as {
+        middle: number;
+        upper: number;
+        lower: number;
+      };
+      expect(latestValue.upper).toBeGreaterThan(latestValue.middle);
+      expect(latestValue.lower).toBeLessThan(latestValue.middle);
+    });
+
+    it('should return null latestValue when no data provided', () => {
+      const candles: ReturnType<typeof generateCandles> = [];
+
+      const result = service.calculateKeltnerChannels({ candles });
+
+      expect(result.values.length).toBe(0);
+      expect(result.latestValue).toBeNull();
+    });
+  });
 });

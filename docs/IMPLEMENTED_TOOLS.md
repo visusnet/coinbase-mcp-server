@@ -4,7 +4,7 @@
 
 This server now uses the official `@coinbase-sample/advanced-trade-sdk-ts` SDK directly, eliminating all custom domain/repository layers.
 
-**Total Tools: 61**
+**Total Tools: 62**
 
 ## Accounts (2)
 
@@ -85,7 +85,7 @@ This server now uses the official `@coinbase-sample/advanced-trade-sdk-ts` SDK d
 
 - ✅ `get_api_key_permissions` - Get current API key permissions
 
-## Technical Indicators (15)
+## Technical Indicators (16)
 
 - ✅ `calculate_rsi` - Calculate RSI (Relative Strength Index)
 - ✅ `calculate_macd` - Calculate MACD (Moving Average Convergence Divergence)
@@ -102,3 +102,4 @@ This server now uses the official `@coinbase-sample/advanced-trade-sdk-ts` SDK d
 - ✅ `calculate_mfi` - Calculate MFI (Money Flow Index)
 - ✅ `calculate_psar` - Calculate Parabolic SAR
 - ✅ `calculate_ichimoku_cloud` - Calculate Ichimoku Cloud
+- ✅ `calculate_keltner_channels` - Calculate Keltner Channels
