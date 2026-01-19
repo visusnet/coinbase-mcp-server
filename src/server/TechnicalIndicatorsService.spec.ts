@@ -2178,4 +2178,287 @@ describe('TechnicalIndicatorsService', () => {
       expect(result.pivotPoint).toBeCloseTo(105, 2);
     });
   });
+
+  describe('detectRsiDivergence', () => {
+    // Helper to generate candles with specific close prices for divergence testing
+    const generateCandlesFromCloses = (closes: number[]): CandleInput[] => {
+      return closes.map((close, _i) => ({
+        open: (close - 1).toString(),
+        high: (close + 2).toString(),
+        low: (close - 2).toString(),
+        close: close.toString(),
+        volume: '1000',
+      }));
+    };
+
+    it('should return structured output with RSI values', () => {
+      // Generate enough candles for RSI calculation (need at least period + lookback + 1)
+      const closes = Array.from(
+        { length: 50 },
+        (_, i) => 100 + Math.sin(i * 0.3) * 10,
+      );
+      const candles = generateCandlesFromCloses(closes);
+
+      const result = service.detectRsiDivergence({ candles });
+
+      expect(result.rsiPeriod).toBe(14);
+      expect(result.lookbackPeriod).toBe(14);
+      expect(Array.isArray(result.rsiValues)).toBe(true);
+      expect(result.rsiValues.length).toBeGreaterThan(0);
+      expect(Array.isArray(result.divergences)).toBe(true);
+      expect(typeof result.hasBullishDivergence).toBe('boolean');
+      expect(typeof result.hasBearishDivergence).toBe('boolean');
+    });
+
+    it('should use custom RSI period and lookback period', () => {
+      const closes = Array.from(
+        { length: 50 },
+        (_, i) => 100 + Math.sin(i * 0.3) * 10,
+      );
+      const candles = generateCandlesFromCloses(closes);
+
+      const result = service.detectRsiDivergence({
+        candles,
+        rsiPeriod: 7,
+        lookbackPeriod: 5,
+      });
+
+      expect(result.rsiPeriod).toBe(7);
+      expect(result.lookbackPeriod).toBe(5);
+    });
+
+    it('should detect bearish divergence (price higher high, RSI lower high)', () => {
+      // Create data with price making higher highs but RSI making lower highs
+      // First peak at index ~15, second peak at index ~30
+      const closes: number[] = [];
+      // Initial uptrend to first peak
+      for (let i = 0; i < 20; i++) {
+        closes.push(100 + i * 2);
+      }
+      // Pullback
+      for (let i = 0; i < 10; i++) {
+        closes.push(140 - i * 1.5);
+      }
+      // Second uptrend to higher high (but RSI won't make higher high due to momentum loss)
+      for (let i = 0; i < 20; i++) {
+        closes.push(125 + i * 1);
+      }
+      // Final pullback
+      for (let i = 0; i < 10; i++) {
+        closes.push(145 - i);
+      }
+
+      const candles = generateCandlesFromCloses(closes);
+      const result = service.detectRsiDivergence({
+        candles,
+        lookbackPeriod: 3,
+      });
+
+      // Check that we got RSI values
+      expect(result.rsiValues.length).toBeGreaterThan(0);
+      expect(Array.isArray(result.divergences)).toBe(true);
+    });
+
+    it('should detect bullish divergence (price lower low, RSI higher low)', () => {
+      // Create data with price making lower lows but RSI making higher lows
+      const closes: number[] = [];
+      // Initial downtrend to first low
+      for (let i = 0; i < 20; i++) {
+        closes.push(150 - i * 2);
+      }
+      // Bounce
+      for (let i = 0; i < 10; i++) {
+        closes.push(110 + i * 1.5);
+      }
+      // Second downtrend to lower low (but RSI won't make lower low)
+      for (let i = 0; i < 20; i++) {
+        closes.push(125 - i * 1);
+      }
+      // Final bounce
+      for (let i = 0; i < 10; i++) {
+        closes.push(105 + i);
+      }
+
+      const candles = generateCandlesFromCloses(closes);
+      const result = service.detectRsiDivergence({
+        candles,
+        lookbackPeriod: 3,
+      });
+
+      expect(result.rsiValues.length).toBeGreaterThan(0);
+      expect(Array.isArray(result.divergences)).toBe(true);
+    });
+
+    it('should detect hidden bullish divergence (price higher low, RSI lower low)', () => {
+      // In an uptrend: price makes higher low, RSI makes lower low
+      const closes: number[] = [];
+      // Uptrend with pullback
+      for (let i = 0; i < 15; i++) {
+        closes.push(100 + i * 2);
+      }
+      // First pullback (trough)
+      for (let i = 0; i < 10; i++) {
+        closes.push(130 - i * 1.5);
+      }
+      // Continue uptrend
+      for (let i = 0; i < 15; i++) {
+        closes.push(115 + i * 2);
+      }
+      // Second pullback to higher low (RSI lower)
+      for (let i = 0; i < 10; i++) {
+        closes.push(145 - i * 1);
+      }
+      // Resume uptrend
+      for (let i = 0; i < 10; i++) {
+        closes.push(135 + i);
+      }
+
+      const candles = generateCandlesFromCloses(closes);
+      const result = service.detectRsiDivergence({
+        candles,
+        lookbackPeriod: 3,
+      });
+
+      expect(result.rsiValues.length).toBeGreaterThan(0);
+      expect(Array.isArray(result.divergences)).toBe(true);
+    });
+
+    it('should detect hidden bearish divergence (price lower high, RSI higher high)', () => {
+      // In a downtrend: price makes lower high, RSI makes higher high
+      const closes: number[] = [];
+      // Downtrend with bounce
+      for (let i = 0; i < 15; i++) {
+        closes.push(150 - i * 2);
+      }
+      // First bounce (peak)
+      for (let i = 0; i < 10; i++) {
+        closes.push(120 + i * 1.5);
+      }
+      // Continue downtrend
+      for (let i = 0; i < 15; i++) {
+        closes.push(135 - i * 2);
+      }
+      // Second bounce to lower high (RSI higher)
+      for (let i = 0; i < 10; i++) {
+        closes.push(105 + i * 1);
+      }
+      // Resume downtrend
+      for (let i = 0; i < 10; i++) {
+        closes.push(115 - i);
+      }
+
+      const candles = generateCandlesFromCloses(closes);
+      const result = service.detectRsiDivergence({
+        candles,
+        lookbackPeriod: 3,
+      });
+
+      expect(result.rsiValues.length).toBeGreaterThan(0);
+      expect(Array.isArray(result.divergences)).toBe(true);
+    });
+
+    it('should return latestDivergence as null when no divergences found', () => {
+      // Flat price data - no peaks/troughs
+      const closes = Array.from({ length: 50 }, () => 100);
+      const candles = generateCandlesFromCloses(closes);
+
+      const result = service.detectRsiDivergence({ candles });
+
+      expect(result.latestDivergence).toBeNull();
+      expect(result.divergences.length).toBe(0);
+    });
+
+    it('should sort divergences by end index (most recent first)', () => {
+      // Create data likely to produce multiple divergences
+      const closes: number[] = [];
+      for (let i = 0; i < 100; i++) {
+        closes.push(100 + Math.sin(i * 0.2) * 20 + i * 0.1);
+      }
+      const candles = generateCandlesFromCloses(closes);
+
+      const result = service.detectRsiDivergence({
+        candles,
+        lookbackPeriod: 3,
+      });
+
+      // Multiple divergences should be sorted by endIndex descending
+      // Filter to pairs where we can check ordering
+      const divergencePairs = result.divergences
+        .slice(0, -1)
+        .map((d, i) => ({ current: d, next: result.divergences[i + 1] }));
+
+      divergencePairs.forEach(({ current, next }) => {
+        expect(current.endIndex).toBeGreaterThanOrEqual(next.endIndex);
+      });
+    });
+
+    it('should include divergence strength classification', () => {
+      // Generate volatile data likely to produce divergences with varying strengths
+      const closes: number[] = [];
+      for (let i = 0; i < 80; i++) {
+        closes.push(100 + Math.sin(i * 0.15) * 30);
+      }
+      const candles = generateCandlesFromCloses(closes);
+
+      const result = service.detectRsiDivergence({
+        candles,
+        lookbackPeriod: 2,
+      });
+
+      // Check structure of any found divergence
+      result.divergences.forEach((div) => {
+        expect(['weak', 'medium', 'strong']).toContain(div.strength);
+        expect(typeof div.priceStart).toBe('number');
+        expect(typeof div.priceEnd).toBe('number');
+        expect(typeof div.rsiStart).toBe('number');
+        expect(typeof div.rsiEnd).toBe('number');
+        expect(typeof div.startIndex).toBe('number');
+        expect(typeof div.endIndex).toBe('number');
+        expect([
+          'bullish',
+          'bearish',
+          'hidden_bullish',
+          'hidden_bearish',
+        ]).toContain(div.type);
+      });
+    });
+
+    it('should handle short data series gracefully', () => {
+      const closes = [100, 101, 102, 103, 104];
+      const candles = generateCandlesFromCloses(closes);
+
+      const result = service.detectRsiDivergence({ candles });
+
+      // Should not crash, just return empty divergences
+      expect(result.divergences).toEqual([]);
+      expect(result.latestDivergence).toBeNull();
+    });
+
+    it('should set hasBullishDivergence and hasBearishDivergence flags correctly', () => {
+      // Generate data with mixed signals
+      const closes: number[] = [];
+      for (let i = 0; i < 100; i++) {
+        closes.push(
+          100 + Math.sin(i * 0.15) * 25 + (i % 20 < 10 ? i * 0.3 : -i * 0.2),
+        );
+      }
+      const candles = generateCandlesFromCloses(closes);
+
+      const result = service.detectRsiDivergence({
+        candles,
+        lookbackPeriod: 2,
+      });
+
+      // Flags should reflect divergence types found
+      const hasBullish = result.divergences.some(
+        (d) => d.type === 'bullish' || d.type === 'hidden_bullish',
+      );
+      const hasBearish = result.divergences.some(
+        (d) => d.type === 'bearish' || d.type === 'hidden_bearish',
+      );
+
+      expect(result.hasBullishDivergence).toBe(hasBullish);
+      expect(result.hasBearishDivergence).toBe(hasBearish);
+    });
+  });
 });

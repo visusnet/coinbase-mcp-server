@@ -1720,6 +1720,48 @@ export class CoinbaseMcpServer {
         ),
       ),
     );
+
+    server.registerTool(
+      'detect_rsi_divergence',
+      {
+        title: 'Detect RSI Divergence',
+        description:
+          'Detect RSI divergences in price data. ' +
+          'Identifies bullish divergences (price lower lows, RSI higher lows), ' +
+          'bearish divergences (price higher highs, RSI lower highs), ' +
+          'hidden bullish (price higher lows, RSI lower lows), and ' +
+          'hidden bearish (price lower highs, RSI higher highs). ' +
+          'Returns divergences with strength classification (weak/medium/strong).',
+        inputSchema: {
+          candles: z
+            .array(
+              z.object({
+                open: z.string().describe('Opening price'),
+                high: z.string().describe('High price'),
+                low: z.string().describe('Low price'),
+                close: z.string().describe('Closing price'),
+                volume: z.string().describe('Volume'),
+              }),
+            )
+            .describe('Array of candle data (oldest first)'),
+          rsiPeriod: z
+            .number()
+            .optional()
+            .describe('RSI period for calculation (default: 14)'),
+          lookbackPeriod: z
+            .number()
+            .optional()
+            .describe(
+              'Lookback period for peak/trough detection (default: 14)',
+            ),
+        },
+      },
+      this.call(
+        this.technicalIndicators.detectRsiDivergence.bind(
+          this.technicalIndicators,
+        ),
+      ),
+    );
   }
 
   private registerPromptsForServer(server: McpServer): void {
@@ -1737,7 +1779,7 @@ export class CoinbaseMcpServer {
                 type: 'text',
                 text: `You are a Coinbase Advanced Trade assistant.
 
-TOOL CATEGORIES (66 total):
+TOOL CATEGORIES (67 total):
 - Accounts (2): list_accounts, get_account
 - Orders (9): create_order, preview_order, list_orders, get_order, cancel_orders, edit_order, preview_edit_order, list_fills, close_position
 - Products (8): list_products, get_product, get_product_candles, get_product_candles_batch, get_best_bid_ask, get_market_snapshot, get_product_book, get_market_trades
@@ -1748,7 +1790,7 @@ TOOL CATEGORIES (66 total):
 - Futures (4): list_futures_positions, get_futures_position, get_futures_balance_summary, list_futures_sweeps
 - Perpetuals (4): list_perpetuals_positions, get_perpetuals_position, get_perpetuals_portfolio_summary, get_perpetuals_portfolio_balance
 - Info (2): get_api_key_permissions, get_transaction_summary
-- Technical Indicators (20): calculate_rsi, calculate_macd, calculate_ema, calculate_bollinger_bands, calculate_atr, calculate_stochastic, calculate_adx, calculate_obv, calculate_vwap, calculate_cci, calculate_williams_r, calculate_roc, calculate_mfi, calculate_psar, calculate_ichimoku_cloud, calculate_keltner_channels, calculate_fibonacci_retracement, detect_candlestick_patterns, calculate_volume_profile, calculate_pivot_points
+- Technical Indicators (21): calculate_rsi, calculate_macd, calculate_ema, calculate_bollinger_bands, calculate_atr, calculate_stochastic, calculate_adx, calculate_obv, calculate_vwap, calculate_cci, calculate_williams_r, calculate_roc, calculate_mfi, calculate_psar, calculate_ichimoku_cloud, calculate_keltner_channels, calculate_fibonacci_retracement, detect_candlestick_patterns, calculate_volume_profile, calculate_pivot_points, detect_rsi_divergence
 
 BEST PRACTICES:
 1. Always preview_order before create_order

@@ -15,7 +15,6 @@ import {
   PSAR,
   IchimokuCloud,
   KeltnerChannels,
-  VolumeProfile,
   fibonacciretracement,
   bullish,
   bearish,
@@ -51,6 +50,31 @@ import {
   abandonedbaby,
   downsidetasukigap,
 } from 'technicalindicators';
+
+import {
+  calculateStandardPivotPoints,
+  calculateFibonacciPivotPoints,
+  calculateWoodiePivotPoints,
+  calculateCamarillaPivotPoints,
+  calculateDemarkPivotPoints,
+  PivotPointsType,
+  PivotPointsOutput,
+} from './indicators/pivotPoints';
+
+import {
+  calculateRsiValues,
+  findLocalPeaks,
+  findLocalTroughs,
+  detectDivergences,
+  RsiDivergence,
+} from './indicators/rsiDivergence';
+
+import {
+  calculateZones,
+  findPointOfControl,
+  calculateValueArea,
+  VolumeProfileZone,
+} from './indicators/volumeProfile';
 
 /**
  * Candle data structure matching Coinbase API output.
@@ -462,17 +486,6 @@ export interface CalculateVolumeProfileInput {
 }
 
 /**
- * Single Volume Profile zone
- */
-interface VolumeProfileZone {
-  readonly rangeStart: number;
-  readonly rangeEnd: number;
-  readonly bullishVolume: number;
-  readonly bearishVolume: number;
-  readonly totalVolume: number;
-}
-
-/**
  * Output for Volume Profile calculation
  */
 export interface CalculateVolumeProfileOutput {
@@ -482,16 +495,6 @@ export interface CalculateVolumeProfileOutput {
   readonly valueAreaHigh: number | null;
   readonly valueAreaLow: number | null;
 }
-
-/**
- * Pivot Points calculation type
- */
-export type PivotPointsType =
-  | 'standard'
-  | 'fibonacci'
-  | 'woodie'
-  | 'camarilla'
-  | 'demark';
 
 /**
  * Input for Pivot Points calculation
@@ -505,17 +508,25 @@ export interface CalculatePivotPointsInput {
 }
 
 /**
- * Output for Pivot Points calculation
+ * Input for RSI Divergence detection
  */
-export interface CalculatePivotPointsOutput {
-  readonly type: PivotPointsType;
-  readonly pivotPoint: number;
-  readonly resistance1: number;
-  readonly resistance2: number;
-  readonly resistance3: number;
-  readonly support1: number;
-  readonly support2: number;
-  readonly support3: number;
+export interface DetectRsiDivergenceInput {
+  readonly candles: readonly CandleInput[];
+  readonly rsiPeriod?: number;
+  readonly lookbackPeriod?: number;
+}
+
+/**
+ * Output for RSI Divergence detection
+ */
+export interface DetectRsiDivergenceOutput {
+  readonly rsiPeriod: number;
+  readonly lookbackPeriod: number;
+  readonly rsiValues: readonly number[];
+  readonly divergences: readonly RsiDivergence[];
+  readonly latestDivergence: RsiDivergence | null;
+  readonly hasBullishDivergence: boolean;
+  readonly hasBearishDivergence: boolean;
 }
 
 const DEFAULT_RSI_PERIOD = 14;
@@ -543,12 +554,6 @@ const DEFAULT_ICHIMOKU_DISPLACEMENT = 26;
 const DEFAULT_KELTNER_MA_PERIOD = 20;
 const DEFAULT_KELTNER_ATR_PERIOD = 10;
 const DEFAULT_KELTNER_MULTIPLIER = 2;
-const DEFAULT_VOLUME_PROFILE_BARS = 12;
-
-// Fibonacci retracement levels used for Pivot Points calculation
-// 38.2% and 61.8% are key Fibonacci levels derived from the golden ratio
-const FIBONACCI_RETRACEMENT_LEVEL_1 = 0.382; // 38.2%
-const FIBONACCI_RETRACEMENT_LEVEL_2 = 0.618; // 61.8% (golden ratio)
 
 /**
  * Service for calculating technical indicators from candle data.
@@ -1147,100 +1152,21 @@ export class TechnicalIndicatorsService {
   public calculateVolumeProfile(
     input: CalculateVolumeProfileInput,
   ): CalculateVolumeProfileOutput {
-    const noOfBars = input.noOfBars ?? DEFAULT_VOLUME_PROFILE_BARS;
-    const open = extractOpenPrices(input.candles);
-    const high = extractHighPrices(input.candles);
-    const low = extractLowPrices(input.candles);
-    const close = extractClosePrices(input.candles);
-    const volume = extractVolumes(input.candles);
+    const noOfBars = input.noOfBars ?? 12;
 
-    // Library types are incorrect - it actually returns VolumeProfileOutput[]
-    const result = VolumeProfile.calculate({
-      open,
-      high,
-      low,
-      close,
-      volume,
+    const zones = calculateZones(
+      extractOpenPrices(input.candles),
+      extractHighPrices(input.candles),
+      extractLowPrices(input.candles),
+      extractClosePrices(input.candles),
+      extractVolumes(input.candles),
       noOfBars,
-    }) as unknown as {
-      rangeStart: number;
-      rangeEnd: number;
-      bullishVolume: number;
-      bearishVolume: number;
-      totalVolume: number;
-    }[];
-
-    // Transform results to our zone format
-    const zones: VolumeProfileZone[] = result.map((zone) => ({
-      rangeStart: zone.rangeStart,
-      rangeEnd: zone.rangeEnd,
-      bullishVolume: zone.bullishVolume,
-      bearishVolume: zone.bearishVolume,
-      totalVolume: zone.totalVolume,
-    }));
-
-    // Find Point of Control (zone with highest total volume)
-    let pointOfControl: VolumeProfileZone | null = null;
-    let maxVolume = 0;
-    for (const zone of zones) {
-      if (zone.totalVolume > maxVolume) {
-        maxVolume = zone.totalVolume;
-        pointOfControl = zone;
-      }
-    }
-
-    // Calculate Value Area (70% of total volume around POC)
-    let valueAreaHigh: number | null = null;
-    let valueAreaLow: number | null = null;
-
-    if (zones.length > 0 && pointOfControl !== null) {
-      const totalVolume = zones.reduce((sum, z) => sum + z.totalVolume, 0);
-      const targetVolume = totalVolume * 0.7;
-
-      // Sort zones by price
-      const sortedZones = [...zones].sort(
-        (a, b) => a.rangeStart - b.rangeStart,
-      );
-      const pocIndex = sortedZones.findIndex(
-        (z) =>
-          z.rangeStart === pointOfControl.rangeStart &&
-          z.rangeEnd === pointOfControl.rangeEnd,
-      );
-
-      let accumulatedVolume = pointOfControl.totalVolume;
-      let lowIndex = pocIndex;
-      let highIndex = pocIndex;
-
-      // Expand outward from POC until we reach 70% volume
-      // Note: Loop always terminates because total of all zones = 100% > 70%
-      while (accumulatedVolume < targetVolume) {
-        const canExpandLow = lowIndex > 0;
-        const canExpandHigh = highIndex < sortedZones.length - 1;
-
-        // Determine which direction to expand based on neighboring volumes
-        let expandLow = false;
-        if (canExpandLow && canExpandHigh) {
-          // Both directions available - choose higher volume
-          const lowVolume = sortedZones[lowIndex - 1].totalVolume;
-          const highVolume = sortedZones[highIndex + 1].totalVolume;
-          expandLow = lowVolume >= highVolume;
-        } else if (canExpandLow) {
-          expandLow = true;
-        }
-        // else: canExpandHigh must be true (loop would have exited otherwise)
-
-        if (expandLow) {
-          lowIndex--;
-          accumulatedVolume += sortedZones[lowIndex].totalVolume;
-        } else {
-          highIndex++;
-          accumulatedVolume += sortedZones[highIndex].totalVolume;
-        }
-      }
-
-      valueAreaLow = sortedZones[lowIndex].rangeStart;
-      valueAreaHigh = sortedZones[highIndex].rangeEnd;
-    }
+    );
+    const pointOfControl = findPointOfControl(zones);
+    const { valueAreaHigh, valueAreaLow } = calculateValueArea(
+      zones,
+      pointOfControl,
+    );
 
     return {
       noOfBars,
@@ -1260,7 +1186,7 @@ export class TechnicalIndicatorsService {
    */
   public calculatePivotPoints(
     input: CalculatePivotPointsInput,
-  ): CalculatePivotPointsOutput {
+  ): PivotPointsOutput {
     const high = parseFloat(input.high);
     const low = parseFloat(input.low);
     const close = parseFloat(input.close);
@@ -1280,124 +1206,76 @@ export class TechnicalIndicatorsService {
         return calculateStandardPivotPoints(high, low, close);
     }
   }
-}
 
-/**
- * Calculate Standard Pivot Points.
- */
-function calculateStandardPivotPoints(
-  high: number,
-  low: number,
-  close: number,
-): CalculatePivotPointsOutput {
-  const pp = (high + low + close) / 3;
-  const range = high - low;
-  return {
-    type: 'standard',
-    pivotPoint: pp,
-    resistance1: 2 * pp - low,
-    resistance2: pp + range,
-    resistance3: high + 2 * (pp - low),
-    support1: 2 * pp - high,
-    support2: pp - range,
-    support3: low - 2 * (high - pp),
-  };
-}
+  /**
+   * Detect RSI Divergences in price data.
+   * Identifies bullish/bearish divergences and hidden divergences.
+   *
+   * @param input - Candles, RSI period, and lookback period
+   * @returns Detected divergences with their characteristics
+   */
+  public detectRsiDivergence(
+    input: DetectRsiDivergenceInput,
+  ): DetectRsiDivergenceOutput {
+    const rsiPeriod = input.rsiPeriod ?? 14;
+    const lookbackPeriod = input.lookbackPeriod ?? 14;
+    const closePrices = extractClosePrices(input.candles);
 
-/**
- * Calculate Fibonacci Pivot Points.
- */
-function calculateFibonacciPivotPoints(
-  high: number,
-  low: number,
-  close: number,
-): CalculatePivotPointsOutput {
-  const pp = (high + low + close) / 3;
-  const range = high - low;
-  return {
-    type: 'fibonacci',
-    pivotPoint: pp,
-    resistance1: pp + FIBONACCI_RETRACEMENT_LEVEL_1 * range,
-    resistance2: pp + FIBONACCI_RETRACEMENT_LEVEL_2 * range,
-    resistance3: pp + range,
-    support1: pp - FIBONACCI_RETRACEMENT_LEVEL_1 * range,
-    support2: pp - FIBONACCI_RETRACEMENT_LEVEL_2 * range,
-    support3: pp - range,
-  };
-}
+    const rsiValues = calculateRsiValues(closePrices, rsiPeriod);
+    const rsiOffset = closePrices.length - rsiValues.length;
 
-/**
- * Calculate Woodie Pivot Points.
- */
-function calculateWoodiePivotPoints(
-  high: number,
-  low: number,
-  close: number,
-): CalculatePivotPointsOutput {
-  const pp = (high + low + 2 * close) / 4;
-  const range = high - low;
-  return {
-    type: 'woodie',
-    pivotPoint: pp,
-    resistance1: 2 * pp - low,
-    resistance2: pp + range,
-    resistance3: high + 2 * (pp - low),
-    support1: 2 * pp - high,
-    support2: pp - range,
-    support3: low - 2 * (high - pp),
-  };
-}
+    const pricePeaks = findLocalPeaks(closePrices, lookbackPeriod);
+    const priceTroughs = findLocalTroughs(closePrices, lookbackPeriod);
 
-/**
- * Calculate Camarilla Pivot Points.
- */
-function calculateCamarillaPivotPoints(
-  high: number,
-  low: number,
-  close: number,
-): CalculatePivotPointsOutput {
-  const pp = (high + low + close) / 3;
-  const range = high - low;
-  return {
-    type: 'camarilla',
-    pivotPoint: pp,
-    resistance1: close + (range * 1.1) / 12,
-    resistance2: close + (range * 1.1) / 6,
-    resistance3: close + (range * 1.1) / 4,
-    support1: close - (range * 1.1) / 12,
-    support2: close - (range * 1.1) / 6,
-    support3: close - (range * 1.1) / 4,
-  };
-}
+    const divergences = [
+      ...detectDivergences(
+        'bearish',
+        pricePeaks,
+        closePrices,
+        rsiValues,
+        rsiOffset,
+      ),
+      ...detectDivergences(
+        'bullish',
+        priceTroughs,
+        closePrices,
+        rsiValues,
+        rsiOffset,
+      ),
+      ...detectDivergences(
+        'hidden_bearish',
+        pricePeaks,
+        closePrices,
+        rsiValues,
+        rsiOffset,
+      ),
+      ...detectDivergences(
+        'hidden_bullish',
+        priceTroughs,
+        closePrices,
+        rsiValues,
+        rsiOffset,
+      ),
+    ].sort((a, b) => b.endIndex - a.endIndex);
 
-/**
- * Calculate DeMark Pivot Points.
- */
-function calculateDemarkPivotPoints(
-  high: number,
-  low: number,
-  close: number,
-  open: number,
-): CalculatePivotPointsOutput {
-  let x: number;
-  if (close < open) {
-    x = high + 2 * low + close;
-  } else if (close > open) {
-    x = 2 * high + low + close;
-  } else {
-    x = high + low + 2 * close;
+    const latestDivergence = divergences.length > 0 ? divergences[0] : null;
+    const hasBullishDivergence = divergences.some(
+      (d) => d.type === 'bullish' || d.type === 'hidden_bullish',
+    );
+    const hasBearishDivergence = divergences.some(
+      (d) => d.type === 'bearish' || d.type === 'hidden_bearish',
+    );
+
+    return {
+      rsiPeriod,
+      lookbackPeriod,
+      rsiValues,
+      divergences,
+      latestDivergence,
+      hasBullishDivergence,
+      hasBearishDivergence,
+    };
   }
-  const pp = x / 4;
-  return {
-    type: 'demark',
-    pivotPoint: pp,
-    resistance1: x / 2 - low,
-    resistance2: x / 2 - low, // DeMark only has R1/S1
-    resistance3: x / 2 - low,
-    support1: x / 2 - high,
-    support2: x / 2 - high, // DeMark only has R1/S1
-    support3: x / 2 - high,
-  };
 }
 
 /**
