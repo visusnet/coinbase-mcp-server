@@ -1361,6 +1361,46 @@ describe('CoinbaseMcpServer Integration Tests', () => {
         expectResponseToContain(response, result);
       });
     });
+
+    describe('calculate_mfi', () => {
+      it('should call calculateMfi via MCP tool calculate_mfi', async () => {
+        const args = {
+          candles: [
+            {
+              open: '100',
+              high: '110',
+              low: '95',
+              close: '105',
+              volume: '1000',
+            },
+            {
+              open: '105',
+              high: '115',
+              low: '100',
+              close: '110',
+              volume: '1100',
+            },
+          ],
+          period: 14,
+        };
+        const result = {
+          period: 14,
+          values: [55.5],
+          latestValue: 55.5,
+        };
+        mockTechnicalIndicatorsService.calculateMfi.mockReturnValueOnce(result);
+
+        const response = await client.callTool({
+          name: 'calculate_mfi',
+          arguments: args,
+        });
+
+        expect(
+          mockTechnicalIndicatorsService.calculateMfi,
+        ).toHaveBeenCalledWith(args);
+        expectResponseToContain(response, result);
+      });
+    });
   });
 
   describe('Prompts', () => {
