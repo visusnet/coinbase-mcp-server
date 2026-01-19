@@ -483,6 +483,41 @@ export interface CalculateVolumeProfileOutput {
   readonly valueAreaLow: number | null;
 }
 
+/**
+ * Pivot Points calculation type
+ */
+export type PivotPointsType =
+  | 'standard'
+  | 'fibonacci'
+  | 'woodie'
+  | 'camarilla'
+  | 'demark';
+
+/**
+ * Input for Pivot Points calculation
+ */
+export interface CalculatePivotPointsInput {
+  readonly high: string;
+  readonly low: string;
+  readonly close: string;
+  readonly open?: string;
+  readonly type?: PivotPointsType;
+}
+
+/**
+ * Output for Pivot Points calculation
+ */
+export interface CalculatePivotPointsOutput {
+  readonly type: PivotPointsType;
+  readonly pivotPoint: number;
+  readonly resistance1: number;
+  readonly resistance2: number;
+  readonly resistance3: number;
+  readonly support1: number;
+  readonly support2: number;
+  readonly support3: number;
+}
+
 const DEFAULT_RSI_PERIOD = 14;
 const DEFAULT_EMA_PERIOD = 20;
 const DEFAULT_MACD_FAST_PERIOD = 12;
@@ -509,6 +544,11 @@ const DEFAULT_KELTNER_MA_PERIOD = 20;
 const DEFAULT_KELTNER_ATR_PERIOD = 10;
 const DEFAULT_KELTNER_MULTIPLIER = 2;
 const DEFAULT_VOLUME_PROFILE_BARS = 12;
+
+// Fibonacci retracement levels used for Pivot Points calculation
+// 38.2% and 61.8% are key Fibonacci levels derived from the golden ratio
+const FIBONACCI_RETRACEMENT_LEVEL_1 = 0.382; // 38.2%
+const FIBONACCI_RETRACEMENT_LEVEL_2 = 0.618; // 61.8% (golden ratio)
 
 /**
  * Service for calculating technical indicators from candle data.
@@ -1210,6 +1250,154 @@ export class TechnicalIndicatorsService {
       valueAreaLow,
     };
   }
+
+  /**
+   * Calculate Pivot Points from previous period's OHLC data.
+   * Supports multiple calculation types: Standard, Fibonacci, Woodie, Camarilla, DeMark.
+   *
+   * @param input - High, Low, Close (and optionally Open) prices from previous period
+   * @returns Pivot Point with Support and Resistance levels
+   */
+  public calculatePivotPoints(
+    input: CalculatePivotPointsInput,
+  ): CalculatePivotPointsOutput {
+    const high = parseFloat(input.high);
+    const low = parseFloat(input.low);
+    const close = parseFloat(input.close);
+    const open = input.open ? parseFloat(input.open) : close;
+    const type = input.type ?? 'standard';
+
+    switch (type) {
+      case 'fibonacci':
+        return calculateFibonacciPivotPoints(high, low, close);
+      case 'woodie':
+        return calculateWoodiePivotPoints(high, low, close);
+      case 'camarilla':
+        return calculateCamarillaPivotPoints(high, low, close);
+      case 'demark':
+        return calculateDemarkPivotPoints(high, low, close, open);
+      default:
+        return calculateStandardPivotPoints(high, low, close);
+    }
+  }
+}
+
+/**
+ * Calculate Standard Pivot Points.
+ */
+function calculateStandardPivotPoints(
+  high: number,
+  low: number,
+  close: number,
+): CalculatePivotPointsOutput {
+  const pp = (high + low + close) / 3;
+  const range = high - low;
+  return {
+    type: 'standard',
+    pivotPoint: pp,
+    resistance1: 2 * pp - low,
+    resistance2: pp + range,
+    resistance3: high + 2 * (pp - low),
+    support1: 2 * pp - high,
+    support2: pp - range,
+    support3: low - 2 * (high - pp),
+  };
+}
+
+/**
+ * Calculate Fibonacci Pivot Points.
+ */
+function calculateFibonacciPivotPoints(
+  high: number,
+  low: number,
+  close: number,
+): CalculatePivotPointsOutput {
+  const pp = (high + low + close) / 3;
+  const range = high - low;
+  return {
+    type: 'fibonacci',
+    pivotPoint: pp,
+    resistance1: pp + FIBONACCI_RETRACEMENT_LEVEL_1 * range,
+    resistance2: pp + FIBONACCI_RETRACEMENT_LEVEL_2 * range,
+    resistance3: pp + range,
+    support1: pp - FIBONACCI_RETRACEMENT_LEVEL_1 * range,
+    support2: pp - FIBONACCI_RETRACEMENT_LEVEL_2 * range,
+    support3: pp - range,
+  };
+}
+
+/**
+ * Calculate Woodie Pivot Points.
+ */
+function calculateWoodiePivotPoints(
+  high: number,
+  low: number,
+  close: number,
+): CalculatePivotPointsOutput {
+  const pp = (high + low + 2 * close) / 4;
+  const range = high - low;
+  return {
+    type: 'woodie',
+    pivotPoint: pp,
+    resistance1: 2 * pp - low,
+    resistance2: pp + range,
+    resistance3: high + 2 * (pp - low),
+    support1: 2 * pp - high,
+    support2: pp - range,
+    support3: low - 2 * (high - pp),
+  };
+}
+
+/**
+ * Calculate Camarilla Pivot Points.
+ */
+function calculateCamarillaPivotPoints(
+  high: number,
+  low: number,
+  close: number,
+): CalculatePivotPointsOutput {
+  const pp = (high + low + close) / 3;
+  const range = high - low;
+  return {
+    type: 'camarilla',
+    pivotPoint: pp,
+    resistance1: close + (range * 1.1) / 12,
+    resistance2: close + (range * 1.1) / 6,
+    resistance3: close + (range * 1.1) / 4,
+    support1: close - (range * 1.1) / 12,
+    support2: close - (range * 1.1) / 6,
+    support3: close - (range * 1.1) / 4,
+  };
+}
+
+/**
+ * Calculate DeMark Pivot Points.
+ */
+function calculateDemarkPivotPoints(
+  high: number,
+  low: number,
+  close: number,
+  open: number,
+): CalculatePivotPointsOutput {
+  let x: number;
+  if (close < open) {
+    x = high + 2 * low + close;
+  } else if (close > open) {
+    x = 2 * high + low + close;
+  } else {
+    x = high + low + 2 * close;
+  }
+  const pp = x / 4;
+  return {
+    type: 'demark',
+    pivotPoint: pp,
+    resistance1: x / 2 - low,
+    resistance2: x / 2 - low, // DeMark only has R1/S1
+    resistance3: x / 2 - low,
+    support1: x / 2 - high,
+    support2: x / 2 - high, // DeMark only has R1/S1
+    support3: x / 2 - high,
+  };
 }
 
 /**

@@ -1430,8 +1430,10 @@ describe('TechnicalIndicatorsService', () => {
     };
 
     it('should detect patterns and return structured output', () => {
-      // Simple candle data
+      // Provide enough candles (5+) to avoid library warnings
       const data = [
+        { open: 98, high: 100, low: 97, close: 99 },
+        { open: 99, high: 101, low: 98, close: 100 },
         { open: 100, high: 102, low: 99, close: 101 },
         { open: 101, high: 103, low: 100, close: 102 },
         { open: 102, high: 104, low: 101, close: 103 },
@@ -1459,7 +1461,12 @@ describe('TechnicalIndicatorsService', () => {
 
     it('should detect Doji pattern', () => {
       // Doji: open and close are very close, with wicks
+      // Provide enough candles to avoid library warnings
       const data = [
+        { open: 102, high: 104, low: 101, close: 103 },
+        { open: 103, high: 105, low: 102, close: 104 },
+        { open: 104, high: 106, low: 103, close: 105 },
+        { open: 105, high: 107, low: 104, close: 106 },
         { open: 100, high: 105, low: 95, close: 100 }, // Doji
       ];
       const candles = generateCandles(data);
@@ -1475,8 +1482,10 @@ describe('TechnicalIndicatorsService', () => {
 
     it('should detect Hammer pattern', () => {
       // Hammer: small body at top, long lower wick, little/no upper wick
-      // After a downtrend
+      // After a downtrend - provide 5+ candles to avoid library warnings
       const data = [
+        { open: 120, high: 122, low: 115, close: 116 }, // Downtrend
+        { open: 116, high: 118, low: 111, close: 112 }, // Downtrend
         { open: 110, high: 112, low: 105, close: 106 }, // Downtrend
         { open: 106, high: 108, low: 100, close: 102 }, // Downtrend
         { open: 100, high: 101, low: 90, close: 100 }, // Hammer
@@ -1492,7 +1501,11 @@ describe('TechnicalIndicatorsService', () => {
 
     it('should detect bullish Engulfing pattern', () => {
       // Bullish engulfing: bearish candle followed by larger bullish candle
+      // Provide 5+ candles to avoid library warnings
       const data = [
+        { open: 115, high: 117, low: 112, close: 113 },
+        { open: 113, high: 115, low: 110, close: 111 },
+        { open: 111, high: 113, low: 108, close: 109 },
         { open: 105, high: 106, low: 98, close: 100 }, // Bearish
         { open: 99, high: 110, low: 98, close: 108 }, // Bullish engulfing
       ];
@@ -1509,7 +1522,11 @@ describe('TechnicalIndicatorsService', () => {
 
     it('should detect bearish Engulfing pattern', () => {
       // Bearish engulfing: bullish candle followed by larger bearish candle
+      // Provide 5+ candles to avoid library warnings
       const data = [
+        { open: 90, high: 93, low: 89, close: 92 },
+        { open: 92, high: 95, low: 91, close: 94 },
+        { open: 94, high: 97, low: 93, close: 96 },
         { open: 100, high: 108, low: 99, close: 105 }, // Bullish
         { open: 108, high: 109, low: 95, close: 97 }, // Bearish engulfing
       ];
@@ -1525,8 +1542,14 @@ describe('TechnicalIndicatorsService', () => {
     });
 
     it('should populate detectedPatterns with names of detected patterns', () => {
-      // Create a Doji pattern
-      const data = [{ open: 100, high: 105, low: 95, close: 100 }];
+      // Create a Doji pattern with enough preceding candles
+      const data = [
+        { open: 102, high: 104, low: 101, close: 103 },
+        { open: 103, high: 105, low: 102, close: 104 },
+        { open: 104, high: 106, low: 103, close: 105 },
+        { open: 105, high: 107, low: 104, close: 106 },
+        { open: 100, high: 105, low: 95, close: 100 }, // Doji
+      ];
       const candles = generateCandles(data);
 
       const result = service.detectCandlestickPatterns({ candles });
@@ -1539,8 +1562,14 @@ describe('TechnicalIndicatorsService', () => {
     });
 
     it('should return empty detectedPatterns when no patterns found', () => {
-      // Neutral candle that doesn't match specific patterns
-      const data = [{ open: 100, high: 101, low: 99, close: 100.5 }];
+      // Neutral candles that don't match specific patterns
+      const data = [
+        { open: 100, high: 101, low: 99, close: 100.5 },
+        { open: 100.5, high: 101.5, low: 99.5, close: 101 },
+        { open: 101, high: 102, low: 100, close: 101.5 },
+        { open: 101.5, high: 102.5, low: 100.5, close: 102 },
+        { open: 102, high: 103, low: 101, close: 102.5 },
+      ];
       const candles = generateCandles(data);
 
       const result = service.detectCandlestickPatterns({ candles });
@@ -1553,8 +1582,11 @@ describe('TechnicalIndicatorsService', () => {
     });
 
     it('should set overall bullish/bearish flags correctly', () => {
-      // Pattern that should trigger bullish
+      // Pattern that should trigger bullish - provide 5+ candles
       const bullishData = [
+        { open: 115, high: 117, low: 112, close: 113 },
+        { open: 113, high: 115, low: 110, close: 111 },
+        { open: 111, high: 113, low: 108, close: 109 },
         { open: 105, high: 106, low: 98, close: 100 },
         { open: 99, high: 110, low: 98, close: 108 },
       ];
@@ -1569,8 +1601,15 @@ describe('TechnicalIndicatorsService', () => {
       expect(typeof bullishResult.bearish).toBe('boolean');
     });
 
-    it('should handle single candle input', () => {
-      const data = [{ open: 100, high: 105, low: 95, close: 102 }];
+    it('should handle minimal candle input', () => {
+      // Even with minimal candles (5), the function should work
+      const data = [
+        { open: 98, high: 100, low: 97, close: 99 },
+        { open: 99, high: 101, low: 98, close: 100 },
+        { open: 100, high: 102, low: 99, close: 101 },
+        { open: 101, high: 103, low: 100, close: 102 },
+        { open: 100, high: 105, low: 95, close: 102 },
+      ];
       const candles = generateCandles(data);
 
       const result = service.detectCandlestickPatterns({ candles });
@@ -1581,7 +1620,11 @@ describe('TechnicalIndicatorsService', () => {
     });
 
     it('should include all expected pattern types', () => {
+      // Provide 5+ candles to avoid library warnings
       const data = [
+        { open: 96, high: 99, low: 95, close: 98 },
+        { open: 98, high: 101, low: 97, close: 100 },
+        { open: 100, high: 103, low: 99, close: 102 },
         { open: 100, high: 105, low: 95, close: 102 },
         { open: 102, high: 108, low: 100, close: 106 },
       ];
@@ -1943,6 +1986,196 @@ describe('TechnicalIndicatorsService', () => {
       // POC should be at highest price zone
       expect(result.valueAreaHigh).not.toBeNull();
       expect(result.valueAreaLow).not.toBeNull();
+    });
+  });
+
+  describe('calculatePivotPoints', () => {
+    // Test data: H=110, L=100, C=105, O=102
+    // Range = 10
+    const testInput = { high: '110', low: '100', close: '105', open: '102' };
+
+    it('should calculate Standard pivot points correctly', () => {
+      const result = service.calculatePivotPoints(testInput);
+
+      // PP = (110 + 100 + 105) / 3 = 105
+      expect(result.type).toBe('standard');
+      expect(result.pivotPoint).toBeCloseTo(105, 2);
+      // R1 = 2 * 105 - 100 = 110
+      expect(result.resistance1).toBeCloseTo(110, 2);
+      // R2 = 105 + 10 = 115
+      expect(result.resistance2).toBeCloseTo(115, 2);
+      // R3 = 110 + 2 * (105 - 100) = 120
+      expect(result.resistance3).toBeCloseTo(120, 2);
+      // S1 = 2 * 105 - 110 = 100
+      expect(result.support1).toBeCloseTo(100, 2);
+      // S2 = 105 - 10 = 95
+      expect(result.support2).toBeCloseTo(95, 2);
+      // S3 = 100 - 2 * (110 - 105) = 90
+      expect(result.support3).toBeCloseTo(90, 2);
+    });
+
+    it('should use standard type when no type specified', () => {
+      const result = service.calculatePivotPoints({
+        high: '110',
+        low: '100',
+        close: '105',
+      });
+
+      expect(result.type).toBe('standard');
+      expect(result.pivotPoint).toBeCloseTo(105, 2);
+    });
+
+    it('should use close as open when open not provided', () => {
+      // For DeMark, open is used - when not provided, should use close
+      const result = service.calculatePivotPoints({
+        high: '110',
+        low: '100',
+        close: '105',
+        type: 'demark',
+      });
+
+      // close === open (both 105), so x = H + L + 2*C = 110 + 100 + 210 = 420
+      expect(result.type).toBe('demark');
+      expect(result.pivotPoint).toBeCloseTo(105, 2); // 420/4 = 105
+    });
+
+    it('should calculate Fibonacci pivot points correctly', () => {
+      const result = service.calculatePivotPoints({
+        ...testInput,
+        type: 'fibonacci',
+      });
+
+      // PP = 105 (same as standard)
+      expect(result.type).toBe('fibonacci');
+      expect(result.pivotPoint).toBeCloseTo(105, 2);
+      // R1 = 105 + 0.382 * 10 = 108.82
+      expect(result.resistance1).toBeCloseTo(108.82, 2);
+      // R2 = 105 + 0.618 * 10 = 111.18
+      expect(result.resistance2).toBeCloseTo(111.18, 2);
+      // R3 = 105 + 10 = 115
+      expect(result.resistance3).toBeCloseTo(115, 2);
+      // S1 = 105 - 0.382 * 10 = 101.18
+      expect(result.support1).toBeCloseTo(101.18, 2);
+      // S2 = 105 - 0.618 * 10 = 98.82
+      expect(result.support2).toBeCloseTo(98.82, 2);
+      // S3 = 105 - 10 = 95
+      expect(result.support3).toBeCloseTo(95, 2);
+    });
+
+    it('should calculate Woodie pivot points correctly', () => {
+      const result = service.calculatePivotPoints({
+        ...testInput,
+        type: 'woodie',
+      });
+
+      // PP = (110 + 100 + 2*105) / 4 = 105
+      expect(result.type).toBe('woodie');
+      expect(result.pivotPoint).toBeCloseTo(105, 2);
+      // R1 = 2 * 105 - 100 = 110
+      expect(result.resistance1).toBeCloseTo(110, 2);
+      // R2 = 105 + 10 = 115
+      expect(result.resistance2).toBeCloseTo(115, 2);
+      // R3 = 110 + 2 * (105 - 100) = 120
+      expect(result.resistance3).toBeCloseTo(120, 2);
+      // S1 = 2 * 105 - 110 = 100
+      expect(result.support1).toBeCloseTo(100, 2);
+      // S2 = 105 - 10 = 95
+      expect(result.support2).toBeCloseTo(95, 2);
+      // S3 = 100 - 2 * (110 - 105) = 90
+      expect(result.support3).toBeCloseTo(90, 2);
+    });
+
+    it('should calculate Camarilla pivot points correctly', () => {
+      const result = service.calculatePivotPoints({
+        ...testInput,
+        type: 'camarilla',
+      });
+
+      // PP = 105
+      expect(result.type).toBe('camarilla');
+      expect(result.pivotPoint).toBeCloseTo(105, 2);
+      // R1 = 105 + (10 * 1.1) / 12 = 105.917
+      expect(result.resistance1).toBeCloseTo(105.917, 2);
+      // R2 = 105 + (10 * 1.1) / 6 = 106.833
+      expect(result.resistance2).toBeCloseTo(106.833, 2);
+      // R3 = 105 + (10 * 1.1) / 4 = 107.75
+      expect(result.resistance3).toBeCloseTo(107.75, 2);
+      // S1 = 105 - (10 * 1.1) / 12 = 104.083
+      expect(result.support1).toBeCloseTo(104.083, 2);
+      // S2 = 105 - (10 * 1.1) / 6 = 103.167
+      expect(result.support2).toBeCloseTo(103.167, 2);
+      // S3 = 105 - (10 * 1.1) / 4 = 102.25
+      expect(result.support3).toBeCloseTo(102.25, 2);
+    });
+
+    it('should calculate DeMark pivot points when close < open', () => {
+      // close < open scenario
+      const result = service.calculatePivotPoints({
+        high: '110',
+        low: '100',
+        close: '101',
+        open: '108',
+        type: 'demark',
+      });
+
+      // close (101) < open (108), so x = H + 2*L + C = 110 + 200 + 101 = 411
+      // PP = 411 / 4 = 102.75
+      expect(result.type).toBe('demark');
+      expect(result.pivotPoint).toBeCloseTo(102.75, 2);
+      // R1 = 411/2 - 100 = 105.5
+      expect(result.resistance1).toBeCloseTo(105.5, 2);
+      // S1 = 411/2 - 110 = 95.5
+      expect(result.support1).toBeCloseTo(95.5, 2);
+    });
+
+    it('should calculate DeMark pivot points when close > open', () => {
+      // close > open scenario
+      const result = service.calculatePivotPoints({
+        high: '110',
+        low: '100',
+        close: '108',
+        open: '101',
+        type: 'demark',
+      });
+
+      // close (108) > open (101), so x = 2*H + L + C = 220 + 100 + 108 = 428
+      // PP = 428 / 4 = 107
+      expect(result.type).toBe('demark');
+      expect(result.pivotPoint).toBeCloseTo(107, 2);
+      // R1 = 428/2 - 100 = 114
+      expect(result.resistance1).toBeCloseTo(114, 2);
+      // S1 = 428/2 - 110 = 104
+      expect(result.support1).toBeCloseTo(104, 2);
+    });
+
+    it('should calculate DeMark pivot points when close === open', () => {
+      // close === open scenario
+      const result = service.calculatePivotPoints({
+        high: '110',
+        low: '100',
+        close: '105',
+        open: '105',
+        type: 'demark',
+      });
+
+      // close === open, so x = H + L + 2*C = 110 + 100 + 210 = 420
+      // PP = 420 / 4 = 105
+      expect(result.type).toBe('demark');
+      expect(result.pivotPoint).toBeCloseTo(105, 2);
+      // R1 = 420/2 - 100 = 110
+      expect(result.resistance1).toBeCloseTo(110, 2);
+      // S1 = 420/2 - 110 = 100
+      expect(result.support1).toBeCloseTo(100, 2);
+    });
+
+    it('should handle explicit standard type', () => {
+      const result = service.calculatePivotPoints({
+        ...testInput,
+        type: 'standard',
+      });
+
+      expect(result.type).toBe('standard');
+      expect(result.pivotPoint).toBeCloseTo(105, 2);
     });
   });
 });

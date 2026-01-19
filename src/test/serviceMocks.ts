@@ -273,6 +273,7 @@ export const mockTechnicalIndicatorsService: {
   calculateFibonacciRetracement: jest.fn(),
   detectCandlestickPatterns: jest.fn(),
   calculateVolumeProfile: jest.fn(),
+  calculatePivotPoints: jest.fn(),
 };
 
 export function mockServices() {
