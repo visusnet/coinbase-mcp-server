@@ -16,6 +16,27 @@ import {
   IchimokuCloud,
   KeltnerChannels,
   fibonacciretracement,
+  bullish,
+  bearish,
+  doji,
+  bullishengulfingpattern,
+  bearishengulfingpattern,
+  bullishhammerstick,
+  bullishinvertedhammerstick,
+  hangingman,
+  shootingstar,
+  morningstar,
+  eveningstar,
+  threewhitesoldiers,
+  threeblackcrows,
+  piercingline,
+  darkcloudcover,
+  dragonflydoji,
+  gravestonedoji,
+  bullishharami,
+  bearishharami,
+  tweezertop,
+  tweezerbottom,
 } from 'technicalindicators';
 
 /**
@@ -396,6 +417,27 @@ export interface CalculateFibonacciRetracementOutput {
     readonly level: number;
     readonly price: number;
   }[];
+}
+
+/**
+ * Input for Candlestick Patterns detection
+ */
+export interface DetectCandlestickPatternsInput {
+  readonly candles: readonly CandleInput[];
+}
+
+/**
+ * Output for Candlestick Patterns detection
+ */
+export interface DetectCandlestickPatternsOutput {
+  readonly bullish: boolean;
+  readonly bearish: boolean;
+  readonly patterns: {
+    readonly name: string;
+    readonly type: 'bullish' | 'bearish' | 'neutral';
+    readonly detected: boolean;
+  }[];
+  readonly detectedPatterns: string[];
 }
 
 const DEFAULT_RSI_PERIOD = 14;
@@ -913,6 +955,94 @@ export class TechnicalIndicatorsService {
       levels,
     };
   }
+
+  /**
+   * Detect candlestick patterns from candle data.
+   *
+   * @param input - Candles to analyze
+   * @returns Detected patterns with bullish/bearish summary
+   */
+  public detectCandlestickPatterns(
+    input: DetectCandlestickPatternsInput,
+  ): DetectCandlestickPatternsOutput {
+    const open = extractOpenPrices(input.candles);
+    const high = extractHighPrices(input.candles);
+    const low = extractLowPrices(input.candles);
+    const close = extractClosePrices(input.candles);
+
+    const stockData = { open, high, low, close };
+
+    // Define all patterns to check
+    const patternChecks: {
+      name: string;
+      type: 'bullish' | 'bearish' | 'neutral';
+      fn: (data: {
+        open: number[];
+        high: number[];
+        low: number[];
+        close: number[];
+      }) => boolean;
+    }[] = [
+      // Bullish patterns
+      { name: 'Hammer', type: 'bullish', fn: bullishhammerstick },
+      {
+        name: 'Inverted Hammer',
+        type: 'bullish',
+        fn: bullishinvertedhammerstick,
+      },
+      {
+        name: 'Bullish Engulfing',
+        type: 'bullish',
+        fn: bullishengulfingpattern,
+      },
+      { name: 'Morning Star', type: 'bullish', fn: morningstar },
+      { name: 'Three White Soldiers', type: 'bullish', fn: threewhitesoldiers },
+      { name: 'Piercing Line', type: 'bullish', fn: piercingline },
+      { name: 'Bullish Harami', type: 'bullish', fn: bullishharami },
+      { name: 'Tweezer Bottom', type: 'bullish', fn: tweezerbottom },
+      { name: 'Dragonfly Doji', type: 'bullish', fn: dragonflydoji },
+      // Bearish patterns
+      { name: 'Shooting Star', type: 'bearish', fn: shootingstar },
+      { name: 'Hanging Man', type: 'bearish', fn: hangingman },
+      {
+        name: 'Bearish Engulfing',
+        type: 'bearish',
+        fn: bearishengulfingpattern,
+      },
+      { name: 'Evening Star', type: 'bearish', fn: eveningstar },
+      { name: 'Three Black Crows', type: 'bearish', fn: threeblackcrows },
+      { name: 'Dark Cloud Cover', type: 'bearish', fn: darkcloudcover },
+      { name: 'Bearish Harami', type: 'bearish', fn: bearishharami },
+      { name: 'Tweezer Top', type: 'bearish', fn: tweezertop },
+      { name: 'Gravestone Doji', type: 'bearish', fn: gravestonedoji },
+      // Neutral patterns
+      { name: 'Doji', type: 'neutral', fn: doji },
+    ];
+
+    const patterns = patternChecks.map((pattern) => ({
+      name: pattern.name,
+      type: pattern.type,
+      detected: pattern.fn(stockData),
+    }));
+
+    const detectedPatterns = patterns
+      .filter((p) => p.detected)
+      .map((p) => p.name);
+
+    return {
+      bullish: Boolean(bullish(stockData)),
+      bearish: Boolean(bearish(stockData)),
+      patterns,
+      detectedPatterns,
+    };
+  }
+}
+
+/**
+ * Extract open prices from candle data as numbers.
+ */
+function extractOpenPrices(candles: readonly CandleInput[]): number[] {
+  return candles.map((candle) => parseFloat(candle.open));
 }
 
 /**

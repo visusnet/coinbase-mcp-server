@@ -271,6 +271,7 @@ export const mockTechnicalIndicatorsService: {
   calculateIchimokuCloud: jest.fn(),
   calculateKeltnerChannels: jest.fn(),
   calculateFibonacciRetracement: jest.fn(),
+  detectCandlestickPatterns: jest.fn(),
 };
 
 export function mockServices() {

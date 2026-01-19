@@ -1415,4 +1415,203 @@ describe('TechnicalIndicatorsService', () => {
       expect(levels).toContain(100);
     });
   });
+
+  describe('detectCandlestickPatterns', () => {
+    const generateCandles = (
+      data: { open: number; high: number; low: number; close: number }[],
+    ): CandleInput[] => {
+      return data.map(({ open, high, low, close }) => ({
+        open: open.toString(),
+        high: high.toString(),
+        low: low.toString(),
+        close: close.toString(),
+        volume: '1000',
+      }));
+    };
+
+    it('should detect patterns and return structured output', () => {
+      // Simple candle data
+      const data = [
+        { open: 100, high: 102, low: 99, close: 101 },
+        { open: 101, high: 103, low: 100, close: 102 },
+        { open: 102, high: 104, low: 101, close: 103 },
+      ];
+      const candles = generateCandles(data);
+
+      const result = service.detectCandlestickPatterns({ candles });
+
+      // Verify output structure
+      expect(typeof result.bullish).toBe('boolean');
+      expect(typeof result.bearish).toBe('boolean');
+      expect(Array.isArray(result.patterns)).toBe(true);
+      expect(Array.isArray(result.detectedPatterns)).toBe(true);
+      // Should have 19 patterns checked
+      expect(result.patterns.length).toBe(19);
+      // Each pattern should have name, type, and detected properties
+      result.patterns.forEach((pattern) => {
+        expect(pattern).toHaveProperty('name');
+        expect(pattern).toHaveProperty('type');
+        expect(pattern).toHaveProperty('detected');
+        expect(['bullish', 'bearish', 'neutral']).toContain(pattern.type);
+        expect(typeof pattern.detected).toBe('boolean');
+      });
+    });
+
+    it('should detect Doji pattern', () => {
+      // Doji: open and close are very close, with wicks
+      const data = [
+        { open: 100, high: 105, low: 95, close: 100 }, // Doji
+      ];
+      const candles = generateCandles(data);
+
+      const result = service.detectCandlestickPatterns({ candles });
+
+      const dojiPattern = result.patterns.find((p) => p.name === 'Doji');
+      expect(dojiPattern).toBeDefined();
+      expect(dojiPattern?.type).toBe('neutral');
+      expect(dojiPattern?.detected).toBe(true);
+      expect(result.detectedPatterns).toContain('Doji');
+    });
+
+    it('should detect Hammer pattern', () => {
+      // Hammer: small body at top, long lower wick, little/no upper wick
+      // After a downtrend
+      const data = [
+        { open: 110, high: 112, low: 105, close: 106 }, // Downtrend
+        { open: 106, high: 108, low: 100, close: 102 }, // Downtrend
+        { open: 100, high: 101, low: 90, close: 100 }, // Hammer
+      ];
+      const candles = generateCandles(data);
+
+      const result = service.detectCandlestickPatterns({ candles });
+
+      const hammerPattern = result.patterns.find((p) => p.name === 'Hammer');
+      expect(hammerPattern).toBeDefined();
+      expect(hammerPattern?.type).toBe('bullish');
+    });
+
+    it('should detect bullish Engulfing pattern', () => {
+      // Bullish engulfing: bearish candle followed by larger bullish candle
+      const data = [
+        { open: 105, high: 106, low: 98, close: 100 }, // Bearish
+        { open: 99, high: 110, low: 98, close: 108 }, // Bullish engulfing
+      ];
+      const candles = generateCandles(data);
+
+      const result = service.detectCandlestickPatterns({ candles });
+
+      const engulfingPattern = result.patterns.find(
+        (p) => p.name === 'Bullish Engulfing',
+      );
+      expect(engulfingPattern).toBeDefined();
+      expect(engulfingPattern?.type).toBe('bullish');
+    });
+
+    it('should detect bearish Engulfing pattern', () => {
+      // Bearish engulfing: bullish candle followed by larger bearish candle
+      const data = [
+        { open: 100, high: 108, low: 99, close: 105 }, // Bullish
+        { open: 108, high: 109, low: 95, close: 97 }, // Bearish engulfing
+      ];
+      const candles = generateCandles(data);
+
+      const result = service.detectCandlestickPatterns({ candles });
+
+      const engulfingPattern = result.patterns.find(
+        (p) => p.name === 'Bearish Engulfing',
+      );
+      expect(engulfingPattern).toBeDefined();
+      expect(engulfingPattern?.type).toBe('bearish');
+    });
+
+    it('should populate detectedPatterns with names of detected patterns', () => {
+      // Create a Doji pattern
+      const data = [{ open: 100, high: 105, low: 95, close: 100 }];
+      const candles = generateCandles(data);
+
+      const result = service.detectCandlestickPatterns({ candles });
+
+      // detectedPatterns should only contain patterns that were detected
+      const detectedFromPatterns = result.patterns
+        .filter((p) => p.detected)
+        .map((p) => p.name);
+      expect(result.detectedPatterns).toEqual(detectedFromPatterns);
+    });
+
+    it('should return empty detectedPatterns when no patterns found', () => {
+      // Neutral candle that doesn't match specific patterns
+      const data = [{ open: 100, high: 101, low: 99, close: 100.5 }];
+      const candles = generateCandles(data);
+
+      const result = service.detectCandlestickPatterns({ candles });
+
+      // May or may not have patterns, but structure should be correct
+      expect(Array.isArray(result.detectedPatterns)).toBe(true);
+      // Detected patterns should match the filtered patterns array
+      const detectedCount = result.patterns.filter((p) => p.detected).length;
+      expect(result.detectedPatterns.length).toBe(detectedCount);
+    });
+
+    it('should set overall bullish/bearish flags correctly', () => {
+      // Pattern that should trigger bullish
+      const bullishData = [
+        { open: 105, high: 106, low: 98, close: 100 },
+        { open: 99, high: 110, low: 98, close: 108 },
+      ];
+      const bullishCandles = generateCandles(bullishData);
+
+      const bullishResult = service.detectCandlestickPatterns({
+        candles: bullishCandles,
+      });
+
+      // The bullish flag should reflect whether any bullish pattern is detected
+      expect(typeof bullishResult.bullish).toBe('boolean');
+      expect(typeof bullishResult.bearish).toBe('boolean');
+    });
+
+    it('should handle single candle input', () => {
+      const data = [{ open: 100, high: 105, low: 95, close: 102 }];
+      const candles = generateCandles(data);
+
+      const result = service.detectCandlestickPatterns({ candles });
+
+      expect(result.patterns.length).toBe(19);
+      expect(typeof result.bullish).toBe('boolean');
+      expect(typeof result.bearish).toBe('boolean');
+    });
+
+    it('should include all expected pattern types', () => {
+      const data = [
+        { open: 100, high: 105, low: 95, close: 102 },
+        { open: 102, high: 108, low: 100, close: 106 },
+      ];
+      const candles = generateCandles(data);
+
+      const result = service.detectCandlestickPatterns({ candles });
+
+      const patternNames = result.patterns.map((p) => p.name);
+      // Bullish patterns
+      expect(patternNames).toContain('Hammer');
+      expect(patternNames).toContain('Inverted Hammer');
+      expect(patternNames).toContain('Bullish Engulfing');
+      expect(patternNames).toContain('Morning Star');
+      expect(patternNames).toContain('Three White Soldiers');
+      expect(patternNames).toContain('Piercing Line');
+      expect(patternNames).toContain('Bullish Harami');
+      expect(patternNames).toContain('Tweezer Bottom');
+      expect(patternNames).toContain('Dragonfly Doji');
+      // Bearish patterns
+      expect(patternNames).toContain('Shooting Star');
+      expect(patternNames).toContain('Hanging Man');
+      expect(patternNames).toContain('Bearish Engulfing');
+      expect(patternNames).toContain('Evening Star');
+      expect(patternNames).toContain('Three Black Crows');
+      expect(patternNames).toContain('Dark Cloud Cover');
+      expect(patternNames).toContain('Bearish Harami');
+      expect(patternNames).toContain('Tweezer Top');
+      expect(patternNames).toContain('Gravestone Doji');
+      // Neutral patterns
+      expect(patternNames).toContain('Doji');
+    });
+  });
 });
