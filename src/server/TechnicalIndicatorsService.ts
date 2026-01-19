@@ -1,6 +1,7 @@
 import {
   RSI,
   MACD,
+  SMA,
   EMA,
   BollingerBands,
   ATR,
@@ -135,6 +136,23 @@ export interface CalculateMacdOutput {
   readonly signalPeriod: number;
   readonly values: readonly MacdValue[];
   readonly latestValue: MacdValue | null;
+}
+
+/**
+ * Input for SMA calculation
+ */
+export interface CalculateSmaInput {
+  readonly candles: readonly CandleInput[];
+  readonly period?: number;
+}
+
+/**
+ * Output for SMA calculation
+ */
+export interface CalculateSmaOutput {
+  readonly period: number;
+  readonly values: readonly number[];
+  readonly latestValue: number | null;
 }
 
 /**
@@ -550,6 +568,7 @@ export interface DetectChartPatternsOutput {
 }
 
 const DEFAULT_RSI_PERIOD = 14;
+const DEFAULT_SMA_PERIOD = 20;
 const DEFAULT_EMA_PERIOD = 20;
 const DEFAULT_MACD_FAST_PERIOD = 12;
 const DEFAULT_MACD_SLOW_PERIOD = 26;
@@ -630,6 +649,29 @@ export class TechnicalIndicatorsService {
       values: macdValues,
       latestValue:
         macdValues.length > 0 ? macdValues[macdValues.length - 1] : null,
+    };
+  }
+
+  /**
+   * Calculate SMA (Simple Moving Average) from candle data.
+   *
+   * @param input - Candles and optional period (default: 20)
+   * @returns SMA values array and latest value
+   */
+  public calculateSma(input: CalculateSmaInput): CalculateSmaOutput {
+    const period = input.period ?? DEFAULT_SMA_PERIOD;
+    const closePrices = extractClosePrices(input.candles);
+
+    const smaValues = SMA.calculate({
+      period,
+      values: closePrices,
+    });
+
+    return {
+      period,
+      values: smaValues,
+      latestValue:
+        smaValues.length > 0 ? smaValues[smaValues.length - 1] : null,
     };
   }
 
