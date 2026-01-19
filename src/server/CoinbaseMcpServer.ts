@@ -23,6 +23,7 @@ import { ProductVenue } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/
 import { StopPriceDirection } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/StopPriceDirection.js';
 import { ProductsService } from './ProductsService';
 import { PublicService } from './PublicService';
+import { TechnicalIndicatorsService } from './TechnicalIndicatorsService';
 import { Granularity } from './ProductCandles';
 
 export class CoinbaseMcpServer {
@@ -39,6 +40,7 @@ export class CoinbaseMcpServer {
   private readonly perpetuals: PerpetualsService;
   private readonly publicService: PublicService;
   private readonly data: DataService;
+  private readonly technicalIndicators: TechnicalIndicatorsService;
 
   constructor(apiKey: string, privateKey: string) {
     const credentials = new CoinbaseAdvTradeCredentials(apiKey, privateKey);
@@ -56,6 +58,7 @@ export class CoinbaseMcpServer {
     this.perpetuals = new PerpetualsService(this.client);
     this.publicService = new PublicService(this.client);
     this.data = new DataService(this.client);
+    this.technicalIndicators = new TechnicalIndicatorsService();
 
     this.app = createMcpExpressApp();
 
@@ -941,6 +944,46 @@ export class CoinbaseMcpServer {
       },
       this.call(this.data.getAPIKeyPermissions.bind(this.data)),
     );
+
+    // ===== TECHNICAL INDICATORS =====
+
+    server.registerTool(
+      'calculate_rsi',
+      {
+        title: 'Calculate RSI',
+        description:
+          'Calculate Relative Strength Index (RSI) from candle data. ' +
+          'RSI measures momentum and identifies overbought (>70) or oversold (<30) conditions. ' +
+          'Input candles should be in the same format as returned by get_product_candles.',
+        inputSchema: {
+          candles: z
+            .array(
+              z.object({
+                open: z.string().describe('Opening price'),
+                high: z.string().describe('High price'),
+                low: z.string().describe('Low price'),
+                close: z.string().describe('Closing price'),
+                volume: z.string().describe('Volume'),
+              }),
+            )
+            .min(2)
+            .describe('Array of candle data (minimum 2 candles required)'),
+          period: z
+            .number()
+            .int()
+            .min(2)
+            .optional()
+            .describe(
+              'Number of candles to analyze (default: 14). ' +
+                'Lower values (7-9) react faster but produce more false signals. ' +
+                'Higher values (21-25) are slower but more reliable.',
+            ),
+        },
+      },
+      this.call(
+        this.technicalIndicators.calculateRsi.bind(this.technicalIndicators),
+      ),
+    );
   }
 
   private registerPromptsForServer(server: McpServer): void {
@@ -958,7 +1001,7 @@ export class CoinbaseMcpServer {
                 type: 'text',
                 text: `You are a Coinbase Advanced Trade assistant.
 
-TOOL CATEGORIES (46 total):
+TOOL CATEGORIES (47 total):
 - Accounts (2): list_accounts, get_account
 - Orders (9): create_order, preview_order, list_orders, get_order, cancel_orders, edit_order, preview_edit_order, list_fills, close_position
 - Products (8): list_products, get_product, get_product_candles, get_product_candles_batch, get_best_bid_ask, get_market_snapshot, get_product_book, get_market_trades
@@ -969,13 +1012,15 @@ TOOL CATEGORIES (46 total):
 - Futures (4): list_futures_positions, get_futures_position, get_futures_balance_summary, list_futures_sweeps
 - Perpetuals (4): list_perpetuals_positions, get_perpetuals_position, get_perpetuals_portfolio_summary, get_perpetuals_portfolio_balance
 - Info (2): get_api_key_permissions, get_transaction_summary
+- Technical Indicators (1): calculate_rsi
 
 BEST PRACTICES:
 1. Always preview_order before create_order
 2. Check balances with list_accounts first
 3. Use get_transaction_summary to understand fees
 4. For candles: timestamps are converted to Unix automatically
-5. Provide market context when relevant`,
+5. Provide market context when relevant
+6. Use technical indicators with candle data from get_product_candles`,
               },
             },
           ],
@@ -1023,9 +1068,9 @@ BEST PRACTICES:
     });
   }
 
-  private call<I, R>(fn: (input: I) => Promise<R>) {
+  private call<I, R>(fn: (input: I) => R | Promise<R>) {
     return async (input: I) => {
-      const response = await fn(input);
+      const response = await Promise.resolve(fn(input));
       return {
         content: [
           {
