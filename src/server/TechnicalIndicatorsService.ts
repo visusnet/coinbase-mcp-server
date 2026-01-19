@@ -231,19 +231,46 @@ export interface CalculateAtrOutput {
 }
 
 /**
- * Input for Stochastic oscillator calculation
+ * Input for Stochastic oscillator calculation.
+ *
+ * Uses the Slow Stochastic variant (most common in trading platforms):
+ * - %K is smoothed using the kPeriod lookback window
+ * - %D is a simple moving average of %K over dPeriod
+ *
+ * @see https://www.investopedia.com/terms/s/stochasticoscillator.asp
  */
 export interface CalculateStochasticInput {
   readonly candles: readonly CandleInput[];
+  /**
+   * Lookback period for %K calculation (default: 14).
+   * Determines how many periods to consider for the highest high and lowest low.
+   */
   readonly kPeriod?: number;
+  /**
+   * Signal period for %D calculation (default: 3).
+   * %D is a simple moving average of %K over this many periods.
+   */
   readonly dPeriod?: number;
 }
 
 /**
- * Single Stochastic data point
+ * Single Stochastic data point.
+ *
+ * Both values range from 0 to 100:
+ * - Values above 80 indicate overbought conditions
+ * - Values below 20 indicate oversold conditions
  */
 interface StochasticValue {
+  /**
+   * %K (fast line): Measures current close relative to the high-low range.
+   * Formula: (Close - Lowest Low) / (Highest High - Lowest Low) × 100
+   */
   readonly k: number;
+  /**
+   * %D (slow/signal line): SMA of %K, used for signal crossovers.
+   * BUY signal: %K crosses above %D in oversold zone (<20)
+   * SELL signal: %K crosses below %D in overbought zone (>80)
+   */
   readonly d: number;
 }
 
@@ -780,10 +807,28 @@ export class TechnicalIndicatorsService {
   }
 
   /**
-   * Calculate Stochastic oscillator from candle data.
+   * Calculate Slow Stochastic oscillator from candle data.
    *
-   * @param input - Candles and optional periods (default: 14/3)
-   * @returns %K and %D values array and latest value
+   * This implements the Slow Stochastic variant, which is the industry standard
+   * used by TradingView, MT4/MT5, and most trading platforms. The "slow" variant
+   * smooths %K to reduce noise and false signals compared to the "fast" variant.
+   *
+   * Default parameters (kPeriod=14, dPeriod=3) match common platform defaults.
+   * These values can be customized via the input object.
+   *
+   * @param input - Candles and optional periods
+   * @param input.candles - OHLC candle data
+   * @param input.kPeriod - Lookback period for %K (default: 14, library default)
+   * @param input.dPeriod - Signal period for %D (default: 3, library default)
+   * @returns Stochastic values array with %K and %D for each period
+   *
+   * @example
+   * // Using defaults (14, 3)
+   * const result = service.calculateStochastic({ candles });
+   *
+   * @example
+   * // Custom periods (5, 3) for faster signals
+   * const result = service.calculateStochastic({ candles, kPeriod: 5, dPeriod: 3 });
    */
   public calculateStochastic(
     input: CalculateStochasticInput,
