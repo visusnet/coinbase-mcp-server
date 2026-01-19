@@ -47,7 +47,7 @@ The project does NOT need to be built. Just call the tools.
 
 ### Available Indicator Tools
 
-The MCP server provides 22 technical indicator tools. **Always use these instead of manual calculation:**
+The MCP server provides 23 technical indicator tools. **Always use these instead of manual calculation:**
 
 **Momentum:**
 - `calculate_rsi` - RSI with configurable period
@@ -58,6 +58,7 @@ The MCP server provides 22 technical indicator tools. **Always use these instead
 - `detect_rsi_divergence` - Detects bullish/bearish divergence
 
 **Trend:**
+- `calculate_sma` - SMA with configurable period (call multiple times for 20/50/200)
 - `calculate_macd` - MACD line, signal, histogram
 - `calculate_ema` - EMA with configurable period (call multiple times for 9/21/50/200)
 - `calculate_adx` - ADX with +DI/-DI

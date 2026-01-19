@@ -461,8 +461,10 @@ result = calculate_atr(candles, period=14)
 
 **Usage**:
 ```
-result = calculate_keltner_channels(candles, maPeriod=20, atrPeriod=10, multiplier=2)
+result = calculate_keltner_channels(candles, maPeriod=20, atrPeriod=10, multiplier=2, useSMA=false)
 ```
+
+- `useSMA`: Use SMA instead of EMA for middle band (default: false = EMA)
 
 **Output Structure**:
 ```json
