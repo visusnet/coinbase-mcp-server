@@ -13,6 +13,7 @@ import {
   ROC,
   MFI,
   PSAR,
+  IchimokuCloud,
 } from 'technicalindicators';
 
 /**
@@ -309,6 +310,39 @@ export interface CalculatePsarOutput {
   readonly latestValue: number | null;
 }
 
+/**
+ * Input for Ichimoku Cloud calculation
+ */
+export interface CalculateIchimokuCloudInput {
+  readonly candles: readonly CandleInput[];
+  readonly conversionPeriod?: number;
+  readonly basePeriod?: number;
+  readonly spanPeriod?: number;
+  readonly displacement?: number;
+}
+
+/**
+ * Single Ichimoku Cloud data point
+ */
+interface IchimokuCloudDataPoint {
+  readonly conversion: number;
+  readonly base: number;
+  readonly spanA: number;
+  readonly spanB: number;
+}
+
+/**
+ * Output for Ichimoku Cloud calculation
+ */
+export interface CalculateIchimokuCloudOutput {
+  readonly conversionPeriod: number;
+  readonly basePeriod: number;
+  readonly spanPeriod: number;
+  readonly displacement: number;
+  readonly values: readonly IchimokuCloudDataPoint[];
+  readonly latestValue: IchimokuCloudDataPoint | null;
+}
+
 const DEFAULT_RSI_PERIOD = 14;
 const DEFAULT_EMA_PERIOD = 20;
 const DEFAULT_MACD_FAST_PERIOD = 12;
@@ -327,6 +361,10 @@ const DEFAULT_ROC_PERIOD = 12;
 const DEFAULT_MFI_PERIOD = 14;
 const DEFAULT_PSAR_STEP = 0.02;
 const DEFAULT_PSAR_MAX = 0.2;
+const DEFAULT_ICHIMOKU_CONVERSION_PERIOD = 9;
+const DEFAULT_ICHIMOKU_BASE_PERIOD = 26;
+const DEFAULT_ICHIMOKU_SPAN_PERIOD = 52;
+const DEFAULT_ICHIMOKU_DISPLACEMENT = 26;
 
 /**
  * Service for calculating technical indicators from candle data.
@@ -705,6 +743,45 @@ export class TechnicalIndicatorsService {
       values: psarValues,
       latestValue:
         psarValues.length > 0 ? psarValues[psarValues.length - 1] : null,
+    };
+  }
+
+  /**
+   * Calculate Ichimoku Cloud from candle data.
+   *
+   * @param input - Candles and optional period parameters
+   * @returns Ichimoku Cloud values array and latest value
+   */
+  public calculateIchimokuCloud(
+    input: CalculateIchimokuCloudInput,
+  ): CalculateIchimokuCloudOutput {
+    const conversionPeriod =
+      input.conversionPeriod ?? DEFAULT_ICHIMOKU_CONVERSION_PERIOD;
+    const basePeriod = input.basePeriod ?? DEFAULT_ICHIMOKU_BASE_PERIOD;
+    const spanPeriod = input.spanPeriod ?? DEFAULT_ICHIMOKU_SPAN_PERIOD;
+    const displacement = input.displacement ?? DEFAULT_ICHIMOKU_DISPLACEMENT;
+    const high = extractHighPrices(input.candles);
+    const low = extractLowPrices(input.candles);
+
+    const ichimokuValues = IchimokuCloud.calculate({
+      high,
+      low,
+      conversionPeriod,
+      basePeriod,
+      spanPeriod,
+      displacement,
+    });
+
+    return {
+      conversionPeriod,
+      basePeriod,
+      spanPeriod,
+      displacement,
+      values: ichimokuValues,
+      latestValue:
+        ichimokuValues.length > 0
+          ? ichimokuValues[ichimokuValues.length - 1]
+          : null,
     };
   }
 }

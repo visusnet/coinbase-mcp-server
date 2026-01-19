@@ -1172,4 +1172,84 @@ describe('TechnicalIndicatorsService', () => {
       expect(result.latestValue).toBeNull();
     });
   });
+
+  describe('calculateIchimokuCloud', () => {
+    const generateCandles = (
+      data: { high: number; low: number; close: number }[],
+    ): CandleInput[] => {
+      return data.map(({ high, low, close }) => ({
+        open: close.toString(),
+        high: high.toString(),
+        low: low.toString(),
+        close: close.toString(),
+        volume: '1000',
+      }));
+    };
+
+    it('should calculate Ichimoku Cloud with default periods', () => {
+      // Generate enough candles for Ichimoku Cloud (need at least spanPeriod = 52)
+      const data = Array.from({ length: 100 }, (_, i) => ({
+        high: 105 + Math.sin(i / 10) * 10,
+        low: 95 + Math.sin(i / 10) * 10,
+        close: 100 + Math.sin(i / 10) * 10,
+      }));
+      const candles = generateCandles(data);
+
+      const result = service.calculateIchimokuCloud({ candles });
+
+      expect(result.conversionPeriod).toBe(9);
+      expect(result.basePeriod).toBe(26);
+      expect(result.spanPeriod).toBe(52);
+      expect(result.displacement).toBe(26);
+      expect(result.values.length).toBeGreaterThan(0);
+      expect(result.latestValue).not.toBeNull();
+      // Verify output structure
+      const latestValue = result.latestValue as {
+        conversion: number;
+        base: number;
+        spanA: number;
+        spanB: number;
+      };
+      expect(latestValue).toHaveProperty('conversion');
+      expect(latestValue).toHaveProperty('base');
+      expect(latestValue).toHaveProperty('spanA');
+      expect(latestValue).toHaveProperty('spanB');
+      expect(typeof latestValue.conversion).toBe('number');
+      expect(typeof latestValue.base).toBe('number');
+      expect(typeof latestValue.spanA).toBe('number');
+      expect(typeof latestValue.spanB).toBe('number');
+    });
+
+    it('should accept custom period parameters', () => {
+      const data = Array.from({ length: 100 }, (_, i) => ({
+        high: 105 + i * 0.5,
+        low: 95 + i * 0.5,
+        close: 100 + i * 0.5,
+      }));
+      const candles = generateCandles(data);
+
+      const result = service.calculateIchimokuCloud({
+        candles,
+        conversionPeriod: 7,
+        basePeriod: 22,
+        spanPeriod: 44,
+        displacement: 22,
+      });
+
+      expect(result.conversionPeriod).toBe(7);
+      expect(result.basePeriod).toBe(22);
+      expect(result.spanPeriod).toBe(44);
+      expect(result.displacement).toBe(22);
+      expect(result.values.length).toBeGreaterThan(0);
+    });
+
+    it('should return null latestValue when no data provided', () => {
+      const candles: ReturnType<typeof generateCandles> = [];
+
+      const result = service.calculateIchimokuCloud({ candles });
+
+      expect(result.values.length).toBe(0);
+      expect(result.latestValue).toBeNull();
+    });
+  });
 });
