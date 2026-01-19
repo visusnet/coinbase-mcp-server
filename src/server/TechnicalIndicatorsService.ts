@@ -9,6 +9,7 @@ import {
   OBV,
   VWAP,
   CCI,
+  WilliamsR,
 } from 'technicalindicators';
 
 /**
@@ -235,6 +236,23 @@ export interface CalculateCciOutput {
   readonly latestValue: number | null;
 }
 
+/**
+ * Input for Williams %R calculation
+ */
+export interface CalculateWilliamsRInput {
+  readonly candles: readonly CandleInput[];
+  readonly period?: number;
+}
+
+/**
+ * Output for Williams %R calculation
+ */
+export interface CalculateWilliamsROutput {
+  readonly period: number;
+  readonly values: readonly number[];
+  readonly latestValue: number | null;
+}
+
 const DEFAULT_RSI_PERIOD = 14;
 const DEFAULT_EMA_PERIOD = 20;
 const DEFAULT_MACD_FAST_PERIOD = 12;
@@ -248,6 +266,7 @@ const DEFAULT_STOCHASTIC_D_PERIOD = 3;
 const DEFAULT_STOCHASTIC_STOCH_PERIOD = 3;
 const DEFAULT_ADX_PERIOD = 14;
 const DEFAULT_CCI_PERIOD = 20;
+const DEFAULT_WILLIAMS_R_PERIOD = 14;
 
 /**
  * Service for calculating technical indicators from candle data.
@@ -518,6 +537,34 @@ export class TechnicalIndicatorsService {
       values: cciValues,
       latestValue:
         cciValues.length > 0 ? cciValues[cciValues.length - 1] : null,
+    };
+  }
+
+  /**
+   * Calculate Williams %R from candle data.
+   *
+   * @param input - Candles and optional period (default: 14)
+   * @returns Williams %R values array and latest value
+   */
+  public calculateWilliamsR(
+    input: CalculateWilliamsRInput,
+  ): CalculateWilliamsROutput {
+    const period = input.period ?? DEFAULT_WILLIAMS_R_PERIOD;
+    const high = extractHighPrices(input.candles);
+    const low = extractLowPrices(input.candles);
+    const close = extractClosePrices(input.candles);
+
+    const wrValues = WilliamsR.calculate({
+      period,
+      high,
+      low,
+      close,
+    });
+
+    return {
+      period,
+      values: wrValues,
+      latestValue: wrValues.length > 0 ? wrValues[wrValues.length - 1] : null,
     };
   }
 }
