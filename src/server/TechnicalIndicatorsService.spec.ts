@@ -1263,7 +1263,7 @@ describe('TechnicalIndicatorsService', () => {
         base: number;
         spanA: number;
         spanB: number;
-        chikou: number;
+        chikou: number | null;
       };
       expect(latestValue).toHaveProperty('conversion');
       expect(latestValue).toHaveProperty('base');
@@ -1274,7 +1274,36 @@ describe('TechnicalIndicatorsService', () => {
       expect(typeof latestValue.base).toBe('number');
       expect(typeof latestValue.spanA).toBe('number');
       expect(typeof latestValue.spanB).toBe('number');
-      expect(typeof latestValue.chikou).toBe('number');
+      // Chikou is null for the last `displacement` values (no future data)
+      expect(latestValue.chikou).toBeNull();
+    });
+
+    it('should have null chikou for last displacement values and valid chikou for earlier values', () => {
+      // Generate enough candles with predictable close prices
+      const data = Array.from({ length: 100 }, (_, i) => ({
+        high: 105 + i,
+        low: 95 + i,
+        close: 100 + i, // Predictable close prices: 100, 101, 102, ...
+      }));
+      const candles = generateCandles(data);
+      const displacement = 26;
+
+      const result = service.calculateIchimokuCloud({ candles, displacement });
+
+      // The last `displacement` values should have null chikou
+      const valuesCount = result.values.length;
+      for (let i = valuesCount - displacement; i < valuesCount; i++) {
+        expect(result.values[i].chikou).toBeNull();
+      }
+
+      // Earlier values should have valid chikou (close price from `displacement` periods ahead)
+      // The chikou at position i should be the close at (offset + i + displacement)
+      const offset = 100 - valuesCount; // close.length - values.length
+      for (let i = 0; i < valuesCount - displacement; i++) {
+        const expectedChikouIndex = offset + i + displacement;
+        const expectedChikou = 100 + expectedChikouIndex; // Our close prices are 100 + index
+        expect(result.values[i].chikou).toBe(expectedChikou);
+      }
     });
 
     it('should accept custom period parameters', () => {

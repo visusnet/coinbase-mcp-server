@@ -307,10 +307,19 @@ result = calculate_ichimoku_cloud(candles, conversionPeriod=9, basePeriod=26, sp
     "conversion": 45100.5,
     "base": 44850.2,
     "spanA": 44975.35,
-    "spanB": 44500.8
+    "spanB": 44500.8,
+    "chikou": null
   }
 }
 ```
+
+**Chikou Span (Lagging Span)**:
+The `chikou` field represents the current closing price plotted `displacement` periods (default: 26) in the past. This is used to compare current price action with historical price levels.
+
+- For the most recent `displacement` data points, `chikou` will be `null` because we cannot know future closing prices
+- For earlier data points, `chikou` contains the close price from `displacement` periods ahead
+- When `chikou` is above the historical price at that position → Bullish confirmation
+- When `chikou` is below the historical price at that position → Bearish confirmation
 
 **Interpretation** (use `latestValue`):
 
@@ -321,6 +330,7 @@ result = calculate_ichimoku_cloud(candles, conversionPeriod=9, basePeriod=26, sp
 - conversion crosses base downward below cloud → **Strong SELL** (-3)
 - spanA > spanB (green cloud) → Bullish bias (+1)
 - spanB > spanA (red cloud) → Bearish bias (-1)
+- chikou above price from 26 periods ago → Trend confirmation (+1)
 
 ---
 
