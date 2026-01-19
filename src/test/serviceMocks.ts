@@ -274,6 +274,7 @@ export const mockTechnicalIndicatorsService: {
   detectCandlestickPatterns: jest.fn(),
   calculateVolumeProfile: jest.fn(),
   calculatePivotPoints: jest.fn(),
+  detectRsiDivergence: jest.fn(),
 };
 
 export function mockServices() {
