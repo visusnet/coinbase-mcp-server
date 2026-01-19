@@ -10,6 +10,7 @@ import {
   VWAP,
   CCI,
   WilliamsR,
+  ROC,
 } from 'technicalindicators';
 
 /**
@@ -253,6 +254,23 @@ export interface CalculateWilliamsROutput {
   readonly latestValue: number | null;
 }
 
+/**
+ * Input for ROC calculation
+ */
+export interface CalculateRocInput {
+  readonly candles: readonly CandleInput[];
+  readonly period?: number;
+}
+
+/**
+ * Output for ROC calculation
+ */
+export interface CalculateRocOutput {
+  readonly period: number;
+  readonly values: readonly number[];
+  readonly latestValue: number | null;
+}
+
 const DEFAULT_RSI_PERIOD = 14;
 const DEFAULT_EMA_PERIOD = 20;
 const DEFAULT_MACD_FAST_PERIOD = 12;
@@ -267,6 +285,7 @@ const DEFAULT_STOCHASTIC_STOCH_PERIOD = 3;
 const DEFAULT_ADX_PERIOD = 14;
 const DEFAULT_CCI_PERIOD = 20;
 const DEFAULT_WILLIAMS_R_PERIOD = 14;
+const DEFAULT_ROC_PERIOD = 12;
 
 /**
  * Service for calculating technical indicators from candle data.
@@ -565,6 +584,29 @@ export class TechnicalIndicatorsService {
       period,
       values: wrValues,
       latestValue: wrValues.length > 0 ? wrValues[wrValues.length - 1] : null,
+    };
+  }
+
+  /**
+   * Calculate ROC (Rate of Change) from candle data.
+   *
+   * @param input - Candles and optional period (default: 12)
+   * @returns ROC values array and latest value
+   */
+  public calculateRoc(input: CalculateRocInput): CalculateRocOutput {
+    const period = input.period ?? DEFAULT_ROC_PERIOD;
+    const closePrices = extractClosePrices(input.candles);
+
+    const rocValues = ROC.calculate({
+      period,
+      values: closePrices,
+    });
+
+    return {
+      period,
+      values: rocValues,
+      latestValue:
+        rocValues.length > 0 ? rocValues[rocValues.length - 1] : null,
     };
   }
 }

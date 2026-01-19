@@ -954,4 +954,74 @@ describe('TechnicalIndicatorsService', () => {
       expect(result.latestValue).toBeNull();
     });
   });
+
+  describe('calculateRoc', () => {
+    const generateCandles = (closePrices: number[]): CandleInput[] => {
+      return closePrices.map((close) => ({
+        open: close.toString(),
+        high: (close + 1).toString(),
+        low: (close - 1).toString(),
+        close: close.toString(),
+        volume: '1000',
+      }));
+    };
+
+    it('should calculate ROC with default period of 12', () => {
+      const closePrices = Array.from({ length: 20 }, (_, i) => 100 + i);
+      const candles = generateCandles(closePrices);
+
+      const result = service.calculateRoc({ candles });
+
+      expect(result.period).toBe(12);
+      expect(result.values.length).toBeGreaterThan(0);
+      expect(result.latestValue).not.toBeNull();
+    });
+
+    it('should calculate ROC with custom period', () => {
+      const closePrices = Array.from({ length: 15 }, (_, i) => 100 + i);
+      const candles = generateCandles(closePrices);
+
+      const result = service.calculateRoc({ candles, period: 5 });
+
+      expect(result.period).toBe(5);
+      expect(result.values.length).toBeGreaterThan(0);
+    });
+
+    it('should return positive ROC for rising prices', () => {
+      // Prices doubling over the period
+      const closePrices = Array.from({ length: 15 }, (_, i) => 100 + i * 10);
+      const candles = generateCandles(closePrices);
+
+      const result = service.calculateRoc({ candles, period: 5 });
+
+      expect(result.latestValue).not.toBeNull();
+      const latestValue = result.latestValue as number;
+      // ROC should be positive for rising prices
+      expect(latestValue).toBeGreaterThan(0);
+    });
+
+    it('should return negative ROC for falling prices', () => {
+      // Prices falling over the period
+      const closePrices = Array.from({ length: 15 }, (_, i) => 200 - i * 10);
+      const candles = generateCandles(closePrices);
+
+      const result = service.calculateRoc({ candles, period: 5 });
+
+      expect(result.latestValue).not.toBeNull();
+      const latestValue = result.latestValue as number;
+      // ROC should be negative for falling prices
+      expect(latestValue).toBeLessThan(0);
+    });
+
+    it('should return null latestValue when not enough data', () => {
+      const closePrices = [100, 101, 102];
+      const candles = generateCandles(closePrices);
+
+      const result = service.calculateRoc({ candles });
+
+      expect(result.period).toBe(12);
+      expect(result.values.length).toBe(0);
+      expect(result.latestValue).toBeNull();
+    });
+  });
 });

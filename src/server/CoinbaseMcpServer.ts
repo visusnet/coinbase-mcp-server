@@ -1372,6 +1372,41 @@ export class CoinbaseMcpServer {
         ),
       ),
     );
+
+    server.registerTool(
+      'calculate_roc',
+      {
+        title: 'Calculate ROC (Rate of Change)',
+        description:
+          'Calculate ROC (Rate of Change) from candle data. ' +
+          'Momentum oscillator measuring percentage change between current price and price n periods ago. ' +
+          'Positive values indicate upward momentum, negative values indicate downward momentum. ' +
+          'Useful for identifying trend strength and potential reversals.',
+        inputSchema: {
+          candles: z
+            .array(
+              z.object({
+                open: z.string().describe('Opening price'),
+                high: z.string().describe('High price'),
+                low: z.string().describe('Low price'),
+                close: z.string().describe('Closing price'),
+                volume: z.string().describe('Volume'),
+              }),
+            )
+            .min(2)
+            .describe('Array of candle data'),
+          period: z
+            .number()
+            .int()
+            .min(1)
+            .optional()
+            .describe('Period for ROC calculation (default: 12)'),
+        },
+      },
+      this.call(
+        this.technicalIndicators.calculateRoc.bind(this.technicalIndicators),
+      ),
+    );
   }
 
   private registerPromptsForServer(server: McpServer): void {
@@ -1389,7 +1424,7 @@ export class CoinbaseMcpServer {
                 type: 'text',
                 text: `You are a Coinbase Advanced Trade assistant.
 
-TOOL CATEGORIES (55 total):
+TOOL CATEGORIES (56 total):
 - Accounts (2): list_accounts, get_account
 - Orders (9): create_order, preview_order, list_orders, get_order, cancel_orders, edit_order, preview_edit_order, list_fills, close_position
 - Products (8): list_products, get_product, get_product_candles, get_product_candles_batch, get_best_bid_ask, get_market_snapshot, get_product_book, get_market_trades
@@ -1400,7 +1435,7 @@ TOOL CATEGORIES (55 total):
 - Futures (4): list_futures_positions, get_futures_position, get_futures_balance_summary, list_futures_sweeps
 - Perpetuals (4): list_perpetuals_positions, get_perpetuals_position, get_perpetuals_portfolio_summary, get_perpetuals_portfolio_balance
 - Info (2): get_api_key_permissions, get_transaction_summary
-- Technical Indicators (11): calculate_rsi, calculate_macd, calculate_ema, calculate_bollinger_bands, calculate_atr, calculate_stochastic, calculate_adx, calculate_obv, calculate_vwap, calculate_cci, calculate_williams_r
+- Technical Indicators (12): calculate_rsi, calculate_macd, calculate_ema, calculate_bollinger_bands, calculate_atr, calculate_stochastic, calculate_adx, calculate_obv, calculate_vwap, calculate_cci, calculate_williams_r, calculate_roc
 
 BEST PRACTICES:
 1. Always preview_order before create_order
