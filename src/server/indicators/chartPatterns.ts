@@ -311,7 +311,7 @@ function detectHeadAndShoulders(
     const shoulderDiff =
       Math.abs(leftShoulderHigh - rightShoulderHigh) / leftShoulderHigh;
     const confidence =
-      shoulderDiff < 0.02 ? 'high' : shoulderDiff < 0.04 ? 'medium' : 'low';
+      shoulderDiff < 0.015 ? 'high' : shoulderDiff < 0.025 ? 'medium' : 'low';
 
     patterns.push({
       type: 'head_and_shoulders',
@@ -382,7 +382,7 @@ function detectInverseHeadAndShoulders(
     const shoulderDiff =
       Math.abs(leftShoulderLow - rightShoulderLow) / leftShoulderLow;
     const confidence =
-      shoulderDiff < 0.02 ? 'high' : shoulderDiff < 0.04 ? 'medium' : 'low';
+      shoulderDiff < 0.015 ? 'high' : shoulderDiff < 0.025 ? 'medium' : 'low';
 
     patterns.push({
       type: 'inverse_head_and_shoulders',
@@ -512,6 +512,86 @@ function detectDescendingTriangle(
 }
 
 /**
+ * Find the actual start of an uptrend (swing low) by looking backward.
+ * Returns the index of the swing low that initiated the rally.
+ */
+function findUptrendStart(
+  close: readonly number[],
+  low: readonly number[],
+  endIdx: number,
+  minLookback: number,
+): number {
+  // Start from endIdx and look backward to find the swing low
+  let lowestIdx = endIdx;
+  let lowestPrice = low[endIdx];
+
+  // Look backward up to a reasonable distance (max 50 candles or available data)
+  const maxLookback = Math.min(50, endIdx);
+
+  for (let i = endIdx; i >= endIdx - maxLookback && i >= 0; i--) {
+    // Track the lowest point
+    if (low[i] < lowestPrice) {
+      lowestPrice = low[i];
+      lowestIdx = i;
+    }
+
+    // Check if we've found a significant swing low
+    // (price rose at least 2% from the low before dropping again)
+    const distanceFromLow = endIdx - lowestIdx;
+    if (distanceFromLow >= minLookback) {
+      const gain = (close[endIdx] - lowestPrice) / lowestPrice;
+      if (gain >= 0.05) {
+        // Found a valid swing low with 5%+ gain
+        return lowestIdx;
+      }
+    }
+  }
+
+  // Fallback to the lowest point found
+  return lowestIdx;
+}
+
+/**
+ * Find the actual start of a downtrend (swing high) by looking backward.
+ * Returns the index of the swing high that initiated the decline.
+ */
+function findDowntrendStart(
+  close: readonly number[],
+  high: readonly number[],
+  endIdx: number,
+  minLookback: number,
+): number {
+  // Start from endIdx and look backward to find the swing high
+  let highestIdx = endIdx;
+  let highestPrice = high[endIdx];
+
+  // Look backward up to a reasonable distance (max 50 candles or available data)
+  const maxLookback = Math.min(50, endIdx);
+
+  for (let i = endIdx; i >= endIdx - maxLookback && i >= 0; i--) {
+    // Track the highest point
+    if (high[i] > highestPrice) {
+      highestPrice = high[i];
+      highestIdx = i;
+    }
+
+    // Check if we've found a significant swing high
+    // (price dropped at least 2% from the high before rising again)
+    const distanceFromHigh = endIdx - highestIdx;
+    if (distanceFromHigh >= minLookback) {
+      const loss = (highestPrice - close[endIdx]) / highestPrice;
+      if (loss >= 0.05) {
+        // Found a valid swing high with 5%+ loss
+        return highestIdx;
+      }
+    }
+  }
+
+  // Fallback to the highest point found
+  return highestIdx;
+}
+
+/**
  * Detect Bull Flag pattern (bullish continuation).
  */
 function detectBullFlag(
@@ -528,9 +608,15 @@ function detectBullFlag(
     i < close.length - MIN_PATTERN_LENGTH;
     i++
   ) {
-    // Check for preceding uptrend (flagpole)
-    const poleStart = i - MIN_TREND_LENGTH;
+    // Find the actual start of the uptrend (swing low)
+    const poleStart = findUptrendStart(close, low, i, MIN_TREND_LENGTH);
     const poleEnd = i;
+
+    // Skip if pole start is before the analysis window
+    if (poleStart < startIdx) {
+      continue;
+    }
+
     const poleGain = (close[poleEnd] - close[poleStart]) / close[poleStart];
 
     if (poleGain < 0.05) {
@@ -539,7 +625,6 @@ function detectBullFlag(
 
     // Check for consolidation (flag)
     const flagEnd = Math.min(i + MIN_PATTERN_LENGTH, close.length - 1);
-    let isConsolidating = true;
     let maxFlag = high[i];
     let minFlag = low[i];
 
@@ -549,7 +634,7 @@ function detectBullFlag(
     }
 
     const flagRange = (maxFlag - minFlag) / close[i];
-    isConsolidating = flagRange < 0.05; // Flag should be tight
+    const isConsolidating = flagRange < 0.05; // Flag should be tight
 
     // Check for slight downward drift (characteristic of bull flag)
     const flagDrift = (close[flagEnd] - close[i]) / close[i];
@@ -591,9 +676,15 @@ function detectBearFlag(
     i < close.length - MIN_PATTERN_LENGTH;
     i++
   ) {
-    // Check for preceding downtrend (flagpole)
-    const poleStart = i - MIN_TREND_LENGTH;
+    // Find the actual start of the downtrend (swing high)
+    const poleStart = findDowntrendStart(close, high, i, MIN_TREND_LENGTH);
     const poleEnd = i;
+
+    // Skip if pole start is before the analysis window
+    if (poleStart < startIdx) {
+      continue;
+    }
+
     const poleLoss = (close[poleStart] - close[poleEnd]) / close[poleStart];
 
     if (poleLoss < 0.05) {
