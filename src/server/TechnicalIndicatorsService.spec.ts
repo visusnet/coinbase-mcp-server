@@ -627,4 +627,71 @@ describe('TechnicalIndicatorsService', () => {
       expect(result.latestValue).toBeNull();
     });
   });
+
+  describe('calculateObv', () => {
+    const generateCandles = (
+      data: { close: number; volume: number }[],
+    ): CandleInput[] => {
+      return data.map(({ close, volume }) => ({
+        open: close.toString(),
+        high: (close + 1).toString(),
+        low: (close - 1).toString(),
+        close: close.toString(),
+        volume: volume.toString(),
+      }));
+    };
+
+    it('should calculate OBV from candle data', () => {
+      const data = [
+        { close: 100, volume: 1000 },
+        { close: 101, volume: 1100 },
+        { close: 102, volume: 1200 },
+        { close: 101, volume: 900 },
+        { close: 103, volume: 1500 },
+      ];
+      const candles = generateCandles(data);
+
+      const result = service.calculateObv({ candles });
+
+      expect(result.values.length).toBeGreaterThan(0);
+      expect(result.latestValue).not.toBeNull();
+    });
+
+    it('should increase OBV on up days and decrease on down days', () => {
+      // All up days with equal volume
+      const upData = [
+        { close: 100, volume: 1000 },
+        { close: 101, volume: 1000 },
+        { close: 102, volume: 1000 },
+        { close: 103, volume: 1000 },
+      ];
+      const upCandles = generateCandles(upData);
+
+      // All down days with equal volume
+      const downData = [
+        { close: 100, volume: 1000 },
+        { close: 99, volume: 1000 },
+        { close: 98, volume: 1000 },
+        { close: 97, volume: 1000 },
+      ];
+      const downCandles = generateCandles(downData);
+
+      const upResult = service.calculateObv({ candles: upCandles });
+      const downResult = service.calculateObv({ candles: downCandles });
+
+      expect(upResult.latestValue).not.toBeNull();
+      expect(downResult.latestValue).not.toBeNull();
+      // Up trend should have higher OBV than down trend
+      expect(upResult.latestValue!).toBeGreaterThan(downResult.latestValue!);
+    });
+
+    it('should return empty values when not enough data', () => {
+      const candles = generateCandles([{ close: 100, volume: 1000 }]);
+
+      const result = service.calculateObv({ candles });
+
+      expect(result.values.length).toBe(0);
+      expect(result.latestValue).toBeNull();
+    });
+  });
 });

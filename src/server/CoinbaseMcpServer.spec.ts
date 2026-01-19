@@ -1161,6 +1161,44 @@ describe('CoinbaseMcpServer Integration Tests', () => {
         expectResponseToContain(response, result);
       });
     });
+
+    describe('calculate_obv', () => {
+      it('should call calculateObv via MCP tool calculate_obv', async () => {
+        const args = {
+          candles: [
+            {
+              open: '100',
+              high: '101',
+              low: '99',
+              close: '100',
+              volume: '1000',
+            },
+            {
+              open: '100',
+              high: '102',
+              low: '99',
+              close: '101',
+              volume: '1100',
+            },
+          ],
+        };
+        const result = {
+          values: [1000, 2100],
+          latestValue: 2100,
+        };
+        mockTechnicalIndicatorsService.calculateObv.mockReturnValueOnce(result);
+
+        const response = await client.callTool({
+          name: 'calculate_obv',
+          arguments: args,
+        });
+
+        expect(
+          mockTechnicalIndicatorsService.calculateObv,
+        ).toHaveBeenCalledWith(args);
+        expectResponseToContain(response, result);
+      });
+    });
   });
 
   describe('Prompts', () => {
