@@ -17,6 +17,7 @@ import {
   mockPerpetualsService,
   mockPublicService,
   mockDataService,
+  mockTechnicalIndicatorsService,
   mockServices,
 } from '@test/serviceMocks';
 import { Granularity } from './ProductCandles';
@@ -870,6 +871,46 @@ describe('CoinbaseMcpServer Integration Tests', () => {
         expectResponseToContain(response, result);
       });
     });
+
+    describe('Technical Indicators', () => {
+      it('should call calculateRsi via MCP tool calculate_rsi', async () => {
+        const args = {
+          candles: [
+            {
+              open: '100',
+              high: '102',
+              low: '99',
+              close: '101',
+              volume: '1000',
+            },
+            {
+              open: '101',
+              high: '103',
+              low: '100',
+              close: '102',
+              volume: '1100',
+            },
+          ],
+          period: 14,
+        };
+        const result = {
+          period: 14,
+          values: [65.5],
+          latestValue: 65.5,
+        };
+        mockTechnicalIndicatorsService.calculateRsi.mockReturnValueOnce(result);
+
+        const response = await client.callTool({
+          name: 'calculate_rsi',
+          arguments: args,
+        });
+
+        expect(
+          mockTechnicalIndicatorsService.calculateRsi,
+        ).toHaveBeenCalledWith(args);
+        expectResponseToContain(response, result);
+      });
+    });
   });
 
   describe('Prompts', () => {
@@ -897,6 +938,7 @@ describe('CoinbaseMcpServer Integration Tests', () => {
       expect(contentStr).toContain('Coinbase Advanced Trade assistant');
       expect(contentStr).toContain('list_accounts');
       expect(contentStr).toContain('create_order');
+      expect(contentStr).toContain('calculate_rsi');
     });
   });
 
