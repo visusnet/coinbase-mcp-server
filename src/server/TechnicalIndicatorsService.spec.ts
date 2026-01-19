@@ -195,4 +195,59 @@ describe('TechnicalIndicatorsService', () => {
       expect(result.latestValue).toBeNull();
     });
   });
+
+  describe('calculateEma', () => {
+    const generateCandles = (closePrices: number[]): CandleInput[] => {
+      return closePrices.map((close) => ({
+        open: close.toString(),
+        high: (close + 1).toString(),
+        low: (close - 1).toString(),
+        close: close.toString(),
+        volume: '1000',
+      }));
+    };
+
+    it('should calculate EMA with default period of 20', () => {
+      const closePrices = Array.from({ length: 25 }, (_, i) => 100 + i);
+      const candles = generateCandles(closePrices);
+
+      const result = service.calculateEma({ candles });
+
+      expect(result.period).toBe(20);
+      expect(result.values.length).toBeGreaterThan(0);
+      expect(result.latestValue).not.toBeNull();
+    });
+
+    it('should calculate EMA with custom period', () => {
+      const closePrices = Array.from({ length: 15 }, (_, i) => 100 + i);
+      const candles = generateCandles(closePrices);
+
+      const result = service.calculateEma({ candles, period: 9 });
+
+      expect(result.period).toBe(9);
+      expect(result.values.length).toBeGreaterThan(0);
+      expect(result.latestValue).not.toBeNull();
+    });
+
+    it('should return null latestValue when not enough data', () => {
+      const candles = generateCandles([100, 101]);
+
+      const result = service.calculateEma({ candles, period: 50 });
+
+      expect(result.values.length).toBe(0);
+      expect(result.latestValue).toBeNull();
+    });
+
+    it('should give more weight to recent prices', () => {
+      // Create prices that spike at the end
+      const closePrices = [...Array.from({ length: 19 }, () => 100), 150];
+      const candles = generateCandles(closePrices);
+
+      const result = service.calculateEma({ candles, period: 10 });
+
+      // EMA should reflect the spike more than a simple average
+      expect(result.latestValue).not.toBeNull();
+      expect(result.latestValue).toBeGreaterThan(100);
+    });
+  });
 });

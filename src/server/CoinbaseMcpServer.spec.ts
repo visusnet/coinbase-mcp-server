@@ -954,6 +954,44 @@ describe('CoinbaseMcpServer Integration Tests', () => {
         ).toHaveBeenCalledWith(args);
         expectResponseToContain(response, result);
       });
+
+      it('should call calculateEma via MCP tool calculate_ema', async () => {
+        const args = {
+          candles: [
+            {
+              open: '100',
+              high: '102',
+              low: '99',
+              close: '101',
+              volume: '1000',
+            },
+            {
+              open: '101',
+              high: '103',
+              low: '100',
+              close: '102',
+              volume: '1100',
+            },
+          ],
+          period: 20,
+        };
+        const result = {
+          period: 20,
+          values: [101.5],
+          latestValue: 101.5,
+        };
+        mockTechnicalIndicatorsService.calculateEma.mockReturnValueOnce(result);
+
+        const response = await client.callTool({
+          name: 'calculate_ema',
+          arguments: args,
+        });
+
+        expect(
+          mockTechnicalIndicatorsService.calculateEma,
+        ).toHaveBeenCalledWith(args);
+        expectResponseToContain(response, result);
+      });
     });
   });
 
