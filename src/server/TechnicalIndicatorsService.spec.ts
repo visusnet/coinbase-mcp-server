@@ -2461,4 +2461,131 @@ describe('TechnicalIndicatorsService', () => {
       expect(result.hasBearishDivergence).toBe(hasBearish);
     });
   });
+
+  describe('detectChartPatterns', () => {
+    // Helper to generate candles with given high, low, close values
+    const generateCandlesForPatterns = (count: number): CandleInput[] => {
+      return Array.from({ length: count }, (_, i) => ({
+        open: String(100 + i),
+        high: String(102 + i),
+        low: String(98 + i),
+        close: String(101 + i),
+        volume: '1000',
+      }));
+    };
+
+    it('should return pattern detection results with default lookback', () => {
+      const candles = generateCandlesForPatterns(100);
+      const result = service.detectChartPatterns({ candles });
+
+      expect(result).toHaveProperty('lookbackPeriod', 50);
+      expect(result).toHaveProperty('patterns');
+      expect(result).toHaveProperty('bullishPatterns');
+      expect(result).toHaveProperty('bearishPatterns');
+      expect(result).toHaveProperty('latestPattern');
+      expect(Array.isArray(result.patterns)).toBe(true);
+    });
+
+    it('should use custom lookback period', () => {
+      const candles = generateCandlesForPatterns(100);
+      const result = service.detectChartPatterns({
+        candles,
+        lookbackPeriod: 30,
+      });
+
+      expect(result.lookbackPeriod).toBe(30);
+    });
+
+    it('should filter bullish and bearish patterns correctly', () => {
+      // Create data with a double top (bearish)
+      const candles: CandleInput[] = [];
+      // Initial uptrend
+      for (let i = 0; i < 10; i++) {
+        candles.push({
+          open: String(99 + i * 2),
+          high: String(100 + i * 2),
+          low: String(98 + i * 2),
+          close: String(99 + i * 2),
+          volume: '1000',
+        });
+      }
+      // First peak
+      candles.push(
+        { open: '119', high: '121', low: '118', close: '120', volume: '1000' },
+        { open: '120', high: '121', low: '118', close: '119', volume: '1000' },
+      );
+      // Pullback
+      for (let i = 0; i < 12; i++) {
+        candles.push({
+          open: String(114 - i * 0.5),
+          high: String(115 - i * 0.5),
+          low: String(113 - i * 0.5),
+          close: String(114 - i * 0.5),
+          volume: '1000',
+        });
+      }
+      // Second peak
+      candles.push(
+        { open: '119', high: '121', low: '118', close: '120', volume: '1000' },
+        { open: '120', high: '121', low: '118', close: '119', volume: '1000' },
+      );
+
+      const result = service.detectChartPatterns({ candles });
+
+      // All bullish patterns should have direction 'bullish'
+      for (const pattern of result.bullishPatterns) {
+        expect(pattern.direction).toBe('bullish');
+      }
+      // All bearish patterns should have direction 'bearish'
+      for (const pattern of result.bearishPatterns) {
+        expect(pattern.direction).toBe('bearish');
+      }
+    });
+
+    it('should return latestPattern as null for empty results', () => {
+      const candles = generateCandlesForPatterns(5); // Very few candles
+      const result = service.detectChartPatterns({ candles });
+
+      expect(result.latestPattern).toBeNull();
+    });
+
+    it('should set latestPattern to first pattern when patterns exist', () => {
+      // Create data likely to produce a pattern (double top)
+      const candles: CandleInput[] = [];
+      for (let i = 0; i < 10; i++) {
+        candles.push({
+          open: String(99 + i * 2),
+          high: String(100 + i * 2),
+          low: String(98 + i * 2),
+          close: String(99 + i * 2),
+          volume: '1000',
+        });
+      }
+      candles.push(
+        { open: '119', high: '121', low: '118', close: '120', volume: '1000' },
+        { open: '120', high: '121', low: '118', close: '119', volume: '1000' },
+      );
+      for (let i = 0; i < 15; i++) {
+        candles.push({
+          open: '108',
+          high: '109',
+          low: '105',
+          close: '106',
+          volume: '1000',
+        });
+      }
+      candles.push(
+        { open: '119', high: '121', low: '118', close: '120', volume: '1000' },
+        { open: '120', high: '121', low: '118', close: '119', volume: '1000' },
+      );
+
+      const result = service.detectChartPatterns({ candles });
+
+      // latestPattern should be first pattern or null
+      expect(
+        result.latestPattern === null ||
+          result.latestPattern === result.patterns[0],
+      ).toBe(true);
+    });
+  });
 });

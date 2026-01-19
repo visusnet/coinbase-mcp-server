@@ -76,6 +76,8 @@ import {
   VolumeProfileZone,
 } from './indicators/volumeProfile';
 
+import { detectChartPatterns, ChartPattern } from './indicators/chartPatterns';
+
 /**
  * Candle data structure matching Coinbase API output.
  * All values are strings to match the API response format.
@@ -527,6 +529,25 @@ export interface DetectRsiDivergenceOutput {
   readonly latestDivergence: RsiDivergence | null;
   readonly hasBullishDivergence: boolean;
   readonly hasBearishDivergence: boolean;
+}
+
+/**
+ * Input for Chart Pattern detection
+ */
+export interface DetectChartPatternsInput {
+  readonly candles: readonly CandleInput[];
+  readonly lookbackPeriod?: number;
+}
+
+/**
+ * Output for Chart Pattern detection
+ */
+export interface DetectChartPatternsOutput {
+  readonly lookbackPeriod: number;
+  readonly patterns: readonly ChartPattern[];
+  readonly bullishPatterns: readonly ChartPattern[];
+  readonly bearishPatterns: readonly ChartPattern[];
+  readonly latestPattern: ChartPattern | null;
 }
 
 const DEFAULT_RSI_PERIOD = 14;
@@ -1274,6 +1295,38 @@ export class TechnicalIndicatorsService {
       latestDivergence,
       hasBullishDivergence,
       hasBearishDivergence,
+    };
+  }
+
+  /**
+   * Detect Chart Patterns in price data.
+   * Identifies reversal and continuation patterns like Double Top/Bottom,
+   * Head and Shoulders, Triangles, and Flags.
+   *
+   * @param input - Candles and optional lookback period
+   * @returns Detected patterns with price targets
+   */
+  public detectChartPatterns(
+    input: DetectChartPatternsInput,
+  ): DetectChartPatternsOutput {
+    const lookbackPeriod = input.lookbackPeriod ?? 50;
+
+    const high = extractHighPrices(input.candles);
+    const low = extractLowPrices(input.candles);
+    const close = extractClosePrices(input.candles);
+
+    const patterns = detectChartPatterns(high, low, close, lookbackPeriod);
+
+    const bullishPatterns = patterns.filter((p) => p.direction === 'bullish');
+    const bearishPatterns = patterns.filter((p) => p.direction === 'bearish');
+    const latestPattern = patterns.length > 0 ? patterns[0] : null;
+
+    return {
+      lookbackPeriod,
+      patterns,
+      bullishPatterns,
+      bearishPatterns,
+      latestPattern,
     };
   }
 }
