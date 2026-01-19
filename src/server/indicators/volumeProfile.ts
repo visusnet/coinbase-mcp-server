@@ -89,14 +89,11 @@ export function calculateValueArea(
   let highIndex = pocIndex;
 
   // Expand outward from POC until we reach 70% volume
+  // Note: When all zones are included, accumulated = 100% >= 70% target,
+  // so the loop always exits via the condition before running out of zones.
   while (accumulatedVolume < targetVolume) {
     const canExpandLow = lowIndex > 0;
     const canExpandHigh = highIndex < sortedZones.length - 1;
-
-    // Guard: Stop if we cannot expand in either direction (all zones included)
-    if (!canExpandLow && !canExpandHigh) {
-      break;
-    }
 
     const expandLow = shouldExpandLow(
       sortedZones,
