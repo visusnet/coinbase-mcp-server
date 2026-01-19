@@ -171,6 +171,7 @@ interface BollingerBandsValue {
   readonly upper: number;
   readonly lower: number;
   readonly pb: number;
+  readonly bandwidth: number;
 }
 
 /**
@@ -662,7 +663,7 @@ export class TechnicalIndicatorsService {
    * Calculate Bollinger Bands from candle data.
    *
    * @param input - Candles and optional period/stdDev (default: 20/2)
-   * @returns Upper, middle, lower bands and %B values
+   * @returns Upper, middle, lower bands, %B, and bandwidth values
    */
   public calculateBollingerBands(
     input: CalculateBollingerBandsInput,
@@ -671,11 +672,20 @@ export class TechnicalIndicatorsService {
     const stdDev = input.stdDev ?? DEFAULT_BOLLINGER_STD_DEV;
     const closePrices = extractClosePrices(input.candles);
 
-    const bbValues = BollingerBands.calculate({
+    const rawBbValues = BollingerBands.calculate({
       period,
       stdDev,
       values: closePrices,
     });
+
+    // Add bandwidth calculation: (upper - lower) / middle
+    const bbValues: BollingerBandsValue[] = rawBbValues.map((bb) => ({
+      middle: bb.middle,
+      upper: bb.upper,
+      lower: bb.lower,
+      pb: bb.pb,
+      bandwidth: (bb.upper - bb.lower) / bb.middle,
+    }));
 
     return {
       period,

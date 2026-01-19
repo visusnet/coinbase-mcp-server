@@ -173,6 +173,7 @@ ichimoku = calculate_ichimoku_cloud(candles)
 bb = calculate_bollinger_bands(candles)
 → bb.latestValue.pb < 0: Oversold, BUY (+2)
 → bb.latestValue.pb > 1: Overbought, SELL (-2)
+→ bb.latestValue.bandwidth: Volatility measure (low = squeeze, high = expansion)
 
 atr = calculate_atr(candles)
 → Use for position sizing: High ATR = smaller position
@@ -464,7 +465,7 @@ Diese Tools haben eine `latestValue` Property die `null` sein kann:
 - `calculate_rsi` → `latestValue: number | null`
 - `calculate_macd` → `latestValue: MacdValue | null`
 - `calculate_ema` → `latestValue: number | null`
-- `calculate_bollinger_bands` → `latestValue: BollingerBandsValue | null`
+- `calculate_bollinger_bands` → `latestValue: BollingerBandsValue | null` (includes `middle`, `upper`, `lower`, `pb`, `bandwidth`)
 - `calculate_atr` → `latestValue: number | null`
 - `calculate_stochastic` → `latestValue: StochasticValue | null`
 - `calculate_adx` → `latestValue: AdxValue | null`
@@ -524,17 +525,17 @@ Falls nur bestimmte Indikatoren Probleme machen:
 
 ## Verifizierung: Formel-Obsoleszenz
 
-**Ergebnis der Analyse:** 95% der manuellen Berechnungsformeln werden obsolet.
+**Ergebnis der Analyse:** 100% der manuellen Berechnungsformeln werden obsolet.
 
 | Kategorie | Formeln | Status |
 |-----------|---------|--------|
 | Momentum (RSI, Stochastic, Williams %R, CCI, ROC, RSI Divergence) | 6 | ✅ Alle obsolet |
 | Trend (MACD, EMA, ADX, PSAR, Ichimoku) | 5 | ✅ Alle obsolet |
-| Volatility (Bollinger, ATR, Keltner) | 3 | ✅ Alle obsolet |
+| Volatility (Bollinger + Bandwidth, ATR, Keltner) | 3 | ✅ Alle obsolet |
 | Volume (OBV, MFI, VWAP, Volume Profile) | 4 | ✅ Alle obsolet |
 | Support/Resistance (Pivots, Fibonacci) | 2 | ✅ Alle obsolet |
 | Patterns (31 Candlestick, 9 Chart) | 2 | ✅ Alle obsolet |
 
-**Einzige Lücke:** Bollinger Bandwidth (trivial: `(upper - lower) / middle`)
+**Keine Lücken** - Bollinger Bandwidth ist jetzt im `calculate_bollinger_bands` Tool enthalten (`latestValue.bandwidth`).
 
 **Signal Aggregation bleibt erhalten** - Dies ist beabsichtigte Trading-Strategie-Logik, keine Indikator-Berechnung.
