@@ -993,6 +993,44 @@ describe('CoinbaseMcpServer Integration Tests', () => {
         expectResponseToContain(response, result);
       });
 
+      it('should call calculateSma via MCP tool calculate_sma', async () => {
+        const args = {
+          candles: [
+            {
+              open: '100',
+              high: '102',
+              low: '99',
+              close: '101',
+              volume: '1000',
+            },
+            {
+              open: '101',
+              high: '103',
+              low: '100',
+              close: '102',
+              volume: '1100',
+            },
+          ],
+          period: 20,
+        };
+        const result = {
+          period: 20,
+          values: [101.5],
+          latestValue: 101.5,
+        };
+        mockTechnicalIndicatorsService.calculateSma.mockReturnValueOnce(result);
+
+        const response = await client.callTool({
+          name: 'calculate_sma',
+          arguments: args,
+        });
+
+        expect(
+          mockTechnicalIndicatorsService.calculateSma,
+        ).toHaveBeenCalledWith(args);
+        expectResponseToContain(response, result);
+      });
+
       it('should call calculateBollingerBands via MCP tool calculate_bollinger_bands', async () => {
         const args = {
           candles: [
