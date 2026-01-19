@@ -258,6 +258,7 @@ export const mockTechnicalIndicatorsService: {
   calculateMacd: jest.fn(),
   calculateEma: jest.fn(),
   calculateBollingerBands: jest.fn(),
+  calculateAtr: jest.fn(),
 };
 
 export function mockServices() {
