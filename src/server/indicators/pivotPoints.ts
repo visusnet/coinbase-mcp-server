@@ -118,6 +118,8 @@ export function calculateCamarillaPivotPoints(
 
 /**
  * Calculate DeMark Pivot Points.
+ * DeMark method only defines R1/S1. For R2/R3/S2/S3, we extend with
+ * Standard pivot formulas using the DeMark pivot point.
  */
 export function calculateDemarkPivotPoints(
   high: number,
@@ -134,14 +136,21 @@ export function calculateDemarkPivotPoints(
     x = high + low + 2 * close;
   }
   const pp = x / 4;
+  const range = high - low;
+
+  // DeMark R1/S1
+  const r1 = x / 2 - low;
+  const s1 = x / 2 - high;
+
+  // Extended levels using Standard formulas with DeMark pivot
   return {
     type: 'demark' as PivotPointsType,
     pivotPoint: pp,
-    resistance1: x / 2 - low,
-    resistance2: x / 2 - low, // DeMark only has R1/S1
-    resistance3: x / 2 - low,
-    support1: x / 2 - high,
-    support2: x / 2 - high, // DeMark only has R1/S1
-    support3: x / 2 - high,
+    resistance1: r1,
+    resistance2: pp + range, // Standard R2 formula
+    resistance3: high + 2 * (pp - low), // Standard R3 formula
+    support1: s1,
+    support2: pp - range, // Standard S2 formula
+    support3: low - 2 * (high - pp), // Standard S3 formula
   };
 }
