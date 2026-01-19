@@ -659,6 +659,280 @@ describe('chartPatterns', () => {
       );
     });
 
+    it('should detect cup and handle pattern with high confidence', () => {
+      // Cup and Handle: U-shaped decline with handle pullback
+      // Requirements: 10-35% depth, U-shaped, handle retraces 10-50%, handle in upper half
+      // High confidence: bottomDeviation < 0.15 AND handleRetracement >= 0.2
+      const high: number[] = [];
+      const low: number[] = [];
+      const close: number[] = [];
+
+      // Baseline before cup
+      for (let i = 0; i < 5; i++) {
+        high.push(95);
+        low.push(90);
+        close.push(92);
+      }
+      // Left lip (first peak at 120) - needs lookback=3 structure
+      high.push(110, 115, 120, 115, 110);
+      low.push(108, 113, 118, 113, 108);
+      close.push(109, 114, 119, 114, 109);
+      // Cup formation - decline to 100 (17% depth from 120)
+      // Cup bottom should be in the middle for U-shape (bottomDeviation < 0.15)
+      high.push(107, 105, 104, 104, 104, 105, 107);
+      low.push(104, 102, 101, 100, 101, 102, 104);
+      close.push(105, 103, 102, 101, 102, 103, 105);
+      // Right lip (second peak at 120) - sharper ascent to avoid false trough
+      high.push(112, 117, 120, 117, 115);
+      low.push(110, 115, 118, 115, 113);
+      close.push(111, 116, 119, 116, 114);
+      // Handle - 25% retracement (>= 0.2 for high confidence)
+      high.push(117, 118, 117, 118, 119);
+      low.push(115, 116, 115, 116, 117);
+      close.push(116, 117, 116, 117, 118);
+      // Trail after handle
+      for (let i = 0; i < 5; i++) {
+        high.push(121);
+        low.push(118);
+        close.push(120);
+      }
+
+      const result = detectChartPatterns(high, low, close, 50);
+
+      const cupAndHandle = result.find((p) => p.type === 'cup_and_handle');
+      expect(cupAndHandle).toBeDefined();
+      expect(cupAndHandle?.direction).toBe('bullish');
+      expect(cupAndHandle?.confidence).toBe('high');
+      expect(cupAndHandle?.priceTarget).toBeGreaterThan(
+        cupAndHandle?.neckline ?? 0,
+      );
+    });
+
+    it('should detect cup and handle with medium confidence (shallow handle)', () => {
+      // Medium confidence when handleRetracement < 0.2
+      // handleRetracement = (rightLipPrice - handleLow) / (rightLipPrice - cupBottomPrice)
+      // For 15%: handleLow = 117 gives (120-117)/20 = 0.15 < 0.2
+      // CRITICAL: The algorithm scans from rightLip (index 19) to handleEnd
+      // So right lip descent must have lows >= 117 to not affect handleLow
+      const high: number[] = [];
+      const low: number[] = [];
+      const close: number[] = [];
+
+      // Build up: indices 0-4
+      for (let i = 0; i < 5; i++) {
+        high.push(100 + i * 4);
+        low.push(98 + i * 4);
+        close.push(99 + i * 4);
+      }
+      // Left lip peak at index 7 (high=120): indices 5-9
+      high.push(117, 119, 120, 118, 116);
+      low.push(115, 117, 118, 116, 114);
+      close.push(116, 118, 119, 117, 115);
+      // Cup with centered bottom: indices 10-16
+      high.push(112, 107, 104, 102, 104, 107, 112);
+      low.push(108, 104, 101, 100, 101, 104, 108); // bottom at index 13 = 100
+      close.push(110, 105, 102, 101, 102, 105, 110);
+      // Right lip peak at index 19 - BUT with higher lows in descent
+      // So handleLow won't be contaminated: indices 17-21
+      high.push(116, 118, 120, 119, 118);
+      low.push(114, 117, 118, 118, 117); // descent lows: 118, 118, 117 (all >= 117)
+      close.push(115, 117, 119, 118, 117);
+      // Very shallow handle - 15% retracement: indices 22-26
+      // handleLow = 117 for (120-117)/20 = 0.15 < 0.2
+      high.push(119, 118, 118, 119, 120);
+      low.push(118, 117, 117, 118, 118); // handleLow = 117
+      close.push(118, 117, 117, 118, 119);
+      // Trail: indices 27-31
+      for (let i = 0; i < 5; i++) {
+        high.push(121);
+        low.push(119);
+        close.push(120);
+      }
+
+      const result = detectChartPatterns(high, low, close, 50);
+
+      const cupAndHandle = result.find((p) => p.type === 'cup_and_handle');
+      expect(cupAndHandle).toBeDefined();
+      expect(cupAndHandle?.confidence).toBe('medium');
+    });
+
+    it('should detect cup and handle with multiple troughs (tests reduce branch)', () => {
+      // Cup with TWO troughs between peaks to test reduce callback's true branch
+      // Second trough must be LOWER than first to trigger "return t" path
+      // Key: use strictly decreasing high values in cup to avoid extra peaks
+      const high: number[] = [];
+      const low: number[] = [];
+      const close: number[] = [];
+
+      // Build up: indices 0-4
+      for (let i = 0; i < 5; i++) {
+        high.push(100 + i * 4);
+        low.push(98 + i * 4);
+        close.push(99 + i * 4);
+      }
+      // Left lip peak at index 7 (high=120): indices 5-9
+      high.push(117, 119, 120, 118, 116);
+      low.push(115, 117, 118, 116, 114);
+      close.push(116, 118, 119, 117, 115);
+      // Cup: strictly descending high values until bottom, then ascending
+      // This prevents any intermediate peaks
+      // Two troughs in low: first at idx 13 (low=103), second at idx 17 (low=100 LOWER)
+      // indices 10-20 (11 points)
+      high.push(113, 110, 108, 106, 104, 102, 104, 106, 108, 110, 113);
+      low.push(110, 107, 105, 103, 105, 108, 105, 100, 105, 108, 110);
+      close.push(111, 108, 106, 104, 104, 104, 104, 101, 106, 109, 111);
+      // Right lip peak at index 23: indices 21-25
+      high.push(116, 118, 120, 118, 116);
+      low.push(114, 116, 118, 116, 114);
+      close.push(115, 117, 119, 117, 115);
+      // Handle: indices 26-30
+      high.push(118, 117, 117, 118, 119);
+      low.push(116, 115, 115, 116, 117);
+      close.push(117, 116, 116, 117, 118);
+      // Trail: indices 31-35
+      for (let i = 0; i < 5; i++) {
+        high.push(121);
+        low.push(118);
+        close.push(120);
+      }
+
+      const result = detectChartPatterns(high, low, close, 50);
+
+      const cupAndHandle = result.find((p) => p.type === 'cup_and_handle');
+      expect(cupAndHandle).toBeDefined();
+    });
+
+    it('should skip cup and handle when handle is too deep', () => {
+      // Handle retraces more than 50% - should be rejected
+      const high: number[] = [];
+      const low: number[] = [];
+      const close: number[] = [];
+
+      // Baseline
+      for (let i = 0; i < 5; i++) {
+        high.push(95);
+        low.push(90);
+        close.push(92);
+      }
+      // Left lip at 120
+      high.push(110, 115, 120, 115, 110);
+      low.push(108, 113, 118, 113, 108);
+      close.push(109, 114, 119, 114, 109);
+      // Cup formation to 100 (17% depth)
+      high.push(107, 104, 102, 102, 104, 107);
+      low.push(104, 101, 99, 99, 101, 104);
+      close.push(105, 102, 100, 100, 102, 105);
+      // Right lip at 120
+      high.push(110, 115, 120, 115, 110);
+      low.push(108, 113, 118, 113, 108);
+      close.push(109, 114, 119, 114, 109);
+      // Handle too deep - retraces 60% (goes below midpoint of cup)
+      high.push(115, 112, 110, 108, 106);
+      low.push(113, 110, 108, 106, 104);
+      close.push(114, 111, 109, 107, 105);
+
+      const result = detectChartPatterns(high, low, close, 50);
+
+      const cupAndHandle = result.find((p) => p.type === 'cup_and_handle');
+      expect(cupAndHandle).toBeUndefined();
+    });
+
+    it('should skip cup and handle when handle too short (narrow cup)', () => {
+      // Cup forms with very narrow width (5 indices between lips)
+      // Peaks at 7 and 12: (12-7)/2 = 2.5 < 3 → handle too short
+      const high: number[] = [];
+      const low: number[] = [];
+      const close: number[] = [];
+
+      // Build up to left lip with ascending trend: indices 0-4
+      for (let i = 0; i < 5; i++) {
+        high.push(100 + i * 4);
+        low.push(98 + i * 4);
+        close.push(99 + i * 4);
+      }
+      // Left lip peak at index 7 (high=120): indices 5-9
+      high.push(117, 119, 120, 118, 116);
+      low.push(115, 117, 118, 116, 114);
+      close.push(116, 118, 119, 117, 115);
+
+      // Cup bottom at index 10
+      high.push(104);
+      low.push(100); // 16.7% depth
+      close.push(102);
+
+      // Right lip with peak at index 12 (not 13!): indices 11-15
+      // Faster ascent: 118, 120 (peak), then descent
+      // Distance: 12 - 7 = 5 -> maxHandleLength = 5/2 = 2.5 < 3
+      high.push(118, 120, 118, 116, 114);
+      low.push(116, 118, 116, 114, 112);
+      close.push(117, 119, 117, 115, 113);
+
+      // Trail data: indices 16-20 (need 3+ points after right lip for peak detection)
+      for (let i = 0; i < 5; i++) {
+        high.push(112 - i);
+        low.push(110 - i);
+        close.push(111 - i);
+      }
+
+      const result = detectChartPatterns(high, low, close, 50);
+
+      const cupAndHandle = result.find((p) => p.type === 'cup_and_handle');
+      expect(cupAndHandle).toBeUndefined();
+    });
+
+    it('should skip cup and handle when handle dips below cup midpoint', () => {
+      // Handle retracement is valid BUT handleLow < cupMidPrice
+      // Key: leftLipPrice > rightLipPrice (within 3%) shifts cupMidPrice up
+      // leftLipPrice=123, rightLipPrice=120, cupBottom=99
+      // cupMidPrice = (123+99)/2 = 111
+      // handleRetracement = (120-handleLow)/(120-99) -> for handleLow=110: 10/21=0.476
+      // 110 < 111 (below midpoint) but retracement is valid
+      const high: number[] = [];
+      const low: number[] = [];
+      const close: number[] = [];
+
+      // Build up to left lip with ascending trend: indices 0-4
+      for (let i = 0; i < 5; i++) {
+        high.push(100 + i * 4);
+        low.push(98 + i * 4);
+        close.push(99 + i * 4);
+      }
+      // Left lip peak at index 7 (high=123): indices 5-9
+      high.push(120, 122, 123, 121, 118);
+      low.push(118, 120, 121, 119, 116);
+      close.push(119, 121, 122, 120, 117);
+
+      // Cup formation with single clear trough - depth ~19.5%: indices 10-16
+      // Trough must be strictly lower than 3 neighbors on each side
+      high.push(112, 107, 104, 99, 104, 107, 112);
+      low.push(108, 104, 101, 99, 101, 104, 108); // Single clear bottom at index 13 (99)
+      close.push(110, 105, 102, 99, 102, 105, 110);
+
+      // Right lip peak at index 19 (high=120, within 3% of 123): indices 17-21
+      high.push(116, 118, 120, 118, 116);
+      low.push(114, 116, 118, 116, 114);
+      close.push(115, 117, 119, 117, 115);
+
+      // Handle - retracement ~48% (valid) but handleLow=110 < cupMidPrice=111
+      // cupMidPrice = (123 + 99) / 2 = 111
+      // handleRetracement = (120 - 110) / (120 - 99) = 10/21 = 0.476 (valid)
+      high.push(117, 115, 113, 115, 117);
+      low.push(115, 113, 110, 113, 115); // handleLow = 110 < 111 = cupMidPrice
+      close.push(116, 114, 111, 114, 116);
+
+      // Trail data: indices 27-31
+      for (let i = 0; i < 5; i++) {
+        high.push(119);
+        low.push(117);
+        close.push(118);
+      }
+
+      const result = detectChartPatterns(high, low, close, 50);
+
+      const cupAndHandle = result.find((p) => p.type === 'cup_and_handle');
+      expect(cupAndHandle).toBeUndefined();
+    });
+
     it('should sort patterns by end index (most recent first)', () => {
       // Create data with oscillating pattern that may produce multiple detections
       const high: number[] = [];
