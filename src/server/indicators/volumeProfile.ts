@@ -1,4 +1,4 @@
-import { VolumeProfile } from 'technicalindicators';
+import { VolumeProfile } from '@thuantan2060/technicalindicators';
 
 /**
  * Single Volume Profile zone

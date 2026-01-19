@@ -1,4 +1,4 @@
-import { RSI } from 'technicalindicators';
+import { RSI } from '@thuantan2060/technicalindicators';
 
 /** Minimum candles between peaks/troughs for valid divergence */
 const MIN_DISTANCE = 3;

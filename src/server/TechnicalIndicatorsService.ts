@@ -49,7 +49,7 @@ import {
   tweezerbottom,
   abandonedbaby,
   downsidetasukigap,
-} from 'technicalindicators';
+} from '@thuantan2060/technicalindicators';
 
 import {
   calculateStandardPivotPoints,
