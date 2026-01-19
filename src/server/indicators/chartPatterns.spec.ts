@@ -1566,5 +1566,98 @@ describe('chartPatterns', () => {
         expect(Array.isArray(result)).toBe(true);
       });
     });
+
+    describe('volume confirmation', () => {
+      it('should include volumeConfirmed field when volume data is provided', () => {
+        // Create data with two peaks at similar levels
+        const high: number[] = [];
+        const low: number[] = [];
+        const close: number[] = [];
+        const volume: number[] = [];
+
+        // Initial uptrend
+        for (let i = 0; i < 10; i++) {
+          high.push(100 + i * 2);
+          low.push(98 + i * 2);
+          close.push(99 + i * 2);
+          volume.push(1000);
+        }
+        // First peak with high volume
+        high.push(120, 121, 120);
+        low.push(118, 119, 118);
+        close.push(119, 120, 119);
+        volume.push(5000, 6000, 5000); // High volume at first peak
+
+        // Pullback
+        for (let i = 0; i < 12; i++) {
+          high.push(115 - i * 0.5);
+          low.push(113 - i * 0.5);
+          close.push(114 - i * 0.5);
+          volume.push(2000);
+        }
+        // Second peak (similar level) with lower volume
+        high.push(120, 121, 120);
+        low.push(118, 119, 118);
+        close.push(119, 120, 119);
+        volume.push(2000, 3000, 2000); // Lower volume at second peak
+
+        // Decline
+        for (let i = 0; i < 5; i++) {
+          high.push(115 - i * 2);
+          low.push(113 - i * 2);
+          close.push(114 - i * 2);
+          volume.push(2000);
+        }
+
+        const result = detectChartPatterns(high, low, close, 50, volume);
+        const doubleTop = result.find((p) => p.type === 'double_top');
+
+        // Verify pattern was found
+        expect(doubleTop).toBeDefined();
+
+        // Should have detected a double top with volume confirmation
+        // Second peak has lower volume, so should be confirmed
+        expect(doubleTop?.volumeConfirmed).toBe(true);
+      });
+
+      it('should not include volumeConfirmed field when volume data is not provided', () => {
+        // Create simple double top data without volume
+        const high: number[] = [];
+        const low: number[] = [];
+        const close: number[] = [];
+
+        for (let i = 0; i < 10; i++) {
+          high.push(100 + i * 2);
+          low.push(98 + i * 2);
+          close.push(99 + i * 2);
+        }
+        high.push(120, 121, 120);
+        low.push(118, 119, 118);
+        close.push(119, 120, 119);
+        for (let i = 0; i < 12; i++) {
+          high.push(115 - i * 0.5);
+          low.push(113 - i * 0.5);
+          close.push(114 - i * 0.5);
+        }
+        high.push(120, 121, 120);
+        low.push(118, 119, 118);
+        close.push(119, 120, 119);
+        for (let i = 0; i < 5; i++) {
+          high.push(115 - i * 2);
+          low.push(113 - i * 2);
+          close.push(114 - i * 2);
+        }
+
+        // Call without volume parameter
+        const result = detectChartPatterns(high, low, close, 50);
+        const doubleTop = result.find((p) => p.type === 'double_top');
+
+        // Verify pattern was found
+        expect(doubleTop).toBeDefined();
+
+        // volumeConfirmed should be undefined when no volume provided
+        expect(doubleTop?.volumeConfirmed).toBeUndefined();
+      });
+    });
   });
 });
