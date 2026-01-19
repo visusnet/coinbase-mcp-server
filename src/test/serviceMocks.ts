@@ -260,6 +260,7 @@ export const mockTechnicalIndicatorsService: {
   calculateBollingerBands: jest.fn(),
   calculateAtr: jest.fn(),
   calculateStochastic: jest.fn(),
+  calculateAdx: jest.fn(),
 };
 
 export function mockServices() {

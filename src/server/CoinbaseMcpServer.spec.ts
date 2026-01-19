@@ -1121,6 +1121,46 @@ describe('CoinbaseMcpServer Integration Tests', () => {
         expectResponseToContain(response, result);
       });
     });
+
+    describe('calculate_adx', () => {
+      it('should call calculateAdx via MCP tool calculate_adx', async () => {
+        const args = {
+          candles: [
+            {
+              open: '100',
+              high: '110',
+              low: '95',
+              close: '105',
+              volume: '1000',
+            },
+            {
+              open: '105',
+              high: '115',
+              low: '100',
+              close: '110',
+              volume: '1100',
+            },
+          ],
+          period: 14,
+        };
+        const result = {
+          period: 14,
+          values: [{ adx: 25, pdi: 30, mdi: 20 }],
+          latestValue: { adx: 25, pdi: 30, mdi: 20 },
+        };
+        mockTechnicalIndicatorsService.calculateAdx.mockReturnValueOnce(result);
+
+        const response = await client.callTool({
+          name: 'calculate_adx',
+          arguments: args,
+        });
+
+        expect(
+          mockTechnicalIndicatorsService.calculateAdx,
+        ).toHaveBeenCalledWith(args);
+        expectResponseToContain(response, result);
+      });
+    });
   });
 
   describe('Prompts', () => {
