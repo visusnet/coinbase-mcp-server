@@ -62,6 +62,7 @@ MHcCAQEEI...your-key-here...
 ### 4. Start the Server
 
 ```bash
+npm run build
 npm start
 ```
 
