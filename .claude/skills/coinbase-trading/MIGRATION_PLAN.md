@@ -447,7 +447,7 @@ Nach der Migration können folgende Sektionen entfernt/vereinfacht werden:
 
 ## Null-Safety Hinweise
 
-Alle MCP Indikator-Tools können `latestValue: null` zurückgeben, wenn nicht genügend Daten vorhanden sind. Der Skill MUSS dies berücksichtigen:
+Viele (aber nicht alle) MCP Indikator-Tools können `null` zurückgeben, wenn nicht genügend Daten vorhanden sind. Der Skill MUSS dies berücksichtigen:
 
 ```
 // FALSCH - kann zu Runtime-Fehlern führen:
@@ -457,7 +457,10 @@ if (rsi.latestValue < 30) { ... }
 if (rsi.latestValue !== null && rsi.latestValue < 30) { ... }
 ```
 
-**Betroffene Tools mit `latestValue: T | null`:**
+### Tools MIT `latestValue: T | null` (16 Tools)
+
+Diese Tools haben eine `latestValue` Property die `null` sein kann:
+
 - `calculate_rsi` → `latestValue: number | null`
 - `calculate_macd` → `latestValue: MacdValue | null`
 - `calculate_ema` → `latestValue: number | null`
@@ -474,9 +477,25 @@ if (rsi.latestValue !== null && rsi.latestValue < 30) { ... }
 - `calculate_psar` → `latestValue: number | null`
 - `calculate_ichimoku_cloud` → `latestValue: IchimokuCloudDataPoint | null`
 - `calculate_keltner_channels` → `latestValue: KeltnerChannelsDataPoint | null`
-- `calculate_volume_profile` → `pointOfControl: VolumeProfileZone | null`
+
+### Tools MIT anderen nullable Feldern (3 Tools)
+
+Diese Tools haben KEINE `latestValue` Property, aber andere nullable Felder:
+
+- `calculate_volume_profile`:
+  - `pointOfControl: VolumeProfileZone | null`
+  - `valueAreaHigh: number | null`
+  - `valueAreaLow: number | null`
 - `detect_rsi_divergence` → `latestDivergence: RsiDivergence | null`
 - `detect_chart_patterns` → `latestPattern: ChartPattern | null`
+
+### Tools OHNE nullable Felder (3 Tools)
+
+Diese Tools geben immer vollständige Daten zurück (keine Null-Checks nötig):
+
+- `calculate_fibonacci_retracement` → `{ start, end, trend, levels[] }`
+- `detect_candlestick_patterns` → `{ bullish: boolean, bearish: boolean, patterns[], detectedPatterns[] }`
+- `calculate_pivot_points` → `{ type, pivotPoint, resistance1-3, support1-3 }` (alle Zahlen)
 
 ---
 
