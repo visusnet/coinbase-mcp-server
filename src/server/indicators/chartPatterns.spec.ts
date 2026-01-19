@@ -1658,6 +1658,387 @@ describe('chartPatterns', () => {
         // volumeConfirmed should be undefined when no volume provided
         expect(doubleTop?.volumeConfirmed).toBeUndefined();
       });
+
+      it('should detect double bottom with volume confirmation', () => {
+        // Create data with two troughs at similar levels
+        const high: number[] = [];
+        const low: number[] = [];
+        const close: number[] = [];
+        const volume: number[] = [];
+
+        // Initial downtrend
+        for (let i = 0; i < 10; i++) {
+          high.push(120 - i * 2);
+          low.push(118 - i * 2);
+          close.push(119 - i * 2);
+          volume.push(1000);
+        }
+        // First trough with high volume
+        high.push(102, 101, 102);
+        low.push(100, 99, 100);
+        close.push(101, 100, 101);
+        volume.push(5000, 6000, 5000); // High volume at first trough
+
+        // Rise between troughs
+        for (let i = 0; i < 12; i++) {
+          high.push(105 + i * 0.5);
+          low.push(103 + i * 0.5);
+          close.push(104 + i * 0.5);
+          volume.push(2000);
+        }
+
+        // Second trough with lower volume (confirmation)
+        high.push(102, 101, 102);
+        low.push(100, 99, 100);
+        close.push(101, 100, 101);
+        volume.push(2000, 2500, 2000); // Lower volume at second trough
+
+        // Recovery
+        for (let i = 0; i < 5; i++) {
+          high.push(105 + i * 2);
+          low.push(103 + i * 2);
+          close.push(104 + i * 2);
+          volume.push(3000);
+        }
+
+        const result = detectChartPatterns(high, low, close, 50, volume);
+        const doubleBottom = result.find((p) => p.type === 'double_bottom');
+
+        expect(doubleBottom).toBeDefined();
+        expect(doubleBottom?.volumeConfirmed).toBe(true);
+      });
+
+      it('should detect head and shoulders with volume confirmation', () => {
+        // Create head and shoulders pattern with decreasing volume
+        const high: number[] = [];
+        const low: number[] = [];
+        const close: number[] = [];
+        const volume: number[] = [];
+
+        // Initial trend
+        for (let i = 0; i < 5; i++) {
+          high.push(100 + i * 2);
+          low.push(98 + i * 2);
+          close.push(99 + i * 2);
+          volume.push(1000);
+        }
+
+        // Left shoulder with highest volume
+        high.push(112, 115, 112);
+        low.push(110, 113, 110);
+        close.push(111, 114, 111);
+        volume.push(6000, 7000, 6000);
+
+        // Dip to neckline
+        high.push(108, 106, 108);
+        low.push(104, 102, 104);
+        close.push(106, 104, 106);
+        volume.push(3000, 3000, 3000);
+
+        // Head with medium volume
+        high.push(118, 122, 118);
+        low.push(116, 120, 116);
+        close.push(117, 121, 117);
+        volume.push(4000, 5000, 4000);
+
+        // Dip to neckline
+        high.push(108, 106, 108);
+        low.push(104, 102, 104);
+        close.push(106, 104, 106);
+        volume.push(2500, 2500, 2500);
+
+        // Right shoulder with lowest volume
+        high.push(112, 115, 112);
+        low.push(110, 113, 110);
+        close.push(111, 114, 111);
+        volume.push(2000, 2500, 2000);
+
+        // Breakdown
+        for (let i = 0; i < 5; i++) {
+          high.push(108 - i * 2);
+          low.push(106 - i * 2);
+          close.push(107 - i * 2);
+          volume.push(4000);
+        }
+
+        const result = detectChartPatterns(high, low, close, 50, volume);
+        const hs = result.find((p) => p.type === 'head_and_shoulders');
+
+        expect(hs).toBeDefined();
+        expect(hs?.volumeConfirmed).toBeDefined();
+      });
+
+      it('should detect inverse head and shoulders with volume confirmation', () => {
+        // Create inverse H&S pattern
+        const high: number[] = [];
+        const low: number[] = [];
+        const close: number[] = [];
+        const volume: number[] = [];
+
+        // Initial downtrend
+        for (let i = 0; i < 5; i++) {
+          high.push(120 - i * 2);
+          low.push(118 - i * 2);
+          close.push(119 - i * 2);
+          volume.push(1000);
+        }
+
+        // Left shoulder (first trough)
+        high.push(108, 106, 108);
+        low.push(104, 102, 104);
+        close.push(106, 104, 106);
+        volume.push(3000, 3500, 3000);
+
+        // Rise to neckline
+        high.push(112, 114, 112);
+        low.push(110, 112, 110);
+        close.push(111, 113, 111);
+        volume.push(2000, 2000, 2000);
+
+        // Head (lowest trough)
+        high.push(104, 100, 104);
+        low.push(100, 96, 100);
+        close.push(102, 98, 102);
+        volume.push(2500, 3000, 2500);
+
+        // Rise to neckline
+        high.push(112, 114, 112);
+        low.push(110, 112, 110);
+        close.push(111, 113, 111);
+        volume.push(2000, 2000, 2000);
+
+        // Right shoulder with increasing volume
+        high.push(108, 106, 108);
+        low.push(104, 102, 104);
+        close.push(106, 104, 106);
+        volume.push(4000, 4500, 4000); // Higher volume than head
+
+        // Breakout
+        for (let i = 0; i < 5; i++) {
+          high.push(112 + i * 2);
+          low.push(110 + i * 2);
+          close.push(111 + i * 2);
+          volume.push(5000);
+        }
+
+        const result = detectChartPatterns(high, low, close, 50, volume);
+        const ihs = result.find((p) => p.type === 'inverse_head_and_shoulders');
+
+        expect(ihs).toBeDefined();
+        expect(ihs?.volumeConfirmed).toBeDefined();
+      });
+
+      it('should set volumeConfirmed to false when volume does not confirm double top', () => {
+        // Create double top where second peak has HIGHER volume (not confirmed)
+        const high: number[] = [];
+        const low: number[] = [];
+        const close: number[] = [];
+        const volume: number[] = [];
+
+        // Initial uptrend
+        for (let i = 0; i < 10; i++) {
+          high.push(100 + i * 2);
+          low.push(98 + i * 2);
+          close.push(99 + i * 2);
+          volume.push(1000);
+        }
+        // First peak with LOW volume
+        high.push(120, 121, 120);
+        low.push(118, 119, 118);
+        close.push(119, 120, 119);
+        volume.push(2000, 2500, 2000); // Low volume at first peak
+
+        // Dip between peaks
+        for (let i = 0; i < 12; i++) {
+          high.push(115 - i * 0.5);
+          low.push(113 - i * 0.5);
+          close.push(114 - i * 0.5);
+          volume.push(1500);
+        }
+
+        // Second peak with HIGHER volume (no confirmation)
+        high.push(120, 121, 120);
+        low.push(118, 119, 118);
+        close.push(119, 120, 119);
+        volume.push(5000, 6000, 5000); // Higher volume = not confirmed
+
+        // Decline
+        for (let i = 0; i < 5; i++) {
+          high.push(115 - i * 2);
+          low.push(113 - i * 2);
+          close.push(114 - i * 2);
+          volume.push(3000);
+        }
+
+        const result = detectChartPatterns(high, low, close, 50, volume);
+        const doubleTop = result.find((p) => p.type === 'double_top');
+
+        expect(doubleTop).toBeDefined();
+        expect(doubleTop?.volumeConfirmed).toBe(false);
+      });
+
+      it('should upgrade medium confidence to high when volume confirms', () => {
+        // Create double top with 1.5% peak diff (medium confidence)
+        const high: number[] = [];
+        const low: number[] = [];
+        const close: number[] = [];
+        const volume: number[] = [];
+
+        // Initial uptrend
+        for (let i = 0; i < 10; i++) {
+          high.push(100 + i * 2);
+          low.push(98 + i * 2);
+          close.push(99 + i * 2);
+          volume.push(1000);
+        }
+        // First peak at 120
+        high.push(119, 120, 119);
+        low.push(117, 118, 117);
+        close.push(118, 119, 118);
+        volume.push(5000, 6000, 5000);
+
+        // Dip between peaks
+        for (let i = 0; i < 12; i++) {
+          high.push(115 - i * 0.5);
+          low.push(113 - i * 0.5);
+          close.push(114 - i * 0.5);
+          volume.push(1500);
+        }
+
+        // Second peak at 118.2 (1.5% diff = medium confidence)
+        high.push(117.2, 118.2, 117.2);
+        low.push(115.2, 116.2, 115.2);
+        close.push(116.2, 117.2, 116.2);
+        volume.push(2000, 2500, 2000); // Lower volume = confirmed
+
+        // Decline
+        for (let i = 0; i < 5; i++) {
+          high.push(114 - i * 2);
+          low.push(112 - i * 2);
+          close.push(113 - i * 2);
+          volume.push(3000);
+        }
+
+        const result = detectChartPatterns(high, low, close, 50, volume);
+        const doubleTop = result.find((p) => p.type === 'double_top');
+
+        expect(doubleTop).toBeDefined();
+        // Medium confidence upgraded to high due to volume confirmation
+        expect(doubleTop?.confidence).toBe('high');
+        expect(doubleTop?.volumeConfirmed).toBe(true);
+      });
+
+      it('should not upgrade high confidence when volume confirms', () => {
+        // Create a very precise double top (< 1% diff) to get high confidence
+        const high: number[] = [];
+        const low: number[] = [];
+        const close: number[] = [];
+        const volume: number[] = [];
+
+        // Initial uptrend
+        for (let i = 0; i < 10; i++) {
+          high.push(100 + i * 2);
+          low.push(98 + i * 2);
+          close.push(99 + i * 2);
+          volume.push(1000);
+        }
+        // First peak at exactly 120 (must have clear peak shape)
+        high.push(119, 120, 119);
+        low.push(117, 118, 117);
+        close.push(118, 119, 118);
+        volume.push(5000, 6000, 5000);
+
+        // Dip between peaks
+        for (let i = 0; i < 12; i++) {
+          high.push(115 - i * 0.5);
+          low.push(113 - i * 0.5);
+          close.push(114 - i * 0.5);
+          volume.push(1500);
+        }
+
+        // Second peak at exactly 120 (0% diff = high confidence)
+        high.push(119, 120, 119);
+        low.push(117, 118, 117);
+        close.push(118, 119, 118);
+        volume.push(2000, 2500, 2000); // Lower volume = confirmed
+
+        // Decline
+        for (let i = 0; i < 5; i++) {
+          high.push(115 - i * 2);
+          low.push(113 - i * 2);
+          close.push(114 - i * 2);
+          volume.push(3000);
+        }
+
+        const result = detectChartPatterns(high, low, close, 50, volume);
+        const doubleTop = result.find((p) => p.type === 'double_top');
+
+        expect(doubleTop).toBeDefined();
+        expect(doubleTop?.confidence).toBe('high'); // Already high, can't upgrade
+        expect(doubleTop?.volumeConfirmed).toBe(true);
+      });
+
+      it('should not downgrade low confidence when volume does not confirm (H&S)', () => {
+        // H&S has 3% tolerance but 'low' starts at 2.5% diff
+        // So shoulder diff of 2.6% gives low confidence + pattern detection
+        const high: number[] = [];
+        const low: number[] = [];
+        const close: number[] = [];
+        const volume: number[] = [];
+
+        // Initial trend
+        for (let i = 0; i < 5; i++) {
+          high.push(100 + i * 2);
+          low.push(98 + i * 2);
+          close.push(99 + i * 2);
+          volume.push(1000);
+        }
+
+        // Left shoulder at 115 (increasing volume)
+        high.push(113, 115, 113);
+        low.push(111, 113, 111);
+        close.push(112, 114, 112);
+        volume.push(4000, 5000, 4000);
+
+        // Dip to neckline
+        high.push(108, 106, 108);
+        low.push(104, 102, 104);
+        close.push(106, 104, 106);
+        volume.push(3000, 3000, 3000);
+
+        // Head at 122 (higher volume = not decreasing = not confirmed)
+        high.push(120, 122, 120);
+        low.push(118, 120, 118);
+        close.push(119, 121, 119);
+        volume.push(6000, 7000, 6000); // Higher than left shoulder
+
+        // Dip to neckline
+        high.push(108, 106, 108);
+        low.push(104, 102, 104);
+        close.push(106, 104, 106);
+        volume.push(2500, 2500, 2500);
+
+        // Right shoulder at 112 (2.6% diff from 115 = low confidence, within 3% tolerance)
+        high.push(110, 112, 110);
+        low.push(108, 110, 108);
+        close.push(109, 111, 109);
+        volume.push(5500, 6500, 5500); // Higher than head = not confirmed
+
+        // Breakdown
+        for (let i = 0; i < 5; i++) {
+          high.push(106 - i * 2);
+          low.push(104 - i * 2);
+          close.push(105 - i * 2);
+          volume.push(4000);
+        }
+
+        const result = detectChartPatterns(high, low, close, 50, volume);
+        const hs = result.find((p) => p.type === 'head_and_shoulders');
+
+        expect(hs).toBeDefined();
+        expect(hs?.confidence).toBe('low'); // Already low, can't downgrade
+        expect(hs?.volumeConfirmed).toBe(false);
+      });
     });
   });
 });
