@@ -131,4 +131,68 @@ describe('TechnicalIndicatorsService', () => {
       expect(result.latestValue).not.toBeNull();
     });
   });
+
+  describe('calculateMacd', () => {
+    const generateCandles = (closePrices: number[]): CandleInput[] => {
+      return closePrices.map((close) => ({
+        open: close.toString(),
+        high: (close + 1).toString(),
+        low: (close - 1).toString(),
+        close: close.toString(),
+        volume: '1000',
+      }));
+    };
+
+    it('should calculate MACD with default periods (12/26/9)', () => {
+      // Generate 35 candles with trending prices
+      const closePrices = Array.from({ length: 35 }, (_, i) => 100 + i * 0.5);
+      const candles = generateCandles(closePrices);
+
+      const result = service.calculateMacd({ candles });
+
+      expect(result.fastPeriod).toBe(12);
+      expect(result.slowPeriod).toBe(26);
+      expect(result.signalPeriod).toBe(9);
+      expect(result.values.length).toBeGreaterThan(0);
+      expect(result.latestValue).not.toBeNull();
+    });
+
+    it('should calculate MACD with custom periods', () => {
+      const closePrices = Array.from({ length: 30 }, (_, i) => 100 + i);
+      const candles = generateCandles(closePrices);
+
+      const result = service.calculateMacd({
+        candles,
+        fastPeriod: 8,
+        slowPeriod: 17,
+        signalPeriod: 5,
+      });
+
+      expect(result.fastPeriod).toBe(8);
+      expect(result.slowPeriod).toBe(17);
+      expect(result.signalPeriod).toBe(5);
+      expect(result.values.length).toBeGreaterThan(0);
+    });
+
+    it('should return MACD, signal, and histogram values', () => {
+      const closePrices = Array.from({ length: 40 }, (_, i) => 100 + i);
+      const candles = generateCandles(closePrices);
+
+      const result = service.calculateMacd({ candles });
+
+      expect(result.latestValue).not.toBeNull();
+      expect(result.latestValue).toHaveProperty('MACD');
+      expect(result.latestValue).toHaveProperty('signal');
+      expect(result.latestValue).toHaveProperty('histogram');
+    });
+
+    it('should return null latestValue when not enough data', () => {
+      const candles = generateCandles([100, 101, 102]);
+
+      const result = service.calculateMacd({ candles });
+
+      expect(result.values.length).toBe(0);
+      expect(result.latestValue).toBeNull();
+    });
+  });
 });

@@ -11,7 +11,7 @@ import {
 } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
 import { ProductsService } from '@server/ProductsService';
 import { PublicService } from '@server/PublicService';
-import { TechnicalIndicatorsService } from '@server/TechnicalIndicatorsService';
+import type { TechnicalIndicatorsService } from '@server/TechnicalIndicatorsService';
 import { jest } from '@jest/globals';
 
 // Mock the SDK services to avoid real API calls
@@ -249,13 +249,13 @@ export const mockDataService: Record<
     .mockRejectedValue(new Error('Not implemented')),
 };
 
-export const mockTechnicalIndicatorsService: Record<
-  keyof TechnicalIndicatorsService,
-  jest.MockedFunction<
-    TechnicalIndicatorsService[keyof TechnicalIndicatorsService]
-  >
-> = {
+export const mockTechnicalIndicatorsService: {
+  [K in keyof TechnicalIndicatorsService]: jest.MockedFunction<
+    TechnicalIndicatorsService[K]
+  >;
+} = {
   calculateRsi: jest.fn(),
+  calculateMacd: jest.fn(),
 };
 
 export function mockServices() {
