@@ -18,6 +18,7 @@ import {
   mockPublicService,
   mockDataService,
   mockTechnicalIndicatorsService,
+  mockTechnicalAnalysisService,
   mockServices,
 } from '@test/serviceMocks';
 import { Granularity } from './ProductCandles';
@@ -1625,6 +1626,132 @@ describe('CoinbaseMcpServer Integration Tests', () => {
           expect(
             mockTechnicalIndicatorsService.calculateFibonacciRetracement,
           ).toHaveBeenCalledWith(args);
+          expectResponseToContain(response, result);
+        });
+      });
+
+      describe('detect_swing_points', () => {
+        it('should call detectSwingPoints via MCP tool detect_swing_points', async () => {
+          const args = {
+            candles: [
+              {
+                open: '100',
+                high: '105',
+                low: '95',
+                close: '102',
+                volume: '1000',
+              },
+              {
+                open: '102',
+                high: '108',
+                low: '100',
+                close: '105',
+                volume: '1100',
+              },
+              {
+                open: '105',
+                high: '112',
+                low: '103',
+                close: '110',
+                volume: '1200',
+              },
+              {
+                open: '110',
+                high: '115',
+                low: '108',
+                close: '107',
+                volume: '1300',
+              },
+              {
+                open: '107',
+                high: '110',
+                low: '104',
+                close: '105',
+                volume: '1400',
+              },
+            ],
+            lookback: 2,
+          };
+          const result = {
+            swingHighs: [{ index: 2, price: 112, type: 'high' as const }],
+            swingLows: [],
+            latestSwingHigh: { index: 2, price: 112, type: 'high' as const },
+            latestSwingLow: null,
+            trend: 'sideways' as const,
+          };
+          mockTechnicalIndicatorsService.detectSwingPoints.mockReturnValueOnce(
+            result,
+          );
+
+          const response = await client.callTool({
+            name: 'detect_swing_points',
+            arguments: args,
+          });
+
+          expect(
+            mockTechnicalIndicatorsService.detectSwingPoints,
+          ).toHaveBeenCalledWith(args);
+          expectResponseToContain(response, result);
+        });
+      });
+
+      describe('analyze_technical_indicators', () => {
+        it('should call analyzeTechnicalIndicators via MCP tool analyze_technical_indicators', async () => {
+          const args = {
+            productId: 'BTC-USD',
+            granularity: 'ONE_HOUR',
+            candleCount: 100,
+            indicators: ['rsi', 'macd'],
+          };
+          const result = {
+            productId: 'BTC-USD',
+            granularity: 'ONE_HOUR',
+            candleCount: 100,
+            timestamp: '2024-01-15T12:00:00Z',
+            price: {
+              current: 105,
+              open: 100,
+              high: 110,
+              low: 95,
+              change24h: 5,
+            },
+            indicators: {
+              momentum: {
+                rsi: {
+                  value: 55,
+                  signal: 'neutral',
+                },
+                macd: {
+                  macd: 1.5,
+                  signal: 1.2,
+                  histogram: 0.3,
+                  crossover: 'bullish',
+                },
+              },
+            },
+            signal: {
+              score: 25,
+              direction: 'BUY' as const,
+              confidence: 'MEDIUM' as const,
+            },
+          };
+          mockTechnicalAnalysisService.analyzeTechnicalIndicators.mockResolvedValueOnce(
+            result,
+          );
+
+          const response = await client.callTool({
+            name: 'analyze_technical_indicators',
+            arguments: args,
+          });
+
+          expect(
+            mockTechnicalAnalysisService.analyzeTechnicalIndicators,
+          ).toHaveBeenCalledWith({
+            productId: 'BTC-USD',
+            granularity: 'ONE_HOUR',
+            candleCount: 100,
+            indicators: ['rsi', 'macd'],
+          });
           expectResponseToContain(response, result);
         });
       });

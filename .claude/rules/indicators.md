@@ -90,3 +90,4 @@ Before committing, verify all items:
 - [ ] `CLAUDE.md` updated (tool count)
 - [ ] `CoinbaseMcpServer.ts` assist prompt updated (tool count)
 - [ ] All quality checks pass (format, lint, types, knip, coverage)
+- [ ] **If indicator is useful for trading signals**: Add to `TechnicalAnalysisService.ts` (analyze_technical_indicators tool)

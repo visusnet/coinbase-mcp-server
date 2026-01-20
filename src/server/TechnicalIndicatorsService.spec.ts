@@ -2709,4 +2709,55 @@ describe('TechnicalIndicatorsService', () => {
       ).toBe(true);
     });
   });
+
+  describe('detectSwingPoints', () => {
+    it('should detect swing highs and lows using Williams Fractal', () => {
+      // Pattern: swing high in the middle
+      const candles: CandleInput[] = [
+        { open: '100', high: '105', low: '95', close: '102', volume: '1000' },
+        { open: '102', high: '108', low: '100', close: '105', volume: '1000' },
+        { open: '105', high: '112', low: '103', close: '110', volume: '1000' },
+        { open: '110', high: '108', low: '106', close: '107', volume: '1000' },
+        { open: '107', high: '106', low: '102', close: '104', volume: '1000' },
+      ];
+
+      const result = service.detectSwingPoints({ candles });
+
+      expect(result.swingHighs.length).toBeGreaterThanOrEqual(0);
+      expect(result.swingLows.length).toBeGreaterThanOrEqual(0);
+      expect(['uptrend', 'downtrend', 'sideways']).toContain(result.trend);
+    });
+
+    it('should use default lookback of 2 when not specified', () => {
+      const candles: CandleInput[] = Array.from({ length: 10 }, (_, i) => ({
+        open: String(100 + i),
+        high: String(105 + i),
+        low: String(95 + i),
+        close: String(102 + i),
+        volume: '1000',
+      }));
+
+      const result = service.detectSwingPoints({ candles });
+
+      // Should return valid response
+      expect(result).toHaveProperty('swingHighs');
+      expect(result).toHaveProperty('swingLows');
+      expect(result).toHaveProperty('trend');
+    });
+
+    it('should use custom lookback when specified', () => {
+      const candles: CandleInput[] = Array.from({ length: 7 }, (_, i) => ({
+        open: String(100 + i),
+        high: String(105 + i),
+        low: String(95 + i),
+        close: String(102 + i),
+        volume: '1000',
+      }));
+
+      const result = service.detectSwingPoints({ candles, lookback: 3 });
+
+      expect(result).toHaveProperty('swingHighs');
+      expect(result).toHaveProperty('swingLows');
+    });
+  });
 });

@@ -138,11 +138,11 @@ Add the MCP server to your Claude settings (e.g., `~/.claude/settings.json`):
 }
 ```
 
-Now you can use all 46 trading tools and the `/coinbase:assist` prompt in Claude, but without the autonomous `/trade` skill.
+Now you can use all 71 tools (46 Coinbase API + 24 indicators + 1 analysis) and the `/coinbase:assist` prompt in Claude, but without the autonomous `/trade` skill.
 
 ## Features
 
-### 46 Trading Tools & Autonomous Trading Skill
+### 71 Tools: Trading, Indicators & Analysis
 
 Full access to the Coinbase Advanced Trading API **plus a fully autonomous trading skill for Claude**:
 
@@ -183,7 +183,7 @@ A built-in Claude command that runs an autonomous trading bot:
 
 **What it does:**
 
-- Technical analysis: 20+ indicators across 6 weighted categories (Momentum 25%, Trend 30%, Volatility 15%, Volume 15%, S/R 10%, Patterns 5%)
+- Technical analysis: 24 indicators across 6 weighted categories (Momentum 25%, Trend 30%, Volatility 15%, Volume 15%, S/R 10%, Patterns 5%)
 - Sentiment analysis (Fear & Greed Index with 7 regions, news search)
 - Automatic order execution with preview
 - Dynamic ATR-based stop-loss/take-profit
@@ -258,7 +258,7 @@ coinbase-mcp-server/
 ├── src/
 │   ├── index.ts                 # HTTP server entry point
 │   └── server/
-│       └── CoinbaseMcpServer.ts # MCP server with 63 tools
+│       └── CoinbaseMcpServer.ts # MCP server with 71 tools
 ├── .claude/
 │   ├── settings.json            # MCP server config (auto-loaded)
 │   └── commands/
@@ -271,7 +271,7 @@ coinbase-mcp-server/
 
 ```bash
 npm start          # Start production server
-npm run dev        # Start with hot-reload
+npm run start:dev  # Start with hot-reload
 npm test           # Run tests
 npm run lint       # Check code style
 npm run build      # Build for production
@@ -280,10 +280,10 @@ npm run inspect    # Open MCP Inspector for debugging
 
 ### Testing with MCP Inspector
 
-1. Start the server: `npm run dev`
+1. Start the server: `npm run start:dev`
 2. In another terminal: `npm run inspect`
 3. Connect to `http://localhost:3005/mcp`
-4. Test any of the 63 tools interactively
+4. Test any of the 71 tools interactively
 
 ---
 
