@@ -1,5 +1,5 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import type { DataService } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
+import type { DataService } from '../services';
 import { ToolRegistry } from './ToolRegistry';
 
 /**

@@ -3,6 +3,15 @@ import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
 import type { GetAccountsResponse } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/GetAccountsResponse';
+import { CancelOrderFailureReason } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/CancelOrderFailureReason';
+import { OrderExecutionStatus } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/OrderExecutionStatus';
+import { OrderPlacementSource } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/OrderPlacementSource';
+import { OrderType } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/OrderType';
+import { ProductType } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/ProductType';
+import { RejectReason } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/RejectReason';
+import { StopTriggerStatus } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/StopTriggerStatus';
+import { TimeInForceType } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/TimeInForceType';
+import { OrderSide } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/OrderSide';
 import request from 'supertest';
 import * as StreamableHttpModule from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import {
@@ -21,7 +30,7 @@ import {
   mockTechnicalAnalysisService,
   mockServices,
 } from '@test/serviceMocks';
-import { Granularity } from './ProductCandles';
+import { Granularity } from './services';
 
 mockServices();
 
@@ -118,7 +127,37 @@ describe('CoinbaseMcpServer Integration Tests', () => {
 
       it('should call getOrder via MCP tool get_order', async () => {
         const args = { orderId: 'order-123' };
-        const result = { orders: [], hasNext: false };
+        const result = {
+          orderId: 'order-123',
+          productId: 'BTC-USD',
+          userId: 'user-1',
+          orderConfiguration: {},
+          side: OrderSide.Buy,
+          clientOrderId: 'client-123',
+          status: OrderExecutionStatus.Open,
+          timeInForce: TimeInForceType.GoodUntilCancelled,
+          createdTime: '2025-01-01T00:00:00Z',
+          completionPercentage: 0,
+          filledSize: 0,
+          averageFilledPrice: 0,
+          fee: 0,
+          numberOfFills: 0,
+          filledValue: 0,
+          pendingCancel: false,
+          sizeInQuote: false,
+          totalFees: 0,
+          sizeInclusiveOfFees: false,
+          totalValueAfterFees: 0,
+          triggerStatus: StopTriggerStatus.InvalidOrderType,
+          orderType: OrderType.Limit,
+          rejectReason: RejectReason.RejectReasonUnspecified,
+          settled: false,
+          productType: ProductType.Spot,
+          rejectMessage: '',
+          cancelMessage: '',
+          orderPlacementSource: OrderPlacementSource.RetailAdvanced,
+          outstandingHoldAmount: 0,
+        };
         mockOrdersService.getOrder.mockResolvedValueOnce(result);
 
         const response = await client.callTool({
@@ -151,7 +190,11 @@ describe('CoinbaseMcpServer Integration Tests', () => {
 
       it('should call cancelOrders via MCP tool cancel_orders', async () => {
         const args = { orderIds: ['order-123', 'order-456'] };
-        const result = { orders: [], hasNext: false };
+        const result = {
+          success: true,
+          failureReason: CancelOrderFailureReason.UnknownCancelFailureReason,
+          orderId: 'order-123',
+        };
         mockOrdersService.cancelOrders.mockResolvedValueOnce(result);
 
         const response = await client.callTool({
@@ -178,7 +221,7 @@ describe('CoinbaseMcpServer Integration Tests', () => {
       });
 
       it('should call editOrder via MCP tool edit_order', async () => {
-        const args = { orderId: 'order-123', price: '50000', size: '0.1' };
+        const args = { orderId: 'order-123', price: 50000, size: 0.1 };
         const result = { success: true };
         mockOrdersService.editOrder.mockResolvedValueOnce(result);
 
@@ -192,8 +235,11 @@ describe('CoinbaseMcpServer Integration Tests', () => {
       });
 
       it('should call editOrderPreview via MCP tool preview_edit_order', async () => {
-        const args = { orderId: 'order-123', price: '50000', size: '0.1' };
-        const result = { orders: [], hasNext: false };
+        const args = { orderId: 'order-123', price: 50000, size: 0.1 };
+        const result = {
+          errors: [],
+          slippage: '0.01',
+        };
         mockOrdersService.editOrderPreview.mockResolvedValueOnce(result);
 
         const response = await client.callTool({
@@ -211,7 +257,18 @@ describe('CoinbaseMcpServer Integration Tests', () => {
           side: 'BUY',
           orderConfiguration: {},
         };
-        const result = { orders: [], hasNext: false };
+        const result = {
+          orderTotal: '50000',
+          commissionTotal: '50',
+          errs: [],
+          warning: [],
+          quoteSize: '50000',
+          baseSize: '0.01',
+          bestBid: '49990',
+          bestAsk: '50010',
+          isMax: false,
+          slippage: '0.01',
+        };
         mockOrdersService.createOrderPreview.mockResolvedValueOnce(result);
 
         const response = await client.callTool({
@@ -255,7 +312,35 @@ describe('CoinbaseMcpServer Integration Tests', () => {
 
       it('should call getProduct via MCP tool get_product', async () => {
         const args = { productId: 'BTC-USD' };
-        const result = { products: [] };
+        const result = {
+          productId: 'BTC-USD',
+          price: 50000,
+          pricePercentageChange24h: 2.5,
+          volume24h: 1000000,
+          volumePercentageChange24h: 5.0,
+          baseIncrement: 0.00000001,
+          quoteIncrement: 0.01,
+          quoteMinSize: 1,
+          quoteMaxSize: 10000000,
+          baseMinSize: 0.0001,
+          baseMaxSize: 10000,
+          baseName: 'Bitcoin',
+          quoteName: 'US Dollar',
+          watched: false,
+          isDisabled: false,
+          status: 'online',
+          cancelOnly: false,
+          limitOnly: false,
+          postOnly: false,
+          tradingDisabled: false,
+          auctionMode: false,
+          productType: ProductType.Spot,
+          quoteCurrencyId: 'USD',
+          baseCurrencyId: 'BTC',
+          _new: false,
+          baseDisplaySymbol: 'BTC',
+          quoteDisplaySymbol: 'USD',
+        };
         mockProductsService.getProduct.mockResolvedValueOnce(result);
 
         const response = await client.callTool({
@@ -283,7 +368,7 @@ describe('CoinbaseMcpServer Integration Tests', () => {
         expectResponseToContain(response, result);
       });
 
-      it('should call getProductCandlesFixed via MCP tool get_product_candles', async () => {
+      it('should call getProductCandles via MCP tool get_product_candles', async () => {
         const args = {
           productId: 'BTC-USD',
           start: '2024-01-01T00:00:00Z',
@@ -291,16 +376,14 @@ describe('CoinbaseMcpServer Integration Tests', () => {
           granularity: 'ONE_HOUR',
         };
         const result = { candles: [] };
-        mockProductsService.getProductCandlesFixed.mockResolvedValueOnce(
-          result,
-        );
+        mockProductsService.getProductCandles.mockResolvedValueOnce(result);
 
         const response = await client.callTool({
           name: 'get_product_candles',
           arguments: args,
         });
 
-        expect(mockProductsService.getProductCandlesFixed).toHaveBeenCalledWith(
+        expect(mockProductsService.getProductCandles).toHaveBeenCalledWith(
           args,
         );
         expectResponseToContain(response, result);
@@ -406,12 +489,12 @@ describe('CoinbaseMcpServer Integration Tests', () => {
           totalFees: 0,
           feeTier: {
             pricingTier: '',
-            usdFrom: '',
-            usdTo: '',
-            takerFeeRate: '',
-            makerFeeRate: '',
-            aopFrom: '',
-            aopTo: '',
+            usdFrom: 0,
+            usdTo: 0,
+            takerFeeRate: 0,
+            makerFeeRate: 0,
+            aopFrom: 0,
+            aopTo: 0,
           },
         };
         mockFeesService.getTransactionSummary.mockResolvedValueOnce(result);
@@ -445,7 +528,7 @@ describe('CoinbaseMcpServer Integration Tests', () => {
 
       it('should call createPortfolio via MCP tool create_portfolio', async () => {
         const args = { name: 'My Portfolio' };
-        const result = { portfolios: [] };
+        const result = { portfolio: { portfolioUuid: 'new-uuid' } };
         mockPortfoliosService.createPortfolio.mockResolvedValueOnce(result);
 
         const response = await client.callTool({
@@ -461,7 +544,7 @@ describe('CoinbaseMcpServer Integration Tests', () => {
 
       it('should call getPortfolio via MCP tool get_portfolio', async () => {
         const args = { portfolioUuid: 'portfolio-123' };
-        const result = { portfolios: [] };
+        const result = { portfolio: { portfolioUuid: 'portfolio-123' } };
         mockPortfoliosService.getPortfolio.mockResolvedValueOnce(result);
 
         const response = await client.callTool({
@@ -475,11 +558,14 @@ describe('CoinbaseMcpServer Integration Tests', () => {
 
       it('should call movePortfolioFunds via MCP tool move_portfolio_funds', async () => {
         const args = {
-          funds: { value: '100', currency: 'USD' },
+          funds: { value: 100, currency: 'USD' },
           sourcePortfolioUuid: 'source-123',
           targetPortfolioUuid: 'target-456',
         };
-        const result = { portfolios: [] };
+        const result = {
+          sourcePortfolioUuid: 'source-123',
+          targetPortfolioUuid: 'target-456',
+        };
         mockPortfoliosService.movePortfolioFunds.mockResolvedValueOnce(result);
 
         const response = await client.callTool({
@@ -495,7 +581,7 @@ describe('CoinbaseMcpServer Integration Tests', () => {
 
       it('should call editPortfolio via MCP tool edit_portfolio', async () => {
         const args = { portfolioUuid: 'portfolio-123', name: 'Updated Name' };
-        const result = { portfolios: [] };
+        const result = { portfolio: { portfolioUuid: 'portfolio-123' } };
         mockPortfoliosService.editPortfolio.mockResolvedValueOnce(result);
 
         const response = await client.callTool({
@@ -529,12 +615,12 @@ describe('CoinbaseMcpServer Integration Tests', () => {
         const args = {
           fromAccount: 'account-123',
           toAccount: 'account-456',
-          amount: '100',
+          amount: 100,
         };
         const result = {
           trade: {
             id: 'trade-123',
-            userEnteredAmount: { value: '100', currency: 'USD' },
+            userEnteredAmount: { value: 100, currency: 'USD' },
           },
         };
         mockConvertsService.createConvertQuote.mockResolvedValueOnce(result);
@@ -559,7 +645,7 @@ describe('CoinbaseMcpServer Integration Tests', () => {
         const result = {
           trade: {
             id: 'trade-123',
-            userEnteredAmount: { value: '100', currency: 'USD' },
+            userEnteredAmount: { value: 100, currency: 'USD' },
           },
         };
         mockConvertsService.commitConvertTrade.mockResolvedValueOnce(result);
@@ -575,7 +661,7 @@ describe('CoinbaseMcpServer Integration Tests', () => {
         expectResponseToContain(response, result);
       });
 
-      it('should call GetConvertTrade via MCP tool get_convert_trade', async () => {
+      it('should call getConvertTrade via MCP tool get_convert_trade', async () => {
         const args = {
           tradeId: 'trade-123',
           fromAccount: 'account-123',
@@ -584,17 +670,17 @@ describe('CoinbaseMcpServer Integration Tests', () => {
         const result = {
           trade: {
             id: 'trade-123',
-            userEnteredAmount: { value: '100', currency: 'USD' },
+            userEnteredAmount: { value: 100, currency: 'USD' },
           },
         };
-        mockConvertsService.GetConvertTrade.mockResolvedValueOnce(result);
+        mockConvertsService.getConvertTrade.mockResolvedValueOnce(result);
 
         const response = await client.callTool({
           name: 'get_convert_trade',
           arguments: args,
         });
 
-        expect(mockConvertsService.GetConvertTrade).toHaveBeenCalledWith(args);
+        expect(mockConvertsService.getConvertTrade).toHaveBeenCalledWith(args);
         expectResponseToContain(response, result);
       });
     });
@@ -619,7 +705,35 @@ describe('CoinbaseMcpServer Integration Tests', () => {
 
       it('should call getProduct via MCP tool get_public_product', async () => {
         const args = { productId: 'BTC-USD' };
-        const result = { products: [] };
+        const result = {
+          productId: 'BTC-USD',
+          price: 50000,
+          pricePercentageChange24h: 2.5,
+          volume24h: 1000000,
+          volumePercentageChange24h: 5.0,
+          baseIncrement: 0.00000001,
+          quoteIncrement: 0.01,
+          quoteMinSize: 1,
+          quoteMaxSize: 10000000,
+          baseMinSize: 0.0001,
+          baseMaxSize: 10000,
+          baseName: 'Bitcoin',
+          quoteName: 'US Dollar',
+          watched: false,
+          isDisabled: false,
+          _new: false,
+          status: 'online',
+          cancelOnly: false,
+          limitOnly: false,
+          postOnly: false,
+          tradingDisabled: false,
+          auctionMode: false,
+          productType: ProductType.Spot,
+          quoteCurrencyId: 'USD',
+          baseCurrencyId: 'BTC',
+          baseDisplaySymbol: 'BTC',
+          quoteDisplaySymbol: 'USD',
+        };
         mockPublicService.getProduct.mockResolvedValueOnce(result);
 
         const response = await client.callTool({
@@ -661,7 +775,7 @@ describe('CoinbaseMcpServer Integration Tests', () => {
         expectResponseToContain(response, result);
       });
 
-      it('should call getProductCandlesFixed via MCP tool get_public_product_candles', async () => {
+      it('should call getProductCandles via MCP tool get_public_product_candles', async () => {
         const args = {
           productId: 'BTC-USD',
           start: '2024-01-01T00:00:00Z',
@@ -669,16 +783,14 @@ describe('CoinbaseMcpServer Integration Tests', () => {
           granularity: 'ONE_HOUR',
         };
         const result = { candles: [] };
-        mockPublicService.getProductCandlesFixed.mockResolvedValueOnce(result);
+        mockPublicService.getProductCandles.mockResolvedValueOnce(result);
 
         const response = await client.callTool({
           name: 'get_public_product_candles',
           arguments: args,
         });
 
-        expect(mockPublicService.getProductCandlesFixed).toHaveBeenCalledWith(
-          args,
-        );
+        expect(mockPublicService.getProductCandles).toHaveBeenCalledWith(args);
         expectResponseToContain(response, result);
       });
 
@@ -720,7 +832,11 @@ describe('CoinbaseMcpServer Integration Tests', () => {
 
       it('should call getPaymentMethod via MCP tool get_payment_method', async () => {
         const args = { paymentMethodId: 'payment-123' };
-        const result = { paymentMethods: [] };
+        const result = {
+          id: 'payment-123',
+          type: 'BANK_ACCOUNT',
+          name: 'Test Bank',
+        };
         mockPaymentMethodsService.getPaymentMethod.mockResolvedValueOnce(
           result,
         );
@@ -826,7 +942,7 @@ describe('CoinbaseMcpServer Integration Tests', () => {
 
       it('should call getPortfolioSummary via MCP tool get_perpetuals_portfolio_summary', async () => {
         const args = { portfolioUuid: 'portfolio-123' };
-        const result = { positions: [] };
+        const result = { portfolios: [] };
         mockPerpetualsService.getPortfolioSummary.mockResolvedValueOnce(result);
 
         const response = await client.callTool({
@@ -842,7 +958,7 @@ describe('CoinbaseMcpServer Integration Tests', () => {
 
       it('should call getPortfolioBalance via MCP tool get_perpetuals_portfolio_balance', async () => {
         const args = { portfolioUuid: 'portfolio-123' };
-        const result = { positions: [] };
+        const result = { portfolioBalances: [] };
         mockPerpetualsService.getPortfolioBalance.mockResolvedValueOnce(result);
 
         const response = await client.callTool({
@@ -878,18 +994,18 @@ describe('CoinbaseMcpServer Integration Tests', () => {
         const args = {
           candles: [
             {
-              open: '100',
-              high: '102',
-              low: '99',
-              close: '101',
-              volume: '1000',
+              open: 100,
+              high: 102,
+              low: 99,
+              close: 101,
+              volume: 1000,
             },
             {
-              open: '101',
-              high: '103',
-              low: '100',
-              close: '102',
-              volume: '1100',
+              open: 101,
+              high: 103,
+              low: 100,
+              close: 102,
+              volume: 1100,
             },
           ],
           period: 14,
@@ -916,18 +1032,18 @@ describe('CoinbaseMcpServer Integration Tests', () => {
         const args = {
           candles: [
             {
-              open: '100',
-              high: '102',
-              low: '99',
-              close: '101',
-              volume: '1000',
+              open: 100,
+              high: 102,
+              low: 99,
+              close: 101,
+              volume: 1000,
             },
             {
-              open: '101',
-              high: '103',
-              low: '100',
-              close: '102',
-              volume: '1100',
+              open: 101,
+              high: 103,
+              low: 100,
+              close: 102,
+              volume: 1100,
             },
           ],
           fastPeriod: 12,
@@ -960,18 +1076,18 @@ describe('CoinbaseMcpServer Integration Tests', () => {
         const args = {
           candles: [
             {
-              open: '100',
-              high: '102',
-              low: '99',
-              close: '101',
-              volume: '1000',
+              open: 100,
+              high: 102,
+              low: 99,
+              close: 101,
+              volume: 1000,
             },
             {
-              open: '101',
-              high: '103',
-              low: '100',
-              close: '102',
-              volume: '1100',
+              open: 101,
+              high: 103,
+              low: 100,
+              close: 102,
+              volume: 1100,
             },
           ],
           period: 20,
@@ -998,18 +1114,18 @@ describe('CoinbaseMcpServer Integration Tests', () => {
         const args = {
           candles: [
             {
-              open: '100',
-              high: '102',
-              low: '99',
-              close: '101',
-              volume: '1000',
+              open: 100,
+              high: 102,
+              low: 99,
+              close: 101,
+              volume: 1000,
             },
             {
-              open: '101',
-              high: '103',
-              low: '100',
-              close: '102',
-              volume: '1100',
+              open: 101,
+              high: 103,
+              low: 100,
+              close: 102,
+              volume: 1100,
             },
           ],
           period: 20,
@@ -1036,18 +1152,18 @@ describe('CoinbaseMcpServer Integration Tests', () => {
         const args = {
           candles: [
             {
-              open: '100',
-              high: '102',
-              low: '99',
-              close: '101',
-              volume: '1000',
+              open: 100,
+              high: 102,
+              low: 99,
+              close: 101,
+              volume: 1000,
             },
             {
-              open: '101',
-              high: '103',
-              low: '100',
-              close: '102',
-              volume: '1100',
+              open: 101,
+              high: 103,
+              low: 100,
+              close: 102,
+              volume: 1100,
             },
           ],
           period: 20,
@@ -1087,18 +1203,18 @@ describe('CoinbaseMcpServer Integration Tests', () => {
           const args = {
             candles: [
               {
-                open: '100',
-                high: '110',
-                low: '95',
-                close: '105',
-                volume: '1000',
+                open: 100,
+                high: 110,
+                low: 95,
+                close: 105,
+                volume: 1000,
               },
               {
-                open: '105',
-                high: '115',
-                low: '100',
-                close: '110',
-                volume: '1100',
+                open: 105,
+                high: 115,
+                low: 100,
+                close: 110,
+                volume: 1100,
               },
             ],
             period: 14,
@@ -1129,18 +1245,18 @@ describe('CoinbaseMcpServer Integration Tests', () => {
           const args = {
             candles: [
               {
-                open: '100',
-                high: '110',
-                low: '95',
-                close: '105',
-                volume: '1000',
+                open: 100,
+                high: 110,
+                low: 95,
+                close: 105,
+                volume: 1000,
               },
               {
-                open: '105',
-                high: '115',
-                low: '100',
-                close: '110',
-                volume: '1100',
+                open: 105,
+                high: 115,
+                low: 100,
+                close: 110,
+                volume: 1100,
               },
             ],
             kPeriod: 14,
@@ -1173,18 +1289,18 @@ describe('CoinbaseMcpServer Integration Tests', () => {
           const args = {
             candles: [
               {
-                open: '100',
-                high: '110',
-                low: '95',
-                close: '105',
-                volume: '1000',
+                open: 100,
+                high: 110,
+                low: 95,
+                close: 105,
+                volume: 1000,
               },
               {
-                open: '105',
-                high: '115',
-                low: '100',
-                close: '110',
-                volume: '1100',
+                open: 105,
+                high: 115,
+                low: 100,
+                close: 110,
+                volume: 1100,
               },
             ],
             period: 14,
@@ -1215,18 +1331,18 @@ describe('CoinbaseMcpServer Integration Tests', () => {
           const args = {
             candles: [
               {
-                open: '100',
-                high: '101',
-                low: '99',
-                close: '100',
-                volume: '1000',
+                open: 100,
+                high: 101,
+                low: 99,
+                close: 100,
+                volume: 1000,
               },
               {
-                open: '100',
-                high: '102',
-                low: '99',
-                close: '101',
-                volume: '1100',
+                open: 100,
+                high: 102,
+                low: 99,
+                close: 101,
+                volume: 1100,
               },
             ],
           };
@@ -1255,18 +1371,18 @@ describe('CoinbaseMcpServer Integration Tests', () => {
           const args = {
             candles: [
               {
-                open: '100',
-                high: '102',
-                low: '98',
-                close: '100',
-                volume: '1000',
+                open: 100,
+                high: 102,
+                low: 98,
+                close: 100,
+                volume: 1000,
               },
               {
-                open: '100',
-                high: '103',
-                low: '99',
-                close: '101',
-                volume: '1100',
+                open: 100,
+                high: 103,
+                low: 99,
+                close: 101,
+                volume: 1100,
               },
             ],
           };
@@ -1295,18 +1411,18 @@ describe('CoinbaseMcpServer Integration Tests', () => {
           const args = {
             candles: [
               {
-                open: '100',
-                high: '110',
-                low: '95',
-                close: '105',
-                volume: '1000',
+                open: 100,
+                high: 110,
+                low: 95,
+                close: 105,
+                volume: 1000,
               },
               {
-                open: '105',
-                high: '115',
-                low: '100',
-                close: '110',
-                volume: '1100',
+                open: 105,
+                high: 115,
+                low: 100,
+                close: 110,
+                volume: 1100,
               },
             ],
             period: 20,
@@ -1337,18 +1453,18 @@ describe('CoinbaseMcpServer Integration Tests', () => {
           const args = {
             candles: [
               {
-                open: '100',
-                high: '110',
-                low: '95',
-                close: '105',
-                volume: '1000',
+                open: 100,
+                high: 110,
+                low: 95,
+                close: 105,
+                volume: 1000,
               },
               {
-                open: '105',
-                high: '115',
-                low: '100',
-                close: '110',
-                volume: '1100',
+                open: 105,
+                high: 115,
+                low: 100,
+                close: 110,
+                volume: 1100,
               },
             ],
             period: 14,
@@ -1379,18 +1495,18 @@ describe('CoinbaseMcpServer Integration Tests', () => {
           const args = {
             candles: [
               {
-                open: '100',
-                high: '110',
-                low: '95',
-                close: '105',
-                volume: '1000',
+                open: 100,
+                high: 110,
+                low: 95,
+                close: 105,
+                volume: 1000,
               },
               {
-                open: '105',
-                high: '115',
-                low: '100',
-                close: '110',
-                volume: '1100',
+                open: 105,
+                high: 115,
+                low: 100,
+                close: 110,
+                volume: 1100,
               },
             ],
             period: 12,
@@ -1421,18 +1537,18 @@ describe('CoinbaseMcpServer Integration Tests', () => {
           const args = {
             candles: [
               {
-                open: '100',
-                high: '110',
-                low: '95',
-                close: '105',
-                volume: '1000',
+                open: 100,
+                high: 110,
+                low: 95,
+                close: 105,
+                volume: 1000,
               },
               {
-                open: '105',
-                high: '115',
-                low: '100',
-                close: '110',
-                volume: '1100',
+                open: 105,
+                high: 115,
+                low: 100,
+                close: 110,
+                volume: 1100,
               },
             ],
             period: 14,
@@ -1463,18 +1579,18 @@ describe('CoinbaseMcpServer Integration Tests', () => {
           const args = {
             candles: [
               {
-                open: '100',
-                high: '110',
-                low: '95',
-                close: '105',
-                volume: '1000',
+                open: 100,
+                high: 110,
+                low: 95,
+                close: 105,
+                volume: 1000,
               },
               {
-                open: '105',
-                high: '115',
-                low: '100',
-                close: '110',
-                volume: '1100',
+                open: 105,
+                high: 115,
+                low: 100,
+                close: 110,
+                volume: 1100,
               },
             ],
             step: 0.02,
@@ -1505,11 +1621,11 @@ describe('CoinbaseMcpServer Integration Tests', () => {
       describe('calculate_ichimoku_cloud', () => {
         it('should call calculateIchimokuCloud via MCP tool calculate_ichimoku_cloud', async () => {
           const candles = Array.from({ length: 52 }, (_, i) => ({
-            open: String(100 + i),
-            high: String(105 + i),
-            low: String(95 + i),
-            close: String(102 + i),
-            volume: String(1000 + i * 10),
+            open: 100 + i,
+            high: 105 + i,
+            low: 95 + i,
+            close: 102 + i,
+            volume: 1000 + i * 10,
           }));
           const args = {
             candles,
@@ -1559,11 +1675,11 @@ describe('CoinbaseMcpServer Integration Tests', () => {
       describe('calculate_keltner_channels', () => {
         it('should call calculateKeltnerChannels via MCP tool calculate_keltner_channels', async () => {
           const candles = Array.from({ length: 30 }, (_, i) => ({
-            open: String(100 + i),
-            high: String(105 + i),
-            low: String(95 + i),
-            close: String(102 + i),
-            volume: String(1000 + i * 10),
+            open: 100 + i,
+            high: 105 + i,
+            low: 95 + i,
+            close: 102 + i,
+            volume: 1000 + i * 10,
           }));
           const args = {
             candles,
@@ -1635,39 +1751,39 @@ describe('CoinbaseMcpServer Integration Tests', () => {
           const args = {
             candles: [
               {
-                open: '100',
-                high: '105',
-                low: '95',
-                close: '102',
-                volume: '1000',
+                open: 100,
+                high: 105,
+                low: 95,
+                close: 102,
+                volume: 1000,
               },
               {
-                open: '102',
-                high: '108',
-                low: '100',
-                close: '105',
-                volume: '1100',
+                open: 102,
+                high: 108,
+                low: 100,
+                close: 105,
+                volume: 1100,
               },
               {
-                open: '105',
-                high: '112',
-                low: '103',
-                close: '110',
-                volume: '1200',
+                open: 105,
+                high: 112,
+                low: 103,
+                close: 110,
+                volume: 1200,
               },
               {
-                open: '110',
-                high: '115',
-                low: '108',
-                close: '107',
-                volume: '1300',
+                open: 110,
+                high: 115,
+                low: 108,
+                close: 107,
+                volume: 1300,
               },
               {
-                open: '107',
-                high: '110',
-                low: '104',
-                close: '105',
-                volume: '1400',
+                open: 107,
+                high: 110,
+                low: 104,
+                close: 105,
+                volume: 1400,
               },
             ],
             lookback: 2,

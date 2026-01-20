@@ -1,8 +1,7 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import * as z from 'zod';
-import type { TechnicalAnalysisService } from '../TechnicalAnalysisService';
-import { IndicatorType } from '../TechnicalAnalysis';
-import { Granularity } from '../ProductCandles';
+import type { TechnicalAnalysisService } from '../services';
+import { IndicatorType, Granularity } from '../services';
 import { ToolRegistry } from './ToolRegistry';
 
 /**

@@ -8,7 +8,7 @@ import type {
   FibonacciPivotPointsOutput,
   WoodiePivotPointsOutput,
   CamarillaPivotPointsOutput,
-} from './indicators/pivotPoints';
+} from '../indicators/pivotPoints';
 
 describe('TechnicalIndicatorsService', () => {
   let service: TechnicalIndicatorsService;
@@ -20,11 +20,11 @@ describe('TechnicalIndicatorsService', () => {
   describe('calculateRsi', () => {
     const generateCandles = (closePrices: number[]): CandleInput[] => {
       return closePrices.map((close) => ({
-        open: close.toString(),
-        high: (close + 1).toString(),
-        low: (close - 1).toString(),
-        close: close.toString(),
-        volume: '1000',
+        open: close,
+        high: close + 1,
+        low: close - 1,
+        close,
+        volume: 1000,
       }));
     };
 
@@ -92,42 +92,42 @@ describe('TechnicalIndicatorsService', () => {
       expect(result.latestValue).toBeLessThanOrEqual(100);
     });
 
-    it('should parse string close prices correctly', () => {
+    it('should handle decimal prices correctly', () => {
       const candles: CandleInput[] = [
         {
-          open: '100.5',
-          high: '102.0',
-          low: '99.0',
-          close: '101.25',
-          volume: '1000',
+          open: 100.5,
+          high: 102.0,
+          low: 99.0,
+          close: 101.25,
+          volume: 1000,
         },
         {
-          open: '101.25',
-          high: '103.0',
-          low: '100.0',
-          close: '102.50',
-          volume: '1100',
+          open: 101.25,
+          high: 103.0,
+          low: 100.0,
+          close: 102.5,
+          volume: 1100,
         },
         {
-          open: '102.50',
-          high: '104.0',
-          low: '101.0',
-          close: '103.75',
-          volume: '1200',
+          open: 102.5,
+          high: 104.0,
+          low: 101.0,
+          close: 103.75,
+          volume: 1200,
         },
         {
-          open: '103.75',
-          high: '105.0',
-          low: '102.0',
-          close: '104.00',
-          volume: '1300',
+          open: 103.75,
+          high: 105.0,
+          low: 102.0,
+          close: 104.0,
+          volume: 1300,
         },
         {
-          open: '104.00',
-          high: '106.0',
-          low: '103.0',
-          close: '105.25',
-          volume: '1400',
+          open: 104.0,
+          high: 106.0,
+          low: 103.0,
+          close: 105.25,
+          volume: 1400,
         },
       ];
 
@@ -141,11 +141,11 @@ describe('TechnicalIndicatorsService', () => {
   describe('calculateMacd', () => {
     const generateCandles = (closePrices: number[]): CandleInput[] => {
       return closePrices.map((close) => ({
-        open: close.toString(),
-        high: (close + 1).toString(),
-        low: (close - 1).toString(),
-        close: close.toString(),
-        volume: '1000',
+        open: close,
+        high: close + 1,
+        low: close - 1,
+        close,
+        volume: 1000,
       }));
     };
 
@@ -205,11 +205,11 @@ describe('TechnicalIndicatorsService', () => {
   describe('calculateSma', () => {
     const generateCandles = (closePrices: number[]): CandleInput[] => {
       return closePrices.map((close) => ({
-        open: close.toString(),
-        high: (close + 1).toString(),
-        low: (close - 1).toString(),
-        close: close.toString(),
-        volume: '1000',
+        open: close,
+        high: close + 1,
+        low: close - 1,
+        close,
+        volume: 1000,
       }));
     };
 
@@ -258,11 +258,11 @@ describe('TechnicalIndicatorsService', () => {
   describe('calculateEma', () => {
     const generateCandles = (closePrices: number[]): CandleInput[] => {
       return closePrices.map((close) => ({
-        open: close.toString(),
-        high: (close + 1).toString(),
-        low: (close - 1).toString(),
-        close: close.toString(),
-        volume: '1000',
+        open: close,
+        high: close + 1,
+        low: close - 1,
+        close,
+        volume: 1000,
       }));
     };
 
@@ -313,11 +313,11 @@ describe('TechnicalIndicatorsService', () => {
   describe('calculateBollingerBands', () => {
     const generateCandles = (closePrices: number[]): CandleInput[] => {
       return closePrices.map((close) => ({
-        open: close.toString(),
-        high: (close + 1).toString(),
-        low: (close - 1).toString(),
-        close: close.toString(),
-        volume: '1000',
+        open: close,
+        high: close + 1,
+        low: close - 1,
+        close,
+        volume: 1000,
       }));
     };
 
@@ -390,11 +390,11 @@ describe('TechnicalIndicatorsService', () => {
       data: { high: number; low: number; close: number }[],
     ): CandleInput[] => {
       return data.map(({ high, low, close }) => ({
-        open: close.toString(),
-        high: high.toString(),
-        low: low.toString(),
-        close: close.toString(),
-        volume: '1000',
+        open: close,
+        high,
+        low,
+        close,
+        volume: 1000,
       }));
     };
 
@@ -470,49 +470,49 @@ describe('TechnicalIndicatorsService', () => {
       expect(result.latestValue).toBeNull();
     });
 
-    it('should handle candles with string values correctly', () => {
+    it('should handle candles with decimal values correctly', () => {
       const candles: CandleInput[] = [
         {
-          open: '100',
-          high: '110.5',
-          low: '95.25',
-          close: '105.75',
-          volume: '1000',
+          open: 100,
+          high: 110.5,
+          low: 95.25,
+          close: 105.75,
+          volume: 1000,
         },
         {
-          open: '105',
-          high: '115.5',
-          low: '100.25',
-          close: '110.75',
-          volume: '1100',
+          open: 105,
+          high: 115.5,
+          low: 100.25,
+          close: 110.75,
+          volume: 1100,
         },
         {
-          open: '110',
-          high: '120.5',
-          low: '105.25',
-          close: '115.75',
-          volume: '1200',
+          open: 110,
+          high: 120.5,
+          low: 105.25,
+          close: 115.75,
+          volume: 1200,
         },
         {
-          open: '115',
-          high: '125.5',
-          low: '110.25',
-          close: '120.75',
-          volume: '1300',
+          open: 115,
+          high: 125.5,
+          low: 110.25,
+          close: 120.75,
+          volume: 1300,
         },
         {
-          open: '120',
-          high: '130.5',
-          low: '115.25',
-          close: '125.75',
-          volume: '1400',
+          open: 120,
+          high: 130.5,
+          low: 115.25,
+          close: 125.75,
+          volume: 1400,
         },
         {
-          open: '125',
-          high: '135.5',
-          low: '120.25',
-          close: '130.75',
-          volume: '1500',
+          open: 125,
+          high: 135.5,
+          low: 120.25,
+          close: 130.75,
+          volume: 1500,
         },
       ];
 
@@ -528,11 +528,11 @@ describe('TechnicalIndicatorsService', () => {
       data: { high: number; low: number; close: number }[],
     ): CandleInput[] => {
       return data.map(({ high, low, close }) => ({
-        open: close.toString(),
-        high: high.toString(),
-        low: low.toString(),
-        close: close.toString(),
-        volume: '1000',
+        open: close,
+        high,
+        low,
+        close,
+        volume: 1000,
       }));
     };
 
@@ -623,11 +623,11 @@ describe('TechnicalIndicatorsService', () => {
       data: { high: number; low: number; close: number }[],
     ): CandleInput[] => {
       return data.map(({ high, low, close }) => ({
-        open: close.toString(),
-        high: high.toString(),
-        low: low.toString(),
-        close: close.toString(),
-        volume: '1000',
+        open: close,
+        high,
+        low,
+        close,
+        volume: 1000,
       }));
     };
 
@@ -741,11 +741,11 @@ describe('TechnicalIndicatorsService', () => {
       data: { close: number; volume: number }[],
     ): CandleInput[] => {
       return data.map(({ close, volume }) => ({
-        open: close.toString(),
-        high: (close + 1).toString(),
-        low: (close - 1).toString(),
-        close: close.toString(),
-        volume: volume.toString(),
+        open: close,
+        high: close + 1,
+        low: close - 1,
+        close,
+        volume,
       }));
     };
 
@@ -810,11 +810,11 @@ describe('TechnicalIndicatorsService', () => {
       data: { high: number; low: number; close: number; volume: number }[],
     ): CandleInput[] => {
       return data.map(({ high, low, close, volume }) => ({
-        open: close.toString(),
-        high: high.toString(),
-        low: low.toString(),
-        close: close.toString(),
-        volume: volume.toString(),
+        open: close,
+        high,
+        low,
+        close,
+        volume,
       }));
     };
 
@@ -874,11 +874,11 @@ describe('TechnicalIndicatorsService', () => {
       data: { high: number; low: number; close: number }[],
     ): CandleInput[] => {
       return data.map(({ high, low, close }) => ({
-        open: close.toString(),
-        high: high.toString(),
-        low: low.toString(),
-        close: close.toString(),
-        volume: '1000',
+        open: close,
+        high,
+        low,
+        close,
+        volume: 1000,
       }));
     };
 
@@ -947,11 +947,11 @@ describe('TechnicalIndicatorsService', () => {
       data: { high: number; low: number; close: number }[],
     ): CandleInput[] => {
       return data.map(({ high, low, close }) => ({
-        open: close.toString(),
-        high: high.toString(),
-        low: low.toString(),
-        close: close.toString(),
-        volume: '1000',
+        open: close,
+        high,
+        low,
+        close,
+        volume: 1000,
       }));
     };
 
@@ -1018,11 +1018,11 @@ describe('TechnicalIndicatorsService', () => {
   describe('calculateRoc', () => {
     const generateCandles = (closePrices: number[]): CandleInput[] => {
       return closePrices.map((close) => ({
-        open: close.toString(),
-        high: (close + 1).toString(),
-        low: (close - 1).toString(),
-        close: close.toString(),
-        volume: '1000',
+        open: close,
+        high: close + 1,
+        low: close - 1,
+        close,
+        volume: 1000,
       }));
     };
 
@@ -1090,11 +1090,11 @@ describe('TechnicalIndicatorsService', () => {
       data: { high: number; low: number; close: number; volume: number }[],
     ): CandleInput[] => {
       return data.map(({ high, low, close, volume }) => ({
-        open: close.toString(),
-        high: high.toString(),
-        low: low.toString(),
-        close: close.toString(),
-        volume: volume.toString(),
+        open: close,
+        high,
+        low,
+        close,
+        volume,
       }));
     };
 
@@ -1166,11 +1166,11 @@ describe('TechnicalIndicatorsService', () => {
       data: { high: number; low: number; close: number }[],
     ): CandleInput[] => {
       return data.map(({ high, low, close }) => ({
-        open: close.toString(),
-        high: high.toString(),
-        low: low.toString(),
-        close: close.toString(),
-        volume: '1000',
+        open: close,
+        high,
+        low,
+        close,
+        volume: 1000,
       }));
     };
 
@@ -1238,11 +1238,11 @@ describe('TechnicalIndicatorsService', () => {
       data: { high: number; low: number; close: number }[],
     ): CandleInput[] => {
       return data.map(({ high, low, close }) => ({
-        open: close.toString(),
-        high: high.toString(),
-        low: low.toString(),
-        close: close.toString(),
-        volume: '1000',
+        open: close,
+        high,
+        low,
+        close,
+        volume: 1000,
       }));
     };
 
@@ -1350,11 +1350,11 @@ describe('TechnicalIndicatorsService', () => {
       data: { high: number; low: number; close: number }[],
     ): CandleInput[] => {
       return data.map(({ high, low, close }) => ({
-        open: close.toString(),
-        high: high.toString(),
-        low: low.toString(),
-        close: close.toString(),
-        volume: '1000',
+        open: close,
+        high,
+        low,
+        close,
+        volume: 1000,
       }));
     };
 
@@ -1513,11 +1513,11 @@ describe('TechnicalIndicatorsService', () => {
       data: { open: number; high: number; low: number; close: number }[],
     ): CandleInput[] => {
       return data.map(({ open, high, low, close }) => ({
-        open: open.toString(),
-        high: high.toString(),
-        low: low.toString(),
-        close: close.toString(),
-        volume: '1000',
+        open,
+        high,
+        low,
+        close,
+        volume: 1000,
       }));
     };
 
@@ -1765,11 +1765,11 @@ describe('TechnicalIndicatorsService', () => {
   describe('calculateVolumeProfile', () => {
     it('should calculate volume profile with default bars', () => {
       const candles: CandleInput[] = [
-        { open: '100', high: '105', low: '99', close: '104', volume: '1000' },
-        { open: '104', high: '108', low: '102', close: '106', volume: '1500' },
-        { open: '106', high: '110', low: '104', close: '108', volume: '2000' },
-        { open: '108', high: '112', low: '106', close: '110', volume: '1800' },
-        { open: '110', high: '114', low: '108', close: '112', volume: '1200' },
+        { open: 100, high: 105, low: 99, close: 104, volume: 1000 },
+        { open: 104, high: 108, low: 102, close: 106, volume: 1500 },
+        { open: 106, high: 110, low: 104, close: 108, volume: 2000 },
+        { open: 108, high: 112, low: 106, close: 110, volume: 1800 },
+        { open: 110, high: 114, low: 108, close: 112, volume: 1200 },
       ];
 
       const result = service.calculateVolumeProfile({ candles });
@@ -1781,9 +1781,9 @@ describe('TechnicalIndicatorsService', () => {
 
     it('should calculate volume profile with custom number of bars', () => {
       const candles: CandleInput[] = [
-        { open: '100', high: '110', low: '95', close: '108', volume: '1000' },
-        { open: '108', high: '115', low: '105', close: '112', volume: '1500' },
-        { open: '112', high: '120', low: '110', close: '118', volume: '2000' },
+        { open: 100, high: 110, low: 95, close: 108, volume: 1000 },
+        { open: 108, high: 115, low: 105, close: 112, volume: 1500 },
+        { open: 112, high: 120, low: 110, close: 118, volume: 2000 },
       ];
 
       const result = service.calculateVolumeProfile({ candles, noOfBars: 5 });
@@ -1794,8 +1794,8 @@ describe('TechnicalIndicatorsService', () => {
 
     it('should return zones with correct structure', () => {
       const candles: CandleInput[] = [
-        { open: '100', high: '105', low: '98', close: '103', volume: '1000' },
-        { open: '103', high: '107', low: '101', close: '105', volume: '1200' },
+        { open: 100, high: 105, low: 98, close: 103, volume: 1000 },
+        { open: 103, high: 107, low: 101, close: 105, volume: 1200 },
       ];
 
       const result = service.calculateVolumeProfile({ candles, noOfBars: 3 });
@@ -1816,10 +1816,10 @@ describe('TechnicalIndicatorsService', () => {
 
     it('should identify Point of Control (highest volume zone)', () => {
       const candles: CandleInput[] = [
-        { open: '100', high: '102', low: '99', close: '101', volume: '500' },
-        { open: '101', high: '103', low: '100', close: '102', volume: '1000' },
-        { open: '102', high: '104', low: '101', close: '103', volume: '3000' },
-        { open: '103', high: '105', low: '102', close: '104', volume: '800' },
+        { open: 100, high: 102, low: 99, close: 101, volume: 500 },
+        { open: 101, high: 103, low: 100, close: 102, volume: 1000 },
+        { open: 102, high: 104, low: 101, close: 103, volume: 3000 },
+        { open: 103, high: 105, low: 102, close: 104, volume: 800 },
       ];
 
       const result = service.calculateVolumeProfile({ candles, noOfBars: 4 });
@@ -1833,11 +1833,11 @@ describe('TechnicalIndicatorsService', () => {
 
     it('should calculate Value Area High and Low', () => {
       const candles: CandleInput[] = [
-        { open: '100', high: '105', low: '98', close: '104', volume: '1000' },
-        { open: '104', high: '108', low: '102', close: '106', volume: '1500' },
-        { open: '106', high: '110', low: '104', close: '108', volume: '2000' },
-        { open: '108', high: '112', low: '106', close: '110', volume: '1800' },
-        { open: '110', high: '114', low: '108', close: '112', volume: '1200' },
+        { open: 100, high: 105, low: 98, close: 104, volume: 1000 },
+        { open: 104, high: 108, low: 102, close: 106, volume: 1500 },
+        { open: 106, high: 110, low: 104, close: 108, volume: 2000 },
+        { open: 108, high: 112, low: 106, close: 110, volume: 1800 },
+        { open: 110, high: 114, low: 108, close: 112, volume: 1200 },
       ];
 
       const result = service.calculateVolumeProfile({ candles, noOfBars: 6 });
@@ -1853,7 +1853,7 @@ describe('TechnicalIndicatorsService', () => {
 
     it('should handle single candle input', () => {
       const candles: CandleInput[] = [
-        { open: '100', high: '105', low: '95', close: '102', volume: '1000' },
+        { open: 100, high: 105, low: 95, close: 102, volume: 1000 },
       ];
 
       const result = service.calculateVolumeProfile({ candles, noOfBars: 3 });
@@ -1865,7 +1865,7 @@ describe('TechnicalIndicatorsService', () => {
     it('should separate bullish and bearish volume correctly', () => {
       // Bullish candle (close > open)
       const bullishCandles: CandleInput[] = [
-        { open: '100', high: '110', low: '98', close: '108', volume: '1000' },
+        { open: 100, high: 110, low: 98, close: 108, volume: 1000 },
       ];
 
       const bullishResult = service.calculateVolumeProfile({
@@ -1875,7 +1875,7 @@ describe('TechnicalIndicatorsService', () => {
 
       // Bearish candle (close < open)
       const bearishCandles: CandleInput[] = [
-        { open: '108', high: '110', low: '98', close: '100', volume: '1000' },
+        { open: 108, high: 110, low: 98, close: 100, volume: 1000 },
       ];
 
       const bearishResult = service.calculateVolumeProfile({
@@ -1892,9 +1892,9 @@ describe('TechnicalIndicatorsService', () => {
       // Create candles where POC is at an extreme position
       // to test boundary condition in value area calculation
       const candles: CandleInput[] = [
-        { open: '100', high: '102', low: '99', close: '101', volume: '100' },
-        { open: '101', high: '103', low: '100', close: '102', volume: '100' },
-        { open: '102', high: '104', low: '101', close: '103', volume: '5000' },
+        { open: 100, high: 102, low: 99, close: 101, volume: 100 },
+        { open: 101, high: 103, low: 100, close: 102, volume: 100 },
+        { open: 102, high: 104, low: 101, close: 103, volume: 5000 },
       ];
 
       // Use few bars to ensure we hit the break condition
@@ -1909,9 +1909,9 @@ describe('TechnicalIndicatorsService', () => {
       // Create data where high volume zone is at lower prices
       // to test the canExpandLow branch when canExpandHigh is false
       const candles: CandleInput[] = [
-        { open: '100', high: '105', low: '98', close: '104', volume: '5000' },
-        { open: '104', high: '108', low: '102', close: '106', volume: '100' },
-        { open: '106', high: '112', low: '104', close: '110', volume: '100' },
+        { open: 100, high: 105, low: 98, close: 104, volume: 5000 },
+        { open: 104, high: 108, low: 102, close: 106, volume: 100 },
+        { open: 106, high: 112, low: 104, close: 110, volume: 100 },
       ];
 
       const result = service.calculateVolumeProfile({ candles, noOfBars: 3 });
@@ -1925,9 +1925,9 @@ describe('TechnicalIndicatorsService', () => {
       // POC at highest price zone - can only expand low
       // This tests the `else if (canExpandLow)` branch where canExpandHigh is false
       const candles: CandleInput[] = [
-        { open: '100', high: '103', low: '99', close: '102', volume: '100' },
-        { open: '102', high: '105', low: '101', close: '104', volume: '200' },
-        { open: '104', high: '107', low: '103', close: '106', volume: '5000' },
+        { open: 100, high: 103, low: 99, close: 102, volume: 100 },
+        { open: 102, high: 105, low: 101, close: 104, volume: 200 },
+        { open: 104, high: 107, low: 103, close: 106, volume: 5000 },
       ];
 
       const result = service.calculateVolumeProfile({ candles, noOfBars: 3 });
@@ -1942,7 +1942,7 @@ describe('TechnicalIndicatorsService', () => {
       // Use minimal bars with volume spread so we hit both boundaries
       // before reaching 70% (tests the break statement)
       const candles: CandleInput[] = [
-        { open: '100', high: '150', low: '100', close: '125', volume: '1000' },
+        { open: 100, high: 150, low: 100, close: 125, volume: 1000 },
       ];
 
       // With only 1 bar, POC is alone, can't expand either way
@@ -1959,9 +1959,9 @@ describe('TechnicalIndicatorsService', () => {
       // POC at top zone, but lower zones have more volume
       // This tests canExpandHigh=false branch in ternary
       const candles: CandleInput[] = [
-        { open: '100', high: '103', low: '99', close: '102', volume: '3000' },
-        { open: '102', high: '105', low: '101', close: '104', volume: '2000' },
-        { open: '104', high: '107', low: '103', close: '106', volume: '5000' },
+        { open: 100, high: 103, low: 99, close: 102, volume: 3000 },
+        { open: 102, high: 105, low: 101, close: 104, volume: 2000 },
+        { open: 104, high: 107, low: 103, close: 106, volume: 5000 },
       ];
 
       // With 3 bars, POC at top has nowhere to expand high
@@ -1977,9 +1977,9 @@ describe('TechnicalIndicatorsService', () => {
       // POC in middle, high zone has more volume than low zone
       // This forces expansion in high direction, testing canExpandHigh=true
       const candles: CandleInput[] = [
-        { open: '100', high: '104', low: '99', close: '102', volume: '100' },
-        { open: '102', high: '106', low: '101', close: '104', volume: '2000' },
-        { open: '104', high: '108', low: '103', close: '106', volume: '500' },
+        { open: 100, high: 104, low: 99, close: 102, volume: 100 },
+        { open: 102, high: 106, low: 101, close: 104, volume: 2000 },
+        { open: 104, high: 108, low: 103, close: 106, volume: 500 },
       ];
 
       const result = service.calculateVolumeProfile({ candles, noOfBars: 3 });
@@ -1994,9 +1994,9 @@ describe('TechnicalIndicatorsService', () => {
       // POC at lowest zone - canExpandLow is false, must expand high
       // This specifically tests the else branch with canExpandHigh=true
       const candles: CandleInput[] = [
-        { open: '100', high: '103', low: '99', close: '101', volume: '5000' },
-        { open: '103', high: '106', low: '102', close: '105', volume: '1000' },
-        { open: '106', high: '109', low: '105', close: '108', volume: '1000' },
+        { open: 100, high: 103, low: 99, close: 101, volume: 5000 },
+        { open: 103, high: 106, low: 102, close: 105, volume: 1000 },
+        { open: 106, high: 109, low: 105, close: 108, volume: 1000 },
       ];
 
       const result = service.calculateVolumeProfile({ candles, noOfBars: 3 });
@@ -2014,11 +2014,11 @@ describe('TechnicalIndicatorsService', () => {
       // 2. POC volume < 70% (enters while loop)
       // 3. Must expand high (tests else branch where canExpandHigh=true)
       const candles: CandleInput[] = [
-        { open: '100', high: '104', low: '100', close: '102', volume: '300' },
-        { open: '104', high: '108', low: '104', close: '106', volume: '200' },
-        { open: '108', high: '112', low: '108', close: '110', volume: '200' },
-        { open: '112', high: '116', low: '112', close: '114', volume: '100' },
-        { open: '116', high: '120', low: '116', close: '118', volume: '100' },
+        { open: 100, high: 104, low: 100, close: 102, volume: 300 },
+        { open: 104, high: 108, low: 104, close: 106, volume: 200 },
+        { open: 108, high: 112, low: 108, close: 110, volume: 200 },
+        { open: 112, high: 116, low: 112, close: 114, volume: 100 },
+        { open: 116, high: 120, low: 116, close: 118, volume: 100 },
       ];
 
       // 5 bars: POC at lowest (300/900 = 33%) < 70%, must expand high
@@ -2035,9 +2035,9 @@ describe('TechnicalIndicatorsService', () => {
       // Neighboring high zone has more volume than low zone
       // This tests: canExpandHigh=true, lowVolume < highVolume, taking else branch
       const candles: CandleInput[] = [
-        { open: '100', high: '110', low: '100', close: '105', volume: '100' },
-        { open: '105', high: '115', low: '105', close: '110', volume: '400' },
-        { open: '110', high: '120', low: '110', close: '115', volume: '300' },
+        { open: 100, high: 110, low: 100, close: 105, volume: 100 },
+        { open: 105, high: 115, low: 105, close: 110, volume: 400 },
+        { open: 110, high: 120, low: 110, close: 115, volume: 300 },
       ];
 
       // 3 zones: middle has most volume (POC), but < 70%
@@ -2059,11 +2059,11 @@ describe('TechnicalIndicatorsService', () => {
       // 4. POC volume < 70% (enters while loop)
       // This specifically tests line 1188: else if (canExpandLow) { expandLow = true; }
       const candles: CandleInput[] = [
-        { open: '100', high: '104', low: '100', close: '102', volume: '200' },
-        { open: '104', high: '108', low: '104', close: '106', volume: '200' },
-        { open: '108', high: '112', low: '108', close: '110', volume: '200' },
-        { open: '112', high: '116', low: '112', close: '114', volume: '200' },
-        { open: '116', high: '120', low: '116', close: '118', volume: '500' },
+        { open: 100, high: 104, low: 100, close: 102, volume: 200 },
+        { open: 104, high: 108, low: 104, close: 106, volume: 200 },
+        { open: 108, high: 112, low: 108, close: 110, volume: 200 },
+        { open: 112, high: 116, low: 112, close: 114, volume: 200 },
+        { open: 116, high: 120, low: 116, close: 118, volume: 500 },
       ];
 
       // 5 zones: highest zone has most volume (POC at index 4)
@@ -2084,7 +2084,7 @@ describe('TechnicalIndicatorsService', () => {
   describe('calculatePivotPoints', () => {
     // Test data: H=110, L=100, C=105, O=102
     // Range = 10
-    const testInput = { high: '110', low: '100', close: '105', open: '102' };
+    const testInput = { high: 110, low: 100, close: 105, open: 102 };
 
     it('should calculate Standard pivot points correctly', () => {
       const result = service.calculatePivotPoints(testInput);
@@ -2111,9 +2111,9 @@ describe('TechnicalIndicatorsService', () => {
 
     it('should use standard type when no type specified', () => {
       const result = service.calculatePivotPoints({
-        high: '110',
-        low: '100',
-        close: '105',
+        high: 110,
+        low: 100,
+        close: 105,
       });
 
       expect(result.type).toBe('standard');
@@ -2123,9 +2123,9 @@ describe('TechnicalIndicatorsService', () => {
     it('should use close as open when open not provided', () => {
       // For DeMark, open is used - when not provided, should use close
       const result = service.calculatePivotPoints({
-        high: '110',
-        low: '100',
-        close: '105',
+        high: 110,
+        low: 100,
+        close: 105,
         type: 'demark',
       });
 
@@ -2216,10 +2216,10 @@ describe('TechnicalIndicatorsService', () => {
     it('should calculate DeMark pivot points when close < open', () => {
       // close < open scenario
       const result = service.calculatePivotPoints({
-        high: '110',
-        low: '100',
-        close: '101',
-        open: '108',
+        high: 110,
+        low: 100,
+        close: 101,
+        open: 108,
         type: 'demark',
       });
 
@@ -2235,10 +2235,10 @@ describe('TechnicalIndicatorsService', () => {
     it('should calculate DeMark pivot points when close > open', () => {
       // close > open scenario
       const result = service.calculatePivotPoints({
-        high: '110',
-        low: '100',
-        close: '108',
-        open: '101',
+        high: 110,
+        low: 100,
+        close: 108,
+        open: 101,
         type: 'demark',
       });
 
@@ -2254,10 +2254,10 @@ describe('TechnicalIndicatorsService', () => {
     it('should calculate DeMark pivot points when close === open', () => {
       // close === open scenario
       const result = service.calculatePivotPoints({
-        high: '110',
-        low: '100',
-        close: '105',
-        open: '105',
+        high: 110,
+        low: 100,
+        close: 105,
+        open: 105,
         type: 'demark',
       });
 
@@ -2284,12 +2284,12 @@ describe('TechnicalIndicatorsService', () => {
   describe('detectRsiDivergence', () => {
     // Helper to generate candles with specific close prices for divergence testing
     const generateCandlesFromCloses = (closes: number[]): CandleInput[] => {
-      return closes.map((close, _i) => ({
-        open: (close - 1).toString(),
-        high: (close + 2).toString(),
-        low: (close - 2).toString(),
-        close: close.toString(),
-        volume: '1000',
+      return closes.map((close) => ({
+        open: close - 1,
+        high: close + 2,
+        low: close - 2,
+        close,
+        volume: 1000,
       }));
     };
 
@@ -2568,11 +2568,11 @@ describe('TechnicalIndicatorsService', () => {
     // Helper to generate candles with given high, low, close values
     const generateCandlesForPatterns = (count: number): CandleInput[] => {
       return Array.from({ length: count }, (_, i) => ({
-        open: String(100 + i),
-        high: String(102 + i),
-        low: String(98 + i),
-        close: String(101 + i),
-        volume: '1000',
+        open: 100 + i,
+        high: 102 + i,
+        low: 98 + i,
+        close: 101 + i,
+        volume: 1000,
       }));
     };
 
@@ -2606,43 +2606,43 @@ describe('TechnicalIndicatorsService', () => {
       // Initial uptrend
       for (let i = 0; i < 10; i++) {
         candles.push({
-          open: String(99 + i * 2),
-          high: String(100 + i * 2),
-          low: String(98 + i * 2),
-          close: String(99 + i * 2),
-          volume: '1000',
+          open: 99 + i * 2,
+          high: 100 + i * 2,
+          low: 98 + i * 2,
+          close: 99 + i * 2,
+          volume: 1000,
         });
       }
       // First peak (needs lookback=3 structure for peak detection)
       candles.push(
-        { open: '119', high: '120', low: '118', close: '119', volume: '1000' },
-        { open: '120', high: '121', low: '119', close: '120', volume: '1000' },
-        { open: '119', high: '120', low: '118', close: '119', volume: '1000' },
+        { open: 119, high: 120, low: 118, close: 119, volume: 1000 },
+        { open: 120, high: 121, low: 119, close: 120, volume: 1000 },
+        { open: 119, high: 120, low: 118, close: 119, volume: 1000 },
       );
       // Pullback (enough for MIN_PATTERN_LENGTH)
       for (let i = 0; i < 12; i++) {
         candles.push({
-          open: String(115 - i * 0.5),
-          high: String(115 - i * 0.5),
-          low: String(113 - i * 0.5),
-          close: String(114 - i * 0.5),
-          volume: '1000',
+          open: 115 - i * 0.5,
+          high: 115 - i * 0.5,
+          low: 113 - i * 0.5,
+          close: 114 - i * 0.5,
+          volume: 1000,
         });
       }
       // Second peak (similar to first for double top detection)
       candles.push(
-        { open: '118', high: '119', low: '117', close: '118', volume: '1000' },
-        { open: '119', high: '121', low: '119', close: '120', volume: '1000' },
-        { open: '118', high: '120', low: '118', close: '119', volume: '1000' },
+        { open: 118, high: 119, low: 117, close: 118, volume: 1000 },
+        { open: 119, high: 121, low: 119, close: 120, volume: 1000 },
+        { open: 118, high: 120, low: 118, close: 119, volume: 1000 },
       );
       // Decline
       for (let i = 0; i < 5; i++) {
         candles.push({
-          open: String(118 - i),
-          high: String(118 - i),
-          low: String(116 - i),
-          close: String(117 - i),
-          volume: '1000',
+          open: 118 - i,
+          high: 118 - i,
+          low: 116 - i,
+          close: 117 - i,
+          volume: 1000,
         });
       }
 
@@ -2675,29 +2675,29 @@ describe('TechnicalIndicatorsService', () => {
       const candles: CandleInput[] = [];
       for (let i = 0; i < 10; i++) {
         candles.push({
-          open: String(99 + i * 2),
-          high: String(100 + i * 2),
-          low: String(98 + i * 2),
-          close: String(99 + i * 2),
-          volume: '1000',
+          open: 99 + i * 2,
+          high: 100 + i * 2,
+          low: 98 + i * 2,
+          close: 99 + i * 2,
+          volume: 1000,
         });
       }
       candles.push(
-        { open: '119', high: '121', low: '118', close: '120', volume: '1000' },
-        { open: '120', high: '121', low: '118', close: '119', volume: '1000' },
+        { open: 119, high: 121, low: 118, close: 120, volume: 1000 },
+        { open: 120, high: 121, low: 118, close: 119, volume: 1000 },
       );
       for (let i = 0; i < 15; i++) {
         candles.push({
-          open: '108',
-          high: '109',
-          low: '105',
-          close: '106',
-          volume: '1000',
+          open: 108,
+          high: 109,
+          low: 105,
+          close: 106,
+          volume: 1000,
         });
       }
       candles.push(
-        { open: '119', high: '121', low: '118', close: '120', volume: '1000' },
-        { open: '120', high: '121', low: '118', close: '119', volume: '1000' },
+        { open: 119, high: 121, low: 118, close: 120, volume: 1000 },
+        { open: 120, high: 121, low: 118, close: 119, volume: 1000 },
       );
 
       const result = service.detectChartPatterns({ candles });
@@ -2714,11 +2714,11 @@ describe('TechnicalIndicatorsService', () => {
     it('should detect swing highs and lows using Williams Fractal', () => {
       // Pattern: swing high in the middle
       const candles: CandleInput[] = [
-        { open: '100', high: '105', low: '95', close: '102', volume: '1000' },
-        { open: '102', high: '108', low: '100', close: '105', volume: '1000' },
-        { open: '105', high: '112', low: '103', close: '110', volume: '1000' },
-        { open: '110', high: '108', low: '106', close: '107', volume: '1000' },
-        { open: '107', high: '106', low: '102', close: '104', volume: '1000' },
+        { open: 100, high: 105, low: 95, close: 102, volume: 1000 },
+        { open: 102, high: 108, low: 100, close: 105, volume: 1000 },
+        { open: 105, high: 112, low: 103, close: 110, volume: 1000 },
+        { open: 110, high: 108, low: 106, close: 107, volume: 1000 },
+        { open: 107, high: 106, low: 102, close: 104, volume: 1000 },
       ];
 
       const result = service.detectSwingPoints({ candles });
@@ -2730,11 +2730,11 @@ describe('TechnicalIndicatorsService', () => {
 
     it('should use default lookback of 2 when not specified', () => {
       const candles: CandleInput[] = Array.from({ length: 10 }, (_, i) => ({
-        open: String(100 + i),
-        high: String(105 + i),
-        low: String(95 + i),
-        close: String(102 + i),
-        volume: '1000',
+        open: 100 + i,
+        high: 105 + i,
+        low: 95 + i,
+        close: 102 + i,
+        volume: 1000,
       }));
 
       const result = service.detectSwingPoints({ candles });
@@ -2747,11 +2747,11 @@ describe('TechnicalIndicatorsService', () => {
 
     it('should use custom lookback when specified', () => {
       const candles: CandleInput[] = Array.from({ length: 7 }, (_, i) => ({
-        open: String(100 + i),
-        high: String(105 + i),
-        low: String(95 + i),
-        close: String(102 + i),
-        volume: '1000',
+        open: 100 + i,
+        high: 105 + i,
+        low: 95 + i,
+        close: 102 + i,
+        volume: 1000,
       }));
 
       const result = service.detectSwingPoints({ candles, lookback: 3 });
