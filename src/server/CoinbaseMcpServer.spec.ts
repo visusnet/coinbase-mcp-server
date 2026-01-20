@@ -1080,541 +1080,618 @@ describe('CoinbaseMcpServer Integration Tests', () => {
         ).toHaveBeenCalledWith(args);
         expectResponseToContain(response, result);
       });
-    });
 
-    describe('calculate_atr', () => {
-      it('should call calculateAtr via MCP tool calculate_atr', async () => {
-        const args = {
-          candles: [
-            {
-              open: '100',
-              high: '110',
-              low: '95',
-              close: '105',
-              volume: '1000',
-            },
-            {
-              open: '105',
-              high: '115',
-              low: '100',
-              close: '110',
-              volume: '1100',
-            },
-          ],
-          period: 14,
-        };
-        const result = {
-          period: 14,
-          values: [10.5],
-          latestValue: 10.5,
-        };
-        mockTechnicalIndicatorsService.calculateAtr.mockReturnValueOnce(result);
+      describe('calculate_atr', () => {
+        it('should call calculateAtr via MCP tool calculate_atr', async () => {
+          const args = {
+            candles: [
+              {
+                open: '100',
+                high: '110',
+                low: '95',
+                close: '105',
+                volume: '1000',
+              },
+              {
+                open: '105',
+                high: '115',
+                low: '100',
+                close: '110',
+                volume: '1100',
+              },
+            ],
+            period: 14,
+          };
+          const result = {
+            period: 14,
+            values: [10.5],
+            latestValue: 10.5,
+          };
+          mockTechnicalIndicatorsService.calculateAtr.mockReturnValueOnce(
+            result,
+          );
 
-        const response = await client.callTool({
-          name: 'calculate_atr',
-          arguments: args,
+          const response = await client.callTool({
+            name: 'calculate_atr',
+            arguments: args,
+          });
+
+          expect(
+            mockTechnicalIndicatorsService.calculateAtr,
+          ).toHaveBeenCalledWith(args);
+          expectResponseToContain(response, result);
         });
-
-        expect(
-          mockTechnicalIndicatorsService.calculateAtr,
-        ).toHaveBeenCalledWith(args);
-        expectResponseToContain(response, result);
       });
-    });
 
-    describe('calculate_stochastic', () => {
-      it('should call calculateStochastic via MCP tool calculate_stochastic', async () => {
-        const args = {
-          candles: [
-            {
-              open: '100',
-              high: '110',
-              low: '95',
-              close: '105',
-              volume: '1000',
-            },
-            {
-              open: '105',
-              high: '115',
-              low: '100',
-              close: '110',
-              volume: '1100',
-            },
-          ],
-          kPeriod: 14,
-          dPeriod: 3,
-        };
-        const result = {
-          kPeriod: 14,
-          dPeriod: 3,
-          values: [{ k: 75, d: 70 }],
-          latestValue: { k: 75, d: 70 },
-        };
-        mockTechnicalIndicatorsService.calculateStochastic.mockReturnValueOnce(
-          result,
-        );
+      describe('calculate_stochastic', () => {
+        it('should call calculateStochastic via MCP tool calculate_stochastic', async () => {
+          const args = {
+            candles: [
+              {
+                open: '100',
+                high: '110',
+                low: '95',
+                close: '105',
+                volume: '1000',
+              },
+              {
+                open: '105',
+                high: '115',
+                low: '100',
+                close: '110',
+                volume: '1100',
+              },
+            ],
+            kPeriod: 14,
+            dPeriod: 3,
+          };
+          const result = {
+            kPeriod: 14,
+            dPeriod: 3,
+            values: [{ k: 75, d: 70 }],
+            latestValue: { k: 75, d: 70 },
+          };
+          mockTechnicalIndicatorsService.calculateStochastic.mockReturnValueOnce(
+            result,
+          );
 
-        const response = await client.callTool({
-          name: 'calculate_stochastic',
-          arguments: args,
+          const response = await client.callTool({
+            name: 'calculate_stochastic',
+            arguments: args,
+          });
+
+          expect(
+            mockTechnicalIndicatorsService.calculateStochastic,
+          ).toHaveBeenCalledWith(args);
+          expectResponseToContain(response, result);
         });
-
-        expect(
-          mockTechnicalIndicatorsService.calculateStochastic,
-        ).toHaveBeenCalledWith(args);
-        expectResponseToContain(response, result);
       });
-    });
 
-    describe('calculate_adx', () => {
-      it('should call calculateAdx via MCP tool calculate_adx', async () => {
-        const args = {
-          candles: [
-            {
-              open: '100',
-              high: '110',
-              low: '95',
-              close: '105',
-              volume: '1000',
-            },
-            {
-              open: '105',
-              high: '115',
-              low: '100',
-              close: '110',
-              volume: '1100',
-            },
-          ],
-          period: 14,
-        };
-        const result = {
-          period: 14,
-          values: [{ adx: 25, pdi: 30, mdi: 20 }],
-          latestValue: { adx: 25, pdi: 30, mdi: 20 },
-        };
-        mockTechnicalIndicatorsService.calculateAdx.mockReturnValueOnce(result);
+      describe('calculate_adx', () => {
+        it('should call calculateAdx via MCP tool calculate_adx', async () => {
+          const args = {
+            candles: [
+              {
+                open: '100',
+                high: '110',
+                low: '95',
+                close: '105',
+                volume: '1000',
+              },
+              {
+                open: '105',
+                high: '115',
+                low: '100',
+                close: '110',
+                volume: '1100',
+              },
+            ],
+            period: 14,
+          };
+          const result = {
+            period: 14,
+            values: [{ adx: 25, pdi: 30, mdi: 20 }],
+            latestValue: { adx: 25, pdi: 30, mdi: 20 },
+          };
+          mockTechnicalIndicatorsService.calculateAdx.mockReturnValueOnce(
+            result,
+          );
 
-        const response = await client.callTool({
-          name: 'calculate_adx',
-          arguments: args,
+          const response = await client.callTool({
+            name: 'calculate_adx',
+            arguments: args,
+          });
+
+          expect(
+            mockTechnicalIndicatorsService.calculateAdx,
+          ).toHaveBeenCalledWith(args);
+          expectResponseToContain(response, result);
         });
-
-        expect(
-          mockTechnicalIndicatorsService.calculateAdx,
-        ).toHaveBeenCalledWith(args);
-        expectResponseToContain(response, result);
       });
-    });
 
-    describe('calculate_obv', () => {
-      it('should call calculateObv via MCP tool calculate_obv', async () => {
-        const args = {
-          candles: [
-            {
-              open: '100',
-              high: '101',
-              low: '99',
-              close: '100',
-              volume: '1000',
-            },
-            {
-              open: '100',
-              high: '102',
-              low: '99',
-              close: '101',
-              volume: '1100',
-            },
-          ],
-        };
-        const result = {
-          values: [1000, 2100],
-          latestValue: 2100,
-        };
-        mockTechnicalIndicatorsService.calculateObv.mockReturnValueOnce(result);
+      describe('calculate_obv', () => {
+        it('should call calculateObv via MCP tool calculate_obv', async () => {
+          const args = {
+            candles: [
+              {
+                open: '100',
+                high: '101',
+                low: '99',
+                close: '100',
+                volume: '1000',
+              },
+              {
+                open: '100',
+                high: '102',
+                low: '99',
+                close: '101',
+                volume: '1100',
+              },
+            ],
+          };
+          const result = {
+            values: [1000, 2100],
+            latestValue: 2100,
+          };
+          mockTechnicalIndicatorsService.calculateObv.mockReturnValueOnce(
+            result,
+          );
 
-        const response = await client.callTool({
-          name: 'calculate_obv',
-          arguments: args,
+          const response = await client.callTool({
+            name: 'calculate_obv',
+            arguments: args,
+          });
+
+          expect(
+            mockTechnicalIndicatorsService.calculateObv,
+          ).toHaveBeenCalledWith(args);
+          expectResponseToContain(response, result);
         });
-
-        expect(
-          mockTechnicalIndicatorsService.calculateObv,
-        ).toHaveBeenCalledWith(args);
-        expectResponseToContain(response, result);
       });
-    });
 
-    describe('calculate_vwap', () => {
-      it('should call calculateVwap via MCP tool calculate_vwap', async () => {
-        const args = {
-          candles: [
-            {
-              open: '100',
-              high: '102',
-              low: '98',
-              close: '100',
-              volume: '1000',
-            },
-            {
-              open: '100',
-              high: '103',
-              low: '99',
-              close: '101',
-              volume: '1100',
-            },
-          ],
-        };
-        const result = {
-          values: [100, 100.52],
-          latestValue: 100.52,
-        };
-        mockTechnicalIndicatorsService.calculateVwap.mockReturnValueOnce(
-          result,
-        );
+      describe('calculate_vwap', () => {
+        it('should call calculateVwap via MCP tool calculate_vwap', async () => {
+          const args = {
+            candles: [
+              {
+                open: '100',
+                high: '102',
+                low: '98',
+                close: '100',
+                volume: '1000',
+              },
+              {
+                open: '100',
+                high: '103',
+                low: '99',
+                close: '101',
+                volume: '1100',
+              },
+            ],
+          };
+          const result = {
+            values: [100, 100.52],
+            latestValue: 100.52,
+          };
+          mockTechnicalIndicatorsService.calculateVwap.mockReturnValueOnce(
+            result,
+          );
 
-        const response = await client.callTool({
-          name: 'calculate_vwap',
-          arguments: args,
+          const response = await client.callTool({
+            name: 'calculate_vwap',
+            arguments: args,
+          });
+
+          expect(
+            mockTechnicalIndicatorsService.calculateVwap,
+          ).toHaveBeenCalledWith(args);
+          expectResponseToContain(response, result);
         });
-
-        expect(
-          mockTechnicalIndicatorsService.calculateVwap,
-        ).toHaveBeenCalledWith(args);
-        expectResponseToContain(response, result);
       });
-    });
 
-    describe('calculate_cci', () => {
-      it('should call calculateCci via MCP tool calculate_cci', async () => {
-        const args = {
-          candles: [
-            {
-              open: '100',
-              high: '110',
-              low: '95',
-              close: '105',
-              volume: '1000',
-            },
-            {
-              open: '105',
-              high: '115',
-              low: '100',
-              close: '110',
-              volume: '1100',
-            },
-          ],
-          period: 20,
-        };
-        const result = {
-          period: 20,
-          values: [66.67],
-          latestValue: 66.67,
-        };
-        mockTechnicalIndicatorsService.calculateCci.mockReturnValueOnce(result);
+      describe('calculate_cci', () => {
+        it('should call calculateCci via MCP tool calculate_cci', async () => {
+          const args = {
+            candles: [
+              {
+                open: '100',
+                high: '110',
+                low: '95',
+                close: '105',
+                volume: '1000',
+              },
+              {
+                open: '105',
+                high: '115',
+                low: '100',
+                close: '110',
+                volume: '1100',
+              },
+            ],
+            period: 20,
+          };
+          const result = {
+            period: 20,
+            values: [66.67],
+            latestValue: 66.67,
+          };
+          mockTechnicalIndicatorsService.calculateCci.mockReturnValueOnce(
+            result,
+          );
 
-        const response = await client.callTool({
-          name: 'calculate_cci',
-          arguments: args,
+          const response = await client.callTool({
+            name: 'calculate_cci',
+            arguments: args,
+          });
+
+          expect(
+            mockTechnicalIndicatorsService.calculateCci,
+          ).toHaveBeenCalledWith(args);
+          expectResponseToContain(response, result);
         });
-
-        expect(
-          mockTechnicalIndicatorsService.calculateCci,
-        ).toHaveBeenCalledWith(args);
-        expectResponseToContain(response, result);
       });
-    });
 
-    describe('calculate_williams_r', () => {
-      it('should call calculateWilliamsR via MCP tool calculate_williams_r', async () => {
-        const args = {
-          candles: [
-            {
-              open: '100',
-              high: '110',
-              low: '95',
-              close: '105',
-              volume: '1000',
-            },
-            {
-              open: '105',
-              high: '115',
-              low: '100',
-              close: '110',
-              volume: '1100',
-            },
-          ],
-          period: 14,
-        };
-        const result = {
-          period: 14,
-          values: [-20],
-          latestValue: -20,
-        };
-        mockTechnicalIndicatorsService.calculateWilliamsR.mockReturnValueOnce(
-          result,
-        );
+      describe('calculate_williams_r', () => {
+        it('should call calculateWilliamsR via MCP tool calculate_williams_r', async () => {
+          const args = {
+            candles: [
+              {
+                open: '100',
+                high: '110',
+                low: '95',
+                close: '105',
+                volume: '1000',
+              },
+              {
+                open: '105',
+                high: '115',
+                low: '100',
+                close: '110',
+                volume: '1100',
+              },
+            ],
+            period: 14,
+          };
+          const result = {
+            period: 14,
+            values: [-20],
+            latestValue: -20,
+          };
+          mockTechnicalIndicatorsService.calculateWilliamsR.mockReturnValueOnce(
+            result,
+          );
 
-        const response = await client.callTool({
-          name: 'calculate_williams_r',
-          arguments: args,
+          const response = await client.callTool({
+            name: 'calculate_williams_r',
+            arguments: args,
+          });
+
+          expect(
+            mockTechnicalIndicatorsService.calculateWilliamsR,
+          ).toHaveBeenCalledWith(args);
+          expectResponseToContain(response, result);
         });
-
-        expect(
-          mockTechnicalIndicatorsService.calculateWilliamsR,
-        ).toHaveBeenCalledWith(args);
-        expectResponseToContain(response, result);
       });
-    });
 
-    describe('calculate_roc', () => {
-      it('should call calculateRoc via MCP tool calculate_roc', async () => {
-        const args = {
-          candles: [
-            {
-              open: '100',
-              high: '110',
-              low: '95',
-              close: '105',
-              volume: '1000',
-            },
-            {
-              open: '105',
-              high: '115',
-              low: '100',
-              close: '110',
-              volume: '1100',
-            },
-          ],
-          period: 12,
-        };
-        const result = {
-          period: 12,
-          values: [4.76],
-          latestValue: 4.76,
-        };
-        mockTechnicalIndicatorsService.calculateRoc.mockReturnValueOnce(result);
+      describe('calculate_roc', () => {
+        it('should call calculateRoc via MCP tool calculate_roc', async () => {
+          const args = {
+            candles: [
+              {
+                open: '100',
+                high: '110',
+                low: '95',
+                close: '105',
+                volume: '1000',
+              },
+              {
+                open: '105',
+                high: '115',
+                low: '100',
+                close: '110',
+                volume: '1100',
+              },
+            ],
+            period: 12,
+          };
+          const result = {
+            period: 12,
+            values: [4.76],
+            latestValue: 4.76,
+          };
+          mockTechnicalIndicatorsService.calculateRoc.mockReturnValueOnce(
+            result,
+          );
 
-        const response = await client.callTool({
-          name: 'calculate_roc',
-          arguments: args,
+          const response = await client.callTool({
+            name: 'calculate_roc',
+            arguments: args,
+          });
+
+          expect(
+            mockTechnicalIndicatorsService.calculateRoc,
+          ).toHaveBeenCalledWith(args);
+          expectResponseToContain(response, result);
         });
-
-        expect(
-          mockTechnicalIndicatorsService.calculateRoc,
-        ).toHaveBeenCalledWith(args);
-        expectResponseToContain(response, result);
       });
-    });
 
-    describe('calculate_mfi', () => {
-      it('should call calculateMfi via MCP tool calculate_mfi', async () => {
-        const args = {
-          candles: [
-            {
-              open: '100',
-              high: '110',
-              low: '95',
-              close: '105',
-              volume: '1000',
-            },
-            {
-              open: '105',
-              high: '115',
-              low: '100',
-              close: '110',
-              volume: '1100',
-            },
-          ],
-          period: 14,
-        };
-        const result = {
-          period: 14,
-          values: [55.5],
-          latestValue: 55.5,
-        };
-        mockTechnicalIndicatorsService.calculateMfi.mockReturnValueOnce(result);
+      describe('calculate_mfi', () => {
+        it('should call calculateMfi via MCP tool calculate_mfi', async () => {
+          const args = {
+            candles: [
+              {
+                open: '100',
+                high: '110',
+                low: '95',
+                close: '105',
+                volume: '1000',
+              },
+              {
+                open: '105',
+                high: '115',
+                low: '100',
+                close: '110',
+                volume: '1100',
+              },
+            ],
+            period: 14,
+          };
+          const result = {
+            period: 14,
+            values: [55.5],
+            latestValue: 55.5,
+          };
+          mockTechnicalIndicatorsService.calculateMfi.mockReturnValueOnce(
+            result,
+          );
 
-        const response = await client.callTool({
-          name: 'calculate_mfi',
-          arguments: args,
+          const response = await client.callTool({
+            name: 'calculate_mfi',
+            arguments: args,
+          });
+
+          expect(
+            mockTechnicalIndicatorsService.calculateMfi,
+          ).toHaveBeenCalledWith(args);
+          expectResponseToContain(response, result);
         });
-
-        expect(
-          mockTechnicalIndicatorsService.calculateMfi,
-        ).toHaveBeenCalledWith(args);
-        expectResponseToContain(response, result);
       });
-    });
 
-    describe('calculate_psar', () => {
-      it('should call calculatePsar via MCP tool calculate_psar', async () => {
-        const args = {
-          candles: [
-            {
-              open: '100',
-              high: '110',
-              low: '95',
-              close: '105',
-              volume: '1000',
-            },
-            {
-              open: '105',
-              high: '115',
-              low: '100',
-              close: '110',
-              volume: '1100',
-            },
-          ],
-          step: 0.02,
-          max: 0.2,
-        };
-        const result = {
-          step: 0.02,
-          max: 0.2,
-          values: [94.5],
-          latestValue: 94.5,
-        };
-        mockTechnicalIndicatorsService.calculatePsar.mockReturnValueOnce(
-          result,
-        );
+      describe('calculate_psar', () => {
+        it('should call calculatePsar via MCP tool calculate_psar', async () => {
+          const args = {
+            candles: [
+              {
+                open: '100',
+                high: '110',
+                low: '95',
+                close: '105',
+                volume: '1000',
+              },
+              {
+                open: '105',
+                high: '115',
+                low: '100',
+                close: '110',
+                volume: '1100',
+              },
+            ],
+            step: 0.02,
+            max: 0.2,
+          };
+          const result = {
+            step: 0.02,
+            max: 0.2,
+            values: [94.5],
+            latestValue: 94.5,
+          };
+          mockTechnicalIndicatorsService.calculatePsar.mockReturnValueOnce(
+            result,
+          );
 
-        const response = await client.callTool({
-          name: 'calculate_psar',
-          arguments: args,
+          const response = await client.callTool({
+            name: 'calculate_psar',
+            arguments: args,
+          });
+
+          expect(
+            mockTechnicalIndicatorsService.calculatePsar,
+          ).toHaveBeenCalledWith(args);
+          expectResponseToContain(response, result);
         });
-
-        expect(
-          mockTechnicalIndicatorsService.calculatePsar,
-        ).toHaveBeenCalledWith(args);
-        expectResponseToContain(response, result);
       });
-    });
 
-    describe('calculate_ichimoku_cloud', () => {
-      it('should call calculateIchimokuCloud via MCP tool calculate_ichimoku_cloud', async () => {
-        const candles = Array.from({ length: 52 }, (_, i) => ({
-          open: String(100 + i),
-          high: String(105 + i),
-          low: String(95 + i),
-          close: String(102 + i),
-          volume: String(1000 + i * 10),
-        }));
-        const args = {
-          candles,
-          conversionPeriod: 9,
-          basePeriod: 26,
-          spanPeriod: 52,
-          displacement: 26,
-        };
-        const result = {
-          conversionPeriod: 9,
-          basePeriod: 26,
-          spanPeriod: 52,
-          displacement: 26,
-          values: [
-            {
+      describe('calculate_ichimoku_cloud', () => {
+        it('should call calculateIchimokuCloud via MCP tool calculate_ichimoku_cloud', async () => {
+          const candles = Array.from({ length: 52 }, (_, i) => ({
+            open: String(100 + i),
+            high: String(105 + i),
+            low: String(95 + i),
+            close: String(102 + i),
+            volume: String(1000 + i * 10),
+          }));
+          const args = {
+            candles,
+            conversionPeriod: 9,
+            basePeriod: 26,
+            spanPeriod: 52,
+            displacement: 26,
+          };
+          const result = {
+            conversionPeriod: 9,
+            basePeriod: 26,
+            spanPeriod: 52,
+            displacement: 26,
+            values: [
+              {
+                conversion: 120,
+                base: 115,
+                spanA: 117.5,
+                spanB: 110,
+                chikou: 102,
+              },
+            ],
+            latestValue: {
               conversion: 120,
               base: 115,
               spanA: 117.5,
               spanB: 110,
               chikou: 102,
             },
-          ],
-          latestValue: {
-            conversion: 120,
-            base: 115,
-            spanA: 117.5,
-            spanB: 110,
-            chikou: 102,
-          },
-        };
-        mockTechnicalIndicatorsService.calculateIchimokuCloud.mockReturnValueOnce(
-          result,
-        );
+          };
+          mockTechnicalIndicatorsService.calculateIchimokuCloud.mockReturnValueOnce(
+            result,
+          );
 
-        const response = await client.callTool({
-          name: 'calculate_ichimoku_cloud',
-          arguments: args,
+          const response = await client.callTool({
+            name: 'calculate_ichimoku_cloud',
+            arguments: args,
+          });
+
+          expect(
+            mockTechnicalIndicatorsService.calculateIchimokuCloud,
+          ).toHaveBeenCalledWith(args);
+          expectResponseToContain(response, result);
         });
+      });
 
-        expect(
-          mockTechnicalIndicatorsService.calculateIchimokuCloud,
-        ).toHaveBeenCalledWith(args);
-        expectResponseToContain(response, result);
+      describe('calculate_keltner_channels', () => {
+        it('should call calculateKeltnerChannels via MCP tool calculate_keltner_channels', async () => {
+          const candles = Array.from({ length: 30 }, (_, i) => ({
+            open: String(100 + i),
+            high: String(105 + i),
+            low: String(95 + i),
+            close: String(102 + i),
+            volume: String(1000 + i * 10),
+          }));
+          const args = {
+            candles,
+            maPeriod: 20,
+            atrPeriod: 10,
+            multiplier: 2,
+            useSMA: false,
+          };
+          const result = {
+            maPeriod: 20,
+            atrPeriod: 10,
+            multiplier: 2,
+            useSMA: false,
+            values: [{ middle: 115, upper: 125, lower: 105 }],
+            latestValue: { middle: 115, upper: 125, lower: 105 },
+          };
+          mockTechnicalIndicatorsService.calculateKeltnerChannels.mockReturnValueOnce(
+            result,
+          );
+
+          const response = await client.callTool({
+            name: 'calculate_keltner_channels',
+            arguments: args,
+          });
+
+          expect(
+            mockTechnicalIndicatorsService.calculateKeltnerChannels,
+          ).toHaveBeenCalledWith(args);
+          expectResponseToContain(response, result);
+        });
+      });
+
+      describe('calculate_fibonacci_retracement', () => {
+        it('should call calculateFibonacciRetracement via MCP tool calculate_fibonacci_retracement', async () => {
+          const args = {
+            start: 100,
+            end: 200,
+          };
+          const result = {
+            start: 100,
+            end: 200,
+            trend: 'uptrend' as const,
+            levels: [
+              { level: 0, price: 100 },
+              { level: 38.2, price: 138.2 },
+              { level: 50, price: 150 },
+              { level: 61.8, price: 161.8 },
+              { level: 100, price: 200 },
+            ],
+          };
+          mockTechnicalIndicatorsService.calculateFibonacciRetracement.mockReturnValueOnce(
+            result,
+          );
+
+          const response = await client.callTool({
+            name: 'calculate_fibonacci_retracement',
+            arguments: args,
+          });
+
+          expect(
+            mockTechnicalIndicatorsService.calculateFibonacciRetracement,
+          ).toHaveBeenCalledWith(args);
+          expectResponseToContain(response, result);
+        });
       });
     });
 
-    describe('calculate_keltner_channels', () => {
-      it('should call calculateKeltnerChannels via MCP tool calculate_keltner_channels', async () => {
-        const candles = Array.from({ length: 30 }, (_, i) => ({
-          open: String(100 + i),
-          high: String(105 + i),
-          low: String(95 + i),
-          close: String(102 + i),
-          volume: String(1000 + i * 10),
-        }));
-        const args = {
-          candles,
-          maPeriod: 20,
-          atrPeriod: 10,
-          multiplier: 2,
-          useSMA: false,
-        };
-        const result = {
-          maPeriod: 20,
-          atrPeriod: 10,
-          multiplier: 2,
-          useSMA: false,
-          values: [{ middle: 115, upper: 125, lower: 105 }],
-          latestValue: { middle: 115, upper: 125, lower: 105 },
-        };
-        mockTechnicalIndicatorsService.calculateKeltnerChannels.mockReturnValueOnce(
-          result,
-        );
-
-        const response = await client.callTool({
-          name: 'calculate_keltner_channels',
-          arguments: args,
-        });
-
+    describe('Error Handling', () => {
+      it('should throw error for unknown tool', async () => {
         expect(
-          mockTechnicalIndicatorsService.calculateKeltnerChannels,
-        ).toHaveBeenCalledWith(args);
-        expectResponseToContain(response, result);
-      });
-    });
-
-    describe('calculate_fibonacci_retracement', () => {
-      it('should call calculateFibonacciRetracement via MCP tool calculate_fibonacci_retracement', async () => {
-        const args = {
-          start: 100,
-          end: 200,
-        };
-        const result = {
-          start: 100,
-          end: 200,
-          trend: 'uptrend' as const,
-          levels: [
-            { level: 0, price: 100 },
-            { level: 38.2, price: 138.2 },
-            { level: 50, price: 150 },
-            { level: 61.8, price: 161.8 },
-            { level: 100, price: 200 },
+          await client.callTool({
+            name: 'unknown_tool',
+            arguments: {},
+          }),
+        ).toEqual({
+          content: [
+            {
+              text: 'MCP error -32602: Tool unknown_tool not found',
+              type: 'text',
+            },
           ],
-        };
-        mockTechnicalIndicatorsService.calculateFibonacciRetracement.mockReturnValueOnce(
-          result,
+          isError: true,
+        });
+      });
+
+      it('should handle tool method errors gracefully', async () => {
+        const args = { productId: 'BTC-USD' };
+        mockPublicService.getProduct.mockRejectedValueOnce(
+          new Error('API error'),
         );
 
         const response = await client.callTool({
-          name: 'calculate_fibonacci_retracement',
+          name: 'get_public_product',
           arguments: args,
         });
 
-        expect(
-          mockTechnicalIndicatorsService.calculateFibonacciRetracement,
-        ).toHaveBeenCalledWith(args);
-        expectResponseToContain(response, result);
+        expect(mockPublicService.getProduct).toHaveBeenCalledWith(args);
+        expect(response).toEqual({
+          content: [
+            {
+              text: 'API error',
+              type: 'text',
+            },
+          ],
+          isError: true,
+        });
+      });
+
+      it('should handle tool method (non-Error) errors gracefully', async () => {
+        const args = { productId: 'BTC-USD' };
+        mockPublicService.getProduct.mockRejectedValueOnce(
+          'Unexpected error format',
+        );
+
+        const response = await client.callTool({
+          name: 'get_public_product',
+          arguments: args,
+        });
+
+        expect(mockPublicService.getProduct).toHaveBeenCalledWith(args);
+        expect(response).toEqual({
+          content: [
+            {
+              text: 'Unexpected error format',
+              type: 'text',
+            },
+          ],
+          isError: true,
+        });
       });
     });
   });

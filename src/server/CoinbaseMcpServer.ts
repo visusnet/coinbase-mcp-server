@@ -1910,15 +1910,31 @@ BEST PRACTICES:
 
   private call<I, R>(fn: (input: I) => R | Promise<R>) {
     return async (input: I) => {
-      const response = await Promise.resolve(fn(input));
+      let text = null;
+      let isError = false;
+      try {
+        const response = await Promise.resolve(fn(input));
+        text = JSON.stringify(response, null, 2);
+      } catch (error) {
+        text = extractErrorMessage(error);
+        isError = true;
+      }
       return {
         content: [
           {
             type: 'text' as const,
-            text: JSON.stringify(response, null, 2),
+            text,
           },
         ],
+        isError,
       };
     };
   }
+}
+
+function extractErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return String(error);
 }
