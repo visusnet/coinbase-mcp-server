@@ -78,6 +78,11 @@ import {
 } from './indicators/volumeProfile';
 
 import { detectChartPatterns, ChartPattern } from './indicators/chartPatterns';
+import {
+  detectSwingPoints,
+  SwingPoint,
+  SwingTrend,
+} from './indicators/swingPoints';
 
 /**
  * Candle data structure matching Coinbase API output.
@@ -599,6 +604,25 @@ export interface DetectChartPatternsOutput {
   readonly bullishPatterns: readonly ChartPattern[];
   readonly bearishPatterns: readonly ChartPattern[];
   readonly latestPattern: ChartPattern | null;
+}
+
+/**
+ * Input for Swing Points detection (Williams Fractal)
+ */
+export interface DetectSwingPointsInput {
+  readonly candles: readonly CandleInput[];
+  readonly lookback?: number;
+}
+
+/**
+ * Output for Swing Points detection (Williams Fractal)
+ */
+export interface DetectSwingPointsOutput {
+  readonly swingHighs: readonly SwingPoint[];
+  readonly swingLows: readonly SwingPoint[];
+  readonly latestSwingHigh: SwingPoint | null;
+  readonly latestSwingLow: SwingPoint | null;
+  readonly trend: SwingTrend;
 }
 
 const DEFAULT_RSI_PERIOD = 14;
@@ -1449,6 +1473,30 @@ export class TechnicalIndicatorsService {
       bearishPatterns,
       latestPattern,
     };
+  }
+
+  /**
+   * Detect swing points using Williams Fractal method.
+   *
+   * A swing high occurs when a bar's high is higher than the highs of
+   * `lookback` bars before AND `lookback` bars after.
+   *
+   * A swing low occurs when a bar's low is lower than the lows of
+   * `lookback` bars before AND `lookback` bars after.
+   *
+   * Industry standard uses lookback=2 (5-bar pattern).
+   *
+   * @param input - Candles and optional lookback period
+   * @returns Detected swing points with trend analysis
+   */
+  public detectSwingPoints(
+    input: DetectSwingPointsInput,
+  ): DetectSwingPointsOutput {
+    const lookback = input.lookback ?? 2;
+    const highs = extractHighPrices(input.candles);
+    const lows = extractLowPrices(input.candles);
+
+    return detectSwingPoints(highs, lows, lookback);
   }
 }
 

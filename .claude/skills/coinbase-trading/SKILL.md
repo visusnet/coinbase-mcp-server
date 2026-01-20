@@ -45,9 +45,29 @@ The project does NOT need to be built. Just call the tools.
 - **Take-Profit / Stop-Loss**: ATR-based (see "Dynamic Stop-Loss / Take-Profit")
 - **Allowed Pairs**: All EUR trading pairs
 
+### Integrated Analysis Tool (Recommended)
+
+For efficiency, use `analyze_technical_indicators` to fetch candles and compute all indicators in one call:
+
+```
+result = analyze_technical_indicators(
+  productId="BTC-EUR",
+  granularity="ONE_HOUR",
+  candleCount=100,
+  indicators=["rsi", "macd", "bollinger", "adx", "obv", "pivots"]
+)
+```
+
+**Output includes**:
+- `price`: Current, open, high, low, 24h change
+- `indicators`: Computed values for each requested indicator
+- `signal`: Aggregated score (-100 to +100), direction (BUY/SELL/HOLD), confidence (HIGH/MEDIUM/LOW)
+
+This reduces context by ~90-95% compared to calling individual tools.
+
 ### Available Indicator Tools
 
-The MCP server provides 23 technical indicator tools. **Always use these instead of manual calculation:**
+The MCP server provides 24 technical indicator tools. **Always use these instead of manual calculation:**
 
 **Momentum:**
 - `calculate_rsi` - RSI with configurable period
@@ -79,6 +99,7 @@ The MCP server provides 23 technical indicator tools. **Always use these instead
 **Support/Resistance:**
 - `calculate_pivot_points` - 5 types (Standard, Fibonacci, Woodie, Camarilla, DeMark)
 - `calculate_fibonacci_retracement` - Fib levels from swing high/low
+- `detect_swing_points` - Williams Fractal for swing high/low detection
 
 **Patterns:**
 - `detect_candlestick_patterns` - 31 candlestick patterns

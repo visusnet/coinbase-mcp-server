@@ -12,6 +12,7 @@ import {
 import { ProductsService } from '@server/ProductsService';
 import { PublicService } from '@server/PublicService';
 import type { TechnicalIndicatorsService } from '@server/TechnicalIndicatorsService';
+import type { TechnicalAnalysisService } from '@server/TechnicalAnalysisService';
 import { jest } from '@jest/globals';
 
 // Mock the SDK services to avoid real API calls
@@ -277,6 +278,15 @@ export const mockTechnicalIndicatorsService: {
   calculatePivotPoints: jest.fn(),
   detectRsiDivergence: jest.fn(),
   detectChartPatterns: jest.fn(),
+  detectSwingPoints: jest.fn(),
+};
+
+export const mockTechnicalAnalysisService: {
+  [K in keyof TechnicalAnalysisService]: jest.MockedFunction<
+    TechnicalAnalysisService[K]
+  >;
+} = {
+  analyzeTechnicalIndicators: jest.fn(),
 };
 
 export function mockServices() {
@@ -319,6 +329,14 @@ export function mockServices() {
       TechnicalIndicatorsService: jest
         .fn()
         .mockImplementation(() => mockTechnicalIndicatorsService),
+    };
+  });
+
+  jest.mock('@server/TechnicalAnalysisService', () => {
+    return {
+      TechnicalAnalysisService: jest
+        .fn()
+        .mockImplementation(() => mockTechnicalAnalysisService),
     };
   });
 }
