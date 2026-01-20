@@ -5,7 +5,7 @@
  * provides integrated candle fetching and indicator calculation.
  */
 
-import { Granularity } from './ProductCandles';
+import { Granularity } from './ProductsService.types';
 
 /**
  * All supported indicator types (24 total).

@@ -20,7 +20,11 @@ export default {
     ],
   },
   testMatch: ['**/*.spec.ts'],
-  collectCoverageFrom: ['src/**/*.ts', '!src/**/*.spec.ts', '!src/**/*.d.ts'],
+  collectCoverageFrom: [
+    'src/**/*.ts',
+    '!src/**/*.spec.ts',
+    '!src/**/*.d.ts',
+  ],
   coverageThreshold: {
     global: {
       branches: 100,

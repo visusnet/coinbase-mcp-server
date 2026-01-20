@@ -1,5 +1,5 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import type { ConvertsService } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
+import type { ConvertsService } from '../services';
 import * as z from 'zod';
 import { ToolRegistry } from './ToolRegistry';
 
@@ -23,7 +23,7 @@ export class ConvertToolRegistry extends ToolRegistry {
         inputSchema: {
           fromAccount: z.string().describe('Source account UUID'),
           toAccount: z.string().describe('Destination account UUID'),
-          amount: z.string().describe('Amount to convert'),
+          amount: z.number().describe('Amount to convert'),
         },
       },
       this.call(this.converts.createConvertQuote.bind(this.converts)),
@@ -54,7 +54,7 @@ export class ConvertToolRegistry extends ToolRegistry {
           toAccount: z.string().describe('Destination account UUID'),
         },
       },
-      this.call(this.converts.GetConvertTrade.bind(this.converts)),
+      this.call(this.converts.getConvertTrade.bind(this.converts)),
     );
   }
 }
