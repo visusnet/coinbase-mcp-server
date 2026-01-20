@@ -1,4 +1,4 @@
-# Plan: Standardization of Number Types (v8)
+# Plan: Standardization of Number Types (v9)
 
 ## Meta Information
 
@@ -21,6 +21,7 @@ This plan was created based on the following prompt:
 - **Every function and method MUST have an explicit return type.**
 - **Request and Response types from the SDK must NOT be used directly. Each service gets an XService.types.ts file.**
 - **Service mocks should mock our wrapper services, NOT the SDK services.**
+- **Test assertions must NOT be reduced to property existence checks (toHaveProperty, toBeDefined). If actual values exist in assertions, they must be preserved unchanged.**
 
 ---
 
@@ -66,9 +67,12 @@ This plan was created based on the following prompt:
 - MAJOR: Added `src/test/serviceMocks.ts` to files to change with detailed update notes
 - MAJOR: Removed non-existent `src/server/indicators/pivotPoints.spec.ts` from test file list
 - MINOR: Clarified v2→v3 changelog note about serviceMocks.ts path issue
-- MINOR: Updated file count to accurate number (28 new files)
+- MINOR: Updated file count to accurate number (26 new files)
 - MINOR: Added note about `GetConvertTrade` method naming (capital G from SDK)
 - MINOR: Added documentation for private helper methods (getOrderBooks, getProducts)
+
+### v8 → v9
+- MAJOR: Added new acceptance criterion: Test assertions must not be reduced to property existence checks; actual values must be preserved
 
 ---
 
@@ -1011,6 +1015,7 @@ The existing tests for the Tool Registries (via CoinbaseMcpServer.spec.ts) cover
 - Do not delete tests
 - Change mock data from strings to numbers
 - Adapt assertions to number values
+- **IMPORTANT:** Do NOT reduce assertions to property existence checks (toHaveProperty, toBeDefined). If a test asserts actual values, those assertions must be preserved with the correct number values.
 
 **Complete list of test files to adapt:**
 
@@ -1185,13 +1190,14 @@ npm run knip          # Unused exports
 - [ ] ProductsService/PublicService use delegation instead of extends
 - [ ] CandleInput uses number instead of string
 - [ ] CalculatePivotPointsInput uses number instead of string
-- [ ] No parseFloat() calls in TechnicalIndicatorsService (except in removed extract functions)
+- [ ] No parseFloat() calls in TechnicalIndicatorsService (extract functions simplified to use number properties directly)
 - [ ] No parseFloat() calls in TechnicalAnalysisService
 - [ ] mapApiCandlesToInput in TechnicalAnalysisService replaced by mapSdkCandlesToInput
 - [ ] All import paths for moved services updated
 - [ ] **Every function and method has an explicit return type**
 - [ ] **Service mocks mock our wrapper services, not SDK services**
 - [ ] `src/test/serviceMocks.ts` updated (import paths, deprecated methods removed)
+- [ ] **Test assertions preserve actual values** (no reduction to toHaveProperty/toBeDefined)
 - [ ] 100% test coverage
 - [ ] No ESLint errors/warnings
 - [ ] No TypeScript errors
