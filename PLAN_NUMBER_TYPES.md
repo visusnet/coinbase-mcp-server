@@ -1208,7 +1208,7 @@ npm run knip          # Unused exports
 ## 6. Commit Message
 
 ```
-refactor: standardize number types across MCP tools and services
+refactor(server): standardize number types across MCP tools and services
 
 BREAKING CHANGE: All MCP tool schemas now use z.number() instead of
 z.string() for numeric values (amounts, prices, OHLCV data).
