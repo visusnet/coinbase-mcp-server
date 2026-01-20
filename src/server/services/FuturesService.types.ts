@@ -1,0 +1,85 @@
+// Wrapper types with numbers for API convenience
+import type { FCMPositionSide } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/FCMPositionSide';
+import type { FCMSweepStatus } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/FCMSweepStatus';
+import type { FcmMarginWindowMeasure } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/FcmMarginWindowMeasure';
+import type { Amount } from './AccountsService.types';
+
+// =============================================================================
+// SDK Type Re-exports
+// =============================================================================
+
+export type {
+  ListFuturesPositionsResponse as SdkListFuturesPositionsResponse,
+  GetFuturesPositionsResponse as SdkGetFuturesPositionResponse,
+  GetFuturesBalanceSummaryResponse as SdkGetFuturesBalanceSummaryResponse,
+  ListFuturesSweepsResponse as SdkListFuturesSweepsResponse,
+} from '@coinbase-sample/advanced-trade-sdk-ts/dist/rest/futures/types';
+export type { FCMPosition as SdkFCMPosition } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/FCMPosition';
+export type { FCMBalanceSummary as SdkFCMBalanceSummary } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/FCMBalanceSummary';
+export type { FCMSweep as SdkFCMSweep } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/FCMSweep';
+
+// Re-export SdkAmount from AccountsService.types
+export type { SdkAmount } from './AccountsService.types';
+
+// Re-export request types unchanged
+export type { GetFuturesPositionRequest } from '@coinbase-sample/advanced-trade-sdk-ts/dist/rest/futures/types';
+
+// =============================================================================
+// Our Types (with number values instead of string)
+// =============================================================================
+
+// FCMPosition with numbers
+export interface FCMPosition {
+  readonly productId?: string;
+  readonly expirationTime?: string;
+  readonly side?: FCMPositionSide;
+  readonly numberOfContracts?: number;
+  readonly currentPrice?: number;
+  readonly avgEntryPrice?: number;
+  readonly unrealizedPnl?: number;
+  readonly dailyRealizedPnl?: number;
+}
+
+// FCMBalanceSummary with numbers
+export interface FCMBalanceSummary {
+  readonly futuresBuyingPower?: Amount;
+  readonly totalUsdBalance?: Amount;
+  readonly cbiUsdBalance?: Amount;
+  readonly cfmUsdBalance?: Amount;
+  readonly totalOpenOrdersHoldAmount?: Amount;
+  readonly unrealizedPnl?: Amount;
+  readonly dailyRealizedPnl?: Amount;
+  readonly initialMargin?: Amount;
+  readonly availableMargin?: Amount;
+  readonly liquidationThreshold?: Amount;
+  readonly liquidationBufferAmount?: Amount;
+  readonly liquidationBufferPercentage?: number;
+  readonly intradayMarginWindowMeasure?: FcmMarginWindowMeasure;
+  readonly overnightMarginWindowMeasure?: FcmMarginWindowMeasure;
+}
+
+// FCMSweep with numbers
+export interface FCMSweep {
+  readonly id?: string;
+  readonly requestedAmount?: Amount;
+  readonly shouldSweepAll?: boolean;
+  readonly status?: FCMSweepStatus;
+  readonly scheduledTime?: string;
+}
+
+// Response types with our wrapper types
+export interface ListFuturesPositionsResponse {
+  readonly positions?: FCMPosition[];
+}
+
+export interface GetFuturesPositionResponse {
+  readonly position?: FCMPosition;
+}
+
+export interface GetFuturesBalanceSummaryResponse {
+  readonly balanceSummary?: FCMBalanceSummary;
+}
+
+export interface ListFuturesSweepsResponse {
+  readonly sweeps?: FCMSweep[];
+}

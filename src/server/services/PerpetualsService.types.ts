@@ -1,0 +1,152 @@
+// Wrapper types with numbers for API convenience
+import type { PortfolioMarginType } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/PortfolioMarginType';
+import type { PositionSide } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/PositionSide';
+import type { PortfolioLiquidationStatus } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/PortfolioLiquidationStatus';
+import type { PortfolioMarginFlags } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/PortfolioMarginFlags';
+import type { Amount } from './AccountsService.types';
+
+// =============================================================================
+// SDK Type Re-exports
+// =============================================================================
+
+export type {
+  ListPerpetualsPositionsResponse as SdkListPerpetualsPositionsResponse,
+  GetPerpetualsPositionResponse as SdkGetPerpetualsPositionResponse,
+  GetPerpetualsPortfolioSummaryResponse as SdkGetPortfolioSummaryResponse,
+  GetPerpetualsPortfoliosBalancesResponse as SdkGetPortfolioBalanceResponse,
+} from '@coinbase-sample/advanced-trade-sdk-ts/dist/rest/perpetuals/types';
+export type { Asset as SdkAsset } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/Asset';
+export type { Balance as SdkBalance } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/Balance';
+export type { Position as SdkPosition } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/Position';
+export type { PositionSummary as SdkPositionSummary } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/PositionSummary';
+export type { Portfolio as SdkPortfolio } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/Portfolio';
+export type { PortfoliosSummary as SdkPortfoliosSummary } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/PortfoliosSummary';
+export type { PortfolioBalance as SdkPortfolioBalance } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/PortfolioBalance';
+
+// Re-export SdkAmount from AccountsService.types
+export type { SdkAmount } from './AccountsService.types';
+
+// Re-export request types unchanged
+export type {
+  ListPerpetualsPositionsRequest,
+  GetPerpetualsPositionRequest,
+  GetPerpetualsPortfolioSummaryRequest as GetPortfolioSummaryRequest,
+  GetPerpetualsPortfoliosBalancesRequest as GetPortfolioBalanceRequest,
+} from '@coinbase-sample/advanced-trade-sdk-ts/dist/rest/perpetuals/types';
+
+// =============================================================================
+// Our Types (with number values instead of string)
+// =============================================================================
+
+// Asset with numbers
+export interface Asset {
+  readonly assetId?: string;
+  readonly assetUuid?: string;
+  readonly assetName?: string;
+  readonly status?: string;
+  readonly collateralWeight?: number;
+  readonly accountCollateralLimit?: number;
+  readonly ecosystemCollateralLimitBreached?: boolean;
+  readonly assetIconUrl?: string;
+  readonly supportedNetworksEnabled?: boolean;
+}
+
+// Balance with numbers
+export interface Balance {
+  readonly asset?: Asset;
+  readonly quantity?: number;
+  readonly hold?: number;
+  readonly transferHold?: number;
+  readonly collateralValue?: number;
+  readonly collateralWeight?: number;
+  readonly maxWithdrawAmount?: number;
+  readonly loan?: number;
+  readonly loanCollateralRequirementUsd?: number;
+  readonly pledgedQuantity?: number;
+}
+
+// Position with numbers
+export interface Position {
+  readonly productId?: string;
+  readonly productUuid?: string;
+  readonly portfolioUuid?: string;
+  readonly symbol?: string;
+  readonly vwap?: Amount;
+  readonly entryVwap?: Amount;
+  readonly positionSide?: PositionSide;
+  readonly marginType?: PortfolioMarginType;
+  readonly netSize?: number;
+  readonly buyOrderSize?: number;
+  readonly sellOrderSize?: number;
+  readonly imContribution?: number;
+  readonly unrealizedPnl?: Amount;
+  readonly markPrice?: Amount;
+  readonly liquidationPrice?: Amount;
+  readonly leverage?: number;
+  readonly imNotional?: Amount;
+  readonly mmNotional?: Amount;
+  readonly positionNotional?: Amount;
+  readonly aggregatedPnl?: Amount;
+}
+
+// PositionSummary with numbers
+export interface PositionSummary {
+  readonly aggregatedPnl?: Amount;
+}
+
+// Portfolio with numbers
+export interface Portfolio {
+  readonly portfolioUuid?: string;
+  readonly collateral?: number;
+  readonly positionNotional?: number;
+  readonly openPositionNotional?: number;
+  readonly pendingFees?: number;
+  readonly borrow?: number;
+  readonly accruedInterest?: number;
+  readonly rollingDebt?: number;
+  readonly portfolioInitialMargin?: number;
+  readonly portfolioImNotional?: Amount;
+  readonly portfolioMaintenanceMargin?: number;
+  readonly portfolioMmNotional?: Amount;
+  readonly liquidationPercentage?: number;
+  readonly liquidationBuffer?: number;
+  readonly marginType?: PortfolioMarginType;
+  readonly marginFlags?: PortfolioMarginFlags;
+  readonly liquidationStatus?: PortfolioLiquidationStatus;
+  readonly unrealizedPnl?: Amount;
+  readonly totalBalance?: Amount;
+}
+
+// PortfoliosSummary with numbers
+export interface PortfoliosSummary {
+  readonly unrealizedPnl?: Amount;
+  readonly buyingPower?: Amount;
+  readonly totalBalance?: Amount;
+  readonly maxWithdrawalAmount?: Amount;
+}
+
+// PortfolioBalance with our Balance type
+export interface PortfolioBalance {
+  readonly portfolioUuid?: string;
+  readonly balances?: Balance[];
+  readonly isMarginLimitReached?: boolean;
+}
+
+// Response types with our wrapper types
+export interface ListPerpetualsPositionsResponse {
+  readonly positions?: Position[];
+  readonly summary?: PositionSummary;
+}
+
+export interface GetPerpetualsPositionResponse {
+  readonly position?: Position;
+}
+
+export interface GetPortfolioSummaryResponse {
+  readonly portfolios?: Portfolio[];
+  readonly summary?: PortfoliosSummary;
+}
+
+export interface GetPortfolioBalanceResponse {
+  readonly portfolioBalances?: PortfolioBalance[];
+}

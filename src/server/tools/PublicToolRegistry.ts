@@ -1,7 +1,7 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import * as z from 'zod';
-import type { PublicService } from '../PublicService';
-import { Granularity } from '../ProductCandles';
+import type { PublicService } from '../services';
+import { Granularity } from '../services';
 import { ToolRegistry } from './ToolRegistry';
 
 /**
@@ -80,9 +80,7 @@ export class PublicToolRegistry extends ToolRegistry {
             ),
         },
       },
-      this.call(
-        this.publicService.getProductCandlesFixed.bind(this.publicService),
-      ),
+      this.call(this.publicService.getProductCandles.bind(this.publicService)),
     );
 
     this.server.registerTool(

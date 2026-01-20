@@ -1,5 +1,5 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import type { PaymentMethodsService } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
+import type { PaymentMethodsService } from '../services';
 import * as z from 'zod';
 import { ToolRegistry } from './ToolRegistry';
 

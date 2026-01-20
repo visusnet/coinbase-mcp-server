@@ -1,5 +1,5 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import type { OrdersService } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
+import type { OrdersService } from '../services';
 import { OrderSide } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/OrderSide.js';
 import { StopPriceDirection } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/StopPriceDirection.js';
 import * as z from 'zod';
@@ -12,66 +12,66 @@ const orderConfigurationSchema = z
   .object({
     marketMarketIoc: z
       .object({
-        quoteSize: z.string().optional(),
-        baseSize: z.string().optional(),
+        quoteSize: z.number().optional(),
+        baseSize: z.number().optional(),
       })
       .optional(),
     limitLimitGtc: z
       .object({
-        baseSize: z.string(),
-        limitPrice: z.string(),
+        baseSize: z.number(),
+        limitPrice: z.number(),
         postOnly: z.boolean().optional(),
       })
       .optional(),
     limitLimitGtd: z
       .object({
-        baseSize: z.string(),
-        limitPrice: z.string(),
+        baseSize: z.number(),
+        limitPrice: z.number(),
         endTime: z.string(),
         postOnly: z.boolean().optional(),
       })
       .optional(),
     limitLimitFok: z
       .object({
-        baseSize: z.string(),
-        limitPrice: z.string(),
+        baseSize: z.number(),
+        limitPrice: z.number(),
       })
       .optional(),
     sorLimitIoc: z
       .object({
-        baseSize: z.string(),
-        limitPrice: z.string(),
+        baseSize: z.number(),
+        limitPrice: z.number(),
       })
       .optional(),
     stopLimitStopLimitGtc: z
       .object({
-        baseSize: z.string(),
-        limitPrice: z.string(),
-        stopPrice: z.string(),
+        baseSize: z.number(),
+        limitPrice: z.number(),
+        stopPrice: z.number(),
         stopDirection: z.nativeEnum(StopPriceDirection).optional(),
       })
       .optional(),
     stopLimitStopLimitGtd: z
       .object({
-        baseSize: z.string(),
-        limitPrice: z.string(),
-        stopPrice: z.string(),
+        baseSize: z.number(),
+        limitPrice: z.number(),
+        stopPrice: z.number(),
         endTime: z.string(),
         stopDirection: z.nativeEnum(StopPriceDirection).optional(),
       })
       .optional(),
     triggerBracketGtc: z
       .object({
-        baseSize: z.string(),
-        limitPrice: z.string(),
-        stopTriggerPrice: z.string(),
+        baseSize: z.number(),
+        limitPrice: z.number(),
+        stopTriggerPrice: z.number(),
       })
       .optional(),
     triggerBracketGtd: z
       .object({
-        baseSize: z.string(),
-        limitPrice: z.string(),
-        stopTriggerPrice: z.string(),
+        baseSize: z.number(),
+        limitPrice: z.number(),
+        stopTriggerPrice: z.number(),
         endTime: z.string(),
       })
       .optional(),
@@ -184,8 +184,8 @@ export class OrderToolRegistry extends ToolRegistry {
         description: 'Edit an existing order (change price or size)',
         inputSchema: {
           orderId: z.string().describe('The ID of the order to edit'),
-          price: z.string().describe('New limit price'),
-          size: z.string().describe('New size'),
+          price: z.number().describe('New limit price'),
+          size: z.number().describe('New size'),
         },
       },
       this.call(this.orders.editOrder.bind(this.orders)),
@@ -200,8 +200,8 @@ export class OrderToolRegistry extends ToolRegistry {
           orderId: z
             .string()
             .describe('The ID of the order to preview editing'),
-          price: z.string().describe('New limit price'),
-          size: z.string().describe('New size'),
+          price: z.number().describe('New limit price'),
+          size: z.number().describe('New size'),
         },
       },
       this.call(this.orders.editOrderPreview.bind(this.orders)),
@@ -232,7 +232,7 @@ export class OrderToolRegistry extends ToolRegistry {
         inputSchema: {
           clientOrderId: z.string().describe('Unique client order ID'),
           productId: z.string().describe('Trading pair (e.g., BTC-USD)'),
-          size: z.string().optional().describe('Size to close (optional)'),
+          size: z.number().optional().describe('Size to close (optional)'),
         },
       },
       this.call(this.orders.closePosition.bind(this.orders)),

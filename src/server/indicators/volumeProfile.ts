@@ -25,7 +25,8 @@ export function calculateZones(
   volume: readonly number[],
   noOfBars: number,
 ): VolumeProfileZone[] {
-  // Library types are incorrect - it actually returns zone objects
+  // Library types are incorrect - VolumeProfile.calculate() declares number[]
+  // but actually returns zone objects at runtime. Cast via unknown is required.
   const result = VolumeProfile.calculate({
     open: [...open],
     high: [...high],

@@ -1,5 +1,5 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import type { PortfoliosService } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
+import type { PortfoliosService } from '../services';
 import * as z from 'zod';
 import { ToolRegistry } from './ToolRegistry';
 
@@ -57,7 +57,7 @@ export class PortfolioToolRegistry extends ToolRegistry {
         inputSchema: {
           funds: z
             .object({
-              value: z.string().describe('Amount to transfer'),
+              value: z.number().describe('Amount to transfer'),
               currency: z.string().describe('Currency code (e.g., USD, BTC)'),
             })
             .describe('Fund movement details (amount, currency)'),
