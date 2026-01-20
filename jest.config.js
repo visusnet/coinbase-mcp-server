@@ -20,7 +20,12 @@ export default {
     ],
   },
   testMatch: ['**/*.spec.ts'],
-  collectCoverageFrom: ['src/**/*.ts', '!src/**/*.spec.ts', '!src/**/*.d.ts'],
+  collectCoverageFrom: [
+    'src/**/*.ts',
+    '!src/**/*.spec.ts',
+    '!src/**/*.d.ts',
+    '!src/**/index.ts', // Barrel files only re-export
+  ],
   coverageThreshold: {
     global: {
       branches: 100,

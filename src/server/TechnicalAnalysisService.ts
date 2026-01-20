@@ -6,11 +6,12 @@
  * returning only computed indicator values.
  */
 
-import type { ProductsService } from './ProductsService';
+import type { ProductsService } from './services';
 import type {
   TechnicalIndicatorsService,
   CandleInput,
 } from './TechnicalIndicatorsService';
+import { mapSdkCandlesToInput } from './services';
 import { Granularity } from './ProductCandles';
 import {
   AnalyzeTechnicalIndicatorsRequest,
@@ -131,14 +132,14 @@ export class TechnicalAnalysisService {
       end.getTime() - candleCount * secondsPerCandle * 1000,
     );
 
-    const response = await this.productsService.getProductCandlesFixed({
+    const response = await this.productsService.getProductCandles({
       productId,
       granularity,
       start: start.toISOString(),
       end: end.toISOString(),
     });
 
-    return mapApiCandlesToInput(response.candles);
+    return mapSdkCandlesToInput(response.candles);
   }
 
   /**
@@ -150,14 +151,14 @@ export class TechnicalAnalysisService {
     const end = new Date();
     const start = new Date(end.getTime() - 3 * 24 * 60 * 60 * 1000);
 
-    const response = await this.productsService.getProductCandlesFixed({
+    const response = await this.productsService.getProductCandles({
       productId,
       granularity: Granularity.ONE_DAY,
       start: start.toISOString(),
       end: end.toISOString(),
     });
 
-    return mapApiCandlesToInput(response.candles);
+    return mapSdkCandlesToInput(response.candles);
   }
 
   /**
@@ -178,10 +179,10 @@ export class TechnicalAnalysisService {
     const latest = candles[0];
     const oldest = candles[candles.length - 1];
 
-    const current = parseFloat(latest.close);
-    const open = parseFloat(oldest.open);
-    const high = Math.max(...candles.map((c) => parseFloat(c.high)));
-    const low = Math.min(...candles.map((c) => parseFloat(c.low)));
+    const current = latest.close;
+    const open = oldest.open;
+    const high = Math.max(...candles.map((c) => c.high));
+    const low = Math.min(...candles.map((c) => c.low));
     const change24h = open !== 0 ? ((current - open) / open) * 100 : 0;
 
     return {
@@ -349,7 +350,7 @@ export class TechnicalAnalysisService {
     indicatorSet: Set<IndicatorType>,
   ): TrendIndicators {
     const trend: TrendIndicators = {};
-    const currentPrice = candles.length > 0 ? parseFloat(candles[0].close) : 0;
+    const currentPrice = candles.length > 0 ? candles[0].close : 0;
 
     if (indicatorSet.has(IndicatorType.SMA)) {
       const result = this.indicatorsService.calculateSma({ candles });
@@ -409,7 +410,7 @@ export class TechnicalAnalysisService {
     indicatorSet: Set<IndicatorType>,
   ): VolatilityIndicators {
     const volatility: VolatilityIndicators = {};
-    const currentPrice = candles.length > 0 ? parseFloat(candles[0].close) : 0;
+    const currentPrice = candles.length > 0 ? candles[0].close : 0;
 
     if (indicatorSet.has(IndicatorType.BOLLINGER_BANDS)) {
       const result = this.indicatorsService.calculateBollingerBands({
@@ -467,7 +468,7 @@ export class TechnicalAnalysisService {
     indicatorSet: Set<IndicatorType>,
   ): VolumeIndicators {
     const volume: VolumeIndicators = {};
-    const currentPrice = candles.length > 0 ? parseFloat(candles[0].close) : 0;
+    const currentPrice = candles.length > 0 ? candles[0].close : 0;
 
     if (indicatorSet.has(IndicatorType.OBV)) {
       const result = this.indicatorsService.calculateObv({ candles });
@@ -1070,27 +1071,4 @@ export class TechnicalAnalysisService {
     }
     return 'LOW';
   }
-}
-
-/**
- * Map API candle response to CandleInput format.
- */
-function mapApiCandlesToInput(
-  candles:
-    | ReadonlyArray<{
-        readonly open?: string;
-        readonly high?: string;
-        readonly low?: string;
-        readonly close?: string;
-        readonly volume?: string;
-      }>
-    | undefined,
-): CandleInput[] {
-  return (candles ?? []).map((c) => ({
-    open: c.open ?? '0',
-    high: c.high ?? '0',
-    low: c.low ?? '0',
-    close: c.close ?? '0',
-    volume: c.volume ?? '0',
-  }));
 }

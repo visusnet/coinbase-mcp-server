@@ -7,11 +7,11 @@ import { ToolRegistry } from './ToolRegistry';
  * Shared candle schema for technical indicator inputs.
  */
 const candleSchema = z.object({
-  open: z.string().describe('Opening price'),
-  high: z.string().describe('High price'),
-  low: z.string().describe('Low price'),
-  close: z.string().describe('Closing price'),
-  volume: z.string().describe('Volume'),
+  open: z.number().describe('Opening price'),
+  high: z.number().describe('High price'),
+  low: z.number().describe('Low price'),
+  close: z.number().describe('Closing price'),
+  volume: z.number().describe('Volume'),
 });
 
 /**
@@ -660,11 +660,11 @@ export class IndicatorToolRegistry extends ToolRegistry {
           'Returns pivot point with support (S1-S3) and resistance (R1-R3) levels. ' +
           'Used to identify potential support/resistance levels for the next trading period.',
         inputSchema: {
-          high: z.string().describe('Previous period high price'),
-          low: z.string().describe('Previous period low price'),
-          close: z.string().describe('Previous period closing price'),
+          high: z.number().describe('Previous period high price'),
+          low: z.number().describe('Previous period low price'),
+          close: z.number().describe('Previous period closing price'),
           open: z
-            .string()
+            .number()
             .optional()
             .describe(
               'Previous period opening price (required for DeMark type)',

@@ -1,7 +1,7 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { ProductType } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/ProductType.js';
 import * as z from 'zod';
-import type { ProductsService } from '../ProductsService';
+import type { ProductsService } from '../services';
 import { Granularity } from '../ProductCandles';
 import { ToolRegistry } from './ToolRegistry';
 
@@ -81,7 +81,7 @@ export class ProductToolRegistry extends ToolRegistry {
             ),
         },
       },
-      this.call(this.products.getProductCandlesFixed.bind(this.products)),
+      this.call(this.products.getProductCandles.bind(this.products)),
     );
 
     this.server.registerTool(

@@ -178,7 +178,7 @@ describe('CoinbaseMcpServer Integration Tests', () => {
       });
 
       it('should call editOrder via MCP tool edit_order', async () => {
-        const args = { orderId: 'order-123', price: '50000', size: '0.1' };
+        const args = { orderId: 'order-123', price: 50000, size: 0.1 };
         const result = { success: true };
         mockOrdersService.editOrder.mockResolvedValueOnce(result);
 
@@ -192,7 +192,7 @@ describe('CoinbaseMcpServer Integration Tests', () => {
       });
 
       it('should call editOrderPreview via MCP tool preview_edit_order', async () => {
-        const args = { orderId: 'order-123', price: '50000', size: '0.1' };
+        const args = { orderId: 'order-123', price: 50000, size: 0.1 };
         const result = { orders: [], hasNext: false };
         mockOrdersService.editOrderPreview.mockResolvedValueOnce(result);
 
@@ -283,7 +283,7 @@ describe('CoinbaseMcpServer Integration Tests', () => {
         expectResponseToContain(response, result);
       });
 
-      it('should call getProductCandlesFixed via MCP tool get_product_candles', async () => {
+      it('should call getProductCandles via MCP tool get_product_candles', async () => {
         const args = {
           productId: 'BTC-USD',
           start: '2024-01-01T00:00:00Z',
@@ -291,16 +291,14 @@ describe('CoinbaseMcpServer Integration Tests', () => {
           granularity: 'ONE_HOUR',
         };
         const result = { candles: [] };
-        mockProductsService.getProductCandlesFixed.mockResolvedValueOnce(
-          result,
-        );
+        mockProductsService.getProductCandles.mockResolvedValueOnce(result);
 
         const response = await client.callTool({
           name: 'get_product_candles',
           arguments: args,
         });
 
-        expect(mockProductsService.getProductCandlesFixed).toHaveBeenCalledWith(
+        expect(mockProductsService.getProductCandles).toHaveBeenCalledWith(
           args,
         );
         expectResponseToContain(response, result);
@@ -475,7 +473,7 @@ describe('CoinbaseMcpServer Integration Tests', () => {
 
       it('should call movePortfolioFunds via MCP tool move_portfolio_funds', async () => {
         const args = {
-          funds: { value: '100', currency: 'USD' },
+          funds: { value: 100, currency: 'USD' },
           sourcePortfolioUuid: 'source-123',
           targetPortfolioUuid: 'target-456',
         };
@@ -529,7 +527,7 @@ describe('CoinbaseMcpServer Integration Tests', () => {
         const args = {
           fromAccount: 'account-123',
           toAccount: 'account-456',
-          amount: '100',
+          amount: 100,
         };
         const result = {
           trade: {
@@ -661,7 +659,7 @@ describe('CoinbaseMcpServer Integration Tests', () => {
         expectResponseToContain(response, result);
       });
 
-      it('should call getProductCandlesFixed via MCP tool get_public_product_candles', async () => {
+      it('should call getProductCandles via MCP tool get_public_product_candles', async () => {
         const args = {
           productId: 'BTC-USD',
           start: '2024-01-01T00:00:00Z',
@@ -669,16 +667,14 @@ describe('CoinbaseMcpServer Integration Tests', () => {
           granularity: 'ONE_HOUR',
         };
         const result = { candles: [] };
-        mockPublicService.getProductCandlesFixed.mockResolvedValueOnce(result);
+        mockPublicService.getProductCandles.mockResolvedValueOnce(result);
 
         const response = await client.callTool({
           name: 'get_public_product_candles',
           arguments: args,
         });
 
-        expect(mockPublicService.getProductCandlesFixed).toHaveBeenCalledWith(
-          args,
-        );
+        expect(mockPublicService.getProductCandles).toHaveBeenCalledWith(args);
         expectResponseToContain(response, result);
       });
 
@@ -878,18 +874,18 @@ describe('CoinbaseMcpServer Integration Tests', () => {
         const args = {
           candles: [
             {
-              open: '100',
-              high: '102',
-              low: '99',
-              close: '101',
-              volume: '1000',
+              open: 100,
+              high: 102,
+              low: 99,
+              close: 101,
+              volume: 1000,
             },
             {
-              open: '101',
-              high: '103',
-              low: '100',
-              close: '102',
-              volume: '1100',
+              open: 101,
+              high: 103,
+              low: 100,
+              close: 102,
+              volume: 1100,
             },
           ],
           period: 14,
@@ -916,18 +912,18 @@ describe('CoinbaseMcpServer Integration Tests', () => {
         const args = {
           candles: [
             {
-              open: '100',
-              high: '102',
-              low: '99',
-              close: '101',
-              volume: '1000',
+              open: 100,
+              high: 102,
+              low: 99,
+              close: 101,
+              volume: 1000,
             },
             {
-              open: '101',
-              high: '103',
-              low: '100',
-              close: '102',
-              volume: '1100',
+              open: 101,
+              high: 103,
+              low: 100,
+              close: 102,
+              volume: 1100,
             },
           ],
           fastPeriod: 12,
@@ -960,18 +956,18 @@ describe('CoinbaseMcpServer Integration Tests', () => {
         const args = {
           candles: [
             {
-              open: '100',
-              high: '102',
-              low: '99',
-              close: '101',
-              volume: '1000',
+              open: 100,
+              high: 102,
+              low: 99,
+              close: 101,
+              volume: 1000,
             },
             {
-              open: '101',
-              high: '103',
-              low: '100',
-              close: '102',
-              volume: '1100',
+              open: 101,
+              high: 103,
+              low: 100,
+              close: 102,
+              volume: 1100,
             },
           ],
           period: 20,
@@ -998,18 +994,18 @@ describe('CoinbaseMcpServer Integration Tests', () => {
         const args = {
           candles: [
             {
-              open: '100',
-              high: '102',
-              low: '99',
-              close: '101',
-              volume: '1000',
+              open: 100,
+              high: 102,
+              low: 99,
+              close: 101,
+              volume: 1000,
             },
             {
-              open: '101',
-              high: '103',
-              low: '100',
-              close: '102',
-              volume: '1100',
+              open: 101,
+              high: 103,
+              low: 100,
+              close: 102,
+              volume: 1100,
             },
           ],
           period: 20,
@@ -1036,18 +1032,18 @@ describe('CoinbaseMcpServer Integration Tests', () => {
         const args = {
           candles: [
             {
-              open: '100',
-              high: '102',
-              low: '99',
-              close: '101',
-              volume: '1000',
+              open: 100,
+              high: 102,
+              low: 99,
+              close: 101,
+              volume: 1000,
             },
             {
-              open: '101',
-              high: '103',
-              low: '100',
-              close: '102',
-              volume: '1100',
+              open: 101,
+              high: 103,
+              low: 100,
+              close: 102,
+              volume: 1100,
             },
           ],
           period: 20,
@@ -1087,18 +1083,18 @@ describe('CoinbaseMcpServer Integration Tests', () => {
           const args = {
             candles: [
               {
-                open: '100',
-                high: '110',
-                low: '95',
-                close: '105',
-                volume: '1000',
+                open: 100,
+                high: 110,
+                low: 95,
+                close: 105,
+                volume: 1000,
               },
               {
-                open: '105',
-                high: '115',
-                low: '100',
-                close: '110',
-                volume: '1100',
+                open: 105,
+                high: 115,
+                low: 100,
+                close: 110,
+                volume: 1100,
               },
             ],
             period: 14,
@@ -1129,18 +1125,18 @@ describe('CoinbaseMcpServer Integration Tests', () => {
           const args = {
             candles: [
               {
-                open: '100',
-                high: '110',
-                low: '95',
-                close: '105',
-                volume: '1000',
+                open: 100,
+                high: 110,
+                low: 95,
+                close: 105,
+                volume: 1000,
               },
               {
-                open: '105',
-                high: '115',
-                low: '100',
-                close: '110',
-                volume: '1100',
+                open: 105,
+                high: 115,
+                low: 100,
+                close: 110,
+                volume: 1100,
               },
             ],
             kPeriod: 14,
@@ -1173,18 +1169,18 @@ describe('CoinbaseMcpServer Integration Tests', () => {
           const args = {
             candles: [
               {
-                open: '100',
-                high: '110',
-                low: '95',
-                close: '105',
-                volume: '1000',
+                open: 100,
+                high: 110,
+                low: 95,
+                close: 105,
+                volume: 1000,
               },
               {
-                open: '105',
-                high: '115',
-                low: '100',
-                close: '110',
-                volume: '1100',
+                open: 105,
+                high: 115,
+                low: 100,
+                close: 110,
+                volume: 1100,
               },
             ],
             period: 14,
@@ -1215,18 +1211,18 @@ describe('CoinbaseMcpServer Integration Tests', () => {
           const args = {
             candles: [
               {
-                open: '100',
-                high: '101',
-                low: '99',
-                close: '100',
-                volume: '1000',
+                open: 100,
+                high: 101,
+                low: 99,
+                close: 100,
+                volume: 1000,
               },
               {
-                open: '100',
-                high: '102',
-                low: '99',
-                close: '101',
-                volume: '1100',
+                open: 100,
+                high: 102,
+                low: 99,
+                close: 101,
+                volume: 1100,
               },
             ],
           };
@@ -1255,18 +1251,18 @@ describe('CoinbaseMcpServer Integration Tests', () => {
           const args = {
             candles: [
               {
-                open: '100',
-                high: '102',
-                low: '98',
-                close: '100',
-                volume: '1000',
+                open: 100,
+                high: 102,
+                low: 98,
+                close: 100,
+                volume: 1000,
               },
               {
-                open: '100',
-                high: '103',
-                low: '99',
-                close: '101',
-                volume: '1100',
+                open: 100,
+                high: 103,
+                low: 99,
+                close: 101,
+                volume: 1100,
               },
             ],
           };
@@ -1295,18 +1291,18 @@ describe('CoinbaseMcpServer Integration Tests', () => {
           const args = {
             candles: [
               {
-                open: '100',
-                high: '110',
-                low: '95',
-                close: '105',
-                volume: '1000',
+                open: 100,
+                high: 110,
+                low: 95,
+                close: 105,
+                volume: 1000,
               },
               {
-                open: '105',
-                high: '115',
-                low: '100',
-                close: '110',
-                volume: '1100',
+                open: 105,
+                high: 115,
+                low: 100,
+                close: 110,
+                volume: 1100,
               },
             ],
             period: 20,
@@ -1337,18 +1333,18 @@ describe('CoinbaseMcpServer Integration Tests', () => {
           const args = {
             candles: [
               {
-                open: '100',
-                high: '110',
-                low: '95',
-                close: '105',
-                volume: '1000',
+                open: 100,
+                high: 110,
+                low: 95,
+                close: 105,
+                volume: 1000,
               },
               {
-                open: '105',
-                high: '115',
-                low: '100',
-                close: '110',
-                volume: '1100',
+                open: 105,
+                high: 115,
+                low: 100,
+                close: 110,
+                volume: 1100,
               },
             ],
             period: 14,
@@ -1379,18 +1375,18 @@ describe('CoinbaseMcpServer Integration Tests', () => {
           const args = {
             candles: [
               {
-                open: '100',
-                high: '110',
-                low: '95',
-                close: '105',
-                volume: '1000',
+                open: 100,
+                high: 110,
+                low: 95,
+                close: 105,
+                volume: 1000,
               },
               {
-                open: '105',
-                high: '115',
-                low: '100',
-                close: '110',
-                volume: '1100',
+                open: 105,
+                high: 115,
+                low: 100,
+                close: 110,
+                volume: 1100,
               },
             ],
             period: 12,
@@ -1421,18 +1417,18 @@ describe('CoinbaseMcpServer Integration Tests', () => {
           const args = {
             candles: [
               {
-                open: '100',
-                high: '110',
-                low: '95',
-                close: '105',
-                volume: '1000',
+                open: 100,
+                high: 110,
+                low: 95,
+                close: 105,
+                volume: 1000,
               },
               {
-                open: '105',
-                high: '115',
-                low: '100',
-                close: '110',
-                volume: '1100',
+                open: 105,
+                high: 115,
+                low: 100,
+                close: 110,
+                volume: 1100,
               },
             ],
             period: 14,
@@ -1463,18 +1459,18 @@ describe('CoinbaseMcpServer Integration Tests', () => {
           const args = {
             candles: [
               {
-                open: '100',
-                high: '110',
-                low: '95',
-                close: '105',
-                volume: '1000',
+                open: 100,
+                high: 110,
+                low: 95,
+                close: 105,
+                volume: 1000,
               },
               {
-                open: '105',
-                high: '115',
-                low: '100',
-                close: '110',
-                volume: '1100',
+                open: 105,
+                high: 115,
+                low: 100,
+                close: 110,
+                volume: 1100,
               },
             ],
             step: 0.02,
@@ -1505,11 +1501,11 @@ describe('CoinbaseMcpServer Integration Tests', () => {
       describe('calculate_ichimoku_cloud', () => {
         it('should call calculateIchimokuCloud via MCP tool calculate_ichimoku_cloud', async () => {
           const candles = Array.from({ length: 52 }, (_, i) => ({
-            open: String(100 + i),
-            high: String(105 + i),
-            low: String(95 + i),
-            close: String(102 + i),
-            volume: String(1000 + i * 10),
+            open: 100 + i,
+            high: 105 + i,
+            low: 95 + i,
+            close: 102 + i,
+            volume: 1000 + i * 10,
           }));
           const args = {
             candles,
@@ -1559,11 +1555,11 @@ describe('CoinbaseMcpServer Integration Tests', () => {
       describe('calculate_keltner_channels', () => {
         it('should call calculateKeltnerChannels via MCP tool calculate_keltner_channels', async () => {
           const candles = Array.from({ length: 30 }, (_, i) => ({
-            open: String(100 + i),
-            high: String(105 + i),
-            low: String(95 + i),
-            close: String(102 + i),
-            volume: String(1000 + i * 10),
+            open: 100 + i,
+            high: 105 + i,
+            low: 95 + i,
+            close: 102 + i,
+            volume: 1000 + i * 10,
           }));
           const args = {
             candles,
@@ -1635,39 +1631,39 @@ describe('CoinbaseMcpServer Integration Tests', () => {
           const args = {
             candles: [
               {
-                open: '100',
-                high: '105',
-                low: '95',
-                close: '102',
-                volume: '1000',
+                open: 100,
+                high: 105,
+                low: 95,
+                close: 102,
+                volume: 1000,
               },
               {
-                open: '102',
-                high: '108',
-                low: '100',
-                close: '105',
-                volume: '1100',
+                open: 102,
+                high: 108,
+                low: 100,
+                close: 105,
+                volume: 1100,
               },
               {
-                open: '105',
-                high: '112',
-                low: '103',
-                close: '110',
-                volume: '1200',
+                open: 105,
+                high: 112,
+                low: 103,
+                close: 110,
+                volume: 1200,
               },
               {
-                open: '110',
-                high: '115',
-                low: '108',
-                close: '107',
-                volume: '1300',
+                open: 110,
+                high: 115,
+                low: 108,
+                close: 107,
+                volume: 1300,
               },
               {
-                open: '107',
-                high: '110',
-                low: '104',
-                close: '105',
-                volume: '1400',
+                open: 107,
+                high: 110,
+                low: 104,
+                close: 105,
+                volume: 1400,
               },
             ],
             lookback: 2,

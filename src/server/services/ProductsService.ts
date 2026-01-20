@@ -1,48 +1,68 @@
-import { ProductsService as BaseProductsService } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
-import { GetBestBidAskResponse } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/GetBestBidAskResponse';
-import { GetProductBookResponse } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/GetProductBookResponse';
-import { Product } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/Product';
 import {
-  GetProductCandlesRequest,
-  GetProductCandlesResponse,
-  GetProductRequest,
-} from '@coinbase-sample/advanced-trade-sdk-ts/dist/rest/products/types';
+  ProductsService as SdkProductsService,
+  CoinbaseAdvTradeClient,
+} from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
+import type { GetProductBookResponse } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/GetProductBookResponse';
+import type { Product } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/Product';
+import { toUnixTimestamp } from '../ProductCandles';
 import {
-  GetMarketSnapshotRequest,
-  GetMarketSnapshotResponse,
   OrderBookData,
   MarketSnapshot,
   calculateBidAskDepth,
   calculateBidAskImbalance,
   createMarketSnapshots,
   findBestAndWorstPerformers,
-} from './MarketSnapshot';
-import {
-  countCandles,
+} from '../MarketSnapshot';
+import { countCandles, ProductCandles } from '../ProductCandles';
+import type {
+  ListProductsRequest,
+  ListProductsResponse,
+  GetProductRequest,
+  GetProductCandlesRequest,
+  GetProductCandlesResponse,
+  GetProductBookRequest,
+  GetProductBookResponse as GetProductBookResponseType,
+  GetBestBidAskRequest,
+  GetBestBidAskResponse as GetBestBidAskResponseType,
+  GetProductMarketTradesRequest,
+  GetProductMarketTradesResponse,
+  GetMarketSnapshotRequest,
+  GetMarketSnapshotResponse,
   GetProductCandlesBatchRequest,
   GetProductCandlesBatchResponse,
-  ProductCandles,
-  toUnixTimestamp,
-} from './ProductCandles';
+} from './ProductsService.types';
 
-export class ProductsService extends BaseProductsService {
-  /**
-   * The SDK's getProduct type claims to return GetProductResponse, but it actually
-   * returns a Product type. This function coerces the type.
-   */
-  public async getProductFixed(request: GetProductRequest): Promise<Product> {
-    return this.getProduct(request) as Promise<Product>;
+/**
+ * Wrapper service for Coinbase Products API.
+ * Delegates to SDK service and handles timestamp conversion.
+ */
+export class ProductsService {
+  private readonly sdk: SdkProductsService;
+
+  public constructor(client: CoinbaseAdvTradeClient) {
+    this.sdk = new SdkProductsService(client);
+  }
+
+  public listProducts(
+    request?: ListProductsRequest,
+  ): Promise<ListProductsResponse> {
+    return this.sdk.listProducts(
+      request ?? {},
+    ) as Promise<ListProductsResponse>;
+  }
+
+  public getProduct(request: GetProductRequest): Promise<Product> {
+    return this.sdk.getProduct(request) as Promise<Product>;
   }
 
   /**
-   * The SDK's getProductCandles method expects ISO 8601 timestamps, but the underlying
-   * API requires Unix timestamps. This method converts ISO 8601 to Unix timestamps
-   * before calling the original method.
+   * Get product candles with automatic ISO 8601 to Unix timestamp conversion.
+   * The SDK expects ISO 8601 but the underlying API requires Unix timestamps.
    */
-  public async getProductCandlesFixed(
+  public getProductCandles(
     request: GetProductCandlesRequest,
   ): Promise<GetProductCandlesResponse> {
-    return this.getProductCandles({
+    return this.sdk.getProductCandles({
       productId: request.productId,
       start: toUnixTimestamp(request.start),
       end: toUnixTimestamp(request.end),
@@ -50,13 +70,37 @@ export class ProductsService extends BaseProductsService {
     }) as Promise<GetProductCandlesResponse>;
   }
 
+  public getProductBook(
+    request: GetProductBookRequest,
+  ): Promise<GetProductBookResponseType> {
+    return this.sdk.getProductBook(
+      request,
+    ) as Promise<GetProductBookResponseType>;
+  }
+
+  public getBestBidAsk(
+    request?: GetBestBidAskRequest,
+  ): Promise<GetBestBidAskResponseType> {
+    return this.sdk.getBestBidAsk(
+      request ?? {},
+    ) as Promise<GetBestBidAskResponseType>;
+  }
+
+  public getProductMarketTrades(
+    request: GetProductMarketTradesRequest,
+  ): Promise<GetProductMarketTradesResponse> {
+    return this.sdk.getProductMarketTrades(
+      request,
+    ) as Promise<GetProductMarketTradesResponse>;
+  }
+
   public async getMarketSnapshot({
     productIds,
     includeOrderBook = false,
   }: GetMarketSnapshotRequest): Promise<GetMarketSnapshotResponse> {
-    const bestBidAsk = (await this.getBestBidAsk({
+    const bestBidAsk = await this.getBestBidAsk({
       productIds,
-    })) as GetBestBidAskResponse;
+    });
 
     const products = await this.getProducts(productIds);
 
@@ -112,7 +156,7 @@ export class ProductsService extends BaseProductsService {
     const candleResults = await Promise.all(
       productIds.map(async (productId) => ({
         productId,
-        response: await this.getProductCandlesFixed({
+        response: await this.getProductCandles({
           productId,
           start,
           end,
@@ -146,12 +190,12 @@ export class ProductsService extends BaseProductsService {
   ): Promise<GetProductBookResponse[]> {
     return Promise.all(
       productIds.map((id) => this.getProductBook({ productId: id })),
-    ) as Promise<GetProductBookResponse[]>;
+    );
   }
 
   private async getProducts(productIds: string[]): Promise<Product[]> {
     return Promise.all(
-      productIds.map((id) => this.getProductFixed({ productId: id })),
+      productIds.map((id) => this.getProduct({ productId: id })),
     );
   }
 }

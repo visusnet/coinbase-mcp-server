@@ -85,15 +85,15 @@ import {
 } from './indicators/swingPoints';
 
 /**
- * Candle data structure matching Coinbase API output.
- * All values are strings to match the API response format.
+ * Candle data structure for technical indicator calculations.
+ * All numeric values are provided as numbers (not strings).
  */
 export interface CandleInput {
-  readonly open: string;
-  readonly high: string;
-  readonly low: string;
-  readonly close: string;
-  readonly volume: string;
+  readonly open: number;
+  readonly high: number;
+  readonly low: number;
+  readonly close: number;
+  readonly volume: number;
 }
 
 /**
@@ -558,10 +558,10 @@ export interface CalculateVolumeProfileOutput {
  * Input for Pivot Points calculation
  */
 export interface CalculatePivotPointsInput {
-  readonly high: string;
-  readonly low: string;
-  readonly close: string;
-  readonly open?: string;
+  readonly high: number;
+  readonly low: number;
+  readonly close: number;
+  readonly open?: number;
   readonly type?: PivotPointsType;
 }
 
@@ -1346,10 +1346,8 @@ export class TechnicalIndicatorsService {
   public calculatePivotPoints(
     input: CalculatePivotPointsInput,
   ): PivotPointsOutput {
-    const high = parseFloat(input.high);
-    const low = parseFloat(input.low);
-    const close = parseFloat(input.close);
-    const open = input.open ? parseFloat(input.open) : close;
+    const { high, low, close } = input;
+    const open = input.open ?? close;
     const type = input.type ?? 'standard';
 
     switch (type) {
@@ -1501,36 +1499,36 @@ export class TechnicalIndicatorsService {
 }
 
 /**
- * Extract open prices from candle data as numbers.
+ * Extract open prices from candle data.
  */
 function extractOpenPrices(candles: readonly CandleInput[]): number[] {
-  return candles.map((candle) => parseFloat(candle.open));
+  return candles.map((candle) => candle.open);
 }
 
 /**
- * Extract close prices from candle data as numbers.
+ * Extract close prices from candle data.
  */
 function extractClosePrices(candles: readonly CandleInput[]): number[] {
-  return candles.map((candle) => parseFloat(candle.close));
+  return candles.map((candle) => candle.close);
 }
 
 /**
- * Extract high prices from candle data as numbers.
+ * Extract high prices from candle data.
  */
 function extractHighPrices(candles: readonly CandleInput[]): number[] {
-  return candles.map((candle) => parseFloat(candle.high));
+  return candles.map((candle) => candle.high);
 }
 
 /**
- * Extract low prices from candle data as numbers.
+ * Extract low prices from candle data.
  */
 function extractLowPrices(candles: readonly CandleInput[]): number[] {
-  return candles.map((candle) => parseFloat(candle.low));
+  return candles.map((candle) => candle.low);
 }
 
 /**
- * Extract volume from candle data as numbers.
+ * Extract volume from candle data.
  */
 function extractVolumes(candles: readonly CandleInput[]): number[] {
-  return candles.map((candle) => parseFloat(candle.volume));
+  return candles.map((candle) => candle.volume);
 }

@@ -1,5 +1,5 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import type { AccountsService } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
+import type { AccountsService } from '../services';
 import * as z from 'zod';
 import { ToolRegistry } from './ToolRegistry';
 

@@ -5,6 +5,8 @@ import type { Express, Request, Response } from 'express';
 import {
   CoinbaseAdvTradeClient,
   CoinbaseAdvTradeCredentials,
+} from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
+import {
   AccountsService,
   OrdersService,
   ConvertsService,
@@ -14,9 +16,9 @@ import {
   FuturesService,
   PerpetualsService,
   DataService,
-} from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
-import { ProductsService } from './ProductsService';
-import { PublicService } from './PublicService';
+  ProductsService,
+  PublicService,
+} from './services';
 import { TechnicalIndicatorsService } from './TechnicalIndicatorsService';
 import { TechnicalAnalysisService } from './TechnicalAnalysisService';
 import { ToolRegistry } from './tools/ToolRegistry';
