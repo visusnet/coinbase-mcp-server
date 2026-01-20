@@ -18,6 +18,7 @@ import {
 import { ProductsService } from './ProductsService';
 import { PublicService } from './PublicService';
 import { TechnicalIndicatorsService } from './TechnicalIndicatorsService';
+import { TechnicalAnalysisService } from './TechnicalAnalysisService';
 import { ToolRegistry } from './tools/ToolRegistry';
 import { AccountToolRegistry } from './tools/AccountToolRegistry';
 import { OrderToolRegistry } from './tools/OrderToolRegistry';
@@ -31,6 +32,7 @@ import { FuturesToolRegistry } from './tools/FuturesToolRegistry';
 import { PerpetualsToolRegistry } from './tools/PerpetualsToolRegistry';
 import { DataToolRegistry } from './tools/DataToolRegistry';
 import { IndicatorToolRegistry } from './tools/IndicatorToolRegistry';
+import { AnalysisToolRegistry } from './tools/AnalysisToolRegistry';
 
 export class CoinbaseMcpServer {
   private readonly app: Express;
@@ -47,6 +49,7 @@ export class CoinbaseMcpServer {
   private readonly publicService: PublicService;
   private readonly data: DataService;
   private readonly technicalIndicators: TechnicalIndicatorsService;
+  private readonly technicalAnalysis: TechnicalAnalysisService;
 
   constructor(apiKey: string, privateKey: string) {
     const credentials = new CoinbaseAdvTradeCredentials(apiKey, privateKey);
@@ -65,6 +68,10 @@ export class CoinbaseMcpServer {
     this.publicService = new PublicService(this.client);
     this.data = new DataService(this.client);
     this.technicalIndicators = new TechnicalIndicatorsService();
+    this.technicalAnalysis = new TechnicalAnalysisService(
+      this.products,
+      this.technicalIndicators,
+    );
 
     this.app = createMcpExpressApp();
 
@@ -127,6 +134,7 @@ export class CoinbaseMcpServer {
       new PerpetualsToolRegistry(server, this.perpetuals),
       new DataToolRegistry(server, this.data),
       new IndicatorToolRegistry(server, this.technicalIndicators),
+      new AnalysisToolRegistry(server, this.technicalAnalysis),
     ];
 
     registries.forEach((r) => {
@@ -149,7 +157,7 @@ export class CoinbaseMcpServer {
                 type: 'text',
                 text: `You are a Coinbase Advanced Trade assistant.
 
-TOOL CATEGORIES (69 total):
+TOOL CATEGORIES (71 total):
 - Accounts (2): list_accounts, get_account
 - Orders (9): create_order, preview_order, list_orders, get_order, cancel_orders, edit_order, preview_edit_order, list_fills, close_position
 - Products (8): list_products, get_product, get_product_candles, get_product_candles_batch, get_best_bid_ask, get_market_snapshot, get_product_book, get_market_trades
@@ -160,7 +168,8 @@ TOOL CATEGORIES (69 total):
 - Futures (4): list_futures_positions, get_futures_position, get_futures_balance_summary, list_futures_sweeps
 - Perpetuals (4): list_perpetuals_positions, get_perpetuals_position, get_perpetuals_portfolio_summary, get_perpetuals_portfolio_balance
 - Info (2): get_api_key_permissions, get_transaction_summary
-- Technical Indicators (23): calculate_rsi, calculate_macd, calculate_sma, calculate_ema, calculate_bollinger_bands, calculate_atr, calculate_stochastic, calculate_adx, calculate_obv, calculate_vwap, calculate_cci, calculate_williams_r, calculate_roc, calculate_mfi, calculate_psar, calculate_ichimoku_cloud, calculate_keltner_channels, calculate_fibonacci_retracement, detect_candlestick_patterns, calculate_volume_profile, calculate_pivot_points, detect_rsi_divergence, detect_chart_patterns
+- Technical Indicators (24): calculate_rsi, calculate_macd, calculate_sma, calculate_ema, calculate_bollinger_bands, calculate_atr, calculate_stochastic, calculate_adx, calculate_obv, calculate_vwap, calculate_cci, calculate_williams_r, calculate_roc, calculate_mfi, calculate_psar, calculate_ichimoku_cloud, calculate_keltner_channels, calculate_fibonacci_retracement, detect_candlestick_patterns, calculate_volume_profile, calculate_pivot_points, detect_rsi_divergence, detect_chart_patterns, detect_swing_points
+- Technical Analysis (1): analyze_technical_indicators
 
 BEST PRACTICES:
 1. Always preview_order before create_order
@@ -168,7 +177,8 @@ BEST PRACTICES:
 3. Use get_transaction_summary to understand fees
 4. For candles: timestamps are converted to Unix automatically
 5. Provide market context when relevant
-6. Use technical indicators with candle data from get_product_candles`,
+6. Use analyze_technical_indicators for efficient multi-indicator analysis (reduces context by ~90%)
+7. Use individual indicator tools (calculate_*, detect_*) when you need specific indicator values`,
               },
             },
           ],

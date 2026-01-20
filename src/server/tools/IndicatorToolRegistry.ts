@@ -25,7 +25,7 @@ function candlesSchema(minCount: number, description?: string) {
 }
 
 /**
- * Registry for technical indicator MCP tools (23 tools).
+ * Registry for technical indicator MCP tools (24 tools).
  */
 export class IndicatorToolRegistry extends ToolRegistry {
   constructor(
@@ -594,6 +594,34 @@ export class IndicatorToolRegistry extends ToolRegistry {
         },
       },
       this.call(this.indicators.detectChartPatterns.bind(this.indicators)),
+    );
+
+    this.server.registerTool(
+      'detect_swing_points',
+      {
+        title: 'Detect Swing Points (Williams Fractals)',
+        description:
+          'Detect swing highs and swing lows using Williams Fractal method. ' +
+          "A swing high occurs when a bar's high is higher than the surrounding bars. " +
+          "A swing low occurs when a bar's low is lower than the surrounding bars. " +
+          'Useful for identifying support/resistance levels, trend direction, and Fibonacci retracement points.',
+        inputSchema: {
+          candles: candlesSchema(
+            5,
+            'Array of candle data (minimum 5 for default lookback)',
+          ),
+          lookback: z
+            .number()
+            .int()
+            .min(1)
+            .max(10)
+            .optional()
+            .describe(
+              'Number of bars on each side to compare (default: 2, resulting in 5-bar pattern)',
+            ),
+        },
+      },
+      this.call(this.indicators.detectSwingPoints.bind(this.indicators)),
     );
   }
 

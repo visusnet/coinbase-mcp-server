@@ -679,6 +679,44 @@ Each type returns a different output structure based on its methodology:
 
 ---
 
+### Swing Points (Williams Fractal)
+
+**MCP Tool**: `detect_swing_points`
+
+**Usage**:
+```
+result = detect_swing_points(candles, fractalPeriod=2)
+```
+
+**Output Structure**:
+```json
+{
+  "fractalPeriod": 2,
+  "swingHigh": {
+    "index": 45,
+    "price": 47500.0,
+    "timestamp": "2024-01-15T10:00:00Z"
+  },
+  "swingLow": {
+    "index": 32,
+    "price": 43200.0,
+    "timestamp": "2024-01-14T22:00:00Z"
+  },
+  "trend": "uptrend",
+  "range": 4300.0
+}
+```
+
+**Interpretation**:
+
+- `trend: "uptrend"`: Recent swing high after swing low → Bullish (+1)
+- `trend: "downtrend"`: Recent swing low after swing high → Bearish (-1)
+- `trend: "sideways"`: No clear direction
+- Use `swingHigh.price` and `swingLow.price` for Fibonacci retracement calculation
+- `range`: Difference between swing high and swing low prices
+
+---
+
 ### Fibonacci Retracement
 
 **MCP Tool**: `calculate_fibonacci_retracement`
