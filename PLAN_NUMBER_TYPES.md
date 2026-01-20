@@ -1,86 +1,103 @@
-# Plan: Vereinheitlichung der Zahlen-Typen (v6)
+# Plan: Standardization of Number Types (v8)
 
-## Meta-Information
+## Meta Information
 
-Dieser Plan wurde erstellt basierend auf folgendem Prompt:
+This plan was created based on the following prompt:
 
-> **Thema**: Vereinheitlichung der Zahlen-Typen.
+> **Topic**: Standardization of number types.
 >
-> **Aktuell**: Der MCP Server erwartet bei vielen Zahlen (Fließkommazahlen und Integer-Werte) momentan strings. Das ist historisch bedingt, denn die Coinbase-API arbeitet an vielen Stellen mit strings.
+> **Current State**: The MCP Server currently expects strings for many numbers (floating-point and integer values). This is due to historical reasons, as the Coinbase API works with strings in many places.
 >
-> **Ziel**: Alle "unsere" Typen sollen für Variablen, die Zahlen enthalten number statt string verwenden. Das bedeutet, dass wir die Coinbase SDK Services nicht mehr direkt im CoinbaseMcpServer verwenden sollten, sondern eigene Services, die die Coinbase SDK Services intern verwenden.
+> **Goal**: All "our" types should use number instead of string for variables that contain numbers. This means we should no longer use the Coinbase SDK Services directly in CoinbaseMcpServer, but our own services that use the Coinbase SDK Services internally.
 
-**Akzeptanzkriterien aus dem Prompt:**
-- Alle MCP Tool Schemas nutzen für Zahlenwerte nicht mehr z.string, sondern z.number.
-- Zu jedem Coinbase SDK Service gibt es einen eigenen Service, der jede verwendete Methode an den Coinbase SDK Service delegiert und dabei die string Typen ggf. zu number ändert.
-- Die bestehenden eigenen Services erweitern nicht länger die Coinbase SDK Services, sondern delegieren.
-- Alle Qualitätskriterien sind erfüllt (100% Coverage, lint, types, knip).
-- Es gibt nur einen Commit für diese Änderungen.
-- Es wurden keine Tests gelöscht, maximal auf neue Methodensignaturen und ggf. Mocks angepasst.
-- Hilfsmethoden, Indikator-Berechnungen, etc. verwenden number konsistent.
-- **Jede Funktion und jede Methode MUSS den Return Type explizit angeben.**
+**Acceptance Criteria from the prompt:**
+- All MCP Tool Schemas use z.number() instead of z.string() for numeric values.
+- For each Coinbase SDK Service, there is a wrapper service that delegates each used method to the Coinbase SDK Service and changes string types to number where needed.
+- Existing custom services no longer extend the Coinbase SDK Services but delegate instead.
+- All quality criteria are met (100% coverage, lint, types, knip).
+- There is only one commit for these changes.
+- No tests were deleted, only adapted for new method signatures and mocks.
+- Helper methods, indicator calculations, etc. use number consistently.
+- **Every function and method MUST have an explicit return type.**
+- **Request and Response types from the SDK must NOT be used directly. Each service gets an XService.types.ts file.**
+- **Service mocks should mock our wrapper services, NOT the SDK services.**
 
 ---
 
-## Code Review Historie
+## Code Review History
 
 ### v1 → v2
-- Pragmatischer Ansatz statt Over-Engineering
-- Einfache Konvertierungsfunktionen statt komplexer Mapper
-- Kein Response-Mapping (außer Candles)
+- Pragmatic approach instead of over-engineering
+- Simple conversion functions instead of complex mappers
+- No response mapping (except for candles)
 
 ### v2 → v3
-- CRITICAL: Referenz auf nicht-existierende `serviceMocks.ts` entfernt
-- MAJOR: `mapApiCandlesToInput` in TechnicalAnalysisService.ts explizit dokumentiert
-- MAJOR: Import-Pfad-Änderungen bei Verschiebung explizit gelistet
-- MAJOR: Naming bei ProductsService/PublicService Delegation geklärt
-- MINOR: parseFloat durch Number() ersetzt für strikte Validierung
-- MINOR: Platzierung von mapSdkCandleToInput geklärt (in numberConversion.ts)
-- MINOR: Test-Datei-Liste vervollständigt
-- MINOR: Wrapper-Tests-Strategie dokumentiert
+- CRITICAL: Removed incorrect reference to serviceMocks.ts file path in an earlier version of the plan
+- MAJOR: Explicitly documented `mapApiCandlesToInput` in TechnicalAnalysisService.ts
+- MAJOR: Explicitly listed import path changes when moving files
+- MAJOR: Clarified naming for ProductsService/PublicService delegation
+- MINOR: Replaced parseFloat with Number() for strict validation
+- MINOR: Clarified placement of mapSdkCandleToInput (in numberConversion.ts)
+- MINOR: Completed test file list
+- MINOR: Documented wrapper test strategy
 
 ### v3 → v4
-- MAJOR: Service-Instantiierung korrigiert (Wrapper erhalten `CoinbaseAdvTradeClient`, erstellen intern SDK-Service)
-- MAJOR: ProductsService vollständige Methodenliste dokumentiert (10 Methoden)
-- MAJOR: PublicService vollständige Methodenliste dokumentiert (7 Methoden)
-- MINOR: Test-Coverage-Strategie für Wrapper detaillierter dokumentiert
+- MAJOR: Corrected service instantiation (wrappers receive `CoinbaseAdvTradeClient`, create SDK service internally)
+- MAJOR: Documented complete ProductsService method list (10 methods)
+- MAJOR: Documented complete PublicService method list (7 methods)
+- MINOR: More detailed test coverage strategy for wrappers
 
 ### v4 → v5
-- MAJOR: Explizites PublicService Wrapper-Beispiel mit korrektem Import-Pfad (`@coinbase-sample/advanced-trade-sdk-ts/dist/rest/public/index.js` statt `dist/index.js`)
-- MINOR: Explizite Dokumentation der `getProducts()` Methodenanpassung (von `getProductFixed()` auf `getProduct()`)
+- MAJOR: Explicit PublicService wrapper example with correct import path (`@coinbase-sample/advanced-trade-sdk-ts/dist/rest/public/index.js` instead of `dist/index.js`)
+- MINOR: Explicit documentation of `getProducts()` method change (from `getProductFixed()` to `getProduct()`)
 
 ### v5 → v6
-- MAJOR: Neues Akzeptanzkriterium hinzugefügt: Jede Funktion und Methode MUSS expliziten Return Type haben
-- MAJOR: Alle Code-Beispiele im Plan aktualisiert mit expliziten Return Types
+- MAJOR: Added new acceptance criterion: Every function and method MUST have explicit return type
+- MAJOR: Updated all code examples in the plan with explicit return types
+
+### v6 → v7
+- MAJOR: Translated entire plan to English
+- MAJOR: Added new acceptance criterion: SDK types must not be used directly
+- MAJOR: Added XService.types.ts pattern for type decoupling
+- MAJOR: Updated mock strategy: mocks should mock our wrapper services, not SDK services
+- MAJOR: Documented type mapping approach (SDK types → our types in .types.ts files)
+
+### v7 → v8
+- MAJOR: Added `src/test/serviceMocks.ts` to files to change with detailed update notes
+- MAJOR: Removed non-existent `src/server/indicators/pivotPoints.spec.ts` from test file list
+- MINOR: Clarified v2→v3 changelog note about serviceMocks.ts path issue
+- MINOR: Updated file count to accurate number (28 new files)
+- MINOR: Added note about `GetConvertTrade` method naming (capital G from SDK)
+- MINOR: Added documentation for private helper methods (getOrderBooks, getProducts)
 
 ---
 
-## 1. Analyse des Ist-Zustands
+## 1. Analysis of Current State
 
-### 1.1 Direkt verwendete Coinbase SDK Services
+### 1.1 Directly Used Coinbase SDK Services
 
-| SDK Service | Tool Registry | Numerische Request-Parameter | Wrapper nötig? |
+| SDK Service | Tool Registry | Numeric Request Parameters | Wrapper Needed? |
 |-------------|---------------|------------------------------|----------------|
-| `AccountsService` | `AccountToolRegistry` | Keine | Ja (Akzeptanzkriterium) |
-| `OrdersService` | `OrderToolRegistry` | baseSize, quoteSize, limitPrice, stopPrice, etc. | **Ja** |
-| `ConvertsService` | `ConvertToolRegistry` | amount | **Ja** |
-| `FeesService` | `FeeToolRegistry` | Keine | Ja (Akzeptanzkriterium) |
-| `PaymentMethodsService` | `PaymentToolRegistry` | Keine | Ja (Akzeptanzkriterium) |
-| `PortfoliosService` | `PortfolioToolRegistry` | funds.value | **Ja** |
-| `FuturesService` | `FuturesToolRegistry` | Keine | Ja (Akzeptanzkriterium) |
-| `PerpetualsService` | `PerpetualsToolRegistry` | Keine | Ja (Akzeptanzkriterium) |
-| `DataService` | `DataToolRegistry` | Keine | Ja (Akzeptanzkriterium) |
+| `AccountsService` | `AccountToolRegistry` | None | Yes (acceptance criterion) |
+| `OrdersService` | `OrderToolRegistry` | baseSize, quoteSize, limitPrice, stopPrice, etc. | **Yes** |
+| `ConvertsService` | `ConvertToolRegistry` | amount | **Yes** |
+| `FeesService` | `FeeToolRegistry` | None | Yes (acceptance criterion) |
+| `PaymentMethodsService` | `PaymentToolRegistry` | None | Yes (acceptance criterion) |
+| `PortfoliosService` | `PortfolioToolRegistry` | funds.value | **Yes** |
+| `FuturesService` | `FuturesToolRegistry` | None | Yes (acceptance criterion) |
+| `PerpetualsService` | `PerpetualsToolRegistry` | None | Yes (acceptance criterion) |
+| `DataService` | `DataToolRegistry` | None | Yes (acceptance criterion) |
 
-### 1.2 Bestehende eigene Services (müssen refactored werden)
+### 1.2 Existing Custom Services (must be refactored)
 
-| Service | Aktuell | Ziel |
+| Service | Current | Target |
 |---------|---------|------|
-| `ProductsService` | extends `BaseProductsService` | Delegation + number Types |
-| `PublicService` | extends `BasePublicService` | Delegation + number Types |
+| `ProductsService` | extends `BaseProductsService` | Delegation + number types |
+| `PublicService` | extends `BasePublicService` | Delegation + number types |
 
-### 1.3 String-basierte Zahlenfelder in Tool Schemas
+### 1.3 String-based Number Fields in Tool Schemas
 
-**OrderToolRegistry.ts** (27 Felder):
+**OrderToolRegistry.ts** (27 fields):
 
 In `orderConfigurationSchema`:
 - `marketMarketIoc`: quoteSize, baseSize
@@ -93,79 +110,166 @@ In `orderConfigurationSchema`:
 - `triggerBracketGtc`: baseSize, limitPrice, stopTriggerPrice
 - `triggerBracketGtd`: baseSize, limitPrice, stopTriggerPrice
 
-In separaten Tools:
+In separate tools:
 - `edit_order`: price, size
 - `preview_edit_order`: price, size
 - `close_position`: size
 
-**ConvertToolRegistry.ts** (1 Feld):
+**ConvertToolRegistry.ts** (1 field):
 - `amount`
 
-**PortfolioToolRegistry.ts** (1 Feld):
+**PortfolioToolRegistry.ts** (1 field):
 - `funds.value`
 
-**IndicatorToolRegistry.ts** (9 Felder, verwendet an ~15 Stellen):
-- `candleSchema`: `open`, `high`, `low`, `close`, `volume` (verwendet in allen Candle-basierten Tools)
+**IndicatorToolRegistry.ts** (9 fields, used in ~15 places):
+- `candleSchema`: `open`, `high`, `low`, `close`, `volume` (used in all candle-based tools)
 - `pivotPoints`: `high`, `low`, `close`, `open`
 
-### 1.4 Interne Interfaces mit strings
+### 1.4 Internal Interfaces with strings
 
-- `CandleInput` in `TechnicalIndicatorsService.ts` (Zeile 91-97)
-- `CalculatePivotPointsInput` in `TechnicalIndicatorsService.ts` (Zeile 560-566)
-- `mapApiCandlesToInput()` Funktion in `TechnicalAnalysisService.ts` (Zeile 1078-1096) - **Kritisch!**
+- `CandleInput` in `TechnicalIndicatorsService.ts` (line 91-97)
+- `CalculatePivotPointsInput` in `TechnicalIndicatorsService.ts` (line 560-566)
+- `mapApiCandlesToInput()` function in `TechnicalAnalysisService.ts` (line 1078-1096) - **Critical!**
 
 ---
 
-## 2. Architektur-Entscheidungen
+## 2. Architecture Decisions
 
-### 2.1 Service-Wrapper Verzeichnisstruktur
+### 2.1 Type Decoupling Strategy
+
+**Core Principle:** SDK types must NOT be used directly outside of the service layer. Each service gets its own types file.
+
+**Type File Structure:**
+```
+src/server/services/
+├── AccountsService.types.ts      # Re-exports or defines own types
+├── OrdersService.types.ts        # Defines own types with number fields
+├── ConvertsService.types.ts      # Defines own types with number fields
+├── FeesService.types.ts          # Re-exports SDK types
+├── PaymentMethodsService.types.ts # Re-exports SDK types
+├── PortfoliosService.types.ts    # Defines own types with number fields
+├── FuturesService.types.ts       # Re-exports SDK types
+├── PerpetualsService.types.ts    # Re-exports SDK types
+├── DataService.types.ts          # Re-exports SDK types
+├── ProductsService.types.ts      # Defines own types where needed
+├── PublicService.types.ts        # Defines own types where needed
+└── numberConversion.ts           # Shared conversion utilities
+```
+
+**Two Approaches for Type Files:**
+
+1. **For services WITH numeric conversion** (Orders, Converts, Portfolios, Products, Public):
+   - Define OWN types with `number` instead of `string`
+   - The service converts between our types and SDK types
+
+2. **For services WITHOUT numeric conversion** (Accounts, Fees, Payments, Futures, Perpetuals, Data):
+   - Re-export SDK types from the .types.ts file
+   - This maintains the decoupling layer even when types are unchanged
+
+**Example OrdersService.types.ts (with conversion):**
+```typescript
+// src/server/services/OrdersService.types.ts
+
+// Our types with number instead of string
+export interface CreateOrderRequest {
+  readonly clientOrderId: string;
+  readonly productId: string;
+  readonly side: 'BUY' | 'SELL';
+  readonly orderConfiguration: OrderConfiguration;
+}
+
+export interface MarketMarketIoc {
+  readonly quoteSize?: number;  // number instead of string
+  readonly baseSize?: number;   // number instead of string
+}
+
+export interface LimitLimitGtc {
+  readonly baseSize: number;    // number instead of string
+  readonly limitPrice: number;  // number instead of string
+  readonly postOnly?: boolean;
+}
+
+// ... other order configuration types with number fields
+
+// Response types can be re-exported if they don't need conversion
+export type { CreateOrderResponse } from '@coinbase-sample/advanced-trade-sdk-ts/dist/rest/orders/types';
+```
+
+**Example AccountsService.types.ts (no conversion needed):**
+```typescript
+// src/server/services/AccountsService.types.ts
+
+// Re-export SDK types unchanged - this is the decoupling layer
+export type {
+  ListAccountsRequest,
+  ListAccountsResponse,
+  GetAccountRequest,
+  GetAccountResponse,
+} from '@coinbase-sample/advanced-trade-sdk-ts/dist/rest/accounts/types';
+```
+
+### 2.2 Service Wrapper Directory Structure
 
 ```
 src/server/services/
-├── index.ts                    # Re-exports aller Services
-├── numberConversion.ts         # Zentrale Konvertierungsfunktionen + Candle-Mapping
-├── numberConversion.spec.ts    # Tests für Konvertierungsfunktionen
-├── AccountsService.ts          # Wrapper (durchgereicht, keine Konvertierung)
-├── OrdersService.ts            # Wrapper mit number→string Konvertierung
-├── ConvertsService.ts          # Wrapper mit number→string Konvertierung
-├── FeesService.ts              # Wrapper (durchgereicht)
-├── PaymentMethodsService.ts    # Wrapper (durchgereicht)
-├── PortfoliosService.ts        # Wrapper mit number→string Konvertierung
-├── FuturesService.ts           # Wrapper (durchgereicht)
-├── PerpetualsService.ts        # Wrapper (durchgereicht)
-├── DataService.ts              # Wrapper (durchgereicht)
-├── ProductsService.ts          # Refactored mit Candle-Mapping
-├── ProductsService.spec.ts     # Verschobene Tests
-├── PublicService.ts            # Refactored mit Candle-Mapping
-└── PublicService.spec.ts       # Verschobene Tests
+├── index.ts                      # Re-exports all services and types
+├── numberConversion.ts           # Central conversion functions + candle mapping
+├── numberConversion.spec.ts      # Tests for conversion functions
+├── AccountsService.ts            # Wrapper (pass-through, no conversion)
+├── AccountsService.types.ts      # Type re-exports
+├── OrdersService.ts              # Wrapper with number→string conversion
+├── OrdersService.types.ts        # Own types with number fields
+├── OrdersService.spec.ts         # Tests for conversion logic
+├── ConvertsService.ts            # Wrapper with number→string conversion
+├── ConvertsService.types.ts      # Own types with number fields
+├── ConvertsService.spec.ts       # Tests for conversion logic
+├── FeesService.ts                # Wrapper (pass-through)
+├── FeesService.types.ts          # Type re-exports
+├── PaymentMethodsService.ts      # Wrapper (pass-through)
+├── PaymentMethodsService.types.ts # Type re-exports
+├── PortfoliosService.ts          # Wrapper with number→string conversion
+├── PortfoliosService.types.ts    # Own types with number fields
+├── PortfoliosService.spec.ts     # Tests for conversion logic
+├── FuturesService.ts             # Wrapper (pass-through)
+├── FuturesService.types.ts       # Type re-exports
+├── PerpetualsService.ts          # Wrapper (pass-through)
+├── PerpetualsService.types.ts    # Type re-exports
+├── DataService.ts                # Wrapper (pass-through)
+├── DataService.types.ts          # Type re-exports
+├── ProductsService.ts            # Refactored with candle mapping
+├── ProductsService.types.ts      # Own types where needed
+├── ProductsService.spec.ts       # Moved tests
+├── PublicService.ts              # Refactored with candle mapping
+├── PublicService.types.ts        # Own types where needed
+└── PublicService.spec.ts         # Moved tests
 ```
 
-### 2.2 Konvertierungsfunktionen
+### 2.3 Conversion Functions
 
-**Datei: `src/server/services/numberConversion.ts`**
+**File: `src/server/services/numberConversion.ts`**
 
 ```typescript
 import type { CandleInput } from '../TechnicalIndicatorsService';
 
 /**
- * Konvertiert number zu string für SDK-Aufrufe.
- * Gibt undefined zurück wenn value undefined ist.
+ * Converts number to string for SDK calls.
+ * Returns undefined if value is undefined.
  */
 export function toString(value: number | undefined): string | undefined {
   return value !== undefined ? value.toString() : undefined;
 }
 
 /**
- * Konvertiert number zu string (required).
+ * Converts number to string (required).
  */
 export function toStringRequired(value: number): string {
   return value.toString();
 }
 
 /**
- * Konvertiert string zu number.
- * Wirft Error bei ungültigen Werten (NaN, Infinity, oder teilweise geparste Strings).
- * Verwendet Number() statt parseFloat() für strikte Validierung.
+ * Converts string to number.
+ * Throws Error for invalid values (NaN, Infinity, or partially parsed strings).
+ * Uses Number() instead of parseFloat() for strict validation.
  */
 export function toNumber(value: string | undefined): number | undefined {
   if (value === undefined) return undefined;
@@ -177,8 +281,8 @@ export function toNumber(value: string | undefined): number | undefined {
 }
 
 /**
- * Konvertiert string zu number (required).
- * Verwendet Number() statt parseFloat() für strikte Validierung.
+ * Converts string to number (required).
+ * Uses Number() instead of parseFloat() for strict validation.
  */
 export function toNumberRequired(value: string): number {
   const num = Number(value);
@@ -189,8 +293,8 @@ export function toNumberRequired(value: string): number {
 }
 
 /**
- * Mappt eine SDK-Candle zu CandleInput mit number Types.
- * Wird von ProductsService, PublicService und TechnicalAnalysisService verwendet.
+ * Maps an SDK candle to CandleInput with number types.
+ * Used by ProductsService, PublicService, and TechnicalAnalysisService.
  */
 export function mapSdkCandleToInput(candle: {
   open?: string;
@@ -209,7 +313,7 @@ export function mapSdkCandleToInput(candle: {
 }
 
 /**
- * Mappt ein Array von SDK-Candles zu CandleInput[] mit number Types.
+ * Maps an array of SDK candles to CandleInput[] with number types.
  */
 export function mapSdkCandlesToInput(
   candles: ReadonlyArray<{
@@ -224,12 +328,12 @@ export function mapSdkCandlesToInput(
 }
 ```
 
-### 2.3 CandleInput mit number Types
+### 2.4 CandleInput with number Types
 
-**Änderung in `TechnicalIndicatorsService.ts`:**
+**Change in `TechnicalIndicatorsService.ts`:**
 
 ```typescript
-// Alt (Zeile 91-97)
+// Old (line 91-97)
 export interface CandleInput {
   readonly open: string;
   readonly high: string;
@@ -238,7 +342,7 @@ export interface CandleInput {
   readonly volume: string;
 }
 
-// Neu
+// New
 export interface CandleInput {
   readonly open: number;
   readonly high: number;
@@ -248,59 +352,57 @@ export interface CandleInput {
 }
 ```
 
-### 2.4 ProductsService/PublicService Delegation (vollständige Dokumentation)
+### 2.5 ProductsService/PublicService Delegation (Complete Documentation)
 
-**Wichtig:** Die SDK-Services werden im aktuellen Code mit `new XService(this.client)` erstellt.
+**Important:** SDK services are created in the current code with `new XService(this.client)`.
 
-**ProductsService** - Zu delegierende Methoden:
+**ProductsService** - Methods to delegate:
 
-| Methode | Quelle | Änderung |
+| Method | Source | Change |
 |---------|--------|----------|
-| `listProducts()` | Geerbt von SDK | Reine Delegation |
-| `getProduct()` | Geerbt von SDK | Reine Delegation |
-| `getProductCandles()` | Geerbt von SDK | Delegation + `toUnixTimestamp()` |
-| `getProductBook()` | Geerbt von SDK | Reine Delegation |
-| `getBestBidAsk()` | Geerbt von SDK | Reine Delegation |
-| `getProductMarketTrades()` | Geerbt von SDK | Reine Delegation |
-| `getProductFixed()` | Eigene (Zeile 33-35) | Entfällt (getProduct reicht) |
-| `getProductCandlesFixed()` | Eigene (Zeile 42-51) | Wird zu `getProductCandles()` |
-| `getMarketSnapshot()` | Eigene (Zeile 53-104) | Bleibt, verwendet `getProductCandles()` |
-| `getProductCandlesBatch()` | Eigene (Zeile 106-142) | Bleibt, verwendet `getProductCandles()` |
+| `listProducts()` | Inherited from SDK | Pure delegation |
+| `getProduct()` | Inherited from SDK | Pure delegation |
+| `getProductCandles()` | Inherited from SDK | Delegation + `toUnixTimestamp()` |
+| `getProductBook()` | Inherited from SDK | Pure delegation |
+| `getBestBidAsk()` | Inherited from SDK | Pure delegation |
+| `getProductMarketTrades()` | Inherited from SDK | Pure delegation |
+| `getProductFixed()` | Custom (line 33-35) | Removed (getProduct suffices) |
+| `getProductCandlesFixed()` | Custom (line 42-51) | Becomes `getProductCandles()` |
+| `getMarketSnapshot()` | Custom (line 53-104) | Remains, uses `getProductCandles()` |
+| `getProductCandlesBatch()` | Custom (line 106-142) | Remains, uses `getProductCandles()` |
 
-**PublicService** - Zu delegierende Methoden:
+**PublicService** - Methods to delegate:
 
-| Methode | Quelle | Änderung |
+| Method | Source | Change |
 |---------|--------|----------|
-| `getServerTime()` | Geerbt von SDK | Reine Delegation |
-| `getProduct()` | Geerbt von SDK | Reine Delegation |
-| `listProducts()` | Geerbt von SDK | Reine Delegation |
-| `getProductBook()` | Geerbt von SDK | Reine Delegation |
-| `getProductMarketTrades()` | Geerbt von SDK | Reine Delegation |
-| `getProductCandles()` | Geerbt von SDK | Delegation + `toUnixTimestamp()` |
-| `getProductCandlesFixed()` | Eigene (Zeile 14-23) | Wird zu `getProductCandles()` |
+| `getServerTime()` | Inherited from SDK | Pure delegation |
+| `getProduct()` | Inherited from SDK | Pure delegation |
+| `listProducts()` | Inherited from SDK | Pure delegation |
+| `getProductBook()` | Inherited from SDK | Pure delegation |
+| `getProductMarketTrades()` | Inherited from SDK | Pure delegation |
+| `getProductCandles()` | Inherited from SDK | Delegation + `toUnixTimestamp()` |
+| `getProductCandlesFixed()` | Custom (line 14-23) | Becomes `getProductCandles()` |
 
-**Beispiel ProductsService (Delegation):**
+**Example ProductsService (Delegation):**
 
 ```typescript
 // src/server/services/ProductsService.ts
 import { ProductsService as SdkProductsService } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
 import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
+import { toUnixTimestamp } from '../ProductCandles';
+import { mapSdkCandlesToInput } from './numberConversion';
 import type {
   ListProductsRequest,
   ListProductsResponse,
   GetProductRequest,
   GetProductCandlesRequest,
   GetProductCandlesResponse,
-} from '@coinbase-sample/advanced-trade-sdk-ts/dist/rest/products/types';
-import type { Product } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/Product';
-import { toUnixTimestamp } from '../ProductCandles';
-import type {
   GetMarketSnapshotRequest,
   GetMarketSnapshotResponse,
   GetProductCandlesBatchRequest,
   GetProductCandlesBatchResponse,
-} from '../MarketSnapshot';
-import { mapSdkCandlesToInput } from './numberConversion';
+  Product,
+} from './ProductsService.types';
 
 export class ProductsService {
   private readonly sdk: SdkProductsService;
@@ -309,7 +411,7 @@ export class ProductsService {
     this.sdk = new SdkProductsService(client);
   }
 
-  // Reine Delegation
+  // Pure delegation
   public listProducts(request?: ListProductsRequest): Promise<ListProductsResponse> {
     return this.sdk.listProducts(request);
   }
@@ -318,7 +420,7 @@ export class ProductsService {
     return this.sdk.getProduct(request) as Promise<Product>;
   }
 
-  // Delegation mit Timestamp-Konvertierung
+  // Delegation with timestamp conversion
   public getProductCandles(request: GetProductCandlesRequest): Promise<GetProductCandlesResponse> {
     return this.sdk.getProductCandles({
       ...request,
@@ -327,55 +429,66 @@ export class ProductsService {
     }) as Promise<GetProductCandlesResponse>;
   }
 
-  // ... weitere Methoden (getBestBidAsk, getProductBook, getProductMarketTrades)
+  // ... other methods (getBestBidAsk, getProductBook, getProductMarketTrades)
 
-  // Eigene Methoden bleiben (verwenden jetzt getProductCandles statt getProductCandlesFixed)
+  // Custom methods remain (now use getProductCandles instead of getProductCandlesFixed)
   public async getMarketSnapshot(request: GetMarketSnapshotRequest): Promise<GetMarketSnapshotResponse> {
-    // Implementierung bleibt gleich, ruft jetzt this.getProductCandles() auf
+    // Implementation remains the same, now calls this.getProductCandles()
   }
 
   public async getProductCandlesBatch(request: GetProductCandlesBatchRequest): Promise<GetProductCandlesBatchResponse> {
-    // Implementierung bleibt gleich, ruft jetzt this.getProductCandles() auf
+    // Implementation remains the same, now calls this.getProductCandles()
   }
 }
 ```
 
-**Wichtig:** `getProductCandlesFixed()` wird zu `getProductCandles()` umbenannt, da der Wrapper jetzt IMMER die korrekte Timestamp-Konvertierung durchführt.
+**Important:** `getProductCandlesFixed()` is renamed to `getProductCandles()`, since the wrapper now ALWAYS performs the correct timestamp conversion.
 
 ---
 
-## 3. Implementierungsschritte
+## 3. Implementation Steps
 
-### Phase 1: Infrastruktur
+### Phase 1: Infrastructure
 
-#### Schritt 1.1: Services-Verzeichnis erstellen
+#### Step 1.1: Create services directory
 ```bash
 mkdir -p src/server/services
 ```
 
-#### Schritt 1.2: Konvertierungsfunktionen erstellen
-- Datei: `src/server/services/numberConversion.ts`
-- Inhalt: Wie in Sektion 2.2 definiert
+#### Step 1.2: Create conversion functions
+- File: `src/server/services/numberConversion.ts`
+- Content: As defined in Section 2.3
 - Tests: `src/server/services/numberConversion.spec.ts`
 
-### Phase 2: Service-Wrapper erstellen
+### Phase 2: Create Service Wrappers with Types
 
-Für jeden SDK Service einen Wrapper erstellen, der:
-1. Den `CoinbaseAdvTradeClient` als Parameter erhält
-2. Intern den SDK-Service instantiiert
-3. Alle verwendeten Methoden delegiert
-4. Bei Bedarf number→string Konvertierung für Request-Parameter durchführt
-5. Response unverändert zurückgibt (außer bei Candles)
+For each SDK Service, create a wrapper and types file that:
+1. Types file defines own types (with number fields) or re-exports SDK types
+2. Wrapper receives `CoinbaseAdvTradeClient` as parameter
+3. Wrapper internally instantiates the SDK service
+4. Wrapper delegates all used methods
+5. Wrapper performs number→string conversion for request parameters where needed
+6. Response is returned unchanged (except for candles)
 
-#### Schritt 2.1: Einfache Wrapper (reine Delegation, keine Konvertierung)
-- `AccountsService` - listAccounts(), getAccount()
-- `FeesService` - getTransactionsSummary()
-- `PaymentMethodsService` - listPaymentMethods(), getPaymentMethod()
-- `DataService` - getApiKeyPermissions()
-- `FuturesService` - listFuturesPositions(), getFuturesPosition(), etc.
-- `PerpetualsService` - listPositions(), getPosition(), etc.
+#### Step 2.1: Simple wrappers (pure delegation, no conversion)
+- `AccountsService` + `AccountsService.types.ts` - listAccounts(), getAccount()
+- `FeesService` + `FeesService.types.ts` - getTransactionsSummary()
+- `PaymentMethodsService` + `PaymentMethodsService.types.ts` - listPaymentMethods(), getPaymentMethod()
+- `DataService` + `DataService.types.ts` - getApiKeyPermissions()
+- `FuturesService` + `FuturesService.types.ts` - listFuturesPositions(), getFuturesPosition(), etc.
+- `PerpetualsService` + `PerpetualsService.types.ts` - listPositions(), getPosition(), etc.
 
-**Beispiel für einfachen Wrapper:**
+**Example for simple wrapper with types:**
+```typescript
+// src/server/services/AccountsService.types.ts
+export type {
+  ListAccountsRequest,
+  ListAccountsResponse,
+  GetAccountRequest,
+  GetAccountResponse,
+} from '@coinbase-sample/advanced-trade-sdk-ts/dist/rest/accounts/types';
+```
+
 ```typescript
 // src/server/services/AccountsService.ts
 import {
@@ -387,7 +500,7 @@ import type {
   ListAccountsResponse,
   GetAccountRequest,
   GetAccountResponse,
-} from '@coinbase-sample/advanced-trade-sdk-ts/dist/rest/accounts/types';
+} from './AccountsService.types';
 
 export class AccountsService {
   private readonly sdk: SdkAccountsService;
@@ -406,28 +519,56 @@ export class AccountsService {
 }
 ```
 
-#### Schritt 2.2: Wrapper mit Konvertierung (number→string für Requests)
-- `OrdersService` - createOrder(), editOrder(), previewEditOrder(), closePosition(), etc.
-- `ConvertsService` - createConvertQuote(), commitConvertTrade(), getConvertTrade()
-- `PortfoliosService` - movePortfolioFunds() (funds.value)
+#### Step 2.2: Wrappers with conversion (number→string for requests)
+- `OrdersService` + `OrdersService.types.ts` - createOrder(), editOrder(), previewEditOrder(), closePosition(), etc.
+- `ConvertsService` + `ConvertsService.types.ts` - createConvertQuote(), commitConvertTrade(), GetConvertTrade()
+  - **Note:** The SDK uses `GetConvertTrade` (capital G). Our wrapper preserves this naming for SDK compatibility.
+- `PortfoliosService` + `PortfoliosService.types.ts` - movePortfolioFunds() (funds.value)
 
-**Beispiel für Wrapper mit Konvertierung:**
+**Example for wrapper with conversion and own types:**
+```typescript
+// src/server/services/OrdersService.types.ts
+
+// Our request type with number instead of string
+export interface MarketMarketIoc {
+  readonly quoteSize?: number;
+  readonly baseSize?: number;
+}
+
+export interface LimitLimitGtc {
+  readonly baseSize: number;
+  readonly limitPrice: number;
+  readonly postOnly?: boolean;
+}
+
+// ... other order configuration types
+
+export interface OrderConfiguration {
+  readonly marketMarketIoc?: MarketMarketIoc;
+  readonly limitLimitGtc?: LimitLimitGtc;
+  // ... other configurations
+}
+
+export interface CreateOrderRequest {
+  readonly clientOrderId: string;
+  readonly productId: string;
+  readonly side: 'BUY' | 'SELL';
+  readonly orderConfiguration: OrderConfiguration;
+}
+
+// Response types can be re-exported
+export type { CreateOrderResponse } from '@coinbase-sample/advanced-trade-sdk-ts/dist/rest/orders/types';
+```
+
 ```typescript
 // src/server/services/OrdersService.ts
 import {
   OrdersService as SdkOrdersService,
   CoinbaseAdvTradeClient,
 } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
-import type {
-  CreateOrderRequest as SdkCreateOrderRequest,
-  CreateOrderResponse,
-} from '@coinbase-sample/advanced-trade-sdk-ts/dist/rest/orders/types';
-import { toStringRequired } from './numberConversion';
-
-// Eigener Request-Type mit number statt string
-interface CreateOrderRequest {
-  // ... mit number-Feldern statt string
-}
+import type { CreateOrderRequest as SdkCreateOrderRequest } from '@coinbase-sample/advanced-trade-sdk-ts/dist/rest/orders/types';
+import { toString } from './numberConversion';
+import type { CreateOrderRequest, CreateOrderResponse } from './OrdersService.types';
 
 export class OrdersService {
   private readonly sdk: SdkOrdersService;
@@ -437,34 +578,34 @@ export class OrdersService {
   }
 
   public createOrder(request: CreateOrderRequest): Promise<CreateOrderResponse> {
-    // Konvertiere number-Felder zu strings für SDK
     return this.sdk.createOrder(this.convertCreateOrderRequest(request));
   }
 
   private convertCreateOrderRequest(request: CreateOrderRequest): SdkCreateOrderRequest {
-    // Konvertiere baseSize, limitPrice, etc. zu strings mit toStringRequired()
+    // Convert number fields to strings using toString()
     // ...
   }
 }
 ```
 
-#### Schritt 2.3: ProductsService refactoren
-- Von `extends BaseProductsService` zu Delegation
-- `getProductCandlesFixed()` wird zu `getProductCandles()`
-- `getProductFixed()` entfällt, `getProduct()` wird direkt verwendet
-- **Wichtig:** Die private Methode `getProducts()` muss von `this.getProductFixed()` auf `this.getProduct()` geändert werden (Zeile 152-156)
-- Candle-Response wird zu `CandleInput[]` mit number Types gemappt (via `mapSdkCandlesToInput`)
-- `toUnixTimestamp()` wird intern angewendet
+#### Step 2.3: Refactor ProductsService
+- From `extends BaseProductsService` to delegation
+- `getProductCandlesFixed()` becomes `getProductCandles()`
+- `getProductFixed()` removed, `getProduct()` used directly
+- **Important:** Private methods must be updated:
+  - `getProducts()` (line 152-156): Change from `this.getProductFixed()` to `this.getProduct()`
+  - `getOrderBooks()` (line 144-150): Uses `this.getProductBook()` - no change needed
+- Candle response is mapped to `CandleInput[]` with number types (via `mapSdkCandlesToInput`)
+- `toUnixTimestamp()` is applied internally
+- Create `ProductsService.types.ts` with own types
 
-#### Schritt 2.4: PublicService refactoren
+#### Step 2.4: Refactor PublicService
 
-**WICHTIG:** Der PublicService verwendet einen ANDEREN Import-Pfad als die anderen Services!
+**IMPORTANT:** PublicService uses a DIFFERENT import path than other services!
 
 ```typescript
-// src/server/services/PublicService.ts
-// ACHTUNG: Anderer Import-Pfad als bei anderen Services!
-import { PublicService as SdkPublicService } from '@coinbase-sample/advanced-trade-sdk-ts/dist/rest/public/index.js';
-import type {
+// src/server/services/PublicService.types.ts
+export type {
   GetPublicProductCandlesRequest,
   GetPublicProductCandlesResponse,
   GetPublicProductRequest,
@@ -477,8 +618,27 @@ import type {
   GetPublicMarketTradesResponse,
   GetServerTimeResponse,
 } from '@coinbase-sample/advanced-trade-sdk-ts/dist/rest/public/types';
+```
+
+```typescript
+// src/server/services/PublicService.ts
+// ATTENTION: Different import path than other services!
+import { PublicService as SdkPublicService } from '@coinbase-sample/advanced-trade-sdk-ts/dist/rest/public/index.js';
 import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
 import { toUnixTimestamp } from '../ProductCandles';
+import type {
+  GetPublicProductCandlesRequest,
+  GetPublicProductCandlesResponse,
+  GetPublicProductRequest,
+  GetPublicProductResponse,
+  ListPublicProductsRequest,
+  ListPublicProductsResponse,
+  GetPublicProductBookRequest,
+  GetPublicProductBookResponse,
+  GetPublicMarketTradesRequest,
+  GetPublicMarketTradesResponse,
+  GetServerTimeResponse,
+} from './PublicService.types';
 
 export class PublicService {
   private readonly sdk: SdkPublicService;
@@ -487,7 +647,7 @@ export class PublicService {
     this.sdk = new SdkPublicService(client);
   }
 
-  // Reine Delegation für geerbte Methoden
+  // Pure delegation for inherited methods
   public getServerTime(): Promise<GetServerTimeResponse> {
     return this.sdk.getServerTime();
   }
@@ -508,7 +668,7 @@ export class PublicService {
     return this.sdk.getProductMarketTrades(request);
   }
 
-  // Delegation mit Timestamp-Konvertierung (ersetzt getProductCandlesFixed)
+  // Delegation with timestamp conversion (replaces getProductCandlesFixed)
   public getProductCandles(
     request: GetPublicProductCandlesRequest,
   ): Promise<GetPublicProductCandlesResponse> {
@@ -521,37 +681,37 @@ export class PublicService {
 }
 ```
 
-### Phase 3: Tool Schemas aktualisieren
+### Phase 3: Update Tool Schemas
 
-#### Schritt 3.1: z.string() → z.number() für Zahlenfelder
+#### Step 3.1: z.string() → z.number() for numeric fields
 
 **OrderToolRegistry.ts:**
 ```typescript
-// Alt
+// Old
 baseSize: z.string().describe('Amount to buy/sell')
-// Neu
+// New
 baseSize: z.number().describe('Amount to buy/sell')
 ```
 
 **ConvertToolRegistry.ts:**
 ```typescript
-// Alt
+// Old
 amount: z.string().describe('Amount to convert')
-// Neu
+// New
 amount: z.number().describe('Amount to convert')
 ```
 
 **PortfolioToolRegistry.ts:**
 ```typescript
-// Alt
+// Old
 value: z.string().describe('Amount to transfer')
-// Neu
+// New
 value: z.number().describe('Amount to transfer')
 ```
 
 **IndicatorToolRegistry.ts:**
 ```typescript
-// Alt
+// Old
 const candleSchema = z.object({
   open: z.string(),
   high: z.string(),
@@ -559,7 +719,7 @@ const candleSchema = z.object({
   close: z.string(),
   volume: z.string(),
 })
-// Neu
+// New
 const candleSchema = z.object({
   open: z.number(),
   high: z.number(),
@@ -568,57 +728,57 @@ const candleSchema = z.object({
   volume: z.number(),
 })
 
-// Und für pivotPoints:
-// Alt
+// And for pivotPoints:
+// Old
 high: z.string().describe('Previous period high price')
-// Neu
+// New
 high: z.number().describe('Previous period high price')
 ```
 
-#### Schritt 3.2: Service-Referenzen und Import-Pfade aktualisieren
+#### Step 3.2: Update service references and import paths
 
-**Alle Tool Registries müssen ihre Imports ändern:**
+**All Tool Registries must change their imports:**
 
 ```typescript
-// Alt (z.B. in ProductToolRegistry.ts)
+// Old (e.g., in ProductToolRegistry.ts)
 import type { ProductsService } from '../ProductsService';
 
-// Neu
+// New
 import type { ProductsService } from '../services/ProductsService';
 ```
 
-**Betroffene Dateien und ihre Import-Änderungen:**
+**Affected files and their import changes:**
 
-| Datei | Alt | Neu |
+| File | Old | New |
 |-------|-----|-----|
 | `tools/ProductToolRegistry.ts` | `../ProductsService` | `../services/ProductsService` |
 | `tools/PublicToolRegistry.ts` | `../PublicService` | `../services/PublicService` |
-| `tools/AnalysisToolRegistry.ts` | `../TechnicalAnalysisService` | (bleibt, aber TAS importiert neu) |
+| `tools/AnalysisToolRegistry.ts` | `../TechnicalAnalysisService` | (remains, but TAS imports differently) |
 | `TechnicalAnalysisService.ts` | `./ProductsService` | `./services/ProductsService` |
 
-### Phase 4: TechnicalIndicatorsService aktualisieren
+### Phase 4: Update TechnicalIndicatorsService
 
-#### Schritt 4.1: CandleInput Interface ändern
-- `string` → `number` für alle OHLCV-Felder (Zeile 91-97)
+#### Step 4.1: Change CandleInput interface
+- `string` → `number` for all OHLCV fields (line 91-97)
 
-#### Schritt 4.2: Extract-Funktionen vereinfachen
+#### Step 4.2: Simplify extract functions
 ```typescript
-// Alt (Zeile 1506-1507)
+// Old (line 1506-1507)
 function extractOpenPrices(candles: readonly CandleInput[]): number[] {
   return candles.map((candle) => parseFloat(candle.open));
 }
 
-// Neu
+// New
 function extractOpenPrices(candles: readonly CandleInput[]): number[] {
   return candles.map((candle) => candle.open);
 }
 
-// Analog für alle anderen extract-Funktionen (extractClosePrices, extractHighPrices, etc.)
+// Similarly for all other extract functions (extractClosePrices, extractHighPrices, etc.)
 ```
 
-#### Schritt 4.3: CalculatePivotPointsInput ändern
+#### Step 4.3: Change CalculatePivotPointsInput
 ```typescript
-// Alt (Zeile 560-566)
+// Old (line 560-566)
 export interface CalculatePivotPointsInput {
   readonly high: string;
   readonly low: string;
@@ -627,7 +787,7 @@ export interface CalculatePivotPointsInput {
   readonly type?: PivotPointsType;
 }
 
-// Neu
+// New
 export interface CalculatePivotPointsInput {
   readonly high: number;
   readonly low: number;
@@ -637,9 +797,9 @@ export interface CalculatePivotPointsInput {
 }
 ```
 
-#### Schritt 4.4: calculatePivotPoints Methode anpassen
+#### Step 4.4: Adapt calculatePivotPoints method
 ```typescript
-// Alt (Zeile 1346-1367)
+// Old (line 1346-1367)
 public calculatePivotPoints(input: CalculatePivotPointsInput): PivotPointsOutput {
   const high = parseFloat(input.high);
   const low = parseFloat(input.low);
@@ -648,22 +808,22 @@ public calculatePivotPoints(input: CalculatePivotPointsInput): PivotPointsOutput
   // ...
 }
 
-// Neu
+// New
 public calculatePivotPoints(input: CalculatePivotPointsInput): PivotPointsOutput {
   const { high, low, close } = input;
   const open = input.open ?? close;
-  // ... (kein parseFloat mehr nötig)
+  // ... (no parseFloat needed anymore)
 }
 ```
 
-### Phase 5: TechnicalAnalysisService aktualisieren
+### Phase 5: Update TechnicalAnalysisService
 
-#### Schritt 5.1: mapApiCandlesToInput ersetzen
+#### Step 5.1: Replace mapApiCandlesToInput
 
-Die lokale Funktion `mapApiCandlesToInput` (Zeile 1078-1096) wird durch den Import aus `numberConversion.ts` ersetzt:
+The local function `mapApiCandlesToInput` (line 1078-1096) is replaced by the import from `numberConversion.ts`:
 
 ```typescript
-// Alt (Zeile 1078-1096)
+// Old (line 1078-1096)
 function mapApiCandlesToInput(
   candles: ReadonlyArray<{...}> | undefined,
 ): CandleInput[] {
@@ -676,37 +836,37 @@ function mapApiCandlesToInput(
   }));
 }
 
-// Neu
+// New
 import { mapSdkCandlesToInput } from './services/numberConversion';
 
-// In fetchCandles() und fetchDailyCandles():
+// In fetchCandles() and fetchDailyCandles():
 return mapSdkCandlesToInput(response.candles);
 ```
 
-#### Schritt 5.2: parseFloat-Aufrufe entfernen
+#### Step 5.2: Remove parseFloat calls
 
 ```typescript
-// Alt (z.B. in buildPriceSummary, Zeile 166-194)
+// Old (e.g., in buildPriceSummary, line 166-194)
 const current = parseFloat(latest.close);
 const open = parseFloat(oldest.open);
 const high = Math.max(...candles.map((c) => parseFloat(c.high)));
 const low = Math.min(...candles.map((c) => parseFloat(c.low)));
 
-// Neu
+// New
 const current = latest.close;
 const open = oldest.open;
 const high = Math.max(...candles.map((c) => c.high));
 const low = Math.min(...candles.map((c) => c.low));
 
-// Analog für alle anderen parseFloat-Aufrufe (ca. 30 Stellen)
+// Similarly for all other parseFloat calls (~30 places)
 ```
 
-#### Schritt 5.3: calculateSupportResistanceIndicators anpassen
+#### Step 5.3: Adapt calculateSupportResistanceIndicators
 
-Da `CandleInput` jetzt numbers hat, funktioniert der Aufruf von `calculatePivotPoints` automatisch:
+Since `CandleInput` now has numbers, the call to `calculatePivotPoints` works automatically:
 
 ```typescript
-// Dieser Code funktioniert unverändert, da previousDay.high etc. jetzt numbers sind
+// This code works unchanged since previousDay.high etc. are now numbers
 this.indicatorsService.calculatePivotPoints({
   high: previousDay.high,
   low: previousDay.low,
@@ -715,18 +875,18 @@ this.indicatorsService.calculatePivotPoints({
 });
 ```
 
-### Phase 6: CoinbaseMcpServer aktualisieren
+### Phase 6: Update CoinbaseMcpServer
 
-#### Schritt 6.1: Imports anpassen
+#### Step 6.1: Adapt imports
 ```typescript
-// Alt (SDK-Services direkt importiert)
+// Old (SDK services directly imported)
 import {
   AccountsService,
   OrdersService,
   // ...
 } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
 
-// Neu (nur CoinbaseAdvTradeClient vom SDK, Wrapper aus services/)
+// New (only CoinbaseAdvTradeClient from SDK, wrappers from services/)
 import {
   CoinbaseAdvTradeClient,
   CoinbaseAdvTradeCredentials,
@@ -746,173 +906,300 @@ import {
 } from './services';
 ```
 
-#### Schritt 6.2: Service-Instantiierung
+#### Step 6.2: Service instantiation
 
-**Aktueller Code (CoinbaseMcpServer.ts, Zeile 54-74):**
+**Current code (CoinbaseMcpServer.ts, line 54-74):**
 ```typescript
 const credentials = new CoinbaseAdvTradeCredentials(apiKey, privateKey);
 this.client = new CoinbaseAdvTradeClient(credentials);
 
-// Alt: SDK-Services werden mit Client erstellt
+// Old: SDK services are created with client
 this.accounts = new AccountsService(this.client);  // SDK AccountsService
 this.orders = new OrdersService(this.client);      // SDK OrdersService
-this.products = new ProductsService(this.client);  // Eigener, extends SDK
+this.products = new ProductsService(this.client);  // Own, extends SDK
 // ...
 ```
 
-**Neuer Code:**
+**New code:**
 ```typescript
 const credentials = new CoinbaseAdvTradeCredentials(apiKey, privateKey);
 this.client = new CoinbaseAdvTradeClient(credentials);
 
-// Neu: Wrapper-Services werden mit Client erstellt
-// Die Wrapper erstellen intern die SDK-Services
+// New: Wrapper services are created with client
+// The wrappers create the SDK services internally
 this.accounts = new AccountsService(this.client);   // Wrapper AccountsService
 this.orders = new OrdersService(this.client);       // Wrapper OrdersService
-this.products = new ProductsService(this.client);   // Wrapper ProductsService (Delegation)
+this.products = new ProductsService(this.client);   // Wrapper ProductsService (delegation)
 // ...
 ```
 
-**Wichtig:** Die Wrapper erhalten den `CoinbaseAdvTradeClient` und erstellen intern den jeweiligen SDK-Service. Das Interface bleibt gleich - nur die Implementierung ändert sich.
+**Important:** The wrappers receive `CoinbaseAdvTradeClient` and create the respective SDK service internally. The interface remains the same - only the implementation changes.
 
-### Phase 7: Tests aktualisieren
+### Phase 7: Update Tests
 
-#### Schritt 7.1: Neue Tests für Konvertierungsfunktionen
+#### Step 7.1: New tests for conversion functions
 - `src/server/services/numberConversion.spec.ts`
-- Testet: toString, toStringRequired, toNumber, toNumberRequired
-- Testet: mapSdkCandleToInput, mapSdkCandlesToInput
-- Edge-Cases: undefined, NaN, Infinity, ungültige Strings
+- Tests: toString, toStringRequired, toNumber, toNumberRequired
+- Tests: mapSdkCandleToInput, mapSdkCandlesToInput
+- Edge cases: undefined, NaN, Infinity, invalid strings
 
-#### Schritt 7.2: Wrapper-Tests und 100% Coverage-Strategie
+#### Step 7.2: Mock Strategy - Mock Our Services, Not SDK
 
-**Einfache Wrapper (reine Delegation):**
-Diese delegieren nur an das SDK. Um 100% Coverage zu erreichen, gibt es zwei Optionen:
+**Core Principle:** Tests should mock our wrapper services, NOT the SDK services directly.
 
-1. **Option A (empfohlen):** Die Wrapper werden durch die existierenden Integration-Tests in `CoinbaseMcpServer.spec.ts` indirekt getestet. Istanbul/V8 Coverage misst alle Zeilen die durchlaufen werden.
+**Why this approach:**
+1. Our services are the interface that the rest of the application uses
+2. Mocking at our service layer tests the integration more accurately
+3. SDK implementation details are encapsulated within our wrappers
 
-2. **Option B:** Minimale Unit-Tests für jeden Wrapper, die prüfen ob die SDK-Methode aufgerufen wird.
+**Example mock for ProductsService:**
+```typescript
+// In test files, mock our service, not SDK
+const mockProductsService = {
+  listProducts: vi.fn(),
+  getProduct: vi.fn(),
+  getProductCandles: vi.fn(),
+  getMarketSnapshot: vi.fn(),
+  getProductCandlesBatch: vi.fn(),
+  getBestBidAsk: vi.fn(),
+  getProductBook: vi.fn(),
+  getProductMarketTrades: vi.fn(),
+};
 
-**Wrapper mit Konvertierung (OrdersService, ConvertsService, PortfoliosService):**
-Diese MÜSSEN getestet werden, um die number→string Konvertierung zu verifizieren:
+// Use in tests
+vi.mock('./services/ProductsService', () => ({
+  ProductsService: vi.fn(() => mockProductsService),
+}));
+```
+
+**Example mock for OrdersService (with conversion):**
+```typescript
+const mockOrdersService = {
+  createOrder: vi.fn(),
+  editOrder: vi.fn(),
+  cancelOrders: vi.fn(),
+  listOrders: vi.fn(),
+  listFills: vi.fn(),
+  getOrder: vi.fn(),
+  previewOrder: vi.fn(),
+  previewEditOrder: vi.fn(),
+  closePosition: vi.fn(),
+};
+```
+
+#### Step 7.3: Wrapper tests and 100% coverage strategy
+
+**Simple wrappers (pure delegation):**
+These only delegate to the SDK. To achieve 100% coverage, there are two options:
+
+1. **Option A (recommended):** The wrappers are indirectly tested through existing integration tests in `CoinbaseMcpServer.spec.ts`. Istanbul/V8 coverage measures all lines that are executed.
+
+2. **Option B:** Minimal unit tests for each wrapper that verify the SDK method is called.
+
+**Wrappers with conversion (OrdersService, ConvertsService, PortfoliosService):**
+These MUST be tested to verify the number→string conversion:
 - `src/server/services/OrdersService.spec.ts`
 - `src/server/services/ConvertsService.spec.ts`
 - `src/server/services/PortfoliosService.spec.ts`
 
-**ProductsService und PublicService:**
-Die bestehenden Tests (`ProductsService.spec.ts`, `PublicService.spec.ts`) werden mit nach `services/` verschoben und angepasst.
+**ProductsService and PublicService:**
+Existing tests (`ProductsService.spec.ts`, `PublicService.spec.ts`) are moved to `services/` and adapted.
 
-Die existierenden Tests für die Tool Registries (über CoinbaseMcpServer.spec.ts) decken die Integration ab.
+The existing tests for the Tool Registries (via CoinbaseMcpServer.spec.ts) cover the integration.
 
-#### Schritt 7.3: Bestehende Tests anpassen
-- Keine Tests löschen
-- Mock-Daten von strings zu numbers ändern
-- Assertions auf number-Werte anpassen
+#### Step 7.4: Adapt existing tests
+- Do not delete tests
+- Change mock data from strings to numbers
+- Adapt assertions to number values
 
-**Vollständige Liste der anzupassenden Test-Dateien:**
+**Complete list of test files to adapt:**
 
-| Datei | Änderungen |
+| File | Changes |
 |-------|------------|
-| `src/index.spec.ts` | Prüfen ob betroffen |
-| `src/server/CoinbaseMcpServer.spec.ts` | Mock-Daten, Service-Instantiierung |
-| `src/server/TechnicalIndicatorsService.spec.ts` | CandleInput mit numbers, PivotPointsInput mit numbers |
-| `src/server/TechnicalAnalysisService.spec.ts` | CandleInput mit numbers |
-| `src/server/ProductsService.spec.ts` | Verschieben nach services/, Candle-Mapping testen |
-| `src/server/PublicService.spec.ts` | Verschieben nach services/, Candle-Mapping testen |
-| `src/server/ProductCandles.spec.ts` | Prüfen ob betroffen (nur timestamp utils) |
-| `src/server/indicators/pivotPoints.spec.ts` | Input ist jetzt number |
-| `src/server/indicators/rsiDivergence.spec.ts` | Prüfen ob betroffen |
-| `src/server/indicators/volumeProfile.spec.ts` | Prüfen ob betroffen |
-| `src/server/indicators/chartPatterns.spec.ts` | Prüfen ob betroffen |
-| `src/server/indicators/swingPoints.spec.ts` | Prüfen ob betroffen |
+| `src/index.spec.ts` | Check if affected |
+| `src/server/CoinbaseMcpServer.spec.ts` | Mock data, service instantiation, mock our services |
+| `src/server/TechnicalIndicatorsService.spec.ts` | CandleInput with numbers, PivotPointsInput with numbers |
+| `src/server/TechnicalAnalysisService.spec.ts` | CandleInput with numbers |
+| `src/server/ProductsService.spec.ts` | Move to services/, candle mapping tests |
+| `src/server/PublicService.spec.ts` | Move to services/, candle mapping tests |
+| `src/server/ProductCandles.spec.ts` | Check if affected (only timestamp utils) |
+| `src/server/indicators/rsiDivergence.spec.ts` | Check if affected |
+| `src/server/indicators/volumeProfile.spec.ts` | Check if affected |
+| `src/server/indicators/chartPatterns.spec.ts` | Check if affected |
+| `src/server/indicators/swingPoints.spec.ts` | Check if affected |
+| `src/test/serviceMocks.ts` | Import paths, remove deprecated methods, mock wrapper services |
+
+**Note:** Pivot point tests are covered in TechnicalIndicatorsService.spec.ts, not a separate file.
 
 ---
 
-## 4. Datei-Änderungen Zusammenfassung
+## 4. File Changes Summary
 
-### 4.1 Neue Dateien (~14)
+### 4.1 New Files (26)
 
-| Datei | Beschreibung |
+| File | Description |
 |-------|--------------|
-| `src/server/services/index.ts` | Re-exports |
-| `src/server/services/numberConversion.ts` | Konvertierungsfunktionen + Candle-Mapping |
+| `src/server/services/index.ts` | Re-exports services and types |
+| `src/server/services/numberConversion.ts` | Conversion functions + candle mapping |
 | `src/server/services/numberConversion.spec.ts` | Tests |
 | `src/server/services/AccountsService.ts` | Wrapper |
+| `src/server/services/AccountsService.types.ts` | Type re-exports |
 | `src/server/services/OrdersService.ts` | Wrapper |
+| `src/server/services/OrdersService.types.ts` | Own types with number fields |
+| `src/server/services/OrdersService.spec.ts` | Conversion tests |
 | `src/server/services/ConvertsService.ts` | Wrapper |
+| `src/server/services/ConvertsService.types.ts` | Own types with number fields |
+| `src/server/services/ConvertsService.spec.ts` | Conversion tests |
 | `src/server/services/FeesService.ts` | Wrapper |
+| `src/server/services/FeesService.types.ts` | Type re-exports |
 | `src/server/services/PaymentMethodsService.ts` | Wrapper |
+| `src/server/services/PaymentMethodsService.types.ts` | Type re-exports |
 | `src/server/services/PortfoliosService.ts` | Wrapper |
+| `src/server/services/PortfoliosService.types.ts` | Own types with number fields |
+| `src/server/services/PortfoliosService.spec.ts` | Conversion tests |
 | `src/server/services/FuturesService.ts` | Wrapper |
+| `src/server/services/FuturesService.types.ts` | Type re-exports |
 | `src/server/services/PerpetualsService.ts` | Wrapper |
+| `src/server/services/PerpetualsService.types.ts` | Type re-exports |
 | `src/server/services/DataService.ts` | Wrapper |
+| `src/server/services/DataService.types.ts` | Type re-exports |
+| `src/server/services/ProductsService.types.ts` | Own types where needed |
+| `src/server/services/PublicService.types.ts` | Own types where needed |
 
-### 4.2 Zu verschiebende Dateien (4)
+### 4.2 Files to Move (4)
 
-| Von | Nach |
+| From | To |
 |-----|------|
 | `src/server/ProductsService.ts` | `src/server/services/ProductsService.ts` |
 | `src/server/ProductsService.spec.ts` | `src/server/services/ProductsService.spec.ts` |
 | `src/server/PublicService.ts` | `src/server/services/PublicService.ts` |
 | `src/server/PublicService.spec.ts` | `src/server/services/PublicService.spec.ts` |
 
-### 4.3 Zu ändernde Dateien (~20)
+### 4.3 Files to Change (20)
 
-| Datei | Änderungen |
+| File | Changes |
 |-------|------------|
-| `src/server/TechnicalIndicatorsService.ts` | CandleInput, PivotPointsInput, extract-Funktionen |
-| `src/server/TechnicalIndicatorsService.spec.ts` | Mock-Daten |
-| `src/server/TechnicalAnalysisService.ts` | Import mapSdkCandlesToInput, parseFloat entfernen |
-| `src/server/TechnicalAnalysisService.spec.ts` | Mock-Daten |
-| `src/server/CoinbaseMcpServer.ts` | Service-Imports und Instantiierung |
-| `src/server/CoinbaseMcpServer.spec.ts` | Mock-Daten |
-| `src/server/tools/OrderToolRegistry.ts` | z.number(), Service-Import |
-| `src/server/tools/ConvertToolRegistry.ts` | z.number(), Service-Import |
-| `src/server/tools/PortfolioToolRegistry.ts` | z.number(), Service-Import |
-| `src/server/tools/IndicatorToolRegistry.ts` | z.number() für candleSchema und pivotPoints |
-| `src/server/tools/AccountToolRegistry.ts` | Service-Import |
-| `src/server/tools/FeeToolRegistry.ts` | Service-Import |
-| `src/server/tools/PaymentToolRegistry.ts` | Service-Import |
-| `src/server/tools/FuturesToolRegistry.ts` | Service-Import |
-| `src/server/tools/PerpetualsToolRegistry.ts` | Service-Import |
-| `src/server/tools/DataToolRegistry.ts` | Service-Import |
-| `src/server/tools/ProductToolRegistry.ts` | Service-Import |
-| `src/server/tools/PublicToolRegistry.ts` | Service-Import |
-| `src/server/tools/AnalysisToolRegistry.ts` | Service-Import (falls betroffen) |
-| `src/server/indicators/pivotPoints.spec.ts` | Input-Daten |
+| `src/server/TechnicalIndicatorsService.ts` | CandleInput, PivotPointsInput, extract functions |
+| `src/server/TechnicalIndicatorsService.spec.ts` | Mock data |
+| `src/server/TechnicalAnalysisService.ts` | Import mapSdkCandlesToInput, remove parseFloat |
+| `src/server/TechnicalAnalysisService.spec.ts` | Mock data |
+| `src/server/CoinbaseMcpServer.ts` | Service imports and instantiation |
+| `src/server/CoinbaseMcpServer.spec.ts` | Mock data, mock our services |
+| `src/server/tools/OrderToolRegistry.ts` | z.number(), service import |
+| `src/server/tools/ConvertToolRegistry.ts` | z.number(), service import |
+| `src/server/tools/PortfolioToolRegistry.ts` | z.number(), service import |
+| `src/server/tools/IndicatorToolRegistry.ts` | z.number() for candleSchema and pivotPoints |
+| `src/server/tools/AccountToolRegistry.ts` | Service import |
+| `src/server/tools/FeeToolRegistry.ts` | Service import |
+| `src/server/tools/PaymentToolRegistry.ts` | Service import |
+| `src/server/tools/FuturesToolRegistry.ts` | Service import |
+| `src/server/tools/PerpetualsToolRegistry.ts` | Service import |
+| `src/server/tools/DataToolRegistry.ts` | Service import |
+| `src/server/tools/ProductToolRegistry.ts` | Service import |
+| `src/server/tools/PublicToolRegistry.ts` | Service import |
+| `src/server/tools/AnalysisToolRegistry.ts` | Service import (if affected) |
+| `src/test/serviceMocks.ts` | **Critical update** (see Section 4.4) |
+
+### 4.4 serviceMocks.ts Updates (Critical)
+
+The central mock file `src/test/serviceMocks.ts` requires significant updates to align with the new architecture:
+
+**Current state:**
+- Imports SDK services directly: `import { AccountsService, OrdersService, ... } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js'`
+- Imports ProductsService/PublicService from old paths: `@server/ProductsService`, `@server/PublicService`
+- Mocks SDK services and passes them to test files
+- Contains deprecated method mocks like `getProductFixed()`, `getProductCandlesFixed()`
+
+**Required changes:**
+
+1. **Update imports for moved services:**
+   ```typescript
+   // Old
+   import { ProductsService } from '@server/ProductsService';
+   import { PublicService } from '@server/PublicService';
+
+   // New
+   import { ProductsService } from '@server/services/ProductsService';
+   import { PublicService } from '@server/services/PublicService';
+   ```
+
+2. **Import wrapper services instead of SDK services:**
+   ```typescript
+   // Old
+   import { AccountsService, OrdersService, ... } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
+
+   // New
+   import type { AccountsService } from '@server/services/AccountsService';
+   import type { OrdersService } from '@server/services/OrdersService';
+   // ... etc for all services
+   ```
+
+3. **Remove deprecated method mocks from ProductsService:**
+   - Remove `getProductFixed` mock
+   - Remove `getProductCandlesFixed` mock
+
+4. **Remove deprecated method mocks from PublicService:**
+   - Remove `getProductCandlesFixed` mock
+
+5. **Update mockServices() function:**
+   ```typescript
+   // Old: Mocks SDK services
+   jest.mock('@coinbase-sample/advanced-trade-sdk-ts/dist/index.js', () => {
+     return {
+       AccountsService: jest.fn().mockImplementation(() => mockAccountsService),
+       // ...
+     };
+   });
+
+   // New: Mocks our wrapper services
+   jest.mock('@server/services/AccountsService', () => ({
+     AccountsService: jest.fn().mockImplementation(() => mockAccountsService),
+   }));
+   jest.mock('@server/services/OrdersService', () => ({
+     OrdersService: jest.fn().mockImplementation(() => mockOrdersService),
+   }));
+   // ... etc for all wrapper services
+   ```
+
+6. **Note on method naming:** The SDK uses `GetConvertTrade` (capital G). Our wrapper and mocks should preserve this naming.
 
 ---
 
-## 5. Qualitätssicherung
+## 5. Quality Assurance
 
-### 5.1 Vor dem Commit
+### 5.1 Before Commit
 
 ```bash
-npm run test:types    # TypeScript Fehler
-npm run lint          # ESLint Fehler/Warnungen
-npm run test:coverage # 100% Coverage
+npm run test:types    # TypeScript errors
+npm run lint          # ESLint errors/warnings
+npm run test:coverage # 100% coverage
 npm run knip          # Unused exports
 ```
 
-### 5.2 Checkliste
+### 5.2 Checklist
 
-- [ ] Alle MCP Tool Schemas verwenden z.number() für Zahlenwerte
-- [ ] Alle SDK Services haben einen Wrapper-Service
-- [ ] ProductsService/PublicService verwenden Delegation statt extends
-- [ ] CandleInput verwendet number statt string
-- [ ] CalculatePivotPointsInput verwendet number statt string
-- [ ] Keine parseFloat() Aufrufe mehr in TechnicalIndicatorsService (außer in extract-Funktionen die entfernt wurden)
-- [ ] Keine parseFloat() Aufrufe mehr in TechnicalAnalysisService
-- [ ] mapApiCandlesToInput in TechnicalAnalysisService durch mapSdkCandlesToInput ersetzt
-- [ ] Alle Import-Pfade für verschobene Services aktualisiert
-- [ ] **Jede Funktion und Methode hat einen expliziten Return Type**
-- [ ] 100% Test-Coverage
-- [ ] Keine ESLint Fehler/Warnungen
-- [ ] Keine TypeScript Fehler
-- [ ] Keine unbenutzten Exports (knip)
+- [ ] All MCP Tool Schemas use z.number() for numeric values
+- [ ] All SDK Services have a wrapper service
+- [ ] Each service has an XService.types.ts file
+- [ ] SDK types are not used directly outside of .types.ts files
+- [ ] ProductsService/PublicService use delegation instead of extends
+- [ ] CandleInput uses number instead of string
+- [ ] CalculatePivotPointsInput uses number instead of string
+- [ ] No parseFloat() calls in TechnicalIndicatorsService (except in removed extract functions)
+- [ ] No parseFloat() calls in TechnicalAnalysisService
+- [ ] mapApiCandlesToInput in TechnicalAnalysisService replaced by mapSdkCandlesToInput
+- [ ] All import paths for moved services updated
+- [ ] **Every function and method has an explicit return type**
+- [ ] **Service mocks mock our wrapper services, not SDK services**
+- [ ] `src/test/serviceMocks.ts` updated (import paths, deprecated methods removed)
+- [ ] 100% test coverage
+- [ ] No ESLint errors/warnings
+- [ ] No TypeScript errors
+- [ ] No unused exports (knip)
 
 ---
 
-## 6. Commit-Message
+## 6. Commit Message
 
 ```
 refactor: standardize number types across MCP tools and services
@@ -922,6 +1209,7 @@ z.string() for numeric values (amounts, prices, OHLCV data).
 
 - Create service wrappers for all Coinbase SDK services with number→string
   conversion for request parameters
+- Add XService.types.ts files for type decoupling (SDK types not used directly)
 - Refactor ProductsService and PublicService to use delegation instead
   of inheritance
 - Move ProductsService and PublicService to src/server/services/
@@ -931,36 +1219,44 @@ z.string() for numeric values (amounts, prices, OHLCV data).
 - Add mapSdkCandlesToInput for Candle mapping
 - Update all tool registries to use z.number() schemas
 - Remove parseFloat() calls from indicator services
-- Update all tests to use number values
+- Update all tests to use number values and mock wrapper services
 ```
 
 ---
 
-## 7. Hinweise für die Implementierung
+## 7. Implementation Notes
 
-### 7.1 Reihenfolge beachten
+### 7.1 Maintain Order
 
-1. **Zuerst** Services-Verzeichnis + Konvertierungsfunktionen + Tests
-2. **Dann** Service-Wrapper erstellen (beginnend mit einfachen)
-3. **Dann** ProductsService/PublicService verschieben und refactoren
-4. **Dann** Tool Schemas und Import-Pfade aktualisieren
-5. **Dann** TechnicalIndicatorsService (Interfaces + extract-Funktionen)
-6. **Dann** TechnicalAnalysisService (mapSdkCandlesToInput + parseFloat entfernen)
-7. **Dann** CoinbaseMcpServer aktualisieren
-8. **Zuletzt** Alle Tests anpassen
+1. **First** services directory + conversion functions + tests
+2. **Then** type files for all services (XService.types.ts)
+3. **Then** service wrappers (starting with simple ones)
+4. **Then** move and refactor ProductsService/PublicService
+5. **Then** update tool schemas and import paths
+6. **Then** TechnicalIndicatorsService (interfaces + extract functions)
+7. **Then** TechnicalAnalysisService (mapSdkCandlesToInput + remove parseFloat)
+8. **Then** update CoinbaseMcpServer
+9. **Finally** adapt all tests
 
-### 7.2 TypeScript Compiler nutzen
+### 7.2 Use TypeScript Compiler
 
-Nach Änderung der Interfaces zeigt der TypeScript Compiler alle Stellen, die angepasst werden müssen. Systematisch abarbeiten.
+After changing the interfaces, the TypeScript compiler shows all places that need to be adapted. Work through them systematically.
 
-### 7.3 Tests nicht löschen
+### 7.3 Do Not Delete Tests
 
-Bestehende Tests nur anpassen (Mock-Daten, Assertions), nicht löschen. Bei Bedarf neue Tests hinzufügen.
+Only adapt existing tests (mock data, assertions), do not delete them. Add new tests where needed.
 
-### 7.4 Git-Strategie
+### 7.4 Git Strategy
 
-Alle Änderungen in einem Commit. Bei Verschiebung von Dateien:
+All changes in one commit. When moving files:
 ```bash
 git mv src/server/ProductsService.ts src/server/services/ProductsService.ts
 ```
-Damit bleibt die Git-Historie erhalten.
+This preserves Git history.
+
+### 7.5 Type File Consistency
+
+Ensure all services follow the same pattern:
+- Services with numeric conversion: Define own types in .types.ts
+- Services without numeric conversion: Re-export SDK types in .types.ts
+- Tool registries import types from our .types.ts files, never directly from SDK
