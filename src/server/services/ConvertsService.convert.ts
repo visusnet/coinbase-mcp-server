@@ -8,7 +8,6 @@ import type {
   SdkUnitPrice,
   SdkScaledAmount,
   SdkTaxInfo,
-  SdkAmount,
   Fee,
   ScaledAmount,
   UnitPrice,
@@ -19,19 +18,7 @@ import type {
   CommitConvertTradeResponse,
   GetConvertTradeResponse,
 } from './ConvertsService.types';
-import type { Amount } from './AccountsService.types';
-import { toNumber } from './numberConversion';
-
-/**
- * Convert SDK Amount to our Amount type with number value.
- */
-function toAmount(sdkAmount: SdkAmount | undefined): Amount | undefined {
-  if (!sdkAmount) {
-    return undefined;
-  }
-  const { value, ...unchanged } = sdkAmount;
-  return { ...unchanged, value: toNumber(value) };
-}
+import { toAmount } from './common.convert';
 
 /**
  * Convert SDK Fee to our Fee type with numbers.

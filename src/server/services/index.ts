@@ -13,9 +13,6 @@ export { PublicService } from './PublicService';
 export { TechnicalIndicatorsService } from './TechnicalIndicatorsService';
 export { TechnicalAnalysisService } from './TechnicalAnalysisService';
 
-// Re-export number conversion utilities used by external consumers
-export { toString, mapSdkCandlesToInput } from './numberConversion';
-
 // Re-export Granularity enum (needs explicit export since it's a value, not just a type)
 export { Granularity } from './ProductsService.types';
 
@@ -31,4 +28,5 @@ export type * from './PerpetualsService.types';
 export type * from './DataService.types';
 export type * from './ProductsService.types';
 export type * from './PublicService.types';
-export * from './TechnicalAnalysis';
+export type * from './TechnicalIndicatorsService.types';
+export * from './TechnicalAnalysisService.types';

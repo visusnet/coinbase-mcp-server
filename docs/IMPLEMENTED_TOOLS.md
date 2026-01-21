@@ -4,7 +4,7 @@
 
 This server now uses the official `@coinbase-sample/advanced-trade-sdk-ts` SDK directly, eliminating all custom domain/repository layers.
 
-**Total Tools: 71**
+**Total Tools: 72**
 
 ## Accounts (2)
 
@@ -112,6 +112,7 @@ This server now uses the official `@coinbase-sample/advanced-trade-sdk-ts` SDK d
 - ✅ `detect_chart_patterns` - Detect chart patterns (Double Top/Bottom, Head & Shoulders, Triangles, Flags)
 - ✅ `detect_swing_points` - Detect swing highs/lows using Williams Fractal (5-bar pattern)
 
-## Analysis Tools (1)
+## Analysis Tools (2)
 
 - ✅ `analyze_technical_indicators` - Calculate multiple indicators server-side, reducing context usage by ~90-95%. Fetches candles and returns computed values, aggregated signals, and price summary
+- ✅ `analyze_technical_indicators_batch` - Analyze multiple products in parallel. Returns results for each product with a summary ranking by signal score

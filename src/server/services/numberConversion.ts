@@ -1,5 +1,3 @@
-import type { CandleInput } from './TechnicalIndicatorsService';
-
 /**
  * Converts number to string for SDK calls.
  * Returns undefined if value is undefined.
@@ -76,41 +74,4 @@ export function toUnixTimestamp(value: string): string {
 
   // Convert milliseconds to seconds for Unix timestamp format
   return Math.floor(ms / 1000).toString();
-}
-
-/**
- * Maps an SDK candle to CandleInput with number types.
- * Used by ProductsService, PublicService, and TechnicalAnalysisService.
- */
-export function mapSdkCandleToInput(candle: {
-  open?: string;
-  high?: string;
-  low?: string;
-  close?: string;
-  volume?: string;
-}): CandleInput {
-  return {
-    open: toNumberRequired(candle.open ?? '0'),
-    high: toNumberRequired(candle.high ?? '0'),
-    low: toNumberRequired(candle.low ?? '0'),
-    close: toNumberRequired(candle.close ?? '0'),
-    volume: toNumberRequired(candle.volume ?? '0'),
-  };
-}
-
-/**
- * Maps an array of SDK candles to CandleInput[] with number types.
- */
-export function mapSdkCandlesToInput(
-  candles:
-    | ReadonlyArray<{
-        open?: string;
-        high?: string;
-        low?: string;
-        close?: string;
-        volume?: string;
-      }>
-    | undefined,
-): CandleInput[] {
-  return (candles ?? []).map(mapSdkCandleToInput);
 }

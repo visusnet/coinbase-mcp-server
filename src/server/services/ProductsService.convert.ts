@@ -1,16 +1,18 @@
 import type {
-  SdkProduct,
   SdkGetProductCandlesRequest,
   SdkListProductsResponse,
-  Product,
+  SdkGetBestBidAskResponse,
+  SdkGetProductBookResponse,
   ListProductsResponse,
   GetProductCandlesRequest,
+  GetBestBidAskResponse,
+  GetProductBookResponse,
+  SdkGetProductResponse,
+  GetProductResponse,
 } from './ProductsService.types';
-import {
-  toNumber,
-  toNumberRequired,
-  toUnixTimestamp,
-} from './numberConversion';
+import type { SdkProduct } from './common.types';
+import { toNumber, toUnixTimestamp } from './numberConversion';
+import { toPriceBook, toProduct } from './common.convert';
 
 /**
  * Convert our GetProductCandlesRequest to SDK request.
@@ -28,42 +30,12 @@ export function toSdkGetProductCandlesRequest(
   };
 }
 
-/**
- * Convert SDK Product to our Product type with numbers.
- */
-export function toProduct(sdkProduct: SdkProduct): Product {
-  const {
-    price,
-    pricePercentageChange24h,
-    volume24h,
-    volumePercentageChange24h,
-    baseIncrement,
-    quoteIncrement,
-    quoteMinSize,
-    quoteMaxSize,
-    baseMinSize,
-    baseMaxSize,
-    midMarketPrice,
-    priceIncrement,
-    approximateQuote24hVolume,
-    ...unchanged
-  } = sdkProduct;
-  return {
-    ...unchanged,
-    price: toNumberRequired(price),
-    pricePercentageChange24h: toNumberRequired(pricePercentageChange24h),
-    volume24h: toNumberRequired(volume24h),
-    volumePercentageChange24h: toNumberRequired(volumePercentageChange24h),
-    baseIncrement: toNumberRequired(baseIncrement),
-    quoteIncrement: toNumberRequired(quoteIncrement),
-    quoteMinSize: toNumberRequired(quoteMinSize),
-    quoteMaxSize: toNumberRequired(quoteMaxSize),
-    baseMinSize: toNumberRequired(baseMinSize),
-    baseMaxSize: toNumberRequired(baseMaxSize),
-    midMarketPrice: toNumber(midMarketPrice),
-    priceIncrement: toNumber(priceIncrement),
-    approximateQuote24hVolume: toNumber(approximateQuote24hVolume),
-  };
+export function toGetProductResponse(
+  sdkResponse: SdkGetProductResponse,
+): GetProductResponse {
+  // SDK types incorrectly declare GetProductResponse as { body?: Product }
+  // but the SDK actually returns Product directly (SDK bug)
+  return { product: toProduct(sdkResponse as SdkProduct) };
 }
 
 /**
@@ -74,4 +46,31 @@ export function toListProductsResponse(
 ): ListProductsResponse {
   const { products, ...unchanged } = sdkResponse;
   return { ...unchanged, products: products.map(toProduct) };
+}
+
+/**
+ * Convert SDK GetBestBidAskResponse to our type with numbers.
+ */
+export function toGetBestBidAskResponse(
+  sdkResponse: SdkGetBestBidAskResponse,
+): GetBestBidAskResponse {
+  return {
+    pricebooks: sdkResponse.pricebooks.map(toPriceBook),
+  };
+}
+
+/**
+ * Convert SDK GetProductBookResponse to our type with numbers.
+ */
+export function toGetProductBookResponse(
+  sdkResponse: SdkGetProductBookResponse,
+): GetProductBookResponse {
+  const { pricebook, last, midMarket, spreadBps, spreadAbsolute } = sdkResponse;
+  return {
+    pricebook: toPriceBook(pricebook),
+    last: toNumber(last),
+    midMarket: toNumber(midMarket),
+    spreadBps: toNumber(spreadBps),
+    spreadAbsolute: toNumber(spreadAbsolute),
+  };
 }

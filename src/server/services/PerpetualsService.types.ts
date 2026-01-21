@@ -3,10 +3,10 @@ import type { PortfolioMarginType } from '@coinbase-sample/advanced-trade-sdk-ts
 import type { PositionSide } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/PositionSide';
 import type { PortfolioLiquidationStatus } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/PortfolioLiquidationStatus';
 import type { PortfolioMarginFlags } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/PortfolioMarginFlags';
-import type { Amount } from './AccountsService.types';
+import type { Amount } from './common.types';
 
 // =============================================================================
-// SDK Type Re-exports
+// SDK Types (for conversion) - these have our own converted counterparts
 // =============================================================================
 
 export type {
@@ -22,9 +22,6 @@ export type { PositionSummary as SdkPositionSummary } from '@coinbase-sample/adv
 export type { Portfolio as SdkPortfolio } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/Portfolio';
 export type { PortfoliosSummary as SdkPortfoliosSummary } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/PortfoliosSummary';
 export type { PortfolioBalance as SdkPortfolioBalance } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/PortfolioBalance';
-
-// Re-export SdkAmount from AccountsService.types
-export type { SdkAmount } from './AccountsService.types';
 
 // Re-export request types unchanged
 export type {

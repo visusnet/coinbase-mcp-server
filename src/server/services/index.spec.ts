@@ -11,8 +11,6 @@ import {
   DataService,
   ProductsService,
   PublicService,
-  toString,
-  mapSdkCandlesToInput,
 } from './index';
 
 describe('services barrel exports', () => {
@@ -58,15 +56,5 @@ describe('services barrel exports', () => {
 
   it('should export PublicService', () => {
     expect(PublicService).toBeDefined();
-  });
-
-  it('should export toString utility', () => {
-    expect(toString).toBeDefined();
-    expect(typeof toString).toBe('function');
-  });
-
-  it('should export mapSdkCandlesToInput utility', () => {
-    expect(mapSdkCandlesToInput).toBeDefined();
-    expect(typeof mapSdkCandlesToInput).toBe('function');
   });
 });

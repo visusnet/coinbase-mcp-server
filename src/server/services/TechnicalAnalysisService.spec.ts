@@ -6,7 +6,7 @@ import type {
   CandleInput,
 } from './TechnicalIndicatorsService';
 import { Granularity } from './ProductsService.types';
-import { IndicatorType } from './TechnicalAnalysis';
+import { IndicatorType } from './TechnicalAnalysisService.types';
 import type { Candle } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/Candle';
 
 // Helper to convert test candles to SDK Candle type (SDK uses strings)
@@ -3265,6 +3265,126 @@ describe('TechnicalAnalysisService', () => {
       // Should handle null candles with empty array default
       // Pivot points won't be calculated since we don't have enough daily candles
       expect(result.indicators.supportResistance?.pivotPoints).toBeUndefined();
+    });
+  });
+
+  describe('analyzeTechnicalIndicatorsBatch', () => {
+    it('should analyze multiple products in parallel', async () => {
+      const mockCandles = createMockCandles(100);
+      getProductCandlesMock.mockResolvedValue({
+        candles: asSdkCandles(mockCandles),
+      });
+
+      const result = await service.analyzeTechnicalIndicatorsBatch({
+        productIds: ['BTC-USD', 'ETH-USD'],
+        granularity: Granularity.ONE_HOUR,
+        indicators: [IndicatorType.RSI],
+      });
+
+      expect(result.granularity).toBe(Granularity.ONE_HOUR);
+      expect(result.timestamp).toBeDefined();
+      expect(result.results['BTC-USD']).toBeDefined();
+      expect(result.results['ETH-USD']).toBeDefined();
+      expect(result.errors).toEqual({});
+      expect(result.summary.successCount).toBe(2);
+      expect(result.summary.errorCount).toBe(0);
+      expect(result.summary.rankedBySignal).toHaveLength(2);
+    });
+
+    it('should handle errors for individual products', async () => {
+      const mockCandles = createMockCandles(100);
+      getProductCandlesMock
+        .mockResolvedValueOnce({ candles: asSdkCandles(mockCandles) })
+        .mockRejectedValueOnce(new Error('Product not found'));
+
+      const result = await service.analyzeTechnicalIndicatorsBatch({
+        productIds: ['BTC-USD', 'INVALID-PRODUCT'],
+        granularity: Granularity.ONE_HOUR,
+        indicators: [IndicatorType.RSI],
+      });
+
+      expect(result.results['BTC-USD']).toBeDefined();
+      expect(result.results['INVALID-PRODUCT']).toBeUndefined();
+      expect(result.errors['INVALID-PRODUCT']).toBe('Product not found');
+      expect(result.summary.successCount).toBe(1);
+      expect(result.summary.errorCount).toBe(1);
+    });
+
+    it('should rank products by signal score', async () => {
+      // Create candles with different RSI values to get different signals
+      const bullishCandles = createMockCandles(100);
+      const bearishCandles = createMockCandles(100);
+
+      // First product: bullish
+      getProductCandlesMock.mockResolvedValueOnce({
+        candles: asSdkCandles(bullishCandles),
+      });
+      calculateRsiMock.mockReturnValueOnce({
+        values: [25], // Oversold = bullish
+        latestValue: 25,
+        period: 14,
+      });
+
+      // Second product: bearish
+      getProductCandlesMock.mockResolvedValueOnce({
+        candles: asSdkCandles(bearishCandles),
+      });
+      calculateRsiMock.mockReturnValueOnce({
+        values: [75], // Overbought = bearish
+        latestValue: 75,
+        period: 14,
+      });
+
+      const result = await service.analyzeTechnicalIndicatorsBatch({
+        productIds: ['BULLISH-USD', 'BEARISH-USD'],
+        granularity: Granularity.ONE_HOUR,
+        indicators: [IndicatorType.RSI],
+      });
+
+      // Bullish should rank higher (positive score)
+      expect(result.summary.rankedBySignal[0].productId).toBe('BULLISH-USD');
+      expect(result.summary.rankedBySignal[0].score).toBeGreaterThan(0);
+      expect(result.summary.rankedBySignal[1].productId).toBe('BEARISH-USD');
+      expect(result.summary.rankedBySignal[1].score).toBeLessThan(0);
+    });
+
+    it('should handle non-Error exceptions', async () => {
+      getProductCandlesMock.mockRejectedValueOnce('string error');
+
+      const result = await service.analyzeTechnicalIndicatorsBatch({
+        productIds: ['BTC-USD'],
+        granularity: Granularity.ONE_HOUR,
+        indicators: [IndicatorType.RSI],
+      });
+
+      expect(result.errors['BTC-USD']).toBe('string error');
+      expect(result.summary.errorCount).toBe(1);
+    });
+
+    it('should pass candleCount and indicators to individual analyses', async () => {
+      const mockCandles = createMockCandles(50);
+      getProductCandlesMock.mockResolvedValue({
+        candles: asSdkCandles(mockCandles),
+      });
+
+      await service.analyzeTechnicalIndicatorsBatch({
+        productIds: ['BTC-USD'],
+        granularity: Granularity.FIFTEEN_MINUTE,
+        candleCount: 50,
+        indicators: [IndicatorType.SMA, IndicatorType.EMA],
+      });
+
+      // Verify candle fetch was called with correct parameters
+      expect(getProductCandlesMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          productId: 'BTC-USD',
+          granularity: Granularity.FIFTEEN_MINUTE,
+        }),
+      );
+      // Verify only requested indicators were calculated
+      expect(calculateSmaMock).toHaveBeenCalled();
+      expect(calculateEmaMock).toHaveBeenCalled();
+      expect(calculateRsiMock).not.toHaveBeenCalled();
     });
   });
 });

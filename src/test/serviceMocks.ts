@@ -241,6 +241,8 @@ export const mockTechnicalIndicatorsService = {
 export const mockTechnicalAnalysisService = {
   analyzeTechnicalIndicators:
     jest.fn<TechnicalAnalysisService['analyzeTechnicalIndicators']>(),
+  analyzeTechnicalIndicatorsBatch:
+    jest.fn<TechnicalAnalysisService['analyzeTechnicalIndicatorsBatch']>(),
 } as MockedService<TechnicalAnalysisService>;
 
 export function mockServices(): void {

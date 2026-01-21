@@ -11,7 +11,6 @@ import type {
   SdkPerpPosition,
   SdkFuturesPosition,
   SdkBalancePair,
-  SdkAmount,
   SpotPortfolio,
   PortfolioBreakdown,
   PortfolioBalances,
@@ -25,19 +24,8 @@ import type {
   GetPortfolioResponse,
   EditPortfolioResponse,
 } from './PortfoliosService.types';
-import type { Amount } from './AccountsService.types';
 import { toNumber } from './numberConversion';
-
-/**
- * Convert SDK Amount to our Amount type with number value.
- */
-function toAmount(sdkAmount: SdkAmount | undefined): Amount | undefined {
-  if (!sdkAmount) {
-    return undefined;
-  }
-  const { value, ...unchanged } = sdkAmount;
-  return { ...unchanged, value: toNumber(value) };
-}
+import { toAmount } from './common.convert';
 
 /**
  * Convert SDK BalancePair to our BalancePair type with numbers.

@@ -1,4 +1,6 @@
-// Re-export SDK types unchanged - this is the decoupling layer
+// =============================================================================
+// SDK Types (pass-through) - no conversion needed
+// =============================================================================
 export type {
   ListPaymentMethodsResponse,
   GetPaymentMethodRequest,

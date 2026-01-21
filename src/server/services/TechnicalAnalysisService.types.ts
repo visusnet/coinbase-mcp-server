@@ -66,6 +66,20 @@ export interface AnalyzeTechnicalIndicatorsRequest {
 }
 
 /**
+ * Request input for analyze_technical_indicators_batch tool.
+ */
+export interface AnalyzeTechnicalIndicatorsBatchRequest {
+  /** Product IDs to analyze (e.g., ["BTC-USD", "ETH-USD"]) */
+  readonly productIds: readonly string[];
+  /** Candle granularity (e.g., FIFTEEN_MINUTE, ONE_HOUR) */
+  readonly granularity: Granularity;
+  /** Number of candles to fetch (default: 100) */
+  readonly candleCount?: number;
+  /** Specific indicators to calculate (default: all 24) */
+  readonly indicators?: readonly IndicatorType[];
+}
+
+/**
  * Signal direction based on indicator analysis.
  */
 export type SignalDirection =
@@ -500,4 +514,48 @@ export interface AnalyzeTechnicalIndicatorsResponse {
   readonly indicators: IndicatorResults;
   /** Aggregated trading signal */
   readonly signal: AggregatedSignal;
+}
+
+/**
+ * Response from analyze_technical_indicators_batch tool.
+ *
+ * Contains results for multiple products analyzed in parallel.
+ */
+export interface AnalyzeTechnicalIndicatorsBatchResponse {
+  /** Granularity used for all products */
+  readonly granularity: string;
+  /** ISO 8601 timestamp of analysis */
+  readonly timestamp: string;
+  /** Results keyed by product ID */
+  readonly results: Readonly<
+    Record<string, AnalyzeTechnicalIndicatorsResponse>
+  >;
+  /** Products that failed analysis (with error messages) */
+  readonly errors: Readonly<Record<string, string>>;
+  /** Summary across all successfully analyzed products */
+  readonly summary: BatchAnalysisSummary;
+}
+
+/**
+ * Summary of batch analysis results.
+ */
+export interface BatchAnalysisSummary {
+  /** Number of products successfully analyzed */
+  readonly successCount: number;
+  /** Number of products that failed */
+  readonly errorCount: number;
+  /** Products sorted by signal score (highest first) */
+  readonly rankedBySignal: readonly ProductSignalRanking[];
+}
+
+/**
+ * Product ranking by signal score.
+ */
+export interface ProductSignalRanking {
+  /** Product ID */
+  readonly productId: string;
+  /** Signal score (-100 to +100) */
+  readonly score: number;
+  /** Signal direction */
+  readonly direction: SignalDirection;
 }

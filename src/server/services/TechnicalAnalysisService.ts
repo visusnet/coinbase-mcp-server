@@ -11,11 +11,13 @@ import type {
   TechnicalIndicatorsService,
   CandleInput,
 } from './TechnicalIndicatorsService';
-import { mapSdkCandlesToInput } from './numberConversion';
+import { toCandleInputs } from './TechnicalAnalysisService.convert';
 import { Granularity } from './ProductsService.types';
 import {
   AnalyzeTechnicalIndicatorsRequest,
   AnalyzeTechnicalIndicatorsResponse,
+  AnalyzeTechnicalIndicatorsBatchRequest,
+  AnalyzeTechnicalIndicatorsBatchResponse,
   IndicatorType,
   MomentumIndicators,
   TrendIndicators,
@@ -28,7 +30,8 @@ import {
   SignalDirection,
   SignalConfidence,
   IndicatorResults,
-} from './TechnicalAnalysis';
+  ProductSignalRanking,
+} from './TechnicalAnalysisService.types';
 
 /** Default number of candles to fetch */
 const DEFAULT_CANDLE_COUNT = 100;
@@ -63,6 +66,62 @@ export class TechnicalAnalysisService {
     private readonly productsService: ProductsService,
     private readonly indicatorsService: TechnicalIndicatorsService,
   ) {}
+
+  /**
+   * Analyze technical indicators for multiple products in parallel.
+   *
+   * Fetches candles and calculates indicators for all products concurrently.
+   * Returns results keyed by product ID with a summary ranking.
+   *
+   * @param request - Product IDs, granularity, and optional settings
+   * @returns Results for each product with ranking summary
+   */
+  public async analyzeTechnicalIndicatorsBatch(
+    request: AnalyzeTechnicalIndicatorsBatchRequest,
+  ): Promise<AnalyzeTechnicalIndicatorsBatchResponse> {
+    const { productIds, granularity, candleCount, indicators } = request;
+    const timestamp = new Date().toISOString();
+    const results: Record<string, AnalyzeTechnicalIndicatorsResponse> = {};
+    const errors: Record<string, string> = {};
+
+    // Analyze all products in parallel
+    await Promise.all(
+      productIds.map(async (productId) => {
+        try {
+          const result = await this.analyzeTechnicalIndicators({
+            productId,
+            granularity,
+            candleCount,
+            indicators,
+          });
+          results[productId] = result;
+        } catch (err) {
+          errors[productId] = err instanceof Error ? err.message : String(err);
+        }
+      }),
+    );
+
+    // Build ranking by signal score
+    const rankedBySignal: ProductSignalRanking[] = Object.values(results)
+      .map((r) => ({
+        productId: r.productId,
+        score: r.signal.score,
+        direction: r.signal.direction,
+      }))
+      .sort((a, b) => b.score - a.score);
+
+    return {
+      granularity,
+      timestamp,
+      results,
+      errors,
+      summary: {
+        successCount: Object.keys(results).length,
+        errorCount: Object.keys(errors).length,
+        rankedBySignal,
+      },
+    };
+  }
 
   /**
    * Analyze technical indicators for a product.
@@ -139,7 +198,7 @@ export class TechnicalAnalysisService {
       end: end.toISOString(),
     });
 
-    return mapSdkCandlesToInput(response.candles);
+    return toCandleInputs(response.candles);
   }
 
   /**
@@ -158,7 +217,7 @@ export class TechnicalAnalysisService {
       end: end.toISOString(),
     });
 
-    return mapSdkCandlesToInput(response.candles);
+    return toCandleInputs(response.candles);
   }
 
   /**

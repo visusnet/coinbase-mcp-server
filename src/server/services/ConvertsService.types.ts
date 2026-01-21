@@ -6,10 +6,10 @@ import type { SubscriptionInfo } from '@coinbase-sample/advanced-trade-sdk-ts/di
 import type { TradeIncentiveInfo } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/TradeIncentiveInfo';
 import type { TradeStatus } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/TradeStatus';
 import type { UserWarning } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/UserWarning';
-import type { Amount } from './AccountsService.types';
+import type { Amount } from './common.types';
 
 // =============================================================================
-// SDK Type Re-exports
+// SDK Types (for conversion) - these have our own converted counterparts
 // =============================================================================
 
 export type {
@@ -23,15 +23,6 @@ export type { Fee as SdkFee } from '@coinbase-sample/advanced-trade-sdk-ts/dist/
 export type { UnitPrice as SdkUnitPrice } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/UnitPrice';
 export type { ScaledAmount as SdkScaledAmount } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/ScaledAmount';
 export type { TaxInfo as SdkTaxInfo } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/TaxInfo';
-
-// Re-export SdkAmount from AccountsService.types
-export type { SdkAmount } from './AccountsService.types';
-
-// Re-export request types unchanged (except CreateConvertQuoteRequest which has our number amount)
-export type {
-  CommitConvertTradeRequest,
-  GetConvertTradeRequest,
-} from '@coinbase-sample/advanced-trade-sdk-ts/dist/rest/convert/types';
 
 // =============================================================================
 // Our Types (with number values instead of string)
@@ -112,3 +103,12 @@ export interface CommitConvertTradeResponse {
 export interface GetConvertTradeResponse {
   readonly trade?: RatConvertTrade;
 }
+
+// =============================================================================
+// SDK Types (pass-through) - no conversion needed
+// =============================================================================
+
+export type {
+  CommitConvertTradeRequest,
+  GetConvertTradeRequest,
+} from '@coinbase-sample/advanced-trade-sdk-ts/dist/rest/convert/types';

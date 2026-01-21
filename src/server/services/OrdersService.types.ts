@@ -13,7 +13,7 @@ import type { StopTriggerStatus } from '@coinbase-sample/advanced-trade-sdk-ts/d
 import type { TimeInForceType } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/TimeInForceType';
 
 // =============================================================================
-// SDK Type Re-exports
+// SDK Types (for conversion) - these have our own converted counterparts
 // =============================================================================
 
 export type {

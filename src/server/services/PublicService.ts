@@ -25,7 +25,7 @@ import {
   toGetPublicProductBookResponse,
   toGetPublicMarketTradesResponse,
 } from './PublicService.convert';
-import { toProduct } from './ProductsService.convert';
+import { toProduct } from './common.convert';
 
 /**
  * Wrapper service for Coinbase Public API.

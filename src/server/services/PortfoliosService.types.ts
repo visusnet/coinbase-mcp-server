@@ -3,10 +3,10 @@ import type { PortfolioMarginType } from '@coinbase-sample/advanced-trade-sdk-ts
 import type { PortfolioMarginFlags } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/PortfolioMarginFlags';
 import type { PortfolioLiquidationStatus } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/PortfolioLiquidationStatus';
 import type { FuturesPositionSide } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/FuturesPositionSide';
-import type { Amount } from './AccountsService.types';
+import type { Amount } from './common.types';
 
 // =============================================================================
-// SDK Type Re-exports
+// SDK Types (for conversion) - these have our own converted counterparts
 // =============================================================================
 
 export type {
@@ -23,9 +23,6 @@ export type { PortfolioPosition as SdkPortfolioPosition } from '@coinbase-sample
 export type { PerpPosition as SdkPerpPosition } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/PerpPosition';
 export type { FuturesPosition as SdkFuturesPosition } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/FuturesPosition';
 export type { BalancePair as SdkBalancePair } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/BalancePair';
-
-// Re-export SdkAmount from AccountsService.types
-export type { SdkAmount } from './AccountsService.types';
 
 // =============================================================================
 // Our Types (with number values instead of string)
@@ -160,7 +157,9 @@ export type GetPortfolioResponse = PortfolioBreakdown;
 
 export type EditPortfolioResponse = CreatePortfolioResponse;
 
-// Re-export SDK types unchanged for requests and simple responses
+// =============================================================================
+// SDK Types (pass-through) - no conversion needed
+// =============================================================================
 export type {
   ListPortfoliosRequest,
   CreatePortfolioRequest,
