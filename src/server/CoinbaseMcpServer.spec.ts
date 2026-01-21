@@ -1978,9 +1978,10 @@ describe('CoinbaseMcpServer Integration Tests', () => {
       const consoleSpy = jest
         .spyOn(console, 'log')
         .mockImplementation(() => {});
+      const mockServer = { on: jest.fn() };
       const mockListen = jest.fn((_port: number, callback: () => void) => {
         callback();
-        return {};
+        return mockServer;
       });
       const app = coinbaseMcpServer.getExpressApp();
       // Override listen method for testing
@@ -1995,8 +1996,78 @@ describe('CoinbaseMcpServer Integration Tests', () => {
       expect(consoleSpy).toHaveBeenCalledWith(
         'Coinbase MCP Server listening on port 3000',
       );
+      expect(mockServer.on).toHaveBeenCalledWith('error', expect.any(Function));
 
       consoleSpy.mockRestore();
+    });
+
+    it('should handle EADDRINUSE error with helpful message', () => {
+      const consoleErrorSpy = jest
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
+      const processExitSpy = jest
+        .spyOn(process, 'exit')
+        .mockImplementation(() => undefined as never);
+      const mockServer = { on: jest.fn() };
+      const mockListen = jest.fn(() => mockServer);
+      const app = coinbaseMcpServer.getExpressApp();
+      Object.defineProperty(app, 'listen', {
+        value: mockListen,
+        writable: true,
+      });
+
+      coinbaseMcpServer.listen(3000);
+
+      const errorHandler = mockServer.on.mock.calls.find(
+        (call) => call[0] === 'error',
+      )?.[1] as (error: NodeJS.ErrnoException) => void;
+      const error: NodeJS.ErrnoException = new Error('address in use');
+      error.code = 'EADDRINUSE';
+      errorHandler(error);
+
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        'Error: Port 3000 is already in use',
+      );
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        'Try a different port with: PORT=<port> npm start',
+      );
+      expect(processExitSpy).toHaveBeenCalledWith(1);
+
+      consoleErrorSpy.mockRestore();
+      processExitSpy.mockRestore();
+    });
+
+    it('should handle other server errors', () => {
+      const consoleErrorSpy = jest
+        .spyOn(console, 'error')
+        .mockImplementation(() => {});
+      const processExitSpy = jest
+        .spyOn(process, 'exit')
+        .mockImplementation(() => undefined as never);
+      const mockServer = { on: jest.fn() };
+      const mockListen = jest.fn(() => mockServer);
+      const app = coinbaseMcpServer.getExpressApp();
+      Object.defineProperty(app, 'listen', {
+        value: mockListen,
+        writable: true,
+      });
+
+      coinbaseMcpServer.listen(3000);
+
+      const errorHandler = mockServer.on.mock.calls.find(
+        (call) => call[0] === 'error',
+      )?.[1] as (error: NodeJS.ErrnoException) => void;
+      const error: NodeJS.ErrnoException = new Error('permission denied');
+      error.code = 'EACCES';
+      errorHandler(error);
+
+      expect(consoleErrorSpy).toHaveBeenCalledWith(
+        'Error starting server: permission denied',
+      );
+      expect(processExitSpy).toHaveBeenCalledWith(1);
+
+      consoleErrorSpy.mockRestore();
+      processExitSpy.mockRestore();
     });
   });
 
