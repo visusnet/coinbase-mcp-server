@@ -19,8 +19,12 @@ import { toString, toNumber, toNumberRequired } from './numberConversion';
 
 /**
  * Convert SDK Order to our Order type with numbers.
+ * SDK types are wrong - actual response is { order: {...} }.
  */
-export function toOrder(sdkOrder: SdkGetOrderResponse): Order {
+export function toOrder(sdkResponse: SdkGetOrderResponse): Order {
+  const sdkOrder = (sdkResponse as unknown as { order: SdkGetOrderResponse })
+    .order;
+
   const {
     completionPercentage,
     filledSize,
@@ -34,6 +38,7 @@ export function toOrder(sdkOrder: SdkGetOrderResponse): Order {
     leverage,
     ...unchanged
   } = sdkOrder;
+
   return {
     ...unchanged,
     completionPercentage: toNumberRequired(completionPercentage),
