@@ -223,8 +223,18 @@ BEST PRACTICES:
   }
 
   public listen(port: number): void {
-    this.app.listen(port, () => {
+    const server = this.app.listen(port, () => {
       console.log(`Coinbase MCP Server listening on port ${port}`);
+    });
+
+    server.on('error', (error: NodeJS.ErrnoException) => {
+      if (error.code === 'EADDRINUSE') {
+        console.error(`Error: Port ${port} is already in use`);
+        console.error('Try a different port with: PORT=<port> npm start');
+      } else {
+        console.error(`Error starting server: ${error.message}`);
+      }
+      process.exit(1);
     });
   }
 }
