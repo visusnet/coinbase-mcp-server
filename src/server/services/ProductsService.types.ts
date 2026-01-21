@@ -1,25 +1,24 @@
 // Wrapper types with numbers for API convenience
-import type { FcmTradingSessionDetails } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/FcmTradingSessionDetails';
-import type { FutureProductDetails } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/FutureProductDetails';
-import type { ProductType } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/ProductType';
-import type { ProductVenue } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/ProductVenue';
-import type { Candle, L2Level } from './PublicService.types';
+import type {
+  Candle,
+  L2Level,
+  PriceBook,
+  Product,
+  HistoricalMarketTrade,
+} from './common.types';
 
 // =============================================================================
-// SDK Type Re-exports
+// SDK Types (for conversion) - these have our own converted counterparts
 // =============================================================================
 
-export type { Product as SdkProduct } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/Product';
 export type {
   GetProductCandlesRequest as SdkGetProductCandlesRequest,
+  GetProductResponse as SdkGetProductResponse,
   ListProductsResponse as SdkListProductsResponse,
+  GetBestBidAskResponse as SdkGetBestBidAskResponse,
 } from '@coinbase-sample/advanced-trade-sdk-ts/dist/rest/products/types';
 
-// Re-export shared SDK types from PublicService.types for convenience
-export type { SdkL2Level, SdkPriceBook } from './PublicService.types';
-
-// Re-export shared types for convenience
-export type { Candle, L2Level } from './PublicService.types';
+export type { GetProductBookResponse as SdkGetProductBookResponse } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/GetProductBookResponse';
 
 // =============================================================================
 // Our Types (with number values instead of string)
@@ -29,51 +28,15 @@ export type { Candle, L2Level } from './PublicService.types';
 // Product Types
 // =============================================================================
 
-// Product type with numbers instead of strings for numeric fields
-export interface Product {
-  readonly productId: string;
-  readonly price: number;
-  readonly pricePercentageChange24h: number;
-  readonly volume24h: number;
-  readonly volumePercentageChange24h: number;
-  readonly baseIncrement: number;
-  readonly quoteIncrement: number;
-  readonly quoteMinSize: number;
-  readonly quoteMaxSize: number;
-  readonly baseMinSize: number;
-  readonly baseMaxSize: number;
-  readonly baseName: string;
-  readonly quoteName: string;
-  readonly watched: boolean;
-  readonly isDisabled: boolean;
-  readonly _new: boolean;
-  readonly status: string;
-  readonly cancelOnly: boolean;
-  readonly limitOnly: boolean;
-  readonly postOnly: boolean;
-  readonly tradingDisabled: boolean;
-  readonly auctionMode: boolean;
-  readonly productType?: ProductType;
-  readonly quoteCurrencyId?: string;
-  readonly baseCurrencyId?: string;
-  readonly fcmTradingSessionDetails?: FcmTradingSessionDetails;
-  readonly midMarketPrice?: number;
-  readonly alias?: string;
-  readonly aliasTo?: Array<string>;
-  readonly baseDisplaySymbol: string;
-  readonly quoteDisplaySymbol: string;
-  readonly viewOnly?: boolean;
-  readonly priceIncrement?: number;
-  readonly displayName?: string;
-  readonly productVenue?: ProductVenue;
-  readonly approximateQuote24hVolume?: number;
-  readonly futureProductDetails?: FutureProductDetails;
-}
-
 // ListProductsResponse with our Product type
 export interface ListProductsResponse {
   readonly products?: Product[];
   readonly numProducts?: number;
+}
+
+// GetProductResponse wrapping our Product type
+export interface GetProductResponse {
+  readonly product: Product;
 }
 
 // =============================================================================
@@ -109,6 +72,8 @@ export interface GetProductCandlesBatchResponse {
   granularity: Granularity;
   candleCount: number;
   productCandlesByProductId: Record<string, ProductCandles>;
+  /** Products that failed to fetch (with error messages) */
+  errors: Record<string, string>;
 }
 
 // =============================================================================
@@ -153,7 +118,35 @@ export interface GetMarketSnapshotResponse {
 }
 
 // =============================================================================
-// Re-export SDK types that don't need conversion
+// Best Bid/Ask Types
+// =============================================================================
+
+// GetBestBidAskResponse with our PriceBook type (numbers instead of strings)
+export interface GetBestBidAskResponse {
+  readonly pricebooks: ReadonlyArray<PriceBook>;
+}
+
+// GetProductBookResponse with our PriceBook type (numbers instead of strings)
+export interface GetProductBookResponse {
+  readonly pricebook: PriceBook;
+  readonly last?: number;
+  readonly midMarket?: number;
+  readonly spreadBps?: number;
+  readonly spreadAbsolute?: number;
+}
+
+// =============================================================================
+// Market Trades Types
+// =============================================================================
+
+export interface GetProductMarketTradesResponse {
+  readonly trades?: ReadonlyArray<HistoricalMarketTrade>;
+  readonly bestBid?: number;
+  readonly bestAsk?: number;
+}
+
+// =============================================================================
+// SDK Types (pass-through) - no conversion needed
 // =============================================================================
 
 export type {
@@ -162,9 +155,6 @@ export type {
   GetProductCandlesRequest,
   GetProductCandlesResponse,
   GetProductBookRequest,
-  GetProductBookResponse,
   GetBestBidAskRequest,
-  GetBestBidAskResponse,
   GetProductMarketTradesRequest,
-  GetProductMarketTradesResponse,
 } from '@coinbase-sample/advanced-trade-sdk-ts/dist/rest/products/types';

@@ -6,7 +6,6 @@ import type {
   SdkFCMPosition,
   SdkFCMBalanceSummary,
   SdkFCMSweep,
-  SdkAmount,
   FCMPosition,
   FCMBalanceSummary,
   FCMSweep,
@@ -15,19 +14,8 @@ import type {
   GetFuturesBalanceSummaryResponse,
   ListFuturesSweepsResponse,
 } from './FuturesService.types';
-import type { Amount } from './AccountsService.types';
 import { toNumber } from './numberConversion';
-
-/**
- * Convert SDK Amount to our Amount type with number value.
- */
-function toAmount(sdkAmount: SdkAmount | undefined): Amount | undefined {
-  if (!sdkAmount) {
-    return undefined;
-  }
-  const { value, ...unchanged } = sdkAmount;
-  return { ...unchanged, value: toNumber(value) };
-}
+import { toAmount } from './common.convert';
 
 /**
  * Convert SDK FCMPosition to our type with numbers.

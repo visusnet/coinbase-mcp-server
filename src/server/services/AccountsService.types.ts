@@ -1,9 +1,10 @@
 // Wrapper types with numbers for API convenience
 import type { AccountPlatform } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/AccountPlatform';
 import type { AccountType } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/AccountType';
+import type { Amount } from './common.types';
 
 // =============================================================================
-// SDK Type Re-exports
+// SDK Types (for conversion) - these have our own converted counterparts
 // =============================================================================
 
 export type {
@@ -11,17 +12,10 @@ export type {
   GetAccountResponse as SdkGetAccountResponse,
 } from '@coinbase-sample/advanced-trade-sdk-ts/dist/rest/accounts/types';
 export type { Account as SdkAccount } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/Account';
-export type { Amount as SdkAmount } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/Amount';
 
 // =============================================================================
 // Our Types (with number values instead of string)
 // =============================================================================
-
-// Amount type with number value
-export interface Amount {
-  readonly value?: number;
-  readonly currency?: string;
-}
 
 // Account type with number amounts
 export interface Account {

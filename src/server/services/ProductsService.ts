@@ -3,14 +3,13 @@ import {
   CoinbaseAdvTradeClient,
 } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
 import type {
-  SdkProduct,
-  SdkL2Level,
-  SdkPriceBook,
   SdkListProductsResponse,
-  Product,
+  SdkGetBestBidAskResponse,
+  SdkGetProductBookResponse,
   ListProductsRequest,
   ListProductsResponse,
   GetProductRequest,
+  GetProductResponse,
   GetProductCandlesRequest,
   GetProductCandlesResponse,
   GetProductBookRequest,
@@ -27,27 +26,201 @@ import type {
   MarketSnapshot,
   SpreadStatus,
   ProductCandles,
-  L2Level,
-  Candle,
+  SdkGetProductResponse,
 } from './ProductsService.types';
-import { toNumber } from './numberConversion';
+import type { Product, L2Level, PriceBook } from './common.types';
 import {
-  toProduct,
   toListProductsResponse,
   toSdkGetProductCandlesRequest,
+  toGetBestBidAskResponse,
+  toGetProductBookResponse,
+  toGetProductResponse,
 } from './ProductsService.convert';
+import {
+  toCandle,
+  toGetPublicMarketTradesResponse,
+} from './PublicService.convert';
+import type { SdkGetMarketTradesResponse } from './PublicService.types';
 
-// =============================================================================
-// Helper Functions (from MarketSnapshot.ts and ProductCandles.ts)
-// =============================================================================
+/**
+ * Wrapper service for Coinbase Products API.
+ * Delegates to SDK service and handles timestamp conversion.
+ */
+export class ProductsService {
+  private readonly sdk: SdkProductsService;
 
-function parseNumber(value?: string): number {
-  if (typeof value !== 'string') {
-    return 0;
+  public constructor(client: CoinbaseAdvTradeClient) {
+    this.sdk = new SdkProductsService(client);
   }
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : 0;
+
+  public async listProducts(
+    request?: ListProductsRequest,
+  ): Promise<ListProductsResponse> {
+    const sdkResponse = (await this.sdk.listProducts(
+      request ?? {},
+    )) as SdkListProductsResponse;
+    return toListProductsResponse(sdkResponse);
+  }
+
+  public async getProduct(
+    request: GetProductRequest,
+  ): Promise<GetProductResponse> {
+    const sdkResponse = (await this.sdk.getProduct(
+      request,
+    )) as SdkGetProductResponse;
+    return toGetProductResponse(sdkResponse);
+  }
+
+  /**
+   * Get product candles with automatic ISO 8601 to Unix timestamp conversion.
+   * The SDK expects ISO 8601 but the underlying API requires Unix timestamps.
+   */
+  public getProductCandles(
+    request: GetProductCandlesRequest,
+  ): Promise<GetProductCandlesResponse> {
+    return this.sdk.getProductCandles(
+      toSdkGetProductCandlesRequest(request),
+    ) as Promise<GetProductCandlesResponse>;
+  }
+
+  public async getProductBook(
+    request: GetProductBookRequest,
+  ): Promise<GetProductBookResponse> {
+    const sdkResponse = (await this.sdk.getProductBook(
+      request,
+    )) as SdkGetProductBookResponse;
+    return toGetProductBookResponse(sdkResponse);
+  }
+
+  public async getBestBidAsk(
+    request?: GetBestBidAskRequest,
+  ): Promise<GetBestBidAskResponse> {
+    const sdkResponse = (await this.sdk.getBestBidAsk(
+      request ?? {},
+    )) as SdkGetBestBidAskResponse;
+    return toGetBestBidAskResponse(sdkResponse);
+  }
+
+  public async getProductMarketTrades(
+    request: GetProductMarketTradesRequest,
+  ): Promise<GetProductMarketTradesResponse> {
+    const sdkResponse = (await this.sdk.getProductMarketTrades(
+      request,
+    )) as SdkGetMarketTradesResponse;
+    return toGetPublicMarketTradesResponse(sdkResponse);
+  }
+
+  public async getMarketSnapshot({
+    productIds,
+    includeOrderBook = false,
+  }: GetMarketSnapshotRequest): Promise<GetMarketSnapshotResponse> {
+    const bestBidAsk = await this.getBestBidAsk({ productIds });
+
+    const products = await this.getProducts(productIds);
+
+    const orderBooksByProductId: Partial<Record<string, OrderBookData>> = {};
+    if (includeOrderBook) {
+      const productBooks = await this.getProductBooks(productIds);
+
+      for (const book of productBooks) {
+        const { bids, asks } = book.pricebook;
+
+        const bidDepth = calculateBidAskDepth(bids);
+        const askDepth = calculateBidAskDepth(asks);
+        const imbalance = calculateBidAskImbalance(bidDepth, askDepth);
+
+        orderBooksByProductId[book.pricebook.productId] = {
+          bids: [...bids],
+          asks: [...asks],
+          bidDepth,
+          askDepth,
+          imbalance,
+        };
+      }
+    }
+
+    const snapshots: Record<string, MarketSnapshot> = createMarketSnapshots(
+      productIds,
+      products,
+      bestBidAsk,
+      orderBooksByProductId,
+    );
+
+    const { bestPerformer, worstPerformer } =
+      findBestAndWorstPerformers(snapshots);
+
+    return {
+      timestamp: new Date().toISOString(),
+      snapshots,
+      summary: {
+        assetsQueried: Object.keys(snapshots).length,
+        bestPerformer: bestPerformer.id || null,
+        worstPerformer: worstPerformer.id || null,
+      },
+    };
+  }
+
+  public async getProductCandlesBatch({
+    productIds,
+    start,
+    end,
+    granularity,
+  }: GetProductCandlesBatchRequest): Promise<GetProductCandlesBatchResponse> {
+    const productCandlesByProductId: Record<string, ProductCandles> = {};
+    const errors: Record<string, string> = {};
+    let candleCount = 0;
+
+    await Promise.all(
+      productIds.map(async (productId) => {
+        try {
+          const response = await this.getProductCandles({
+            productId,
+            start,
+            end,
+            granularity,
+          });
+          const sdkCandles = response.candles ?? [];
+          const candles = sdkCandles.map(toCandle);
+          productCandlesByProductId[productId] = {
+            candles,
+            latest: candles[0] ?? null,
+            oldest: candles[candles.length - 1] ?? null,
+          };
+          candleCount += candles.length;
+        } catch (err) {
+          errors[productId] = err instanceof Error ? err.message : String(err);
+        }
+      }),
+    );
+
+    return {
+      timestamp: new Date().toISOString(),
+      granularity,
+      candleCount,
+      productCandlesByProductId,
+      errors,
+    };
+  }
+
+  private async getProductBooks(
+    productIds: string[],
+  ): Promise<GetProductBookResponse[]> {
+    return Promise.all(
+      productIds.map((productId) => this.getProductBook({ productId })),
+    );
+  }
+
+  private async getProducts(productIds: string[]): Promise<Product[]> {
+    const responses = await Promise.all(
+      productIds.map((productId) => this.getProduct({ productId })),
+    );
+    return responses.map(({ product }) => product);
+  }
 }
+
+// =============================================================================
+// Helper Functions
+// =============================================================================
 
 function classifySpreadStatus(spreadPercent: number): SpreadStatus {
   if (spreadPercent < 0.1) {
@@ -62,13 +235,10 @@ function classifySpreadStatus(spreadPercent: number): SpreadStatus {
   return 'wide';
 }
 
-function getMaxPrice(levels: SdkL2Level[]): number {
+function getMaxPrice(levels: readonly L2Level[]): number {
   let best = -Infinity;
   for (const level of levels) {
-    if (typeof level.price !== 'string') {
-      continue;
-    }
-    const price = parseNumber(level.price);
+    const price = level.price ?? 0;
     if (price > best) {
       best = price;
     }
@@ -76,13 +246,10 @@ function getMaxPrice(levels: SdkL2Level[]): number {
   return best === -Infinity ? 0 : best;
 }
 
-function getMinPrice(levels: SdkL2Level[]): number {
+function getMinPrice(levels: readonly L2Level[]): number {
   let best = Infinity;
   for (const level of levels) {
-    if (typeof level.price !== 'string') {
-      continue;
-    }
-    const price = parseNumber(level.price);
+    const price = level.price ?? 0;
     if (price < best) {
       best = price;
     }
@@ -102,9 +269,9 @@ function calculateSpreadPercent(price: number, spread: number): number {
   return price > 0 ? (spread / price) * 100 : 0;
 }
 
-function calculateBidAskDepth(levels: SdkL2Level[]): number {
+function calculateBidAskDepth(levels: readonly L2Level[]): number {
   return levels.reduce(
-    (sum, level) => sum + parseNumber(level.price) * parseNumber(level.size),
+    (sum, level) => sum + (level.price ?? 0) * (level.size ?? 0),
     0,
   );
 }
@@ -115,22 +282,15 @@ function calculateBidAskImbalance(bidDepth: number, askDepth: number): number {
     : 0;
 }
 
-function toL2Levels(levels: SdkL2Level[]): L2Level[] {
-  return levels.map((level) => ({
-    price: toNumber(level.price),
-    size: toNumber(level.size),
-  }));
-}
-
 function findPriceBookForProduct(
-  pricebooks: SdkPriceBook[],
+  pricebooks: readonly PriceBook[],
   productId: string,
-): SdkPriceBook | undefined {
+): PriceBook | undefined {
   return pricebooks.find((p) => p.productId === productId);
 }
 
 function createMarketSnapshot(
-  pricebook: SdkPriceBook,
+  pricebook: PriceBook,
   { volume24h, pricePercentageChange24h: change24hPercent }: Product,
   orderBook?: OrderBookData,
 ): MarketSnapshot {
@@ -197,216 +357,4 @@ function findBestAndWorstPerformers(
   }
 
   return { bestPerformer, worstPerformer };
-}
-
-function countCandles(
-  candleResults: { productId: string; response: GetProductCandlesResponse }[],
-): number {
-  return candleResults.reduce(
-    (acc: number, { response }) => acc + (response.candles?.length ?? 0),
-    0,
-  );
-}
-
-function toCandle(candle: {
-  start?: string;
-  low?: string;
-  high?: string;
-  open?: string;
-  close?: string;
-  volume?: string;
-}): Candle {
-  return {
-    start: toNumber(candle.start),
-    low: toNumber(candle.low),
-    high: toNumber(candle.high),
-    open: toNumber(candle.open),
-    close: toNumber(candle.close),
-    volume: toNumber(candle.volume),
-  };
-}
-
-function toCandles(
-  candles: ReadonlyArray<{
-    start?: string;
-    low?: string;
-    high?: string;
-    open?: string;
-    close?: string;
-    volume?: string;
-  }>,
-): Candle[] {
-  return candles.map(toCandle);
-}
-
-// =============================================================================
-// ProductsService
-// =============================================================================
-
-/**
- * Wrapper service for Coinbase Products API.
- * Delegates to SDK service and handles timestamp conversion.
- */
-export class ProductsService {
-  private readonly sdk: SdkProductsService;
-
-  public constructor(client: CoinbaseAdvTradeClient) {
-    this.sdk = new SdkProductsService(client);
-  }
-
-  public async listProducts(
-    request?: ListProductsRequest,
-  ): Promise<ListProductsResponse> {
-    const sdkResponse = (await this.sdk.listProducts(
-      request ?? {},
-    )) as SdkListProductsResponse;
-    return toListProductsResponse(sdkResponse);
-  }
-
-  public async getProduct(request: GetProductRequest): Promise<Product> {
-    // SDK types incorrectly declare GetProductResponse as { body?: Product }
-    // but the SDK actually returns Product directly (SDK bug)
-    const sdkResponse = (await this.sdk.getProduct(
-      request,
-    )) as unknown as SdkProduct;
-    return toProduct(sdkResponse);
-  }
-
-  /**
-   * Get product candles with automatic ISO 8601 to Unix timestamp conversion.
-   * The SDK expects ISO 8601 but the underlying API requires Unix timestamps.
-   */
-  public getProductCandles(
-    request: GetProductCandlesRequest,
-  ): Promise<GetProductCandlesResponse> {
-    return this.sdk.getProductCandles(
-      toSdkGetProductCandlesRequest(request),
-    ) as Promise<GetProductCandlesResponse>;
-  }
-
-  public getProductBook(
-    request: GetProductBookRequest,
-  ): Promise<GetProductBookResponse> {
-    return this.sdk.getProductBook(request) as Promise<GetProductBookResponse>;
-  }
-
-  public getBestBidAsk(
-    request?: GetBestBidAskRequest,
-  ): Promise<GetBestBidAskResponse> {
-    return this.sdk.getBestBidAsk(
-      request ?? {},
-    ) as Promise<GetBestBidAskResponse>;
-  }
-
-  public getProductMarketTrades(
-    request: GetProductMarketTradesRequest,
-  ): Promise<GetProductMarketTradesResponse> {
-    return this.sdk.getProductMarketTrades(
-      request,
-    ) as Promise<GetProductMarketTradesResponse>;
-  }
-
-  public async getMarketSnapshot({
-    productIds,
-    includeOrderBook = false,
-  }: GetMarketSnapshotRequest): Promise<GetMarketSnapshotResponse> {
-    const bestBidAsk = await this.getBestBidAsk({ productIds });
-
-    const products = await this.getProducts(productIds);
-
-    const orderBooksByProductId: Partial<Record<string, OrderBookData>> = {};
-    if (includeOrderBook) {
-      const orderBooks = await this.getOrderBooks(productIds);
-
-      for (const book of orderBooks) {
-        const bids = book.pricebook.bids;
-        const asks = book.pricebook.asks;
-
-        const bidDepth = calculateBidAskDepth(bids);
-        const askDepth = calculateBidAskDepth(asks);
-        const imbalance = calculateBidAskImbalance(bidDepth, askDepth);
-
-        orderBooksByProductId[book.pricebook.productId] = {
-          bids: toL2Levels(bids),
-          asks: toL2Levels(asks),
-          bidDepth,
-          askDepth,
-          imbalance,
-        };
-      }
-    }
-
-    const snapshots: Record<string, MarketSnapshot> = createMarketSnapshots(
-      productIds,
-      products,
-      bestBidAsk,
-      orderBooksByProductId,
-    );
-
-    const { bestPerformer, worstPerformer } =
-      findBestAndWorstPerformers(snapshots);
-
-    return {
-      timestamp: new Date().toISOString(),
-      snapshots,
-      summary: {
-        assetsQueried: Object.keys(snapshots).length,
-        bestPerformer: bestPerformer.id || null,
-        worstPerformer: worstPerformer.id || null,
-      },
-    };
-  }
-
-  public async getProductCandlesBatch({
-    productIds,
-    start,
-    end,
-    granularity,
-  }: GetProductCandlesBatchRequest): Promise<GetProductCandlesBatchResponse> {
-    const candleResults = await Promise.all(
-      productIds.map(async (productId) => ({
-        productId,
-        response: await this.getProductCandles({
-          productId,
-          start,
-          end,
-          granularity,
-        }),
-      })),
-    );
-
-    const productCandlesByProductId: Record<string, ProductCandles> = {};
-    for (const { productId, response } of candleResults) {
-      const sdkCandles = response.candles ?? [];
-      const candles = toCandles(sdkCandles);
-      productCandlesByProductId[productId] = {
-        candles,
-        latest: candles[0] ?? null,
-        oldest: candles[candles.length - 1] ?? null,
-      };
-    }
-
-    const candleCount = countCandles(candleResults);
-
-    return {
-      timestamp: new Date().toISOString(),
-      granularity,
-      candleCount,
-      productCandlesByProductId,
-    };
-  }
-
-  private async getOrderBooks(
-    productIds: string[],
-  ): Promise<GetProductBookResponse[]> {
-    return Promise.all(
-      productIds.map((id) => this.getProductBook({ productId: id })),
-    );
-  }
-
-  private async getProducts(productIds: string[]): Promise<Product[]> {
-    return Promise.all(
-      productIds.map((id) => this.getProduct({ productId: id })),
-    );
-  }
 }

@@ -89,5 +89,6 @@ Before committing, verify all items:
 - [ ] `README.md` updated (tool count)
 - [ ] `CLAUDE.md` updated (tool count)
 - [ ] `CoinbaseMcpServer.ts` assist prompt updated (tool count)
+- [ ] `.claude/skills/coinbase-trading/*.md` updated (if applicable)
 - [ ] All quality checks pass (format, lint, types, knip, coverage)
 - [ ] **If indicator is useful for trading signals**: Add to `TechnicalAnalysisService.ts` (analyze_technical_indicators tool)

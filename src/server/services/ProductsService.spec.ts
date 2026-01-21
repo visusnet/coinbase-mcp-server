@@ -11,11 +11,17 @@ jest.mock('@coinbase-sample/advanced-trade-sdk-ts/dist/index.js', () => ({
 }));
 
 // Import after mock is set up
-import type { GetBestBidAskResponse } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/GetBestBidAskResponse';
-import type { GetProductBookResponse } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/GetProductBookResponse';
 import type { Product as SdkProduct } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/Product';
-import type { Product } from './ProductsService.types';
-import { toProduct, toListProductsResponse } from './ProductsService.convert';
+import type {
+  GetBestBidAskResponse,
+  GetProductBookResponse,
+  SdkGetProductResponse,
+} from './ProductsService.types';
+import type { Product } from './common.types';
+import {
+  toListProductsResponse,
+  toGetProductResponse,
+} from './ProductsService.convert';
 import { ProductsService } from './ProductsService';
 
 const createService = (): ProductsService => new ProductsService({} as never);
@@ -82,7 +88,7 @@ describe('ProductsService', () => {
     });
 
     it('getProduct should convert SDK response numbers', async () => {
-      const mockSdkProduct: SdkProduct = {
+      const mockSdkProduct: SdkGetProductResponse = {
         productId: 'BTC-USD',
         price: '50000',
         pricePercentageChange24h: '2.5',
@@ -110,64 +116,100 @@ describe('ProductsService', () => {
         _new: false,
         baseDisplaySymbol: 'BTC',
         quoteDisplaySymbol: 'USD',
-      };
-      // SDK types incorrectly declare GetProductResponse as { body?: Product }
-      // but SDK actually returns Product directly (SDK bug)
-      mockSdkService.getProduct.mockResolvedValue(
-        mockSdkProduct as unknown as Awaited<
-          ReturnType<typeof mockSdkService.getProduct>
-        >,
-      );
+        // SDK types incorrectly declare GetProductResponse as { body?: Product }
+        // but SDK actually returns Product directly (SDK bug)
+      } as unknown as SdkGetProductResponse;
+      mockSdkService.getProduct.mockResolvedValue(mockSdkProduct);
 
       const result = await service.getProduct({ productId: 'BTC-USD' });
 
       expect(mockSdkService.getProduct).toHaveBeenCalledWith({
         productId: 'BTC-USD',
       });
-      expect(result).toEqual(toProduct(mockSdkProduct));
+      expect(result).toEqual(toGetProductResponse(mockSdkProduct));
     });
 
-    it('getProductBook should delegate to SDK', async () => {
-      const mockResponse = {
-        pricebook: { productId: 'BTC-USD', bids: [], asks: [] },
+    it('getProductBook should delegate to SDK and convert response', async () => {
+      const mockSdkResponse = {
+        pricebook: {
+          productId: 'BTC-USD',
+          bids: [{ price: '100', size: '1.5' }],
+          asks: [{ price: '101', size: '2.0' }],
+        },
+        last: '100.5',
+        midMarket: '100.5',
+        spreadBps: '10',
+        spreadAbsolute: '1',
       };
-      mockSdkService.getProductBook.mockResolvedValue(mockResponse);
+      mockSdkService.getProductBook.mockResolvedValue(mockSdkResponse);
 
       const result = await service.getProductBook({ productId: 'BTC-USD' });
 
       expect(mockSdkService.getProductBook).toHaveBeenCalledWith({
         productId: 'BTC-USD',
       });
-      expect(result).toBe(mockResponse);
+      expect(result).toStrictEqual({
+        pricebook: {
+          productId: 'BTC-USD',
+          bids: [{ price: 100, size: 1.5 }],
+          asks: [{ price: 101, size: 2.0 }],
+        },
+        last: 100.5,
+        midMarket: 100.5,
+        spreadBps: 10,
+        spreadAbsolute: 1,
+      });
     });
 
     it('getBestBidAsk should delegate to SDK with empty object when no request', async () => {
-      const mockResponse = { pricebooks: [] };
-      mockSdkService.getBestBidAsk.mockResolvedValue(mockResponse);
+      const mockSdkResponse = { pricebooks: [] };
+      mockSdkService.getBestBidAsk.mockResolvedValue(mockSdkResponse);
 
       const result = await service.getBestBidAsk();
 
       expect(mockSdkService.getBestBidAsk).toHaveBeenCalledWith({});
-      expect(result).toBe(mockResponse);
+      expect(result).toStrictEqual({ pricebooks: [] });
     });
 
-    it('getBestBidAsk should delegate to SDK with request when provided', async () => {
-      const mockResponse = {
-        pricebooks: [{ productId: 'BTC-USD', bids: [], asks: [] }],
+    it('getBestBidAsk should convert SDK response to our types', async () => {
+      const mockSdkResponse = {
+        pricebooks: [
+          {
+            productId: 'BTC-USD',
+            bids: [{ price: '100', size: '1.5' }],
+            asks: [{ price: '101', size: '2.0' }],
+          },
+        ],
       };
-      mockSdkService.getBestBidAsk.mockResolvedValue(mockResponse);
+      mockSdkService.getBestBidAsk.mockResolvedValue(mockSdkResponse);
 
       const result = await service.getBestBidAsk({ productIds: ['BTC-USD'] });
 
       expect(mockSdkService.getBestBidAsk).toHaveBeenCalledWith({
         productIds: ['BTC-USD'],
       });
-      expect(result).toBe(mockResponse);
+      // Strings should be converted to numbers
+      expect(result).toStrictEqual({
+        pricebooks: [
+          {
+            productId: 'BTC-USD',
+            bids: [{ price: 100, size: 1.5 }],
+            asks: [{ price: 101, size: 2.0 }],
+          },
+        ],
+      });
     });
 
-    it('getProductMarketTrades should delegate to SDK', async () => {
-      const mockResponse = { trades: [] };
-      mockSdkService.getProductMarketTrades.mockResolvedValue(mockResponse);
+    it('getProductMarketTrades should delegate to SDK and convert response', async () => {
+      const mockSdkResponse = {
+        trades: [
+          { tradeId: '123', price: '100.5', size: '1.5' },
+          { tradeId: '124', price: '101.0', size: '2.0' },
+        ],
+        bestBid: '100.0',
+        bestAsk: '101.0',
+      };
+      mockSdkService.getProductMarketTrades.mockResolvedValue(mockSdkResponse);
 
       const result = await service.getProductMarketTrades({
         productId: 'BTC-USD',
@@ -178,7 +220,14 @@ describe('ProductsService', () => {
         productId: 'BTC-USD',
         limit: 10,
       });
-      expect(result).toBe(mockResponse);
+      expect(result).toStrictEqual({
+        trades: [
+          { tradeId: '123', price: 100.5, size: 1.5 },
+          { tradeId: '124', price: 101.0, size: 2.0 },
+        ],
+        bestBid: 100.0,
+        bestAsk: 101.0,
+      });
     });
 
     it('getProductCandles should convert timestamps and delegate to SDK', async () => {
@@ -209,10 +258,12 @@ describe('ProductsService', () => {
         .spyOn(service, 'getBestBidAsk')
         .mockResolvedValue({ pricebooks: [] } as GetBestBidAskResponse);
       jest.spyOn(service, 'getProduct').mockResolvedValue({
-        productId: 'BTC-USD',
-        volume24h: 0,
-        pricePercentageChange24h: 0,
-      } as Product);
+        product: {
+          productId: 'BTC-USD',
+          volume24h: 0,
+          pricePercentageChange24h: 0,
+        } as Product,
+      });
 
       const result = await service.getMarketSnapshot({
         productIds: ['BTC-USD'],
@@ -236,10 +287,12 @@ describe('ProductsService', () => {
         ],
       } as GetBestBidAskResponse);
       jest.spyOn(service, 'getProduct').mockResolvedValue({
-        productId: 'ETH-USD', // Wrong product returned
-        volume24h: 0,
-        pricePercentageChange24h: 0,
-      } as Product);
+        product: {
+          productId: 'ETH-USD', // Wrong product returned
+          volume24h: 0,
+          pricePercentageChange24h: 0,
+        } as Product,
+      });
 
       const result = await service.getMarketSnapshot({
         productIds: ['BTC-USD'],
@@ -256,16 +309,18 @@ describe('ProductsService', () => {
         pricebooks: [
           {
             productId: 'BTC-USD',
-            bids: [{ price: '100', size: '1' }],
-            asks: [{ price: '100.4', size: '1' }],
+            bids: [{ price: 100, size: 1 }],
+            asks: [{ price: 100.4, size: 1 }],
           },
         ],
       } as GetBestBidAskResponse);
       jest.spyOn(service, 'getProduct').mockResolvedValue({
-        productId: 'BTC-USD',
-        volume24h: 0,
-        pricePercentageChange24h: 0,
-      } as Product);
+        product: {
+          productId: 'BTC-USD',
+          volume24h: 0,
+          pricePercentageChange24h: 0,
+        } as Product,
+      });
 
       const result = await service.getMarketSnapshot({
         productIds: ['BTC-USD'],
@@ -283,28 +338,32 @@ describe('ProductsService', () => {
         pricebooks: [
           {
             productId: 'BTC-EUR',
-            bids: [{ price: '94500', size: '0.5' }],
-            asks: [{ price: '94550', size: '0.3' }],
+            bids: [{ price: 94500, size: 0.5 }],
+            asks: [{ price: 94550, size: 0.3 }],
           },
           {
             productId: 'ETH-EUR',
-            bids: [{ price: '3200', size: '1.0' }],
-            asks: [{ price: '3205', size: '0.8' }],
+            bids: [{ price: 3200, size: 1.0 }],
+            asks: [{ price: 3205, size: 0.8 }],
           },
         ],
       } as GetBestBidAskResponse);
       jest
         .spyOn(service, 'getProduct')
         .mockResolvedValueOnce({
-          productId: 'BTC-EUR',
-          volume24h: 1234567.89,
-          pricePercentageChange24h: 2.55,
-        } as Product)
+          product: {
+            productId: 'BTC-EUR',
+            volume24h: 1234567.89,
+            pricePercentageChange24h: 2.55,
+          } as Product,
+        })
         .mockResolvedValueOnce({
-          productId: 'ETH-EUR',
-          volume24h: 567890.12,
-          pricePercentageChange24h: -1.4,
-        } as Product);
+          product: {
+            productId: 'ETH-EUR',
+            volume24h: 567890.12,
+            pricePercentageChange24h: -1.4,
+          } as Product,
+        });
 
       const result = await service.getMarketSnapshot({
         productIds: ['BTC-EUR', 'ETH-EUR'],
@@ -328,10 +387,12 @@ describe('ProductsService', () => {
         ],
       } as GetBestBidAskResponse);
       jest.spyOn(service, 'getProduct').mockResolvedValue({
-        productId: 'BTC-EUR',
-        volume24h: 1000000,
-        pricePercentageChange24h: 1.5,
-      } as Product);
+        product: {
+          productId: 'BTC-EUR',
+          volume24h: 1000000,
+          pricePercentageChange24h: 1.5,
+        } as Product,
+      });
 
       const result = await service.getMarketSnapshot({
         productIds: ['BTC-EUR'],
@@ -344,39 +405,39 @@ describe('ProductsService', () => {
       expect(result.snapshots['BTC-EUR'].spread).toBe(0);
     });
 
-    it('handles levels with non-string price values', async () => {
+    it('handles levels with undefined price values', async () => {
       const service = createService();
       jest.spyOn(service, 'getBestBidAsk').mockResolvedValue({
         pricebooks: [
           {
             productId: 'BTC-EUR',
             bids: [
-              { price: undefined, size: '0.5' }, // Non-string price triggers continue
-              { price: 'invalid', size: '0.5' }, // Invalid string triggers parseNumber NaN branch (returns 0)
-              { price: '94500', size: '0.5' }, // Valid price
+              { price: undefined, size: 0.5 }, // Undefined price treated as 0
+              { price: 94500, size: 0.5 }, // Valid price
             ],
             asks: [
-              { price: undefined, size: '0.3' }, // Non-string price triggers continue
-              { price: 'NaN', size: '0.3' }, // Invalid string triggers parseNumber NaN branch (returns 0)
-              { price: '94550', size: '0.3' }, // Valid price
+              { price: undefined, size: 0.3 }, // Undefined price treated as 0
+              { price: 94550, size: 0.3 }, // Valid price
             ],
           },
         ],
-      } as unknown as GetBestBidAskResponse);
+      } as GetBestBidAskResponse);
       jest.spyOn(service, 'getProduct').mockResolvedValue({
-        productId: 'BTC-EUR',
-        volume24h: 1000000,
-        pricePercentageChange24h: 1.5,
-      } as Product);
+        product: {
+          productId: 'BTC-EUR',
+          volume24h: 1000000,
+          pricePercentageChange24h: 1.5,
+        } as Product,
+      });
 
       const result = await service.getMarketSnapshot({
         productIds: ['BTC-EUR'],
       });
 
-      // getMaxPrice returns max of valid prices (94500 > 0), getMinPrice returns min (0 < 94550)
-      // Invalid strings are parsed to 0 by parseNumber
+      // getMaxPrice returns max of prices (94500 > 0), getMinPrice returns min (0 < 94550)
+      // Undefined prices are treated as 0
       expect(result.snapshots['BTC-EUR'].bid).toBe(94500);
-      expect(result.snapshots['BTC-EUR'].ask).toBe(0); // 0 is minimum due to invalid 'NaN' string
+      expect(result.snapshots['BTC-EUR'].ask).toBe(0); // 0 is minimum due to undefined
     });
 
     it('handles empty order book with includeOrderBook true', async () => {
@@ -385,23 +446,25 @@ describe('ProductsService', () => {
         pricebooks: [
           {
             productId: 'BTC-EUR',
-            bids: [{ price: '94500', size: '0.5' }],
-            asks: [{ price: '94550', size: '0.3' }],
+            bids: [{ price: 94500, size: 0.5 }],
+            asks: [{ price: 94550, size: 0.3 }],
           },
         ],
       } as GetBestBidAskResponse);
       jest.spyOn(service, 'getProduct').mockResolvedValue({
-        productId: 'BTC-EUR',
-        volume24h: 1000000,
-        pricePercentageChange24h: 1.5,
-      } as Product);
+        product: {
+          productId: 'BTC-EUR',
+          volume24h: 1000000,
+          pricePercentageChange24h: 1.5,
+        } as Product,
+      });
       jest.spyOn(service, 'getProductBook').mockResolvedValue({
         pricebook: {
           productId: 'BTC-EUR',
           bids: [], // Empty triggers imbalance=0 branch
           asks: [], // Empty triggers imbalance=0 branch
         },
-      } as unknown as GetProductBookResponse);
+      } as GetProductBookResponse);
 
       const result = await service.getMarketSnapshot({
         productIds: ['BTC-EUR'],
@@ -415,37 +478,40 @@ describe('ProductsService', () => {
       expect(result.snapshots['BTC-EUR'].orderBook?.imbalance).toBe(0);
     });
 
-    it('throws error for invalid number strings in order book', async () => {
+    it('handles undefined values in order book gracefully', async () => {
       const service = createService();
       jest.spyOn(service, 'getBestBidAsk').mockResolvedValue({
         pricebooks: [
           {
             productId: 'BTC-EUR',
-            bids: [{ price: '94500', size: '0.5' }],
-            asks: [{ price: '94550', size: '0.3' }],
+            bids: [{ price: 94500, size: 0.5 }],
+            asks: [{ price: 94550, size: 0.3 }],
           },
         ],
       } as GetBestBidAskResponse);
       jest.spyOn(service, 'getProduct').mockResolvedValue({
-        productId: 'BTC-EUR',
-        volume24h: 1000000,
-        pricePercentageChange24h: 1.5,
-      } as Product);
+        product: {
+          productId: 'BTC-EUR',
+          volume24h: 1000000,
+          pricePercentageChange24h: 1.5,
+        } as Product,
+      });
       jest.spyOn(service, 'getProductBook').mockResolvedValue({
         pricebook: {
           productId: 'BTC-EUR',
-          bids: [{ price: 'invalid', size: 'NaN' }], // Invalid number strings
-          asks: [{ price: 'Infinity', size: '-Infinity' }], // Invalid number strings
+          bids: [{ price: undefined, size: undefined }], // Undefined values
+          asks: [{ price: undefined, size: undefined }], // Undefined values
         },
-      } as unknown as GetProductBookResponse);
+      } as GetProductBookResponse);
 
-      // toL2Levels uses toNumber which throws for invalid strings
-      await expect(
-        service.getMarketSnapshot({
-          productIds: ['BTC-EUR'],
-          includeOrderBook: true,
-        }),
-      ).rejects.toThrow('Invalid number: "invalid"');
+      // Undefined values are treated as 0 in depth calculation
+      const result = await service.getMarketSnapshot({
+        productIds: ['BTC-EUR'],
+        includeOrderBook: true,
+      });
+
+      expect(result.snapshots['BTC-EUR'].orderBook?.bidDepth).toBe(0);
+      expect(result.snapshots['BTC-EUR'].orderBook?.askDepth).toBe(0);
     });
 
     it('calculates spread status correctly', async () => {
@@ -454,16 +520,18 @@ describe('ProductsService', () => {
         pricebooks: [
           {
             productId: 'BTC-EUR',
-            bids: [{ price: '94500', size: '0.5' }],
-            asks: [{ price: '94550', size: '0.3' }],
+            bids: [{ price: 94500, size: 0.5 }],
+            asks: [{ price: 94550, size: 0.3 }],
           },
         ],
       } as GetBestBidAskResponse);
       jest.spyOn(service, 'getProduct').mockResolvedValue({
-        productId: 'BTC-EUR',
-        volume24h: 1000000,
-        pricePercentageChange24h: 1.5,
-      } as Product);
+        product: {
+          productId: 'BTC-EUR',
+          volume24h: 1000000,
+          pricePercentageChange24h: 1.5,
+        } as Product,
+      });
 
       const result = await service.getMarketSnapshot({
         productIds: ['BTC-EUR'],
@@ -483,30 +551,32 @@ describe('ProductsService', () => {
         pricebooks: [
           {
             productId: 'BTC-EUR',
-            bids: [{ price: '94500', size: '0.5' }],
-            asks: [{ price: '94550', size: '0.3' }],
+            bids: [{ price: 94500, size: 0.5 }],
+            asks: [{ price: 94550, size: 0.3 }],
           },
         ],
       } as GetBestBidAskResponse);
       jest.spyOn(service, 'getProduct').mockResolvedValue({
-        productId: 'BTC-EUR',
-        volume24h: 1000000,
-        pricePercentageChange24h: 1.5,
-      } as Product);
+        product: {
+          productId: 'BTC-EUR',
+          volume24h: 1000000,
+          pricePercentageChange24h: 1.5,
+        } as Product,
+      });
       jest.spyOn(service, 'getProductBook').mockResolvedValue({
         pricebook: {
           productId: 'BTC-EUR',
           bids: [
-            { price: '94500', size: '0.5' },
-            { price: '94490', size: '1.2' },
-            { price: undefined, size: undefined }, // Non-string values trigger parseNumber fallback
+            { price: 94500, size: 0.5 },
+            { price: 94490, size: 1.2 },
+            { price: undefined, size: undefined }, // Undefined values treated as 0
           ],
           asks: [
-            { price: '94550', size: '0.3' },
-            { price: '94560', size: '0.9' },
+            { price: 94550, size: 0.3 },
+            { price: 94560, size: 0.9 },
           ],
         },
-      } as unknown as GetProductBookResponse);
+      } as GetProductBookResponse);
 
       const result = await service.getMarketSnapshot({
         productIds: ['BTC-EUR'],
@@ -525,16 +595,18 @@ describe('ProductsService', () => {
         pricebooks: [
           {
             productId: 'BTC-EUR',
-            bids: [{ price: '94500', size: '0.5' }],
-            asks: [{ price: '94550', size: '0.3' }],
+            bids: [{ price: 94500, size: 0.5 }],
+            asks: [{ price: 94550, size: 0.3 }],
           },
         ],
       } as GetBestBidAskResponse);
       jest.spyOn(service, 'getProduct').mockResolvedValue({
-        productId: 'BTC-EUR',
-        volume24h: 1000000,
-        pricePercentageChange24h: 1.5,
-      } as Product);
+        product: {
+          productId: 'BTC-EUR',
+          volume24h: 1000000,
+          pricePercentageChange24h: 1.5,
+        } as Product,
+      });
 
       const result = await service.getMarketSnapshot({
         productIds: ['BTC-EUR'],
@@ -549,38 +621,44 @@ describe('ProductsService', () => {
         pricebooks: [
           {
             productId: 'BTC-EUR',
-            bids: [{ price: '94500', size: '0.5' }],
-            asks: [{ price: '94550', size: '0.3' }],
+            bids: [{ price: 94500, size: 0.5 }],
+            asks: [{ price: 94550, size: 0.3 }],
           },
           {
             productId: 'ETH-EUR',
-            bids: [{ price: '3200', size: '1.0' }],
-            asks: [{ price: '3205', size: '0.8' }],
+            bids: [{ price: 3200, size: 1.0 }],
+            asks: [{ price: 3205, size: 0.8 }],
           },
           {
             productId: 'SOL-EUR',
-            bids: [{ price: '185', size: '2.0' }],
-            asks: [{ price: '186', size: '1.5' }],
+            bids: [{ price: 185, size: 2.0 }],
+            asks: [{ price: 186, size: 1.5 }],
           },
         ],
       } as GetBestBidAskResponse);
       jest
         .spyOn(service, 'getProduct')
         .mockResolvedValueOnce({
-          productId: 'BTC-EUR',
-          volume24h: 1000000,
-          pricePercentageChange24h: 2.5,
-        } as Product)
+          product: {
+            productId: 'BTC-EUR',
+            volume24h: 1000000,
+            pricePercentageChange24h: 2.5,
+          } as Product,
+        })
         .mockResolvedValueOnce({
-          productId: 'ETH-EUR',
-          volume24h: 500000,
-          pricePercentageChange24h: -1.5,
-        } as Product)
+          product: {
+            productId: 'ETH-EUR',
+            volume24h: 500000,
+            pricePercentageChange24h: -1.5,
+          } as Product,
+        })
         .mockResolvedValueOnce({
-          productId: 'SOL-EUR',
-          volume24h: 100000,
-          pricePercentageChange24h: 5.0,
-        } as Product);
+          product: {
+            productId: 'SOL-EUR',
+            volume24h: 100000,
+            pricePercentageChange24h: 5.0,
+          } as Product,
+        });
 
       const result = await service.getMarketSnapshot({
         productIds: ['BTC-EUR', 'ETH-EUR', 'SOL-EUR'],
@@ -708,6 +786,67 @@ describe('ProductsService', () => {
       );
       expect(result.productCandlesByProductId['BTC-EUR'].latest).toBeNull();
       expect(result.productCandlesByProductId['BTC-EUR'].oldest).toBeNull();
+    });
+
+    it('captures per-product errors without failing the batch', async () => {
+      const service = createService();
+      const mockCandles = [
+        {
+          start: '1704067200',
+          low: '95000',
+          high: '96000',
+          open: '95500',
+          close: '95800',
+          volume: '100',
+        },
+      ];
+
+      jest
+        .spyOn(service, 'getProductCandles')
+        .mockResolvedValueOnce({ candles: mockCandles } as never)
+        .mockRejectedValueOnce(new Error('Product not found'))
+        .mockResolvedValueOnce({ candles: mockCandles } as never);
+
+      const result = await service.getProductCandlesBatch({
+        productIds: ['BTC-EUR', 'INVALID-PRODUCT', 'ETH-EUR'],
+        start: new Date().toISOString(),
+        end: new Date().toISOString(),
+        granularity: Granularity.ONE_HOUR,
+      });
+
+      // Successful products are in productCandlesByProductId
+      expect(result.productCandlesByProductId['BTC-EUR']).toBeDefined();
+      expect(result.productCandlesByProductId['ETH-EUR']).toBeDefined();
+      expect(
+        result.productCandlesByProductId['INVALID-PRODUCT'],
+      ).toBeUndefined();
+
+      // Failed product is in errors
+      expect(result.errors['INVALID-PRODUCT']).toBe('Product not found');
+      expect(result.errors['BTC-EUR']).toBeUndefined();
+      expect(result.errors['ETH-EUR']).toBeUndefined();
+
+      // Candle count only includes successful products
+      expect(result.candleCount).toBe(2);
+    });
+
+    it('captures non-Error exceptions as string', async () => {
+      const service = createService();
+
+      jest
+        .spyOn(service, 'getProductCandles')
+        .mockRejectedValueOnce('String error message');
+
+      const result = await service.getProductCandlesBatch({
+        productIds: ['BTC-EUR'],
+        start: new Date().toISOString(),
+        end: new Date().toISOString(),
+        granularity: Granularity.ONE_HOUR,
+      });
+
+      expect(result.errors['BTC-EUR']).toBe('String error message');
+      expect(Object.keys(result.productCandlesByProductId)).toHaveLength(0);
+      expect(result.candleCount).toBe(0);
     });
   });
 });

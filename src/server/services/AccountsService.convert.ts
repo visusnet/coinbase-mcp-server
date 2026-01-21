@@ -2,24 +2,11 @@ import type {
   SdkListAccountsResponse,
   SdkGetAccountResponse,
   SdkAccount,
-  SdkAmount,
   Account,
-  Amount,
   ListAccountsResponse,
   GetAccountResponse,
 } from './AccountsService.types';
-import { toNumber } from './numberConversion';
-
-/**
- * Convert SDK Amount to our Amount type with number value.
- */
-function toAmount(sdkAmount: SdkAmount | undefined): Amount | undefined {
-  if (!sdkAmount) {
-    return undefined;
-  }
-  const { value, ...unchanged } = sdkAmount;
-  return { ...unchanged, value: toNumber(value) };
-}
+import { toAmount } from './common.convert';
 
 /**
  * Convert SDK Account to our Account type with number amounts.

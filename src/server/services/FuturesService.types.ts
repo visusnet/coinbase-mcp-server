@@ -2,10 +2,10 @@
 import type { FCMPositionSide } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/FCMPositionSide';
 import type { FCMSweepStatus } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/FCMSweepStatus';
 import type { FcmMarginWindowMeasure } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/FcmMarginWindowMeasure';
-import type { Amount } from './AccountsService.types';
+import type { Amount } from './common.types';
 
 // =============================================================================
-// SDK Type Re-exports
+// SDK Types (for conversion) - these have our own converted counterparts
 // =============================================================================
 
 export type {
@@ -17,9 +17,6 @@ export type {
 export type { FCMPosition as SdkFCMPosition } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/FCMPosition';
 export type { FCMBalanceSummary as SdkFCMBalanceSummary } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/FCMBalanceSummary';
 export type { FCMSweep as SdkFCMSweep } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/FCMSweep';
-
-// Re-export SdkAmount from AccountsService.types
-export type { SdkAmount } from './AccountsService.types';
 
 // Re-export request types unchanged
 export type { GetFuturesPositionRequest } from '@coinbase-sample/advanced-trade-sdk-ts/dist/rest/futures/types';

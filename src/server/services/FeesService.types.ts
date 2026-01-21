@@ -2,7 +2,7 @@
 import type { GstType } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/GstType';
 
 // =============================================================================
-// SDK Type Re-exports
+// SDK Types (for conversion) - these have our own converted counterparts
 // =============================================================================
 
 export type { GetTransactionSummaryResponse as SdkGetTransactionSummaryResponse } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/GetTransactionSummaryResponse';
@@ -10,7 +10,9 @@ export type { TypesDecimal as SdkTypesDecimal } from '@coinbase-sample/advanced-
 export type { FeeTier as SdkFeeTier } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/FeeTier';
 export type { GoodsAndServicesTax as SdkGoodsAndServicesTax } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/GoodsAndServicesTax';
 
-// Re-export request type unchanged (no numeric string fields)
+// =============================================================================
+// SDK Types (pass-through) - no conversion needed
+// =============================================================================
 export type { GetTransactionsSummaryRequest } from '@coinbase-sample/advanced-trade-sdk-ts/dist/rest/fees/types';
 
 // =============================================================================

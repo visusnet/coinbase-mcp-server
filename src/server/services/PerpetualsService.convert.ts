@@ -10,7 +10,6 @@ import type {
   SdkPortfolio,
   SdkPortfoliosSummary,
   SdkPortfolioBalance,
-  SdkAmount,
   Asset,
   Balance,
   Position,
@@ -23,19 +22,8 @@ import type {
   GetPortfolioSummaryResponse,
   GetPortfolioBalanceResponse,
 } from './PerpetualsService.types';
-import type { Amount } from './AccountsService.types';
 import { toNumber } from './numberConversion';
-
-/**
- * Convert SDK Amount to our Amount type with number value.
- */
-function toAmount(sdkAmount: SdkAmount | undefined): Amount | undefined {
-  if (!sdkAmount) {
-    return undefined;
-  }
-  const { value, ...unchanged } = sdkAmount;
-  return { ...unchanged, value: toNumber(value) };
-}
+import { toAmount } from './common.convert';
 
 /**
  * Convert SDK Asset to our Asset type with numbers.

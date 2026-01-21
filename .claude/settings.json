@@ -75,9 +75,13 @@
       "mcp__coinbase__calculate_pivot_points",
       "mcp__coinbase__detect_rsi_divergence",
       "mcp__coinbase__detect_chart_patterns",
+      "mcp__coinbase__analyze_technical_indicators",
+      "mcp__coinbase__analyze_technical_indicators_batch",
       "WebFetch",
       "WebSearch",
-      "Skill(coinbase-trading)"
+      "Skill(coinbase-trading)",
+      "Read(.claude/trading-state.json)",
+      "Update(.claude/trading-state.json)"
     ],
     "deny": ["Read(./.env)"]
   }
