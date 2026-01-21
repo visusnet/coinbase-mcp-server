@@ -17,13 +17,14 @@ export function toStringRequired(value: number): string {
 
 /**
  * Converts string to number.
- * Throws Error for invalid values (NaN, Infinity, empty strings).
+ * Returns undefined for undefined or empty strings (SDK returns "" for missing optional fields).
+ * Throws Error for invalid values (NaN, Infinity).
  * Also handles number input (SDK may return numbers in some cases).
  */
 export function toNumber(
   value: string | number | undefined,
 ): number | undefined {
-  if (value === undefined) {
+  if (value === undefined || value === '') {
     return undefined;
   }
   // Handle case where SDK might return number instead of string
@@ -32,9 +33,6 @@ export function toNumber(
       return value;
     }
     throw new Error(`Invalid number: "${value}"`);
-  }
-  if (value === '') {
-    throw new Error('Invalid number: ""');
   }
   const num = Number(value);
   if (!Number.isFinite(num)) {

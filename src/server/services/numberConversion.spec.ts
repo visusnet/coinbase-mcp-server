@@ -55,8 +55,8 @@ describe('numberConversion', () => {
       );
     });
 
-    it('should handle empty string', () => {
-      expect(() => toNumber('')).toThrow('Invalid number: ""');
+    it('should return undefined for empty string', () => {
+      expect(toNumber('')).toBeUndefined();
     });
 
     it('should handle number input', () => {
