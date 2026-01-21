@@ -9,6 +9,7 @@ import { StopTriggerStatus } from '@coinbase-sample/advanced-trade-sdk-ts/dist/m
 import { TimeInForceType } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/TimeInForceType';
 import { createSdkOrdersServiceMock } from '@test/serviceMocks';
 import { OrdersService } from './OrdersService';
+import type { SdkGetOrderResponse } from './OrdersService.types';
 import { OrderSide } from './OrdersService.types';
 
 const mockSdkService = createSdkOrdersServiceMock();
@@ -436,39 +437,45 @@ describe('OrdersService', () => {
     });
 
     it('getOrder should delegate to SDK and convert numeric strings to numbers', async () => {
+      // SDK response wraps order in { order: {...} }
       const mockSdkResponse = {
-        orderId: '123',
-        productId: 'BTC-USD',
-        userId: 'user-1',
-        orderConfiguration: {},
-        side: OrderSide.Buy,
-        clientOrderId: 'client-123',
-        status: OrderExecutionStatus.Open,
-        timeInForce: TimeInForceType.GoodUntilCancelled,
-        createdTime: '2025-01-01T00:00:00Z',
-        completionPercentage: '50.5',
-        filledSize: '0.5',
-        averageFilledPrice: '45000.25',
-        fee: '10.5',
-        numberOfFills: '3',
-        filledValue: '22500.125',
-        pendingCancel: false,
-        sizeInQuote: false,
-        totalFees: '15.75',
-        sizeInclusiveOfFees: false,
-        totalValueAfterFees: '22484.375',
-        triggerStatus: StopTriggerStatus.InvalidOrderType,
-        orderType: OrderType.Limit,
-        rejectReason: RejectReason.RejectReasonUnspecified,
-        settled: false,
-        productType: ProductType.Spot,
-        rejectMessage: '',
-        cancelMessage: '',
-        orderPlacementSource: OrderPlacementSource.RetailAdvanced,
-        outstandingHoldAmount: '100.5',
-        leverage: '2.0',
+        order: {
+          orderId: '123',
+          productId: 'BTC-USD',
+          userId: 'user-1',
+          orderConfiguration: {},
+          side: OrderSide.Buy,
+          clientOrderId: 'client-123',
+          status: OrderExecutionStatus.Open,
+          timeInForce: TimeInForceType.GoodUntilCancelled,
+          createdTime: '2025-01-01T00:00:00Z',
+          completionPercentage: '50.5',
+          filledSize: '0.5',
+          averageFilledPrice: '45000.25',
+          fee: '10.5',
+          numberOfFills: '3',
+          filledValue: '22500.125',
+          pendingCancel: false,
+          sizeInQuote: false,
+          totalFees: '15.75',
+          sizeInclusiveOfFees: false,
+          totalValueAfterFees: '22484.375',
+          triggerStatus: StopTriggerStatus.InvalidOrderType,
+          orderType: OrderType.Limit,
+          rejectReason: RejectReason.RejectReasonUnspecified,
+          settled: false,
+          productType: ProductType.Spot,
+          rejectMessage: '',
+          cancelMessage: '',
+          orderPlacementSource: OrderPlacementSource.RetailAdvanced,
+          outstandingHoldAmount: '100.5',
+          leverage: '2.0',
+        },
       };
-      mockSdkService.getOrder.mockResolvedValue(mockSdkResponse);
+      // Cast needed: SDK types are wrong - actual response is { order: {...} }
+      mockSdkService.getOrder.mockResolvedValue(
+        mockSdkResponse as unknown as SdkGetOrderResponse,
+      );
 
       const result = await service.getOrder({ orderId: '123' });
 
