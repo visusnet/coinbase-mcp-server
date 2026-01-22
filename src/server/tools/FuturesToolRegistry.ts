@@ -1,6 +1,6 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { FuturesService } from '../services';
-import * as z from 'zod';
+import { GetFuturesPositionRequestSchema } from '../services/FuturesService.schema';
 import { ToolRegistry } from './ToolRegistry';
 
 /**
@@ -30,9 +30,7 @@ export class FuturesToolRegistry extends ToolRegistry {
       {
         title: 'Get Futures Position',
         description: 'Get a specific futures position',
-        inputSchema: {
-          productId: z.string().describe('Trading pair (e.g., BTC-USD)'),
-        },
+        inputSchema: GetFuturesPositionRequestSchema.shape,
       },
       this.call(this.futures.getPosition.bind(this.futures)),
     );

@@ -18,12 +18,12 @@ import type {
   PerpPosition,
   FuturesPosition,
   BalancePair,
-  MovePortfolioFundsRequest,
   ListPortfoliosResponse,
   CreatePortfolioResponse,
   GetPortfolioResponse,
   EditPortfolioResponse,
 } from './PortfoliosService.types';
+import type { MovePortfolioFundsRequest } from './PortfoliosService.schema';
 import { toNumber } from './numberConversion';
 import { toAmount } from './common.convert';
 

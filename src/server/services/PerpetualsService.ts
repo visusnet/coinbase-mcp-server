@@ -4,15 +4,17 @@ import type {
   SdkGetPerpetualsPositionResponse,
   SdkGetPortfolioSummaryResponse,
   SdkGetPortfolioBalanceResponse,
-  ListPerpetualsPositionsRequest,
   ListPerpetualsPositionsResponse,
-  GetPerpetualsPositionRequest,
   GetPerpetualsPositionResponse,
-  GetPortfolioSummaryRequest,
   GetPortfolioSummaryResponse,
-  GetPortfolioBalanceRequest,
   GetPortfolioBalanceResponse,
 } from './PerpetualsService.types';
+import type {
+  ListPerpetualsPositionsRequest,
+  GetPerpetualsPositionRequest,
+  GetPortfolioSummaryRequest,
+  GetPortfolioBalanceRequest,
+} from './PerpetualsService.schema';
 import {
   toListPerpetualsPositionsResponse,
   toGetPerpetualsPositionResponse,

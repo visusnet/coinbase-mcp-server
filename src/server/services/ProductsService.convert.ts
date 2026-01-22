@@ -4,12 +4,12 @@ import type {
   SdkGetBestBidAskResponse,
   SdkGetProductBookResponse,
   ListProductsResponse,
-  GetProductCandlesRequest,
   GetBestBidAskResponse,
   GetProductBookResponse,
   SdkGetProductResponse,
   GetProductResponse,
 } from './ProductsService.types';
+import type { GetProductCandlesRequest } from './ProductsService.schema';
 import type { SdkProduct } from './common.types';
 import { toNumber, toUnixTimestamp } from './numberConversion';
 import { toPriceBook, toProduct } from './common.convert';

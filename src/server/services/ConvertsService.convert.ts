@@ -13,11 +13,11 @@ import type {
   UnitPrice,
   TaxInfo,
   RatConvertTrade,
-  CreateConvertQuoteRequest,
   CreateConvertQuoteResponse,
   CommitConvertTradeResponse,
   GetConvertTradeResponse,
 } from './ConvertsService.types';
+import type { CreateConvertQuoteRequest } from './ConvertsService.schema';
 import { toAmount } from './common.convert';
 
 /**

@@ -53,11 +53,4 @@ export interface GetPublicMarketTradesResponse {
 // SDK Types (pass-through) - no conversion needed
 // =============================================================================
 
-export type {
-  ListPublicProductsRequest,
-  GetPublicProductRequest,
-  GetPublicProductCandlesRequest,
-  GetPublicProductBookRequest,
-  GetPublicProductMarketTradesRequest as GetPublicMarketTradesRequest,
-  GetServerTimeResponse,
-} from '@coinbase-sample/advanced-trade-sdk-ts/dist/rest/public/types';
+export type { GetServerTimeResponse } from '@coinbase-sample/advanced-trade-sdk-ts/dist/rest/public/types';

@@ -3,6 +3,5 @@
 // =============================================================================
 export type {
   ListPaymentMethodsResponse,
-  GetPaymentMethodRequest,
   GetPaymentMethodResponse,
 } from '@coinbase-sample/advanced-trade-sdk-ts/dist/rest/paymentMethods/types';

@@ -1,6 +1,10 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { ConvertsService } from '../services';
-import * as z from 'zod';
+import {
+  CreateConvertQuoteRequestSchema,
+  CommitConvertTradeRequestSchema,
+  GetConvertTradeRequestSchema,
+} from '../services/ConvertsService.schema';
 import { ToolRegistry } from './ToolRegistry';
 
 /**
@@ -20,11 +24,7 @@ export class ConvertToolRegistry extends ToolRegistry {
       {
         title: 'Create Convert Quote',
         description: 'Create a quote for converting one currency to another',
-        inputSchema: {
-          fromAccount: z.string().describe('Source account UUID'),
-          toAccount: z.string().describe('Destination account UUID'),
-          amount: z.number().describe('Amount to convert'),
-        },
+        inputSchema: CreateConvertQuoteRequestSchema.shape,
       },
       this.call(this.converts.createConvertQuote.bind(this.converts)),
     );
@@ -34,11 +34,7 @@ export class ConvertToolRegistry extends ToolRegistry {
       {
         title: 'Commit Convert Trade',
         description: 'Commit a currency conversion trade using a quote',
-        inputSchema: {
-          tradeId: z.string().describe('The trade ID from the quote'),
-          fromAccount: z.string().describe('Source account UUID'),
-          toAccount: z.string().describe('Destination account UUID'),
-        },
+        inputSchema: CommitConvertTradeRequestSchema.shape,
       },
       this.call(this.converts.commitConvertTrade.bind(this.converts)),
     );
@@ -48,11 +44,7 @@ export class ConvertToolRegistry extends ToolRegistry {
       {
         title: 'Get Convert Trade',
         description: 'Get details of a specific conversion trade',
-        inputSchema: {
-          tradeId: z.string().describe('The trade ID'),
-          fromAccount: z.string().describe('Source account UUID'),
-          toAccount: z.string().describe('Destination account UUID'),
-        },
+        inputSchema: GetConvertTradeRequestSchema.shape,
       },
       this.call(this.converts.getConvertTrade.bind(this.converts)),
     );

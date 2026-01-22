@@ -5,18 +5,20 @@ import type {
   SdkGetPublicProductResponse,
   SdkListPublicProductsResponse,
   SdkGetPublicProductCandlesResponse,
-  GetPublicProductCandlesRequest,
   GetPublicProductCandlesResponse,
-  GetPublicProductRequest,
   GetPublicProductResponse,
-  ListPublicProductsRequest,
   ListPublicProductsResponse,
-  GetPublicProductBookRequest,
   GetPublicProductBookResponse,
-  GetPublicMarketTradesRequest,
   GetPublicMarketTradesResponse,
   GetServerTimeResponse,
 } from './PublicService.types';
+import type {
+  GetPublicProductCandlesRequest,
+  GetPublicProductRequest,
+  ListPublicProductsRequest,
+  GetPublicProductBookRequest,
+  GetPublicMarketTradesRequest,
+} from './PublicService.schema';
 import {
   toSdkGetPublicProductCandlesRequest,
   toListPublicProductsResponse,

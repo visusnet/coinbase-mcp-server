@@ -8,13 +8,15 @@ import type {
   SdkPreviewOrderRequest,
   Order,
   ListOrdersResponse,
+} from './OrdersService.types';
+import type {
   CreateOrderRequest,
   EditOrderRequest,
   PreviewEditOrderRequest,
   ClosePositionRequest,
   PreviewOrderRequest,
   OrderConfiguration,
-} from './OrdersService.types';
+} from './OrdersService.schema';
 import { toString, toNumber, toNumberRequired } from './numberConversion';
 
 /**

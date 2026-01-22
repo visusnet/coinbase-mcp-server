@@ -3,21 +3,13 @@ import type {
   SdkListProductsResponse,
   SdkGetBestBidAskResponse,
   SdkGetProductBookResponse,
-  ListProductsRequest,
   ListProductsResponse,
-  GetProductRequest,
   GetProductResponse,
-  GetProductCandlesRequest,
   GetProductCandlesResponse,
-  GetProductBookRequest,
   GetProductBookResponse,
-  GetBestBidAskRequest,
   GetBestBidAskResponse,
-  GetProductMarketTradesRequest,
   GetProductMarketTradesResponse,
-  GetMarketSnapshotRequest,
   GetMarketSnapshotResponse,
-  GetProductCandlesBatchRequest,
   GetProductCandlesBatchResponse,
   OrderBookData,
   MarketSnapshot,
@@ -25,6 +17,16 @@ import type {
   ProductCandles,
   SdkGetProductResponse,
 } from './ProductsService.types';
+import type {
+  ListProductsRequest,
+  GetProductRequest,
+  GetProductCandlesRequest,
+  GetProductBookRequest,
+  GetBestBidAskRequest,
+  GetProductMarketTradesRequest,
+  GetMarketSnapshotRequest,
+  GetProductCandlesBatchRequest,
+} from './ProductsService.schema';
 import type { Product, L2Level, PriceBook } from './common.types';
 import {
   toListProductsResponse,

@@ -23,14 +23,6 @@ export type { Portfolio as SdkPortfolio } from '@coinbase-sample/advanced-trade-
 export type { PortfoliosSummary as SdkPortfoliosSummary } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/PortfoliosSummary';
 export type { PortfolioBalance as SdkPortfolioBalance } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/PortfolioBalance';
 
-// Re-export request types unchanged
-export type {
-  ListPerpetualsPositionsRequest,
-  GetPerpetualsPositionRequest,
-  GetPerpetualsPortfolioSummaryRequest as GetPortfolioSummaryRequest,
-  GetPerpetualsPortfoliosBalancesRequest as GetPortfolioBalanceRequest,
-} from '@coinbase-sample/advanced-trade-sdk-ts/dist/rest/perpetuals/types';
-
 // =============================================================================
 // Our Types (with number values instead of string)
 // =============================================================================

@@ -45,9 +45,3 @@ export interface ListAccountsResponse {
   readonly cursor?: string;
   readonly size?: number;
 }
-
-// Re-export request types unchanged
-export type {
-  ListAccountsRequest,
-  GetAccountRequest,
-} from '@coinbase-sample/advanced-trade-sdk-ts/dist/rest/accounts/types';

@@ -4,13 +4,15 @@ import type {
   SdkCreateConvertQuoteResponse,
   SdkCommitConvertTradeResponse,
   SdkGetConvertTradeResponse,
-  CreateConvertQuoteRequest,
   CreateConvertQuoteResponse,
-  CommitConvertTradeRequest,
   CommitConvertTradeResponse,
-  GetConvertTradeRequest,
   GetConvertTradeResponse,
 } from './ConvertsService.types';
+import type {
+  CreateConvertQuoteRequest,
+  CommitConvertTradeRequest,
+  GetConvertTradeRequest,
+} from './ConvertsService.schema';
 import {
   toSdkCreateConvertQuoteRequest,
   toCreateConvertQuoteResponse,

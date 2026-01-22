@@ -28,12 +28,7 @@ export type { TaxInfo as SdkTaxInfo } from '@coinbase-sample/advanced-trade-sdk-
 // Our Types (with number values instead of string)
 // =============================================================================
 
-// Create convert quote request with number types
-export interface CreateConvertQuoteRequest {
-  readonly fromAccount: string;
-  readonly toAccount: string;
-  readonly amount: number;
-}
+// Note: CreateConvertQuoteRequest is derived from schema in ConvertsService.schema.ts
 
 // Fee with number amounts
 export interface Fee {
@@ -103,12 +98,3 @@ export interface CommitConvertTradeResponse {
 export interface GetConvertTradeResponse {
   readonly trade?: RatConvertTrade;
 }
-
-// =============================================================================
-// SDK Types (pass-through) - no conversion needed
-// =============================================================================
-
-export type {
-  CommitConvertTradeRequest,
-  GetConvertTradeRequest,
-} from '@coinbase-sample/advanced-trade-sdk-ts/dist/rest/convert/types';

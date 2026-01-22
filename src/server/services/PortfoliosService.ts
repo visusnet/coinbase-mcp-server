@@ -5,19 +5,21 @@ import type {
   SdkCreatePortfolioResponse,
   SdkGetPortfolioResponse,
   SdkEditPortfolioResponse,
-  ListPortfoliosRequest,
   ListPortfoliosResponse,
-  CreatePortfolioRequest,
   CreatePortfolioResponse,
-  GetPortfolioRequest,
   GetPortfolioResponse,
-  EditPortfolioRequest,
   EditPortfolioResponse,
-  DeletePortfolioRequest,
   DeletePortfolioResponse,
-  MovePortfolioFundsRequest,
   MovePortfolioFundsResponse,
 } from './PortfoliosService.types';
+import type {
+  ListPortfoliosRequest,
+  CreatePortfolioRequest,
+  GetPortfolioRequest,
+  EditPortfolioRequest,
+  DeletePortfolioRequest,
+  MovePortfolioFundsRequest,
+} from './PortfoliosService.schema';
 import {
   toListPortfoliosResponse,
   toCreatePortfolioResponse,

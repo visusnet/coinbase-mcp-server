@@ -1,6 +1,6 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { PaymentMethodsService } from '../services';
-import * as z from 'zod';
+import { GetPaymentMethodRequestSchema } from '../services/PaymentMethodsService.schema';
 import { ToolRegistry } from './ToolRegistry';
 
 /**
@@ -32,9 +32,7 @@ export class PaymentToolRegistry extends ToolRegistry {
       {
         title: 'Get Payment Method',
         description: 'Get details of a specific payment method',
-        inputSchema: {
-          paymentMethodId: z.string().describe('The ID of the payment method'),
-        },
+        inputSchema: GetPaymentMethodRequestSchema.shape,
       },
       this.call(this.paymentMethods.getPaymentMethod.bind(this.paymentMethods)),
     );

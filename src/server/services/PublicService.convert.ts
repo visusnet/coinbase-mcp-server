@@ -4,12 +4,12 @@ import type {
   SdkGetPublicProductCandlesRequest,
   SdkGetPublicProductCandlesResponse,
   SdkListPublicProductsResponse,
-  GetPublicProductCandlesRequest,
   GetPublicProductCandlesResponse,
   GetPublicProductBookResponse,
   GetPublicMarketTradesResponse,
   ListPublicProductsResponse,
 } from './PublicService.types';
+import type { GetPublicProductCandlesRequest } from './PublicService.schema';
 import { toNumber, toUnixTimestamp } from './numberConversion';
 import {
   toCandle,

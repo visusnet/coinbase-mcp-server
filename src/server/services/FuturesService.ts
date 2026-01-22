@@ -5,11 +5,11 @@ import type {
   SdkGetFuturesBalanceSummaryResponse,
   SdkListFuturesSweepsResponse,
   ListFuturesPositionsResponse,
-  GetFuturesPositionRequest,
   GetFuturesPositionResponse,
   GetFuturesBalanceSummaryResponse,
   ListFuturesSweepsResponse,
 } from './FuturesService.types';
+import type { GetFuturesPositionRequest } from './FuturesService.schema';
 import {
   toListFuturesPositionsResponse,
   toGetFuturesPositionResponse,

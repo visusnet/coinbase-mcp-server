@@ -1,8 +1,15 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { ProductType } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/ProductType.js';
-import * as z from 'zod';
 import type { ProductsService } from '../services';
-import { Granularity } from '../services';
+import {
+  ListProductsRequestSchema,
+  GetProductRequestSchema,
+  GetProductBookRequestSchema,
+  GetProductCandlesRequestSchema,
+  GetProductCandlesBatchRequestSchema,
+  GetProductMarketTradesRequestSchema,
+  GetBestBidAskRequestSchema,
+  GetMarketSnapshotRequestSchema,
+} from '../services/ProductsService.schema';
 import { ToolRegistry } from './ToolRegistry';
 
 /**
@@ -22,16 +29,7 @@ export class ProductToolRegistry extends ToolRegistry {
       {
         title: 'List Products',
         description: 'Get a list of all tradable products',
-        inputSchema: {
-          limit: z
-            .number()
-            .optional()
-            .describe('Optional limit of products to return'),
-          productType: z
-            .nativeEnum(ProductType)
-            .optional()
-            .describe('Optional product type filter (SPOT, FUTURE)'),
-        },
+        inputSchema: ListProductsRequestSchema.shape,
       },
       this.call(this.products.listProducts.bind(this.products)),
     );
@@ -41,9 +39,7 @@ export class ProductToolRegistry extends ToolRegistry {
       {
         title: 'Get Product',
         description: 'Get details of a specific product',
-        inputSchema: {
-          productId: z.string().describe('Trading pair (e.g., BTC-USD)'),
-        },
+        inputSchema: GetProductRequestSchema.shape,
       },
       this.call(this.products.getProduct.bind(this.products)),
     );
@@ -53,13 +49,7 @@ export class ProductToolRegistry extends ToolRegistry {
       {
         title: 'Get Product Book',
         description: 'Get the order book for a product',
-        inputSchema: {
-          productId: z.string().describe('Trading pair (e.g., BTC-USD)'),
-          limit: z
-            .number()
-            .optional()
-            .describe('Optional limit of orders to return'),
-        },
+        inputSchema: GetProductBookRequestSchema.shape,
       },
       this.call(this.products.getProductBook.bind(this.products)),
     );
@@ -70,16 +60,7 @@ export class ProductToolRegistry extends ToolRegistry {
         title: 'Get Product Candles',
         description:
           'Get historic rates (candles) for a product. Use get_product_candles_batch for multiple products.',
-        inputSchema: {
-          productId: z.string().describe('Trading pair (e.g., BTC-USD)'),
-          start: z.string().describe('Start time (ISO 8601 format)'),
-          end: z.string().describe('End time (ISO 8601 format)'),
-          granularity: z
-            .nativeEnum(Granularity)
-            .describe(
-              'Granularity (e.g., ONE_MINUTE, FIVE_MINUTE, ONE_HOUR, ONE_DAY)',
-            ),
-        },
+        inputSchema: GetProductCandlesRequestSchema.shape,
       },
       this.call(this.products.getProductCandles.bind(this.products)),
     );
@@ -92,22 +73,7 @@ export class ProductToolRegistry extends ToolRegistry {
           'Get historic candle data for multiple trading pairs in a single call. ' +
           'More efficient than calling get_product_candles multiple times. ' +
           'Returns the last N candles (specified by limit) for each product.',
-        inputSchema: {
-          productIds: z
-            .array(z.string())
-            .min(1)
-            .max(10)
-            .describe(
-              "Trading pairs to query (e.g., ['BTC-EUR', 'ETH-EUR', 'SOL-EUR']). Max 10 pairs.",
-            ),
-          start: z.string().describe('Start time (ISO 8601 format)'),
-          end: z.string().describe('End time (ISO 8601 format)'),
-          granularity: z
-            .nativeEnum(Granularity)
-            .describe(
-              'Granularity (e.g., ONE_MINUTE, FIVE_MINUTE, ONE_HOUR, ONE_DAY)',
-            ),
-        },
+        inputSchema: GetProductCandlesBatchRequestSchema.shape,
       },
       this.call(this.products.getProductCandlesBatch.bind(this.products)),
     );
@@ -117,10 +83,7 @@ export class ProductToolRegistry extends ToolRegistry {
       {
         title: 'Get Market Trades',
         description: 'Get recent trades for a product',
-        inputSchema: {
-          productId: z.string().describe('Trading pair (e.g., BTC-USD)'),
-          limit: z.number().describe('Limit of trades to return'),
-        },
+        inputSchema: GetProductMarketTradesRequestSchema.shape,
       },
       this.call(this.products.getProductMarketTrades.bind(this.products)),
     );
@@ -130,14 +93,7 @@ export class ProductToolRegistry extends ToolRegistry {
       {
         title: 'Get Best Bid Ask',
         description: 'Get the best bid and ask prices for one or more products',
-        inputSchema: {
-          productIds: z
-            .array(z.string())
-            .optional()
-            .describe(
-              'Product IDs to get bid/ask for (optional, returns all if omitted)',
-            ),
-        },
+        inputSchema: GetBestBidAskRequestSchema.shape,
       },
       this.call(this.products.getBestBidAsk.bind(this.products)),
     );
@@ -150,19 +106,7 @@ export class ProductToolRegistry extends ToolRegistry {
           'Get comprehensive market snapshot for one or more trading pairs. ' +
           'Returns price, bid, ask, spread, volume, and 24h change in a single call. ' +
           'Use this instead of separate get_best_bid_ask and get_product calls.',
-        inputSchema: {
-          productIds: z
-            .array(z.string())
-            .min(1)
-            .max(10)
-            .describe(
-              "Trading pairs to query (e.g., ['BTC-EUR', 'ETH-EUR']). Max 10 pairs.",
-            ),
-          includeOrderBook: z
-            .boolean()
-            .optional()
-            .describe('Include order book levels per asset (default: false)'),
-        },
+        inputSchema: GetMarketSnapshotRequestSchema.shape,
       },
       this.call(this.products.getMarketSnapshot.bind(this.products)),
     );

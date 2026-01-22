@@ -28,18 +28,7 @@ export type { BalancePair as SdkBalancePair } from '@coinbase-sample/advanced-tr
 // Our Types (with number values instead of string)
 // =============================================================================
 
-// Funds with number type for value
-export interface Funds {
-  readonly value: number;
-  readonly currency: string;
-}
-
-// Move portfolio funds request with number types
-export interface MovePortfolioFundsRequest {
-  readonly funds: Funds;
-  readonly sourcePortfolioUuid: string;
-  readonly targetPortfolioUuid: string;
-}
+// Note: Funds and MovePortfolioFundsRequest are derived from schema in PortfoliosService.schema.ts
 
 // BalancePair with Amount fields
 export interface BalancePair {
@@ -161,11 +150,6 @@ export type EditPortfolioResponse = CreatePortfolioResponse;
 // SDK Types (pass-through) - no conversion needed
 // =============================================================================
 export type {
-  ListPortfoliosRequest,
-  CreatePortfolioRequest,
-  GetPortfolioRequest,
-  EditPortfolioRequest,
-  DeletePortfolioRequest,
   DeletePortfolioResponse,
   MovePortfolioFundsResponse,
 } from '@coinbase-sample/advanced-trade-sdk-ts/dist/rest/portfolios/types';

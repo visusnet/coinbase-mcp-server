@@ -1,6 +1,11 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { PerpetualsService } from '../services';
-import * as z from 'zod';
+import {
+  ListPerpetualsPositionsRequestSchema,
+  GetPerpetualsPositionRequestSchema,
+  GetPortfolioSummaryRequestSchema,
+  GetPortfolioBalanceRequestSchema,
+} from '../services/PerpetualsService.schema';
 import { ToolRegistry } from './ToolRegistry';
 
 /**
@@ -20,9 +25,7 @@ export class PerpetualsToolRegistry extends ToolRegistry {
       {
         title: 'List Perpetuals Positions',
         description: 'Get all perpetuals positions',
-        inputSchema: {
-          portfolioUuid: z.string().describe('Portfolio UUID'),
-        },
+        inputSchema: ListPerpetualsPositionsRequestSchema.shape,
       },
       this.call(this.perpetuals.listPositions.bind(this.perpetuals)),
     );
@@ -32,10 +35,7 @@ export class PerpetualsToolRegistry extends ToolRegistry {
       {
         title: 'Get Perpetuals Position',
         description: 'Get a specific perpetuals position',
-        inputSchema: {
-          portfolioUuid: z.string().describe('Portfolio UUID'),
-          symbol: z.string().describe('Product symbol'),
-        },
+        inputSchema: GetPerpetualsPositionRequestSchema.shape,
       },
       this.call(this.perpetuals.getPosition.bind(this.perpetuals)),
     );
@@ -45,9 +45,7 @@ export class PerpetualsToolRegistry extends ToolRegistry {
       {
         title: 'Get Perpetuals Portfolio Summary',
         description: 'Get perpetuals portfolio summary',
-        inputSchema: {
-          portfolioUuid: z.string().describe('Portfolio UUID'),
-        },
+        inputSchema: GetPortfolioSummaryRequestSchema.shape,
       },
       this.call(this.perpetuals.getPortfolioSummary.bind(this.perpetuals)),
     );
@@ -57,9 +55,7 @@ export class PerpetualsToolRegistry extends ToolRegistry {
       {
         title: 'Get Perpetuals Portfolio Balance',
         description: 'Get perpetuals portfolio balance',
-        inputSchema: {
-          portfolioUuid: z.string().describe('Portfolio UUID'),
-        },
+        inputSchema: GetPortfolioBalanceRequestSchema.shape,
       },
       this.call(this.perpetuals.getPortfolioBalance.bind(this.perpetuals)),
     );

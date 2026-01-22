@@ -1,82 +1,17 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { OrdersService } from '../services';
-import { OrderSide } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/OrderSide.js';
-import { StopPriceDirection } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/StopPriceDirection.js';
-import * as z from 'zod';
+import {
+  ListOrdersRequestSchema,
+  GetOrderRequestSchema,
+  CreateOrderRequestSchema,
+  CancelOrdersRequestSchema,
+  ListFillsRequestSchema,
+  EditOrderRequestSchema,
+  PreviewEditOrderRequestSchema,
+  PreviewOrderRequestSchema,
+  ClosePositionRequestSchema,
+} from '../services/OrdersService.schema';
 import { ToolRegistry } from './ToolRegistry';
-
-/**
- * Shared order configuration schema for order creation.
- */
-const orderConfigurationSchema = z
-  .object({
-    marketMarketIoc: z
-      .object({
-        quoteSize: z.number().optional(),
-        baseSize: z.number().optional(),
-      })
-      .optional(),
-    limitLimitGtc: z
-      .object({
-        baseSize: z.number(),
-        limitPrice: z.number(),
-        postOnly: z.boolean().optional(),
-      })
-      .optional(),
-    limitLimitGtd: z
-      .object({
-        baseSize: z.number(),
-        limitPrice: z.number(),
-        endTime: z.string(),
-        postOnly: z.boolean().optional(),
-      })
-      .optional(),
-    limitLimitFok: z
-      .object({
-        baseSize: z.number(),
-        limitPrice: z.number(),
-      })
-      .optional(),
-    sorLimitIoc: z
-      .object({
-        baseSize: z.number(),
-        limitPrice: z.number(),
-      })
-      .optional(),
-    stopLimitStopLimitGtc: z
-      .object({
-        baseSize: z.number(),
-        limitPrice: z.number(),
-        stopPrice: z.number(),
-        stopDirection: z.nativeEnum(StopPriceDirection).optional(),
-      })
-      .optional(),
-    stopLimitStopLimitGtd: z
-      .object({
-        baseSize: z.number(),
-        limitPrice: z.number(),
-        stopPrice: z.number(),
-        endTime: z.string(),
-        stopDirection: z.nativeEnum(StopPriceDirection).optional(),
-      })
-      .optional(),
-    triggerBracketGtc: z
-      .object({
-        baseSize: z.number(),
-        limitPrice: z.number(),
-        stopTriggerPrice: z.number(),
-      })
-      .optional(),
-    triggerBracketGtd: z
-      .object({
-        baseSize: z.number(),
-        limitPrice: z.number(),
-        stopTriggerPrice: z.number(),
-        endTime: z.string(),
-      })
-      .optional(),
-  })
-  .describe('Order configuration (marketMarketIoc, limitLimitGtc, etc.)');
 
 /**
  * Registry for order-related MCP tools.
@@ -95,20 +30,7 @@ export class OrderToolRegistry extends ToolRegistry {
       {
         title: 'List Orders',
         description: 'Get a list of all historical orders',
-        inputSchema: {
-          productIds: z
-            .array(z.string())
-            .optional()
-            .describe('Optional product IDs to filter by'),
-          orderStatus: z
-            .array(z.string())
-            .optional()
-            .describe('Optional order statuses to filter by'),
-          limit: z
-            .number()
-            .optional()
-            .describe('Optional limit of orders to return'),
-        },
+        inputSchema: ListOrdersRequestSchema.shape,
       },
       this.call(this.orders.listOrders.bind(this.orders)),
     );
@@ -118,9 +40,7 @@ export class OrderToolRegistry extends ToolRegistry {
       {
         title: 'Get Order',
         description: 'Get details of a specific order by order ID',
-        inputSchema: {
-          orderId: z.string().describe('The ID of the order to retrieve'),
-        },
+        inputSchema: GetOrderRequestSchema.shape,
       },
       this.call(this.orders.getOrder.bind(this.orders)),
     );
@@ -130,12 +50,7 @@ export class OrderToolRegistry extends ToolRegistry {
       {
         title: 'Create Order',
         description: 'Create a new buy or sell order',
-        inputSchema: {
-          clientOrderId: z.string().describe('Unique client order ID'),
-          productId: z.string().describe('Trading pair (e.g., BTC-USD)'),
-          side: z.nativeEnum(OrderSide).describe('Order side'),
-          orderConfiguration: orderConfigurationSchema,
-        },
+        inputSchema: CreateOrderRequestSchema.shape,
       },
       this.call(this.orders.createOrder.bind(this.orders)),
     );
@@ -145,11 +60,7 @@ export class OrderToolRegistry extends ToolRegistry {
       {
         title: 'Cancel Orders',
         description: 'Cancel one or more orders',
-        inputSchema: {
-          orderIds: z
-            .array(z.string())
-            .describe('Array of order IDs to cancel'),
-        },
+        inputSchema: CancelOrdersRequestSchema.shape,
       },
       this.call(this.orders.cancelOrders.bind(this.orders)),
     );
@@ -159,20 +70,7 @@ export class OrderToolRegistry extends ToolRegistry {
       {
         title: 'List Fills',
         description: 'Get a list of fills (executed trades) for orders',
-        inputSchema: {
-          orderIds: z
-            .array(z.string())
-            .optional()
-            .describe('Optional order IDs to filter by'),
-          productIds: z
-            .array(z.string())
-            .optional()
-            .describe('Optional product IDs to filter by'),
-          limit: z
-            .number()
-            .optional()
-            .describe('Optional limit of fills to return'),
-        },
+        inputSchema: ListFillsRequestSchema.shape,
       },
       this.call(this.orders.listFills.bind(this.orders)),
     );
@@ -182,11 +80,7 @@ export class OrderToolRegistry extends ToolRegistry {
       {
         title: 'Edit Order',
         description: 'Edit an existing order (change price or size)',
-        inputSchema: {
-          orderId: z.string().describe('The ID of the order to edit'),
-          price: z.number().describe('New limit price'),
-          size: z.number().describe('New size'),
-        },
+        inputSchema: EditOrderRequestSchema.shape,
       },
       this.call(this.orders.editOrder.bind(this.orders)),
     );
@@ -196,13 +90,7 @@ export class OrderToolRegistry extends ToolRegistry {
       {
         title: 'Preview Edit Order',
         description: 'Preview the result of editing an order before committing',
-        inputSchema: {
-          orderId: z
-            .string()
-            .describe('The ID of the order to preview editing'),
-          price: z.number().describe('New limit price'),
-          size: z.number().describe('New size'),
-        },
+        inputSchema: PreviewEditOrderRequestSchema.shape,
       },
       this.call(this.orders.editOrderPreview.bind(this.orders)),
     );
@@ -213,13 +101,7 @@ export class OrderToolRegistry extends ToolRegistry {
         title: 'Preview Order',
         description:
           'Preview the result of creating an order before committing',
-        inputSchema: {
-          productId: z.string().describe('Trading pair (e.g., BTC-USD)'),
-          side: z.nativeEnum(OrderSide).describe('Order side'),
-          orderConfiguration: orderConfigurationSchema.describe(
-            'Order configuration',
-          ),
-        },
+        inputSchema: PreviewOrderRequestSchema.shape,
       },
       this.call(this.orders.createOrderPreview.bind(this.orders)),
     );
@@ -229,11 +111,7 @@ export class OrderToolRegistry extends ToolRegistry {
       {
         title: 'Close Position',
         description: 'Close an open position for a product',
-        inputSchema: {
-          clientOrderId: z.string().describe('Unique client order ID'),
-          productId: z.string().describe('Trading pair (e.g., BTC-USD)'),
-          size: z.number().optional().describe('Size to close (optional)'),
-        },
+        inputSchema: ClosePositionRequestSchema.shape,
       },
       this.call(this.orders.closePosition.bind(this.orders)),
     );

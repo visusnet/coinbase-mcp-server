@@ -2,11 +2,13 @@ import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk
 import type {
   SdkListAccountsResponse,
   SdkGetAccountResponse,
-  ListAccountsRequest,
   ListAccountsResponse,
-  GetAccountRequest,
   GetAccountResponse,
 } from './AccountsService.types';
+import type {
+  ListAccountsRequest,
+  GetAccountRequest,
+} from './AccountsService.schema';
 import {
   toListAccountsResponse,
   toGetAccountResponse,

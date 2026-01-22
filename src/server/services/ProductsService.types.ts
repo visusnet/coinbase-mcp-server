@@ -21,6 +21,17 @@ export type {
 export type { GetProductBookResponse as SdkGetProductBookResponse } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/GetProductBookResponse';
 
 // =============================================================================
+// Locally Defined Enums (avoid SDK dependency for common enums)
+// =============================================================================
+
+/** Product type for filtering products */
+export enum ProductType {
+  UnknownProductType = 'UNKNOWN_PRODUCT_TYPE',
+  Spot = 'SPOT',
+  Future = 'FUTURE',
+}
+
+// =============================================================================
 // Our Types (with number values instead of string)
 // =============================================================================
 
@@ -54,12 +65,7 @@ export enum Granularity {
   ONE_DAY = 'ONE_DAY',
 }
 
-export interface GetProductCandlesBatchRequest {
-  productIds: string[];
-  granularity: Granularity;
-  start: string; // ISO 8601 timestamp
-  end: string; // ISO 8601 timestamp
-}
+// Note: GetProductCandlesBatchRequest is derived from schema in ProductsService.schema.ts
 
 export interface ProductCandles {
   candles: Candle[];
@@ -80,10 +86,7 @@ export interface GetProductCandlesBatchResponse {
 // Market Snapshot Types
 // =============================================================================
 
-export interface GetMarketSnapshotRequest {
-  productIds: string[];
-  includeOrderBook?: boolean;
-}
+// Note: GetMarketSnapshotRequest is derived from schema in ProductsService.schema.ts
 
 export interface OrderBookData {
   bids: L2Level[];
@@ -149,12 +152,4 @@ export interface GetProductMarketTradesResponse {
 // SDK Types (pass-through) - no conversion needed
 // =============================================================================
 
-export type {
-  ListProductsRequest,
-  GetProductRequest,
-  GetProductCandlesRequest,
-  GetProductCandlesResponse,
-  GetProductBookRequest,
-  GetBestBidAskRequest,
-  GetProductMarketTradesRequest,
-} from '@coinbase-sample/advanced-trade-sdk-ts/dist/rest/products/types';
+export type { GetProductCandlesResponse } from '@coinbase-sample/advanced-trade-sdk-ts/dist/rest/products/types';

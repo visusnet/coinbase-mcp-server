@@ -18,9 +18,6 @@ export type { FCMPosition as SdkFCMPosition } from '@coinbase-sample/advanced-tr
 export type { FCMBalanceSummary as SdkFCMBalanceSummary } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/FCMBalanceSummary';
 export type { FCMSweep as SdkFCMSweep } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/FCMSweep';
 
-// Re-export request types unchanged
-export type { GetFuturesPositionRequest } from '@coinbase-sample/advanced-trade-sdk-ts/dist/rest/futures/types';
-
 // =============================================================================
 // Our Types (with number values instead of string)
 // =============================================================================
