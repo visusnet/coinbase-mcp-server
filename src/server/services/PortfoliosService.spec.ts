@@ -2,23 +2,25 @@ import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import type { Portfolio as SdkPortfolio } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/Portfolio';
 import type { PortfolioBreakdown as SdkPortfolioBreakdown } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/PortfolioBreakdown';
 import { FuturesPositionSide } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/FuturesPositionSide.js';
-import { createSdkPortfoliosServiceMock } from '@test/serviceMocks';
+import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
+import { Method } from '@coinbase-sample/core-ts';
+import { mockResponse } from '@test/serviceMocks';
 import { PortfoliosService } from './PortfoliosService';
-
-const mockSdkService = createSdkPortfoliosServiceMock();
-
-// Mock the SDK
-jest.mock('@coinbase-sample/advanced-trade-sdk-ts/dist/index.js', () => ({
-  PortfoliosService: jest.fn().mockImplementation(() => mockSdkService),
-  CoinbaseAdvTradeClient: jest.fn(),
-}));
 
 describe('PortfoliosService', () => {
   let service: PortfoliosService;
+  let mockClient: {
+    request: jest.MockedFunction<CoinbaseAdvTradeClient['request']>;
+  };
 
   beforeEach(() => {
     jest.clearAllMocks();
-    service = new PortfoliosService({} as never);
+    mockClient = {
+      request: jest.fn<CoinbaseAdvTradeClient['request']>(),
+    };
+    service = new PortfoliosService(
+      mockClient as unknown as CoinbaseAdvTradeClient,
+    );
   });
 
   describe('listPortfolios', () => {
@@ -41,13 +43,18 @@ describe('PortfoliosService', () => {
         unrealizedPnl: { value: '100', currency: 'USD' },
         totalBalance: { value: '10100', currency: 'USD' },
       };
-      mockSdkService.listPortfolios.mockResolvedValue({
-        portfolios: [sdkPortfolio],
-      });
+      mockClient.request.mockResolvedValue(
+        mockResponse({
+          portfolios: [sdkPortfolio],
+        }),
+      );
 
       const result = await service.listPortfolios();
 
-      expect(mockSdkService.listPortfolios).toHaveBeenCalledWith({});
+      expect(mockClient.request).toHaveBeenCalledWith({
+        url: 'portfolios',
+        queryParams: {},
+      });
       expect(result.portfolios).toHaveLength(1);
       expect(result.portfolios[0].portfolioUuid).toBe('uuid-1');
       expect(result.portfolios[0].collateral).toBe(10000);
@@ -66,21 +73,25 @@ describe('PortfoliosService', () => {
         portfolioUuid: 'new-uuid',
         collateral: '0',
       };
-      mockSdkService.createPortfolio.mockResolvedValue({
-        portfolio: sdkPortfolio,
-      });
+      mockClient.request.mockResolvedValue(
+        mockResponse({
+          portfolio: sdkPortfolio,
+        }),
+      );
 
       const result = await service.createPortfolio({ name: 'My Portfolio' });
 
-      expect(mockSdkService.createPortfolio).toHaveBeenCalledWith({
-        name: 'My Portfolio',
+      expect(mockClient.request).toHaveBeenCalledWith({
+        url: 'portfolios',
+        method: Method.POST,
+        bodyParams: { name: 'My Portfolio' },
       });
       expect(result.portfolio?.portfolioUuid).toBe('new-uuid');
       expect(result.portfolio?.collateral).toBe(0);
     });
 
     it('should handle undefined portfolio', async () => {
-      mockSdkService.createPortfolio.mockResolvedValue({});
+      mockClient.request.mockResolvedValue(mockResponse({}));
 
       const result = await service.createPortfolio({ name: 'Test' });
 
@@ -165,12 +176,13 @@ describe('PortfoliosService', () => {
           },
         ],
       };
-      mockSdkService.getPortfolio.mockResolvedValue(sdkBreakdown);
+      mockClient.request.mockResolvedValue(mockResponse(sdkBreakdown));
 
       const result = await service.getPortfolio({ portfolioUuid: 'uuid-123' });
 
-      expect(mockSdkService.getPortfolio).toHaveBeenCalledWith({
-        portfolioUuid: 'uuid-123',
+      expect(mockClient.request).toHaveBeenCalledWith({
+        url: 'portfolios/uuid-123',
+        queryParams: {},
       });
       // Check portfolio conversion
       expect(result.portfolio?.portfolioUuid).toBe('uuid-123');
@@ -204,7 +216,7 @@ describe('PortfoliosService', () => {
     });
 
     it('should handle empty breakdown', async () => {
-      mockSdkService.getPortfolio.mockResolvedValue({});
+      mockClient.request.mockResolvedValue(mockResponse({}));
 
       const result = await service.getPortfolio({ portfolioUuid: 'uuid-123' });
 
@@ -216,15 +228,17 @@ describe('PortfoliosService', () => {
     });
 
     it('should handle perp positions with undefined BalancePair fields', async () => {
-      mockSdkService.getPortfolio.mockResolvedValue({
-        perpPositions: [
-          {
-            productId: 'ETH-PERP',
-            netSize: '1.0',
-            // No vwap, unrealizedPnl, markPrice, etc. - all BalancePair fields undefined
-          },
-        ],
-      });
+      mockClient.request.mockResolvedValue(
+        mockResponse({
+          perpPositions: [
+            {
+              productId: 'ETH-PERP',
+              netSize: '1.0',
+              // No vwap, unrealizedPnl, markPrice, etc. - all BalancePair fields undefined
+            },
+          ],
+        }),
+      );
 
       const result = await service.getPortfolio({ portfolioUuid: 'uuid-123' });
 
@@ -242,25 +256,28 @@ describe('PortfoliosService', () => {
         portfolioUuid: 'uuid-123',
         collateral: '1000',
       };
-      mockSdkService.editPortfolio.mockResolvedValue({
-        portfolio: sdkPortfolio,
-      });
+      mockClient.request.mockResolvedValue(
+        mockResponse({
+          portfolio: sdkPortfolio,
+        }),
+      );
 
       const result = await service.editPortfolio({
         portfolioUuid: 'uuid-123',
         name: 'New Name',
       });
 
-      expect(mockSdkService.editPortfolio).toHaveBeenCalledWith({
-        portfolioUuid: 'uuid-123',
-        name: 'New Name',
+      expect(mockClient.request).toHaveBeenCalledWith({
+        url: 'portfolios/uuid-123',
+        method: Method.PUT,
+        bodyParams: { portfolioUuid: undefined, name: 'New Name' },
       });
       expect(result.portfolio?.portfolioUuid).toBe('uuid-123');
       expect(result.portfolio?.collateral).toBe(1000);
     });
 
     it('should handle undefined portfolio', async () => {
-      mockSdkService.editPortfolio.mockResolvedValue({});
+      mockClient.request.mockResolvedValue(mockResponse({}));
 
       const result = await service.editPortfolio({
         portfolioUuid: 'uuid-123',
@@ -273,27 +290,28 @@ describe('PortfoliosService', () => {
 
   describe('deletePortfolio', () => {
     it('should delegate to SDK', async () => {
-      const mockResponse = {};
-      mockSdkService.deletePortfolio.mockResolvedValue(mockResponse);
+      const responseData = {};
+      mockClient.request.mockResolvedValue(mockResponse(responseData));
 
       const result = await service.deletePortfolio({
         portfolioUuid: 'uuid-123',
       });
 
-      expect(mockSdkService.deletePortfolio).toHaveBeenCalledWith({
-        portfolioUuid: 'uuid-123',
+      expect(mockClient.request).toHaveBeenCalledWith({
+        url: 'portfolios/uuid-123',
+        method: Method.DELETE,
       });
-      expect(result).toBe(mockResponse);
+      expect(result).toEqual(responseData);
     });
   });
 
   describe('movePortfolioFunds', () => {
     it('should convert funds.value number to string', async () => {
-      const mockResponse = {
+      const responseData = {
         sourcePortfolioUuid: 'src',
         targetPortfolioUuid: 'tgt',
       };
-      mockSdkService.movePortfolioFunds.mockResolvedValue(mockResponse);
+      mockClient.request.mockResolvedValue(mockResponse(responseData));
 
       const result = await service.movePortfolioFunds({
         funds: {
@@ -304,19 +322,23 @@ describe('PortfoliosService', () => {
         targetPortfolioUuid: 'portfolio-2',
       });
 
-      expect(mockSdkService.movePortfolioFunds).toHaveBeenCalledWith({
-        funds: {
-          value: '100.5',
-          currency: 'USD',
+      expect(mockClient.request).toHaveBeenCalledWith({
+        url: 'portfolios/move_funds',
+        method: Method.POST,
+        bodyParams: {
+          funds: {
+            value: '100.5',
+            currency: 'USD',
+          },
+          sourcePortfolioUuid: 'portfolio-1',
+          targetPortfolioUuid: 'portfolio-2',
         },
-        sourcePortfolioUuid: 'portfolio-1',
-        targetPortfolioUuid: 'portfolio-2',
       });
-      expect(result).toBe(mockResponse);
+      expect(result).toEqual(responseData);
     });
 
     it('should handle integer values', async () => {
-      mockSdkService.movePortfolioFunds.mockResolvedValue({});
+      mockClient.request.mockResolvedValue(mockResponse({}));
 
       await service.movePortfolioFunds({
         funds: {
@@ -327,18 +349,22 @@ describe('PortfoliosService', () => {
         targetPortfolioUuid: 'tgt',
       });
 
-      expect(mockSdkService.movePortfolioFunds).toHaveBeenCalledWith({
-        funds: {
-          value: '1000',
-          currency: 'BTC',
+      expect(mockClient.request).toHaveBeenCalledWith({
+        url: 'portfolios/move_funds',
+        method: Method.POST,
+        bodyParams: {
+          funds: {
+            value: '1000',
+            currency: 'BTC',
+          },
+          sourcePortfolioUuid: 'src',
+          targetPortfolioUuid: 'tgt',
         },
-        sourcePortfolioUuid: 'src',
-        targetPortfolioUuid: 'tgt',
       });
     });
 
     it('should handle small decimal values', async () => {
-      mockSdkService.movePortfolioFunds.mockResolvedValue({});
+      mockClient.request.mockResolvedValue(mockResponse({}));
 
       await service.movePortfolioFunds({
         funds: {
@@ -349,13 +375,17 @@ describe('PortfoliosService', () => {
         targetPortfolioUuid: 'tgt',
       });
 
-      expect(mockSdkService.movePortfolioFunds).toHaveBeenCalledWith({
-        funds: {
-          value: '1e-8',
-          currency: 'BTC',
+      expect(mockClient.request).toHaveBeenCalledWith({
+        url: 'portfolios/move_funds',
+        method: Method.POST,
+        bodyParams: {
+          funds: {
+            value: '1e-8',
+            currency: 'BTC',
+          },
+          sourcePortfolioUuid: 'src',
+          targetPortfolioUuid: 'tgt',
         },
-        sourcePortfolioUuid: 'src',
-        targetPortfolioUuid: 'tgt',
       });
     });
   });

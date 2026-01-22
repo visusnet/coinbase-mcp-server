@@ -1,7 +1,4 @@
-import {
-  DataService as SdkDataService,
-  CoinbaseAdvTradeClient,
-} from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
+import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
 import type { GetAPIKeyPermissionsResponse } from './DataService.types';
 
 /**
@@ -9,15 +6,13 @@ import type { GetAPIKeyPermissionsResponse } from './DataService.types';
  * Delegates to the SDK service with no conversion needed.
  */
 export class DataService {
-  private readonly sdk: SdkDataService;
+  public constructor(private readonly client: CoinbaseAdvTradeClient) {}
 
-  public constructor(client: CoinbaseAdvTradeClient) {
-    this.sdk = new SdkDataService(client);
-  }
-
-  public getAPIKeyPermissions(): Promise<GetAPIKeyPermissionsResponse> {
-    return this.sdk.getAPIKeyPermissions(
-      {},
-    ) as Promise<GetAPIKeyPermissionsResponse>;
+  public async getAPIKeyPermissions(): Promise<GetAPIKeyPermissionsResponse> {
+    const response = await this.client.request({
+      url: 'key_permissions',
+      queryParams: {},
+    });
+    return response.data as GetAPIKeyPermissionsResponse;
   }
 }

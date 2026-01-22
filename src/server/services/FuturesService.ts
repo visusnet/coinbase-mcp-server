@@ -1,7 +1,4 @@
-import {
-  FuturesService as SdkFuturesService,
-  CoinbaseAdvTradeClient,
-} from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
+import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
 import type {
   SdkListFuturesPositionsResponse,
   SdkGetFuturesPositionResponse,
@@ -25,39 +22,43 @@ import {
  * Converts SDK responses with string numbers to our types with numeric values.
  */
 export class FuturesService {
-  private readonly sdk: SdkFuturesService;
-
-  public constructor(client: CoinbaseAdvTradeClient) {
-    this.sdk = new SdkFuturesService(client);
-  }
+  public constructor(private readonly client: CoinbaseAdvTradeClient) {}
 
   public async listPositions(): Promise<ListFuturesPositionsResponse> {
-    const sdkResponse = (await this.sdk.listPositions(
-      {},
-    )) as SdkListFuturesPositionsResponse;
+    const response = await this.client.request({
+      url: 'cfm/positions',
+      queryParams: {},
+    });
+    const sdkResponse = response.data as SdkListFuturesPositionsResponse;
     return toListFuturesPositionsResponse(sdkResponse);
   }
 
   public async getPosition(
     request: GetFuturesPositionRequest,
   ): Promise<GetFuturesPositionResponse> {
-    const sdkResponse = (await this.sdk.getPosition(
-      request,
-    )) as SdkGetFuturesPositionResponse;
+    const response = await this.client.request({
+      url: `cfm/positions/${request.productId}`,
+      queryParams: {},
+    });
+    const sdkResponse = response.data as SdkGetFuturesPositionResponse;
     return toGetFuturesPositionResponse(sdkResponse);
   }
 
   public async getBalanceSummary(): Promise<GetFuturesBalanceSummaryResponse> {
-    const sdkResponse = (await this.sdk.getBalanceSummary(
-      {},
-    )) as SdkGetFuturesBalanceSummaryResponse;
+    const response = await this.client.request({
+      url: 'cfm/balance_summary',
+      queryParams: {},
+    });
+    const sdkResponse = response.data as SdkGetFuturesBalanceSummaryResponse;
     return toGetFuturesBalanceSummaryResponse(sdkResponse);
   }
 
   public async listSweeps(): Promise<ListFuturesSweepsResponse> {
-    const sdkResponse = (await this.sdk.listSweeps(
-      {},
-    )) as SdkListFuturesSweepsResponse;
+    const response = await this.client.request({
+      url: 'cfm/sweeps',
+      queryParams: {},
+    });
+    const sdkResponse = response.data as SdkListFuturesSweepsResponse;
     return toListFuturesSweepsResponse(sdkResponse);
   }
 }

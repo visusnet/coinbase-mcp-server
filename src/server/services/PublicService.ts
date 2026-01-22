@@ -1,4 +1,3 @@
-import { PublicService as SdkPublicService } from '@coinbase-sample/advanced-trade-sdk-ts/dist/rest/public/index.js';
 import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
 import type {
   SdkGetProductBookResponse,
@@ -32,49 +31,57 @@ import { toProduct } from './common.convert';
  * Converts SDK response types to our types with number fields.
  */
 export class PublicService {
-  private readonly sdk: SdkPublicService;
+  public constructor(private readonly client: CoinbaseAdvTradeClient) {}
 
-  public constructor(client: CoinbaseAdvTradeClient) {
-    this.sdk = new SdkPublicService(client);
-  }
-
-  public getServerTime(): Promise<GetServerTimeResponse> {
-    return this.sdk.getServerTime({}) as Promise<GetServerTimeResponse>;
+  public async getServerTime(): Promise<GetServerTimeResponse> {
+    const response = await this.client.request({
+      url: 'time',
+      queryParams: {},
+    });
+    return response.data as GetServerTimeResponse;
   }
 
   public async getProduct(
     request: GetPublicProductRequest,
   ): Promise<GetPublicProductResponse> {
-    const sdkResponse = (await this.sdk.getProduct(
-      request,
-    )) as SdkGetPublicProductResponse;
+    const response = await this.client.request({
+      url: `market/products/${request.productId}`,
+      queryParams: {},
+    });
+    const sdkResponse = response.data as SdkGetPublicProductResponse;
     return toProduct(sdkResponse);
   }
 
   public async listProducts(
     request?: ListPublicProductsRequest,
   ): Promise<ListPublicProductsResponse> {
-    const sdkResponse = (await this.sdk.listProducts(
-      request ?? {},
-    )) as SdkListPublicProductsResponse;
+    const response = await this.client.request({
+      url: 'market/products',
+      queryParams: request ?? {},
+    });
+    const sdkResponse = response.data as SdkListPublicProductsResponse;
     return toListPublicProductsResponse(sdkResponse);
   }
 
   public async getProductBook(
     request: GetPublicProductBookRequest,
   ): Promise<GetPublicProductBookResponse> {
-    const sdkResponse = (await this.sdk.getProductBook(
-      request,
-    )) as SdkGetProductBookResponse;
+    const response = await this.client.request({
+      url: 'market/product_book',
+      queryParams: request,
+    });
+    const sdkResponse = response.data as SdkGetProductBookResponse;
     return toGetPublicProductBookResponse(sdkResponse);
   }
 
   public async getProductMarketTrades(
     request: GetPublicMarketTradesRequest,
   ): Promise<GetPublicMarketTradesResponse> {
-    const sdkResponse = (await this.sdk.getProductMarketTrades(
-      request,
-    )) as SdkGetMarketTradesResponse;
+    const response = await this.client.request({
+      url: `market/products/${request.productId}/ticker`,
+      queryParams: request,
+    });
+    const sdkResponse = response.data as SdkGetMarketTradesResponse;
     return toGetPublicMarketTradesResponse(sdkResponse);
   }
 
@@ -85,9 +92,12 @@ export class PublicService {
   public async getProductCandles(
     request: GetPublicProductCandlesRequest,
   ): Promise<GetPublicProductCandlesResponse> {
-    const sdkResponse = (await this.sdk.getProductCandles(
-      toSdkGetPublicProductCandlesRequest(request),
-    )) as SdkGetPublicProductCandlesResponse;
+    const sdkRequest = toSdkGetPublicProductCandlesRequest(request);
+    const response = await this.client.request({
+      url: `market/products/${request.productId}/candles`,
+      queryParams: sdkRequest,
+    });
+    const sdkResponse = response.data as SdkGetPublicProductCandlesResponse;
     return toGetPublicProductCandlesResponse(sdkResponse);
   }
 }

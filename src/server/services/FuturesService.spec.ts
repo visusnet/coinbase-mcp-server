@@ -1,31 +1,32 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
-import { createSdkFuturesServiceMock } from '@test/serviceMocks';
 import { FuturesService } from './FuturesService';
 import type { FCMPosition as SdkFCMPosition } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/FCMPosition';
 import type { FCMBalanceSummary as SdkFCMBalanceSummary } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/FCMBalanceSummary';
 import type { FCMSweep as SdkFCMSweep } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/FCMSweep';
+import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
 import { FCMPositionSide } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/FCMPositionSide';
 import { FCMSweepStatus } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/FCMSweepStatus';
+import { mockResponse } from '@test/serviceMocks';
 import {
   toFCMPosition,
   toFCMBalanceSummary,
   toFCMSweep,
 } from './FuturesService.convert';
 
-const mockSdkService = createSdkFuturesServiceMock();
-
-// Mock the SDK
-jest.mock('@coinbase-sample/advanced-trade-sdk-ts/dist/index.js', () => ({
-  FuturesService: jest.fn().mockImplementation(() => mockSdkService),
-  CoinbaseAdvTradeClient: jest.fn(),
-}));
-
 describe('FuturesService', () => {
   let service: FuturesService;
+  let mockClient: {
+    request: jest.MockedFunction<CoinbaseAdvTradeClient['request']>;
+  };
 
   beforeEach(() => {
     jest.clearAllMocks();
-    service = new FuturesService({} as never);
+    mockClient = {
+      request: jest.fn<CoinbaseAdvTradeClient['request']>(),
+    };
+    service = new FuturesService(
+      mockClient as unknown as CoinbaseAdvTradeClient,
+    );
   });
 
   describe('listPositions', () => {
@@ -41,11 +42,14 @@ describe('FuturesService', () => {
         dailyRealizedPnl: '100.00',
       };
       const mockSdkResponse = { positions: [mockSdkPosition] };
-      mockSdkService.listPositions.mockResolvedValue(mockSdkResponse);
+      mockClient.request.mockResolvedValue(mockResponse(mockSdkResponse));
 
       const result = await service.listPositions();
 
-      expect(mockSdkService.listPositions).toHaveBeenCalledWith({});
+      expect(mockClient.request).toHaveBeenCalledWith({
+        url: 'cfm/positions',
+        queryParams: {},
+      });
       expect(result).toEqual({
         positions: [toFCMPosition(mockSdkPosition)],
       });
@@ -65,12 +69,13 @@ describe('FuturesService', () => {
         dailyRealizedPnl: '0',
       };
       const mockSdkResponse = { position: mockSdkPosition };
-      mockSdkService.getPosition.mockResolvedValue(mockSdkResponse);
+      mockClient.request.mockResolvedValue(mockResponse(mockSdkResponse));
 
       const result = await service.getPosition({ productId: 'BTC-PERP' });
 
-      expect(mockSdkService.getPosition).toHaveBeenCalledWith({
-        productId: 'BTC-PERP',
+      expect(mockClient.request).toHaveBeenCalledWith({
+        url: 'cfm/positions/BTC-PERP',
+        queryParams: {},
       });
       expect(result).toEqual({
         position: toFCMPosition(mockSdkPosition),
@@ -80,7 +85,7 @@ describe('FuturesService', () => {
 
     it('should handle undefined position', async () => {
       const mockSdkResponse = {};
-      mockSdkService.getPosition.mockResolvedValue(mockSdkResponse);
+      mockClient.request.mockResolvedValue(mockResponse(mockSdkResponse));
 
       const result = await service.getPosition({ productId: 'NOT-FOUND' });
 
@@ -105,11 +110,14 @@ describe('FuturesService', () => {
         liquidationBufferPercentage: '75.5',
       };
       const mockSdkResponse = { balanceSummary: mockSdkSummary };
-      mockSdkService.getBalanceSummary.mockResolvedValue(mockSdkResponse);
+      mockClient.request.mockResolvedValue(mockResponse(mockSdkResponse));
 
       const result = await service.getBalanceSummary();
 
-      expect(mockSdkService.getBalanceSummary).toHaveBeenCalledWith({});
+      expect(mockClient.request).toHaveBeenCalledWith({
+        url: 'cfm/balance_summary',
+        queryParams: {},
+      });
       expect(result).toEqual({
         balanceSummary: toFCMBalanceSummary(mockSdkSummary),
       });
@@ -119,7 +127,7 @@ describe('FuturesService', () => {
 
     it('should handle undefined balanceSummary', async () => {
       const mockSdkResponse = {};
-      mockSdkService.getBalanceSummary.mockResolvedValue(mockSdkResponse);
+      mockClient.request.mockResolvedValue(mockResponse(mockSdkResponse));
 
       const result = await service.getBalanceSummary();
 
@@ -137,11 +145,14 @@ describe('FuturesService', () => {
         scheduledTime: '2024-01-15T10:00:00Z',
       };
       const mockSdkResponse = { sweeps: [mockSdkSweep] };
-      mockSdkService.listSweeps.mockResolvedValue(mockSdkResponse);
+      mockClient.request.mockResolvedValue(mockResponse(mockSdkResponse));
 
       const result = await service.listSweeps();
 
-      expect(mockSdkService.listSweeps).toHaveBeenCalledWith({});
+      expect(mockClient.request).toHaveBeenCalledWith({
+        url: 'cfm/sweeps',
+        queryParams: {},
+      });
       expect(result).toEqual({
         sweeps: [toFCMSweep(mockSdkSweep)],
       });
@@ -150,7 +161,7 @@ describe('FuturesService', () => {
 
     it('should handle empty sweeps array', async () => {
       const mockSdkResponse = { sweeps: [] };
-      mockSdkService.listSweeps.mockResolvedValue(mockSdkResponse);
+      mockClient.request.mockResolvedValue(mockResponse(mockSdkResponse));
 
       const result = await service.listSweeps();
 
@@ -164,7 +175,7 @@ describe('FuturesService', () => {
         status: FCMSweepStatus.Pending,
       };
       const mockSdkResponse = { sweeps: [mockSdkSweep] };
-      mockSdkService.listSweeps.mockResolvedValue(mockSdkResponse);
+      mockClient.request.mockResolvedValue(mockResponse(mockSdkResponse));
 
       const result = await service.listSweeps();
 

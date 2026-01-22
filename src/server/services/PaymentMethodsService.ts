@@ -1,7 +1,4 @@
-import {
-  PaymentMethodsService as SdkPaymentMethodsService,
-  CoinbaseAdvTradeClient,
-} from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
+import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
 import type {
   ListPaymentMethodsResponse,
   GetPaymentMethodRequest,
@@ -13,21 +10,23 @@ import type {
  * Delegates to the SDK service with no conversion needed.
  */
 export class PaymentMethodsService {
-  private readonly sdk: SdkPaymentMethodsService;
+  public constructor(private readonly client: CoinbaseAdvTradeClient) {}
 
-  public constructor(client: CoinbaseAdvTradeClient) {
-    this.sdk = new SdkPaymentMethodsService(client);
+  public async listPaymentMethods(): Promise<ListPaymentMethodsResponse> {
+    const response = await this.client.request({
+      url: 'payment_methods',
+      queryParams: {},
+    });
+    return response.data as ListPaymentMethodsResponse;
   }
 
-  public listPaymentMethods(): Promise<ListPaymentMethodsResponse> {
-    return this.sdk.listPaymentMethods() as Promise<ListPaymentMethodsResponse>;
-  }
-
-  public getPaymentMethod(
+  public async getPaymentMethod(
     request: GetPaymentMethodRequest,
   ): Promise<GetPaymentMethodResponse> {
-    return this.sdk.getPaymentMethod(
-      request,
-    ) as Promise<GetPaymentMethodResponse>;
+    const response = await this.client.request({
+      url: `payment_methods/${request.paymentMethodId}`,
+      queryParams: {},
+    });
+    return response.data as GetPaymentMethodResponse;
   }
 }

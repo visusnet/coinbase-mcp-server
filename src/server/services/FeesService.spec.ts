@@ -4,23 +4,22 @@ import { ContractExpiryType } from '@coinbase-sample/advanced-trade-sdk-ts/dist/
 import { ProductVenue } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/ProductVenue.js';
 import { GstType } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/GstType.js';
 import type { GetTransactionSummaryResponse as SdkGetTransactionSummaryResponse } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/GetTransactionSummaryResponse';
-import { createSdkFeesServiceMock } from '@test/serviceMocks';
+import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
+import { mockResponse } from '@test/serviceMocks';
 import { FeesService } from './FeesService';
-
-const mockSdkService = createSdkFeesServiceMock();
-
-// Mock the SDK
-jest.mock('@coinbase-sample/advanced-trade-sdk-ts/dist/index.js', () => ({
-  FeesService: jest.fn().mockImplementation(() => mockSdkService),
-  CoinbaseAdvTradeClient: jest.fn(),
-}));
 
 describe('FeesService', () => {
   let service: FeesService;
+  let mockClient: {
+    request: jest.MockedFunction<CoinbaseAdvTradeClient['request']>;
+  };
 
   beforeEach(() => {
     jest.clearAllMocks();
-    service = new FeesService({} as never);
+    mockClient = {
+      request: jest.fn<CoinbaseAdvTradeClient['request']>(),
+    };
+    service = new FeesService(mockClient as unknown as CoinbaseAdvTradeClient);
   });
 
   describe('getTransactionSummary', () => {
@@ -45,7 +44,7 @@ describe('FeesService', () => {
         coinbaseProFees: 5,
         totalBalance: '50000',
       };
-      mockSdkService.getTransactionSummary.mockResolvedValue(sdkResponse);
+      mockClient.request.mockResolvedValue(mockResponse(sdkResponse));
 
       const result = await service.getTransactionSummary({
         productType: ProductType.Spot,
@@ -53,10 +52,13 @@ describe('FeesService', () => {
         productVenue: ProductVenue.Cbe,
       });
 
-      expect(mockSdkService.getTransactionSummary).toHaveBeenCalledWith({
-        productType: ProductType.Spot,
-        contractExpiryType: ContractExpiryType.UnknownContractExpiryType,
-        productVenue: ProductVenue.Cbe,
+      expect(mockClient.request).toHaveBeenCalledWith({
+        url: 'transaction_summary',
+        queryParams: {
+          productType: ProductType.Spot,
+          contractExpiryType: ContractExpiryType.UnknownContractExpiryType,
+          productVenue: ProductVenue.Cbe,
+        },
       });
       // Verify conversions - numeric fields already numbers, string fields converted
       expect(result.totalVolume).toBe(1000);
@@ -84,7 +86,7 @@ describe('FeesService', () => {
         totalFees: 10,
         feeTier: { pricingTier: 'Basic' },
       };
-      mockSdkService.getTransactionSummary.mockResolvedValue(sdkResponse);
+      mockClient.request.mockResolvedValue(mockResponse(sdkResponse));
 
       const result = await service.getTransactionSummary({
         productType: ProductType.Spot,

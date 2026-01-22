@@ -1,32 +1,34 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
-import { createSdkDataServiceMock } from '@test/serviceMocks';
+import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
+import { mockResponse } from '@test/serviceMocks';
 import { DataService } from './DataService';
-
-const mockSdkService = createSdkDataServiceMock();
-
-// Mock the SDK
-jest.mock('@coinbase-sample/advanced-trade-sdk-ts/dist/index.js', () => ({
-  DataService: jest.fn().mockImplementation(() => mockSdkService),
-  CoinbaseAdvTradeClient: jest.fn(),
-}));
 
 describe('DataService', () => {
   let service: DataService;
+  let mockClient: {
+    request: jest.MockedFunction<CoinbaseAdvTradeClient['request']>;
+  };
 
   beforeEach(() => {
     jest.clearAllMocks();
-    service = new DataService({} as never);
+    mockClient = {
+      request: jest.fn<CoinbaseAdvTradeClient['request']>(),
+    };
+    service = new DataService(mockClient as unknown as CoinbaseAdvTradeClient);
   });
 
   describe('getAPIKeyPermissions', () => {
     it('should delegate to SDK with empty object', async () => {
-      const mockResponse = { canView: true, canTrade: true };
-      mockSdkService.getAPIKeyPermissions.mockResolvedValue(mockResponse);
+      const responseData = { canView: true, canTrade: true };
+      mockClient.request.mockResolvedValue(mockResponse(responseData));
 
       const result = await service.getAPIKeyPermissions();
 
-      expect(mockSdkService.getAPIKeyPermissions).toHaveBeenCalledWith({});
-      expect(result).toBe(mockResponse);
+      expect(mockClient.request).toHaveBeenCalledWith({
+        url: 'key_permissions',
+        queryParams: {},
+      });
+      expect(result).toEqual(responseData);
     });
   });
 });

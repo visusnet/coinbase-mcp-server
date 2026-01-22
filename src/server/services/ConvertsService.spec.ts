@@ -1,7 +1,9 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { TradeStatus } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/TradeStatus';
 import type { RatConvertTrade as SdkRatConvertTrade } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/RatConvertTrade';
-import { createSdkConvertsServiceMock } from '@test/serviceMocks';
+import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
+import { Method } from '@coinbase-sample/core-ts';
+import { mockResponse } from '@test/serviceMocks';
 import { ConvertsService } from './ConvertsService';
 import {
   toCreateConvertQuoteResponse,
@@ -9,20 +11,20 @@ import {
   toGetConvertTradeResponse,
 } from './ConvertsService.convert';
 
-const mockSdkService = createSdkConvertsServiceMock();
-
-// Mock the SDK
-jest.mock('@coinbase-sample/advanced-trade-sdk-ts/dist/index.js', () => ({
-  ConvertsService: jest.fn().mockImplementation(() => mockSdkService),
-  CoinbaseAdvTradeClient: jest.fn(),
-}));
-
 describe('ConvertsService', () => {
   let service: ConvertsService;
+  let mockClient: {
+    request: jest.MockedFunction<CoinbaseAdvTradeClient['request']>;
+  };
 
   beforeEach(() => {
     jest.clearAllMocks();
-    service = new ConvertsService({} as never);
+    mockClient = {
+      request: jest.fn<CoinbaseAdvTradeClient['request']>(),
+    };
+    service = new ConvertsService(
+      mockClient as unknown as CoinbaseAdvTradeClient,
+    );
   });
 
   describe('createConvertQuote', () => {
@@ -35,7 +37,7 @@ describe('ConvertsService', () => {
         total: { value: '100.55', currency: 'USD' },
       };
       const mockSdkResponse = { trade: mockSdkTrade };
-      mockSdkService.createConvertQuote.mockResolvedValue(mockSdkResponse);
+      mockClient.request.mockResolvedValue(mockResponse(mockSdkResponse));
 
       const result = await service.createConvertQuote({
         fromAccount: 'account-1',
@@ -43,10 +45,14 @@ describe('ConvertsService', () => {
         amount: 100.5,
       });
 
-      expect(mockSdkService.createConvertQuote).toHaveBeenCalledWith({
-        fromAccount: 'account-1',
-        toAccount: 'account-2',
-        amount: '100.5',
+      expect(mockClient.request).toHaveBeenCalledWith({
+        url: 'convert/quote',
+        method: Method.POST,
+        bodyParams: {
+          fromAccount: 'account-1',
+          toAccount: 'account-2',
+          amount: '100.5',
+        },
       });
       expect(result).toEqual(toCreateConvertQuoteResponse(mockSdkResponse));
       expect(result.trade?.userEnteredAmount?.value).toBe(100.5);
@@ -55,7 +61,7 @@ describe('ConvertsService', () => {
 
     it('should handle integer amounts', async () => {
       const mockSdkResponse = { trade: { id: 'trade-456' } };
-      mockSdkService.createConvertQuote.mockResolvedValue(mockSdkResponse);
+      mockClient.request.mockResolvedValue(mockResponse(mockSdkResponse));
 
       await service.createConvertQuote({
         fromAccount: 'acc-a',
@@ -63,16 +69,20 @@ describe('ConvertsService', () => {
         amount: 1000,
       });
 
-      expect(mockSdkService.createConvertQuote).toHaveBeenCalledWith({
-        fromAccount: 'acc-a',
-        toAccount: 'acc-b',
-        amount: '1000',
+      expect(mockClient.request).toHaveBeenCalledWith({
+        url: 'convert/quote',
+        method: Method.POST,
+        bodyParams: {
+          fromAccount: 'acc-a',
+          toAccount: 'acc-b',
+          amount: '1000',
+        },
       });
     });
 
     it('should handle small decimal amounts', async () => {
       const mockSdkResponse = { trade: { id: 'trade-789' } };
-      mockSdkService.createConvertQuote.mockResolvedValue(mockSdkResponse);
+      mockClient.request.mockResolvedValue(mockResponse(mockSdkResponse));
 
       await service.createConvertQuote({
         fromAccount: 'acc-a',
@@ -80,10 +90,14 @@ describe('ConvertsService', () => {
         amount: 0.00001,
       });
 
-      expect(mockSdkService.createConvertQuote).toHaveBeenCalledWith({
-        fromAccount: 'acc-a',
-        toAccount: 'acc-b',
-        amount: '0.00001',
+      expect(mockClient.request).toHaveBeenCalledWith({
+        url: 'convert/quote',
+        method: Method.POST,
+        bodyParams: {
+          fromAccount: 'acc-a',
+          toAccount: 'acc-b',
+          amount: '0.00001',
+        },
       });
     });
   });
@@ -97,7 +111,7 @@ describe('ConvertsService', () => {
         fees: [{ title: 'Fee', amount: { value: '5.00', currency: 'USD' } }],
       };
       const mockSdkResponse = { trade: mockSdkTrade };
-      mockSdkService.commitConvertTrade.mockResolvedValue(mockSdkResponse);
+      mockClient.request.mockResolvedValue(mockResponse(mockSdkResponse));
 
       const result = await service.commitConvertTrade({
         tradeId: 'trade-123',
@@ -105,10 +119,14 @@ describe('ConvertsService', () => {
         toAccount: 'account-2',
       });
 
-      expect(mockSdkService.commitConvertTrade).toHaveBeenCalledWith({
-        tradeId: 'trade-123',
-        fromAccount: 'account-1',
-        toAccount: 'account-2',
+      expect(mockClient.request).toHaveBeenCalledWith({
+        url: 'convert/trade/trade-123',
+        method: Method.POST,
+        bodyParams: {
+          tradeId: 'trade-123',
+          fromAccount: 'account-1',
+          toAccount: 'account-2',
+        },
       });
       expect(result).toEqual(toCommitConvertTradeResponse(mockSdkResponse));
       expect(result.trade?.total?.value).toBe(500);
@@ -130,7 +148,7 @@ describe('ConvertsService', () => {
         },
       };
       const mockSdkResponse = { trade: mockSdkTrade };
-      mockSdkService.GetConvertTrade.mockResolvedValue(mockSdkResponse);
+      mockClient.request.mockResolvedValue(mockResponse(mockSdkResponse));
 
       const result = await service.getConvertTrade({
         tradeId: 'trade-123',
@@ -138,10 +156,12 @@ describe('ConvertsService', () => {
         toAccount: 'account-2',
       });
 
-      expect(mockSdkService.GetConvertTrade).toHaveBeenCalledWith({
-        tradeId: 'trade-123',
-        fromAccount: 'account-1',
-        toAccount: 'account-2',
+      expect(mockClient.request).toHaveBeenCalledWith({
+        url: 'convert/trade/trade-123',
+        queryParams: {
+          fromAccount: 'account-1',
+          toAccount: 'account-2',
+        },
       });
       expect(result).toEqual(toGetConvertTradeResponse(mockSdkResponse));
       expect(result.trade?.exchangeRate?.value).toBe(50000);
@@ -150,7 +170,7 @@ describe('ConvertsService', () => {
 
     it('should handle undefined trade', async () => {
       const mockSdkResponse = {};
-      mockSdkService.GetConvertTrade.mockResolvedValue(mockSdkResponse);
+      mockClient.request.mockResolvedValue(mockResponse(mockSdkResponse));
 
       const result = await service.getConvertTrade({
         tradeId: 'trade-123',
@@ -171,7 +191,7 @@ describe('ConvertsService', () => {
         ],
       };
       const mockSdkResponse = { trade: mockSdkTrade };
-      mockSdkService.GetConvertTrade.mockResolvedValue(mockSdkResponse);
+      mockClient.request.mockResolvedValue(mockResponse(mockSdkResponse));
 
       const result = await service.getConvertTrade({
         tradeId: 'trade-123',

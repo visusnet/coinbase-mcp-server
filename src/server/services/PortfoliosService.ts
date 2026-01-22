@@ -1,7 +1,5 @@
-import {
-  PortfoliosService as SdkPortfoliosService,
-  CoinbaseAdvTradeClient,
-} from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
+import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
+import { Method } from '@coinbase-sample/core-ts';
 import type {
   SdkListPortfoliosResponse,
   SdkCreatePortfolioResponse,
@@ -33,61 +31,72 @@ import {
  * Converts number types to strings for SDK calls and strings to numbers for responses.
  */
 export class PortfoliosService {
-  private readonly sdk: SdkPortfoliosService;
-
-  public constructor(client: CoinbaseAdvTradeClient) {
-    this.sdk = new SdkPortfoliosService(client);
-  }
+  public constructor(private readonly client: CoinbaseAdvTradeClient) {}
 
   public async listPortfolios(
     request?: ListPortfoliosRequest,
   ): Promise<ListPortfoliosResponse> {
-    const sdkResponse = (await this.sdk.listPortfolios(
-      request ?? {},
-    )) as SdkListPortfoliosResponse;
+    const response = await this.client.request({
+      url: 'portfolios',
+      queryParams: request ?? {},
+    });
+    const sdkResponse = response.data as SdkListPortfoliosResponse;
     return toListPortfoliosResponse(sdkResponse);
   }
 
   public async createPortfolio(
     request: CreatePortfolioRequest,
   ): Promise<CreatePortfolioResponse> {
-    const sdkResponse = (await this.sdk.createPortfolio(
-      request,
-    )) as SdkCreatePortfolioResponse;
+    const response = await this.client.request({
+      url: 'portfolios',
+      method: Method.POST,
+      bodyParams: request,
+    });
+    const sdkResponse = response.data as SdkCreatePortfolioResponse;
     return toCreatePortfolioResponse(sdkResponse);
   }
 
   public async getPortfolio(
     request: GetPortfolioRequest,
   ): Promise<GetPortfolioResponse> {
-    const sdkResponse = (await this.sdk.getPortfolio(
-      request,
-    )) as SdkGetPortfolioResponse;
+    const response = await this.client.request({
+      url: `portfolios/${request.portfolioUuid}`,
+      queryParams: {},
+    });
+    const sdkResponse = response.data as SdkGetPortfolioResponse;
     return toGetPortfolioResponse(sdkResponse);
   }
 
   public async editPortfolio(
     request: EditPortfolioRequest,
   ): Promise<EditPortfolioResponse> {
-    const sdkResponse = (await this.sdk.editPortfolio(
-      request,
-    )) as SdkEditPortfolioResponse;
+    const response = await this.client.request({
+      url: `portfolios/${request.portfolioUuid}`,
+      method: Method.PUT,
+      bodyParams: { ...request, portfolioUuid: undefined },
+    });
+    const sdkResponse = response.data as SdkEditPortfolioResponse;
     return toEditPortfolioResponse(sdkResponse);
   }
 
-  public deletePortfolio(
+  public async deletePortfolio(
     request: DeletePortfolioRequest,
   ): Promise<DeletePortfolioResponse> {
-    return this.sdk.deletePortfolio(
-      request,
-    ) as Promise<DeletePortfolioResponse>;
+    const response = await this.client.request({
+      url: `portfolios/${request.portfolioUuid}`,
+      method: Method.DELETE,
+    });
+    return response.data as DeletePortfolioResponse;
   }
 
-  public movePortfolioFunds(
+  public async movePortfolioFunds(
     request: MovePortfolioFundsRequest,
   ): Promise<MovePortfolioFundsResponse> {
-    return this.sdk.movePortfolioFunds(
-      toSdkMovePortfolioFundsRequest(request),
-    ) as Promise<MovePortfolioFundsResponse>;
+    const response = await this.client.request({
+      url: 'portfolios/move_funds',
+      method: Method.POST,
+      bodyParams: toSdkMovePortfolioFundsRequest(request),
+    });
+    return response.data as MovePortfolioFundsResponse;
   }
 }

@@ -1,7 +1,5 @@
-import {
-  ConvertsService as SdkConvertsService,
-  CoinbaseAdvTradeClient,
-} from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
+import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
+import { Method } from '@coinbase-sample/core-ts';
 import type {
   SdkCreateConvertQuoteResponse,
   SdkCommitConvertTradeResponse,
@@ -25,36 +23,43 @@ import {
  * Converts number types to strings for SDK calls and SDK responses to numbers.
  */
 export class ConvertsService {
-  private readonly sdk: SdkConvertsService;
-
-  public constructor(client: CoinbaseAdvTradeClient) {
-    this.sdk = new SdkConvertsService(client);
-  }
+  public constructor(private readonly client: CoinbaseAdvTradeClient) {}
 
   public async createConvertQuote(
     request: CreateConvertQuoteRequest,
   ): Promise<CreateConvertQuoteResponse> {
-    const sdkResponse = (await this.sdk.createConvertQuote(
-      toSdkCreateConvertQuoteRequest(request),
-    )) as SdkCreateConvertQuoteResponse;
+    const response = await this.client.request({
+      url: 'convert/quote',
+      method: Method.POST,
+      bodyParams: toSdkCreateConvertQuoteRequest(request),
+    });
+    const sdkResponse = response.data as SdkCreateConvertQuoteResponse;
     return toCreateConvertQuoteResponse(sdkResponse);
   }
 
   public async commitConvertTrade(
     request: CommitConvertTradeRequest,
   ): Promise<CommitConvertTradeResponse> {
-    const sdkResponse = (await this.sdk.commitConvertTrade(
-      request,
-    )) as SdkCommitConvertTradeResponse;
+    const response = await this.client.request({
+      url: `convert/trade/${request.tradeId}`,
+      method: Method.POST,
+      bodyParams: request,
+    });
+    const sdkResponse = response.data as SdkCommitConvertTradeResponse;
     return toCommitConvertTradeResponse(sdkResponse);
   }
 
   public async getConvertTrade(
     request: GetConvertTradeRequest,
   ): Promise<GetConvertTradeResponse> {
-    const sdkResponse = (await this.sdk.GetConvertTrade(
-      request,
-    )) as SdkGetConvertTradeResponse;
+    const response = await this.client.request({
+      url: `convert/trade/${request.tradeId}`,
+      queryParams: {
+        fromAccount: request.fromAccount,
+        toAccount: request.toAccount,
+      },
+    });
+    const sdkResponse = response.data as SdkGetConvertTradeResponse;
     return toGetConvertTradeResponse(sdkResponse);
   }
 }

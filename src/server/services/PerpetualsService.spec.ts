@@ -1,10 +1,11 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
-import { createSdkPerpetualsServiceMock } from '@test/serviceMocks';
 import { PerpetualsService } from './PerpetualsService';
 import type { Position as SdkPosition } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/Position';
 import type { Portfolio as SdkPortfolio } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/Portfolio';
 import type { PortfolioBalance as SdkPortfolioBalance } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/PortfolioBalance';
+import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
 import { PositionSide } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/PositionSide';
+import { mockResponse } from '@test/serviceMocks';
 import {
   toListPerpetualsPositionsResponse,
   toGetPerpetualsPositionResponse,
@@ -12,20 +13,20 @@ import {
   toGetPortfolioBalanceResponse,
 } from './PerpetualsService.convert';
 
-const mockSdkService = createSdkPerpetualsServiceMock();
-
-// Mock the SDK
-jest.mock('@coinbase-sample/advanced-trade-sdk-ts/dist/index.js', () => ({
-  PerpetualsService: jest.fn().mockImplementation(() => mockSdkService),
-  CoinbaseAdvTradeClient: jest.fn(),
-}));
-
 describe('PerpetualsService', () => {
   let service: PerpetualsService;
+  let mockClient: {
+    request: jest.MockedFunction<CoinbaseAdvTradeClient['request']>;
+  };
 
   beforeEach(() => {
     jest.clearAllMocks();
-    service = new PerpetualsService({} as never);
+    mockClient = {
+      request: jest.fn<CoinbaseAdvTradeClient['request']>(),
+    };
+    service = new PerpetualsService(
+      mockClient as unknown as CoinbaseAdvTradeClient,
+    );
   });
 
   describe('listPositions', () => {
@@ -47,12 +48,13 @@ describe('PerpetualsService', () => {
         positions: [mockSdkPosition],
         summary: { aggregatedPnl: { value: '500.00', currency: 'USD' } },
       };
-      mockSdkService.listPositions.mockResolvedValue(mockSdkResponse);
+      mockClient.request.mockResolvedValue(mockResponse(mockSdkResponse));
 
       const result = await service.listPositions({ portfolioUuid: 'port-123' });
 
-      expect(mockSdkService.listPositions).toHaveBeenCalledWith({
-        portfolioUuid: 'port-123',
+      expect(mockClient.request).toHaveBeenCalledWith({
+        url: 'intx/positions/port-123',
+        queryParams: {},
       });
       expect(result).toEqual(
         toListPerpetualsPositionsResponse(mockSdkResponse),
@@ -72,16 +74,16 @@ describe('PerpetualsService', () => {
         markPrice: { value: '51000.00', currency: 'USD' },
       };
       const mockSdkResponse = { position: mockSdkPosition };
-      mockSdkService.getPosition.mockResolvedValue(mockSdkResponse);
+      mockClient.request.mockResolvedValue(mockResponse(mockSdkResponse));
 
       const result = await service.getPosition({
         portfolioUuid: 'port-123',
         symbol: 'BTC-PERP',
       });
 
-      expect(mockSdkService.getPosition).toHaveBeenCalledWith({
-        portfolioUuid: 'port-123',
-        symbol: 'BTC-PERP',
+      expect(mockClient.request).toHaveBeenCalledWith({
+        url: 'intx/positions/port-123/BTC-PERP',
+        queryParams: {},
       });
       expect(result).toEqual(toGetPerpetualsPositionResponse(mockSdkResponse));
       expect(result.position?.netSize).toBe(2);
@@ -90,7 +92,7 @@ describe('PerpetualsService', () => {
 
     it('should handle undefined position', async () => {
       const mockSdkResponse = {};
-      mockSdkService.getPosition.mockResolvedValue(mockSdkResponse);
+      mockClient.request.mockResolvedValue(mockResponse(mockSdkResponse));
 
       const result = await service.getPosition({
         portfolioUuid: 'port-123',
@@ -119,14 +121,15 @@ describe('PerpetualsService', () => {
           buyingPower: { value: '5000.00', currency: 'USD' },
         },
       };
-      mockSdkService.getPortfolioSummary.mockResolvedValue(mockSdkResponse);
+      mockClient.request.mockResolvedValue(mockResponse(mockSdkResponse));
 
       const result = await service.getPortfolioSummary({
         portfolioUuid: 'port-123',
       });
 
-      expect(mockSdkService.getPortfolioSummary).toHaveBeenCalledWith({
-        portfolioUuid: 'port-123',
+      expect(mockClient.request).toHaveBeenCalledWith({
+        url: 'intx/portfolio/port-123',
+        queryParams: {},
       });
       expect(result).toEqual(toGetPortfolioSummaryResponse(mockSdkResponse));
       expect(result.portfolios?.[0].collateral).toBe(10000);
@@ -155,14 +158,15 @@ describe('PerpetualsService', () => {
       const mockSdkResponse = {
         portfolioBalances: [mockSdkPortfolioBalance],
       };
-      mockSdkService.getPortfolioBalance.mockResolvedValue(mockSdkResponse);
+      mockClient.request.mockResolvedValue(mockResponse(mockSdkResponse));
 
       const result = await service.getPortfolioBalance({
         portfolioUuid: 'port-123',
       });
 
-      expect(mockSdkService.getPortfolioBalance).toHaveBeenCalledWith({
-        portfolioUuid: 'port-123',
+      expect(mockClient.request).toHaveBeenCalledWith({
+        url: 'intx/balances/port-123',
+        queryParams: {},
       });
       expect(result).toEqual(toGetPortfolioBalanceResponse(mockSdkResponse));
       expect(result.portfolioBalances?.[0].balances?.[0].quantity).toBe(1.5);
@@ -176,7 +180,7 @@ describe('PerpetualsService', () => {
 
     it('should handle empty balances array', async () => {
       const mockSdkResponse = { portfolioBalances: [] };
-      mockSdkService.getPortfolioBalance.mockResolvedValue(mockSdkResponse);
+      mockClient.request.mockResolvedValue(mockResponse(mockSdkResponse));
 
       const result = await service.getPortfolioBalance({
         portfolioUuid: 'port-123',
@@ -198,7 +202,7 @@ describe('PerpetualsService', () => {
       const mockSdkResponse = {
         portfolioBalances: [mockSdkPortfolioBalance],
       };
-      mockSdkService.getPortfolioBalance.mockResolvedValue(mockSdkResponse);
+      mockClient.request.mockResolvedValue(mockResponse(mockSdkResponse));
 
       const result = await service.getPortfolioBalance({
         portfolioUuid: 'port-123',
@@ -214,7 +218,7 @@ describe('PerpetualsService', () => {
       const mockSdkResponse = {
         positions: [{ productId: 'BTC-PERP', netSize: '1.0' }],
       };
-      mockSdkService.listPositions.mockResolvedValue(mockSdkResponse);
+      mockClient.request.mockResolvedValue(mockResponse(mockSdkResponse));
 
       const result = await service.listPositions({ portfolioUuid: 'port-123' });
 
@@ -227,7 +231,7 @@ describe('PerpetualsService', () => {
       const mockSdkResponse = {
         portfolios: [{ portfolioUuid: 'port-123', collateral: '1000.00' }],
       };
-      mockSdkService.getPortfolioSummary.mockResolvedValue(mockSdkResponse);
+      mockClient.request.mockResolvedValue(mockResponse(mockSdkResponse));
 
       const result = await service.getPortfolioSummary({
         portfolioUuid: 'port-123',

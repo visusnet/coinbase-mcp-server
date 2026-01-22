@@ -1,7 +1,4 @@
-import {
-  ProductsService as SdkProductsService,
-  CoinbaseAdvTradeClient,
-} from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
+import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
 import type {
   SdkListProductsResponse,
   SdkGetBestBidAskResponse,
@@ -47,27 +44,35 @@ import type { SdkGetMarketTradesResponse } from './PublicService.types';
  * Delegates to SDK service and handles timestamp conversion.
  */
 export class ProductsService {
-  private readonly sdk: SdkProductsService;
-
-  public constructor(client: CoinbaseAdvTradeClient) {
-    this.sdk = new SdkProductsService(client);
-  }
+  public constructor(private readonly client: CoinbaseAdvTradeClient) {}
 
   public async listProducts(
     request?: ListProductsRequest,
   ): Promise<ListProductsResponse> {
-    const sdkResponse = (await this.sdk.listProducts(
-      request ?? {},
-    )) as SdkListProductsResponse;
+    const sdkResponse = (
+      await this.client.request({
+        url: 'products',
+        queryParams: request ?? {},
+      })
+    ).data as SdkListProductsResponse;
     return toListProductsResponse(sdkResponse);
   }
 
   public async getProduct(
     request: GetProductRequest,
   ): Promise<GetProductResponse> {
-    const sdkResponse = (await this.sdk.getProduct(
-      request,
-    )) as SdkGetProductResponse;
+    let queryParams = {};
+    if (request.getTradabilityStatus) {
+      queryParams = {
+        getTradabilityStatus: request.getTradabilityStatus,
+      };
+    }
+    const sdkResponse = (
+      await this.client.request({
+        url: `products/${request.productId}`,
+        queryParams,
+      })
+    ).data as SdkGetProductResponse;
     return toGetProductResponse(sdkResponse);
   }
 
@@ -75,38 +80,64 @@ export class ProductsService {
    * Get product candles with automatic ISO 8601 to Unix timestamp conversion.
    * The SDK expects ISO 8601 but the underlying API requires Unix timestamps.
    */
-  public getProductCandles(
+  public async getProductCandles(
     request: GetProductCandlesRequest,
   ): Promise<GetProductCandlesResponse> {
-    return this.sdk.getProductCandles(
-      toSdkGetProductCandlesRequest(request),
-    ) as Promise<GetProductCandlesResponse>;
+    const sdkRequest = toSdkGetProductCandlesRequest(request);
+    const queryParams = {
+      start: sdkRequest.start,
+      end: sdkRequest.end,
+      granularity: sdkRequest.granularity,
+      limit: sdkRequest.limit || 350,
+    };
+    const sdkResponse = (
+      await this.client.request({
+        url: `products/${request.productId}/candles`,
+        queryParams,
+      })
+    ).data as GetProductCandlesResponse;
+    return sdkResponse;
   }
 
   public async getProductBook(
     request: GetProductBookRequest,
   ): Promise<GetProductBookResponse> {
-    const sdkResponse = (await this.sdk.getProductBook(
-      request,
-    )) as SdkGetProductBookResponse;
+    const sdkResponse = (
+      await this.client.request({
+        url: 'product_book',
+        queryParams: request,
+      })
+    ).data as SdkGetProductBookResponse;
     return toGetProductBookResponse(sdkResponse);
   }
 
   public async getBestBidAsk(
     request?: GetBestBidAskRequest,
   ): Promise<GetBestBidAskResponse> {
-    const sdkResponse = (await this.sdk.getBestBidAsk(
-      request ?? {},
-    )) as SdkGetBestBidAskResponse;
+    let queryParams = {};
+    if (request?.productIds) {
+      queryParams = {
+        productIds: request.productIds.join(','),
+      };
+    }
+    const sdkResponse = (
+      await this.client.request({
+        url: 'best_bid_ask',
+        queryParams,
+      })
+    ).data as SdkGetBestBidAskResponse;
     return toGetBestBidAskResponse(sdkResponse);
   }
 
   public async getProductMarketTrades(
     request: GetProductMarketTradesRequest,
   ): Promise<GetProductMarketTradesResponse> {
-    const sdkResponse = (await this.sdk.getProductMarketTrades(
-      request,
-    )) as SdkGetMarketTradesResponse;
+    const sdkResponse = (
+      await this.client.request({
+        url: `products/${request.productId}/ticker`,
+        queryParams: request,
+      })
+    ).data as SdkGetMarketTradesResponse;
     return toGetPublicMarketTradesResponse(sdkResponse);
   }
 

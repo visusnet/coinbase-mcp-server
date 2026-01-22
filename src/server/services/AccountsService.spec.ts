@@ -1,21 +1,22 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
-import { createSdkAccountsServiceMock } from '@test/serviceMocks';
+import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
+import { mockResponse } from '@test/serviceMocks';
 import { AccountsService } from './AccountsService';
-
-const mockSdkService = createSdkAccountsServiceMock();
-
-// Mock the SDK
-jest.mock('@coinbase-sample/advanced-trade-sdk-ts/dist/index.js', () => ({
-  AccountsService: jest.fn().mockImplementation(() => mockSdkService),
-  CoinbaseAdvTradeClient: jest.fn(),
-}));
 
 describe('AccountsService', () => {
   let service: AccountsService;
+  let mockClient: {
+    request: jest.MockedFunction<CoinbaseAdvTradeClient['request']>;
+  };
 
   beforeEach(() => {
     jest.clearAllMocks();
-    service = new AccountsService({} as never);
+    mockClient = {
+      request: jest.fn<CoinbaseAdvTradeClient['request']>(),
+    };
+    service = new AccountsService(
+      mockClient as unknown as CoinbaseAdvTradeClient,
+    );
   });
 
   describe('listAccounts', () => {
@@ -30,11 +31,14 @@ describe('AccountsService', () => {
         ],
         hasNext: false,
       };
-      mockSdkService.listAccounts.mockResolvedValue(mockSdkResponse);
+      mockClient.request.mockResolvedValue(mockResponse(mockSdkResponse));
 
       const result = await service.listAccounts();
 
-      expect(mockSdkService.listAccounts).toHaveBeenCalledWith({});
+      expect(mockClient.request).toHaveBeenCalledWith({
+        url: 'accounts',
+        queryParams: {},
+      });
       expect(result.accounts?.[0].availableBalance?.value).toBe(100.5);
       expect(result.accounts?.[0].hold?.value).toBe(10.25);
     });
@@ -44,11 +48,14 @@ describe('AccountsService', () => {
         accounts: [{ uuid: 'acc-123' }],
         hasNext: false,
       };
-      mockSdkService.listAccounts.mockResolvedValue(mockSdkResponse);
+      mockClient.request.mockResolvedValue(mockResponse(mockSdkResponse));
 
       const result = await service.listAccounts({ limit: 10 });
 
-      expect(mockSdkService.listAccounts).toHaveBeenCalledWith({ limit: 10 });
+      expect(mockClient.request).toHaveBeenCalledWith({
+        url: 'accounts',
+        queryParams: { limit: 10 },
+      });
       expect(result.accounts?.[0].uuid).toBe('acc-123');
     });
   });
@@ -62,12 +69,12 @@ describe('AccountsService', () => {
           hold: { value: '50.25', currency: 'BTC' },
         },
       };
-      mockSdkService.getAccount.mockResolvedValue(mockSdkResponse);
+      mockClient.request.mockResolvedValue(mockResponse(mockSdkResponse));
 
       const result = await service.getAccount({ accountUuid: 'acc-123' });
 
-      expect(mockSdkService.getAccount).toHaveBeenCalledWith({
-        accountUuid: 'acc-123',
+      expect(mockClient.request).toHaveBeenCalledWith({
+        url: 'accounts/acc-123',
       });
       expect(result.account?.availableBalance?.value).toBe(500.75);
       expect(result.account?.hold?.value).toBe(50.25);
@@ -75,7 +82,7 @@ describe('AccountsService', () => {
 
     it('should handle undefined account', async () => {
       const mockSdkResponse = {};
-      mockSdkService.getAccount.mockResolvedValue(mockSdkResponse);
+      mockClient.request.mockResolvedValue(mockResponse(mockSdkResponse));
 
       const result = await service.getAccount({ accountUuid: 'acc-not-found' });
 

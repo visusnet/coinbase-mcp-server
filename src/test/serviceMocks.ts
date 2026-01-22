@@ -13,18 +13,25 @@ import type {
   TechnicalIndicatorsService,
   TechnicalAnalysisService,
 } from '@server/services';
-import type { AccountsService as SdkAccountsService } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
-import type { OrdersService as SdkOrdersService } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
-import type { ProductsService as SdkProductsService } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
-import type { ConvertsService as SdkConvertsService } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
-import type { FeesService as SdkFeesService } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
-import type { PaymentMethodsService as SdkPaymentMethodsService } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
-import type { PortfoliosService as SdkPortfoliosService } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
-import type { FuturesService as SdkFuturesService } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
-import type { PerpetualsService as SdkPerpetualsService } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
-import type { DataService as SdkDataService } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
-import type { PublicService as SdkPublicService } from '@coinbase-sample/advanced-trade-sdk-ts/dist/rest/public/index.js';
 import { jest } from '@jest/globals';
+
+/**
+ * Helper to create a mock response for client.request() calls.
+ * Wraps the data in a CoinbaseResponse-like structure.
+ */
+export function mockResponse<T>(data: T): {
+  data: T;
+  status: number;
+  statusText: string;
+  headers: Record<string, string>;
+} {
+  return {
+    data,
+    status: 200,
+    statusText: 'OK',
+    headers: {},
+  };
+}
 
 // Type helper for creating properly typed mocks
 // Uses conditional types to extract function signatures for Jest 29+
@@ -33,88 +40,6 @@ type MockedService<T> = {
     ? jest.MockedFunction<T[K]>
     : never;
 };
-
-// =============================================================================
-// SDK Service Mocks - for testing wrapper services
-// =============================================================================
-
-export const createSdkAccountsServiceMock = () => ({
-  listAccounts: jest.fn<SdkAccountsService['listAccounts']>(),
-  getAccount: jest.fn<SdkAccountsService['getAccount']>(),
-});
-
-export const createSdkOrdersServiceMock = () => ({
-  listOrders: jest.fn<SdkOrdersService['listOrders']>(),
-  getOrder: jest.fn<SdkOrdersService['getOrder']>(),
-  createOrder: jest.fn<SdkOrdersService['createOrder']>(),
-  cancelOrders: jest.fn<SdkOrdersService['cancelOrders']>(),
-  listFills: jest.fn<SdkOrdersService['listFills']>(),
-  editOrder: jest.fn<SdkOrdersService['editOrder']>(),
-  editOrderPreview: jest.fn<SdkOrdersService['editOrderPreview']>(),
-  createOrderPreview: jest.fn<SdkOrdersService['createOrderPreview']>(),
-  closePosition: jest.fn<SdkOrdersService['closePosition']>(),
-});
-
-export const createSdkProductsServiceMock = () => ({
-  listProducts: jest.fn<SdkProductsService['listProducts']>(),
-  getProduct: jest.fn<SdkProductsService['getProduct']>(),
-  getProductCandles: jest.fn<SdkProductsService['getProductCandles']>(),
-  getProductBook: jest.fn<SdkProductsService['getProductBook']>(),
-  getBestBidAsk: jest.fn<SdkProductsService['getBestBidAsk']>(),
-  getProductMarketTrades:
-    jest.fn<SdkProductsService['getProductMarketTrades']>(),
-});
-
-export const createSdkConvertsServiceMock = () => ({
-  createConvertQuote: jest.fn<SdkConvertsService['createConvertQuote']>(),
-  commitConvertTrade: jest.fn<SdkConvertsService['commitConvertTrade']>(),
-  GetConvertTrade: jest.fn<SdkConvertsService['GetConvertTrade']>(),
-});
-
-export const createSdkFeesServiceMock = () => ({
-  getTransactionSummary: jest.fn<SdkFeesService['getTransactionSummary']>(),
-});
-
-export const createSdkPaymentMethodsServiceMock = () => ({
-  listPaymentMethods: jest.fn<SdkPaymentMethodsService['listPaymentMethods']>(),
-  getPaymentMethod: jest.fn<SdkPaymentMethodsService['getPaymentMethod']>(),
-});
-
-export const createSdkPortfoliosServiceMock = () => ({
-  listPortfolios: jest.fn<SdkPortfoliosService['listPortfolios']>(),
-  createPortfolio: jest.fn<SdkPortfoliosService['createPortfolio']>(),
-  getPortfolio: jest.fn<SdkPortfoliosService['getPortfolio']>(),
-  editPortfolio: jest.fn<SdkPortfoliosService['editPortfolio']>(),
-  deletePortfolio: jest.fn<SdkPortfoliosService['deletePortfolio']>(),
-  movePortfolioFunds: jest.fn<SdkPortfoliosService['movePortfolioFunds']>(),
-});
-
-export const createSdkFuturesServiceMock = () => ({
-  listPositions: jest.fn<SdkFuturesService['listPositions']>(),
-  getPosition: jest.fn<SdkFuturesService['getPosition']>(),
-  getBalanceSummary: jest.fn<SdkFuturesService['getBalanceSummary']>(),
-  listSweeps: jest.fn<SdkFuturesService['listSweeps']>(),
-});
-
-export const createSdkPerpetualsServiceMock = () => ({
-  listPositions: jest.fn<SdkPerpetualsService['listPositions']>(),
-  getPosition: jest.fn<SdkPerpetualsService['getPosition']>(),
-  getPortfolioSummary: jest.fn<SdkPerpetualsService['getPortfolioSummary']>(),
-  getPortfolioBalance: jest.fn<SdkPerpetualsService['getPortfolioBalance']>(),
-});
-
-export const createSdkPublicServiceMock = () => ({
-  getServerTime: jest.fn<SdkPublicService['getServerTime']>(),
-  getProduct: jest.fn<SdkPublicService['getProduct']>(),
-  listProducts: jest.fn<SdkPublicService['listProducts']>(),
-  getProductBook: jest.fn<SdkPublicService['getProductBook']>(),
-  getProductMarketTrades: jest.fn<SdkPublicService['getProductMarketTrades']>(),
-  getProductCandles: jest.fn<SdkPublicService['getProductCandles']>(),
-});
-
-export const createSdkDataServiceMock = () => ({
-  getAPIKeyPermissions: jest.fn<SdkDataService['getAPIKeyPermissions']>(),
-});
 
 // =============================================================================
 // Wrapper Service Mocks - for testing MCP server and other consumers

@@ -1,7 +1,4 @@
-import {
-  PerpetualsService as SdkPerpetualsService,
-  CoinbaseAdvTradeClient,
-} from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
+import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
 import type {
   SdkListPerpetualsPositionsResponse,
   SdkGetPerpetualsPositionResponse,
@@ -28,45 +25,49 @@ import {
  * Converts SDK responses with string numbers to our types with numeric values.
  */
 export class PerpetualsService {
-  private readonly sdk: SdkPerpetualsService;
-
-  public constructor(client: CoinbaseAdvTradeClient) {
-    this.sdk = new SdkPerpetualsService(client);
-  }
+  public constructor(private readonly client: CoinbaseAdvTradeClient) {}
 
   public async listPositions(
     request: ListPerpetualsPositionsRequest,
   ): Promise<ListPerpetualsPositionsResponse> {
-    const sdkResponse = (await this.sdk.listPositions(
-      request,
-    )) as SdkListPerpetualsPositionsResponse;
+    const response = await this.client.request({
+      url: `intx/positions/${request.portfolioUuid}`,
+      queryParams: {},
+    });
+    const sdkResponse = response.data as SdkListPerpetualsPositionsResponse;
     return toListPerpetualsPositionsResponse(sdkResponse);
   }
 
   public async getPosition(
     request: GetPerpetualsPositionRequest,
   ): Promise<GetPerpetualsPositionResponse> {
-    const sdkResponse = (await this.sdk.getPosition(
-      request,
-    )) as SdkGetPerpetualsPositionResponse;
+    const response = await this.client.request({
+      url: `intx/positions/${request.portfolioUuid}/${request.symbol}`,
+      queryParams: {},
+    });
+    const sdkResponse = response.data as SdkGetPerpetualsPositionResponse;
     return toGetPerpetualsPositionResponse(sdkResponse);
   }
 
   public async getPortfolioSummary(
     request: GetPortfolioSummaryRequest,
   ): Promise<GetPortfolioSummaryResponse> {
-    const sdkResponse = (await this.sdk.getPortfolioSummary(
-      request,
-    )) as SdkGetPortfolioSummaryResponse;
+    const response = await this.client.request({
+      url: `intx/portfolio/${request.portfolioUuid}`,
+      queryParams: {},
+    });
+    const sdkResponse = response.data as SdkGetPortfolioSummaryResponse;
     return toGetPortfolioSummaryResponse(sdkResponse);
   }
 
   public async getPortfolioBalance(
     request: GetPortfolioBalanceRequest,
   ): Promise<GetPortfolioBalanceResponse> {
-    const sdkResponse = (await this.sdk.getPortfolioBalance(
-      request,
-    )) as SdkGetPortfolioBalanceResponse;
+    const response = await this.client.request({
+      url: `intx/balances/${request.portfolioUuid}`,
+      queryParams: {},
+    });
+    const sdkResponse = response.data as SdkGetPortfolioBalanceResponse;
     return toGetPortfolioBalanceResponse(sdkResponse);
   }
 }
