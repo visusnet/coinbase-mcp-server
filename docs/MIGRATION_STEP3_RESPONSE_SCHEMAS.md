@@ -24,6 +24,45 @@ Add Zod response schemas that validate API responses AND convert string numbers 
 
 ---
 
+## Naming Convention
+
+### Schema Names
+
+| Type | Pattern | Example |
+|------|---------|---------|
+| Domain object | `*Schema` | `OrderSchema`, `ProductSchema`, `CandleSchema` |
+| API request | `Verb*RequestSchema` | `ListOrdersRequestSchema`, `GetProductRequestSchema` |
+| API response | `Verb*ResponseSchema` | `ListOrdersResponseSchema`, `GetProductResponseSchema` |
+
+### Type Names (derived from schemas)
+
+| Type | Pattern | Derivation |
+|------|---------|------------|
+| Domain object | `*` | `type Order = z.output<typeof OrderSchema>` |
+| Request | `Verb*Request` | `type ListOrdersRequest = z.infer<typeof ListOrdersRequestSchema>` |
+| Response | `Verb*Response` | `type ListOrdersResponse = z.output<typeof ListOrdersResponseSchema>` |
+
+### Examples
+
+```typescript
+// Domain objects (no verb, no Request/Response)
+OrderSchema        → Order
+ProductSchema      → Product
+CandleSchema       → Candle
+
+// Request schemas (verb + object + Request)
+ListOrdersRequestSchema    → ListOrdersRequest
+GetProductRequestSchema    → GetProductRequest
+CreateOrderRequestSchema   → CreateOrderRequest
+
+// Response schemas (verb + object + Response)
+ListOrdersResponseSchema   → ListOrdersResponse
+GetProductResponseSchema   → GetProductResponse
+CreateOrderResponseSchema  → CreateOrderResponse
+```
+
+---
+
 ## Core Concept: preprocess + z.number()
 
 ### Why preprocess?
@@ -67,7 +106,7 @@ export const zodNumberRequired = z.preprocess(
 // since .parse() accepts unknown and we don't cast the API client response
 
 // z.output = What our code receives (after preprocess + validation)
-type Order = z.output<typeof OrderResponseSchema>;
+type Order = z.output<typeof OrderSchema>;
 // { completionPercentage: number, filledSize?: number, ... }
 
 type ListOrdersResponse = z.output<typeof ListOrdersResponseSchema>;
@@ -118,7 +157,8 @@ export const GetOrderRequestSchema = z.object({ ... });
 // Response Schemas (NEW in Step 3)
 // =============================================================================
 
-export const OrderResponseSchema = z.object({
+// Domain object schema (no verb prefix)
+export const OrderSchema = z.object({
   orderId: z.string(),
   productId: z.string(),
   userId: z.string(),
@@ -143,15 +183,16 @@ export const OrderResponseSchema = z.object({
   leverage: zodNumber,
 });
 
+// API response schemas (VerbObject pattern matching request schemas)
 export const ListOrdersResponseSchema = z.object({
-  orders: z.array(OrderResponseSchema),
+  orders: z.array(OrderSchema),
   cursor: z.string().optional(),
   hasNext: z.boolean(),
 });
 
 export const GetOrderResponseSchema = z
   .object({
-    order: OrderResponseSchema,
+    order: OrderSchema,
   })
   .transform((data) => data.order);
 
@@ -164,7 +205,7 @@ export type ListOrdersRequest = z.infer<typeof ListOrdersRequestSchema>;
 export type GetOrderRequest = z.infer<typeof GetOrderRequestSchema>;
 
 // Response types
-export type Order = z.output<typeof OrderResponseSchema>;
+export type Order = z.output<typeof OrderSchema>;
 export type ListOrdersResponse = z.output<typeof ListOrdersResponseSchema>;
 export type GetOrderResponse = z.output<typeof GetOrderResponseSchema>;
 ```
@@ -212,7 +253,7 @@ For responses like `GetOrderResponse` where the API returns `{ order: {...} }` b
 // Schema with transform
 export const GetOrderResponseSchema = z
   .object({
-    order: OrderResponseSchema,
+    order: OrderSchema,
   })
   .transform((data) => data.order);
 
@@ -312,7 +353,7 @@ export const zodNumberRequired = z.preprocess(
 **File:** `src/server/services/AccountsService.schema.ts`
 
 **Response schemas to add:**
-- `AccountResponseSchema` - Account with numeric `availableBalance.value` and `hold.value`
+- `AccountSchema` - Domain object with numeric `availableBalance.value` and `hold.value`
 - `ListAccountsResponseSchema` - Array of accounts with pagination
 - `GetAccountResponseSchema` - Single account (may need transform if wrapped)
 
@@ -329,7 +370,8 @@ export const zodNumberRequired = z.preprocess(
 **File:** `src/server/services/OrdersService.schema.ts`
 
 **Response schemas to add:**
-- `OrderResponseSchema`
+- `OrderSchema` - Domain object
+- `FillSchema` - Domain object for fills
 - `ListOrdersResponseSchema`
 - `GetOrderResponseSchema` (with transform to unwrap)
 - `CreateOrderResponseSchema`
@@ -361,17 +403,17 @@ export const zodNumberRequired = z.preprocess(
 **File:** `src/server/services/ProductsService.schema.ts`
 
 **Response schemas to add:**
-- `ProductResponseSchema`
+- `ProductSchema` - Domain object
+- `CandleSchema` - Domain object
+- `L2LevelSchema` - Domain object for bids/asks
+- `PriceBookSchema` - Domain object
+- `MarketTradeSchema` - Domain object
 - `ListProductsResponseSchema`
 - `GetProductResponseSchema`
-- `CandleResponseSchema`
 - `GetProductCandlesResponseSchema`
-- `PriceBookResponseSchema`
 - `GetProductBookResponseSchema`
-- `BestBidAskResponseSchema`
 - `GetBestBidAskResponseSchema`
-- `MarketTradeResponseSchema`
-- `GetProductMarketTradesResponseSchema`
+- `GetMarketTradesResponseSchema`
 
 **Numeric fields in Product:**
 - `price` → zodNumberRequired
@@ -421,7 +463,7 @@ export const zodNumberRequired = z.preprocess(
 **File:** `src/server/services/PortfoliosService.schema.ts`
 
 **Response schemas to add:**
-- `PortfolioResponseSchema`
+- `PortfolioSchema` - Domain object
 - `ListPortfoliosResponseSchema`
 - `GetPortfolioResponseSchema`
 - `CreatePortfolioResponseSchema`
@@ -438,7 +480,7 @@ export const zodNumberRequired = z.preprocess(
 **File:** `src/server/services/FeesService.schema.ts`
 
 **Response schemas to add:**
-- `TransactionSummaryResponseSchema`
+- `TransactionSummarySchema` - Domain object
 - `GetTransactionSummaryResponseSchema`
 
 **Numeric fields:**
@@ -453,13 +495,13 @@ export const zodNumberRequired = z.preprocess(
 **File:** `src/server/services/FuturesService.schema.ts`
 
 **Response schemas to add:**
-- `FuturesPositionResponseSchema`
+- `FuturesPositionSchema` - Domain object
+- `FuturesBalanceSummarySchema` - Domain object
+- `FuturesSweepSchema` - Domain object
 - `ListFuturesPositionsResponseSchema`
 - `GetFuturesPositionResponseSchema`
-- `BalanceSummaryResponseSchema`
-- `GetBalanceSummaryResponseSchema`
-- `SweepResponseSchema`
-- `ListSweepsResponseSchema`
+- `GetFuturesBalanceSummaryResponseSchema`
+- `ListFuturesSweepsResponseSchema`
 
 **Convert file to remove:** `FuturesService.convert.ts` (if exists)
 
@@ -470,11 +512,13 @@ export const zodNumberRequired = z.preprocess(
 **File:** `src/server/services/PerpetualsService.schema.ts`
 
 **Response schemas to add:**
-- `PerpPositionResponseSchema`
-- `ListPerpPositionsResponseSchema`
-- `GetPerpPositionResponseSchema`
-- `PerpPortfolioSummaryResponseSchema`
-- `PerpPortfolioBalanceResponseSchema`
+- `PerpPositionSchema` - Domain object
+- `PerpPortfolioSummarySchema` - Domain object
+- `PerpPortfolioBalanceSchema` - Domain object
+- `ListPerpetualsPositionsResponseSchema`
+- `GetPerpetualsPositionResponseSchema`
+- `GetPerpetualsPortfolioSummaryResponseSchema`
+- `GetPerpetualsPortfolioBalanceResponseSchema`
 
 **Convert file to remove:** `PerpetualsService.convert.ts` (if exists)
 
@@ -485,7 +529,7 @@ export const zodNumberRequired = z.preprocess(
 **File:** `src/server/services/ConvertsService.schema.ts`
 
 **Response schemas to add:**
-- `ConvertQuoteResponseSchema`
+- `ConvertTradeSchema` - Domain object
 - `CreateConvertQuoteResponseSchema`
 - `CommitConvertTradeResponseSchema`
 - `GetConvertTradeResponseSchema`
@@ -499,7 +543,7 @@ export const zodNumberRequired = z.preprocess(
 **File:** `src/server/services/DataService.schema.ts`
 
 **Response schemas to add:**
-- `ApiKeyPermissionsResponseSchema`
+- `ApiKeyPermissionsSchema` - Domain object
 - `GetApiKeyPermissionsResponseSchema`
 
 **Convert file to remove:** `DataService.convert.ts` (if exists)
@@ -511,7 +555,7 @@ export const zodNumberRequired = z.preprocess(
 **File:** `src/server/services/PaymentMethodsService.schema.ts`
 
 **Response schemas to add:**
-- `PaymentMethodResponseSchema`
+- `PaymentMethodSchema` - Domain object
 - `ListPaymentMethodsResponseSchema`
 - `GetPaymentMethodResponseSchema`
 
@@ -523,23 +567,24 @@ export const zodNumberRequired = z.preprocess(
 
 **File:** `src/server/services/common.schema.ts` (NEW)
 
-Shared response schemas used across multiple services:
+Shared domain object schemas used across multiple services:
 
 ```typescript
 import { z } from 'zod';
 import { zodNumber } from './schema.helpers';
 
-export const AmountResponseSchema = z.object({
+// Domain object schemas (no verb prefix, no Response suffix)
+export const AmountSchema = z.object({
   value: zodNumber,
   currency: z.string(),
 });
 
-export const L2LevelResponseSchema = z.object({
+export const L2LevelSchema = z.object({
   price: zodNumber,
   size: zodNumber,
 });
 
-export const CandleResponseSchema = z.object({
+export const CandleSchema = z.object({
   start: zodNumber,
   low: zodNumber,
   high: zodNumber,
@@ -548,12 +593,18 @@ export const CandleResponseSchema = z.object({
   volume: zodNumber,
 });
 
-export const PriceBookResponseSchema = z.object({
+export const PriceBookSchema = z.object({
   productId: z.string(),
-  bids: z.array(L2LevelResponseSchema),
-  asks: z.array(L2LevelResponseSchema),
+  bids: z.array(L2LevelSchema),
+  asks: z.array(L2LevelSchema),
   time: z.string().optional(),
 });
+
+// Types derived from schemas
+export type Amount = z.output<typeof AmountSchema>;
+export type L2Level = z.output<typeof L2LevelSchema>;
+export type Candle = z.output<typeof CandleSchema>;
+export type PriceBook = z.output<typeof PriceBookSchema>;
 ```
 
 **Convert file to remove:** `common.convert.ts`
