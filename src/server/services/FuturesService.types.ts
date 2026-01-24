@@ -5,21 +5,15 @@ import type { FcmMarginWindowMeasure } from '@coinbase-sample/advanced-trade-sdk
 import type { Amount } from './common.types';
 
 // =============================================================================
-// SDK Types (for conversion) - these have our own converted counterparts
+// SDK Types (for conversion) - used by convert functions for tests
 // =============================================================================
 
-export type {
-  ListFuturesPositionsResponse as SdkListFuturesPositionsResponse,
-  GetFuturesPositionsResponse as SdkGetFuturesPositionResponse,
-  GetFuturesBalanceSummaryResponse as SdkGetFuturesBalanceSummaryResponse,
-  ListFuturesSweepsResponse as SdkListFuturesSweepsResponse,
-} from '@coinbase-sample/advanced-trade-sdk-ts/dist/rest/futures/types';
 export type { FCMPosition as SdkFCMPosition } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/FCMPosition';
 export type { FCMBalanceSummary as SdkFCMBalanceSummary } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/FCMBalanceSummary';
 export type { FCMSweep as SdkFCMSweep } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/FCMSweep';
 
 // =============================================================================
-// Our Types (with number values instead of string)
+// Our Types (with number values instead of string) - used by convert functions
 // =============================================================================
 
 // FCMPosition with numbers
@@ -59,21 +53,4 @@ export interface FCMSweep {
   readonly shouldSweepAll?: boolean;
   readonly status?: FCMSweepStatus;
   readonly scheduledTime?: string;
-}
-
-// Response types with our wrapper types
-export interface ListFuturesPositionsResponse {
-  readonly positions?: FCMPosition[];
-}
-
-export interface GetFuturesPositionResponse {
-  readonly position?: FCMPosition;
-}
-
-export interface GetFuturesBalanceSummaryResponse {
-  readonly balanceSummary?: FCMBalanceSummary;
-}
-
-export interface ListFuturesSweepsResponse {
-  readonly sweeps?: FCMSweep[];
 }

@@ -1,18 +1,10 @@
 import type {
-  SdkListFuturesPositionsResponse,
-  SdkGetFuturesPositionResponse,
-  SdkGetFuturesBalanceSummaryResponse,
-  SdkListFuturesSweepsResponse,
   SdkFCMPosition,
   SdkFCMBalanceSummary,
   SdkFCMSweep,
   FCMPosition,
   FCMBalanceSummary,
   FCMSweep,
-  ListFuturesPositionsResponse,
-  GetFuturesPositionResponse,
-  GetFuturesBalanceSummaryResponse,
-  ListFuturesSweepsResponse,
 } from './FuturesService.types';
 import { toNumber } from './numberConversion';
 import { toAmount } from './common.convert';
@@ -85,53 +77,5 @@ export function toFCMSweep(sdkSweep: SdkFCMSweep): FCMSweep {
   return {
     ...unchanged,
     requestedAmount: toAmount(requestedAmount),
-  };
-}
-
-/**
- * Convert SDK ListFuturesPositionsResponse to our type.
- */
-export function toListFuturesPositionsResponse(
-  sdkResponse: SdkListFuturesPositionsResponse,
-): ListFuturesPositionsResponse {
-  return {
-    positions: sdkResponse.positions?.map(toFCMPosition),
-  };
-}
-
-/**
- * Convert SDK GetFuturesPositionResponse to our type.
- */
-export function toGetFuturesPositionResponse(
-  sdkResponse: SdkGetFuturesPositionResponse,
-): GetFuturesPositionResponse {
-  return {
-    position: sdkResponse.position
-      ? toFCMPosition(sdkResponse.position)
-      : undefined,
-  };
-}
-
-/**
- * Convert SDK GetFuturesBalanceSummaryResponse to our type.
- */
-export function toGetFuturesBalanceSummaryResponse(
-  sdkResponse: SdkGetFuturesBalanceSummaryResponse,
-): GetFuturesBalanceSummaryResponse {
-  return {
-    balanceSummary: sdkResponse.balanceSummary
-      ? toFCMBalanceSummary(sdkResponse.balanceSummary)
-      : undefined,
-  };
-}
-
-/**
- * Convert SDK ListFuturesSweepsResponse to our type.
- */
-export function toListFuturesSweepsResponse(
-  sdkResponse: SdkListFuturesSweepsResponse,
-): ListFuturesSweepsResponse {
-  return {
-    sweeps: sdkResponse.sweeps?.map(toFCMSweep),
   };
 }
