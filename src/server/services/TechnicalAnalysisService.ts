@@ -10,6 +10,7 @@ import type { ProductsService } from '.';
 import type { TechnicalIndicatorsService } from './TechnicalIndicatorsService';
 import { CandleInputArraySchema, type CandleInput } from './common.response';
 import { Granularity } from './ProductsService.types';
+import { GetProductCandlesRequestSchema } from './ProductsService.request';
 import type {
   AnalyzeTechnicalIndicatorsRequest,
   AnalyzeTechnicalIndicatorsBatchRequest,
@@ -190,12 +191,15 @@ export class TechnicalAnalysisService {
       end.getTime() - candleCount * secondsPerCandle * 1000,
     );
 
-    const response = await this.productsService.getProductCandles({
+    // Parse through schema to transform ISO timestamps to Unix timestamps
+    const request = GetProductCandlesRequestSchema.parse({
       productId,
       granularity,
       start: start.toISOString(),
       end: end.toISOString(),
     });
+
+    const response = await this.productsService.getProductCandles(request);
 
     return CandleInputArraySchema.parse(response.candles ?? []);
   }
@@ -209,12 +213,15 @@ export class TechnicalAnalysisService {
     const end = new Date();
     const start = new Date(end.getTime() - 3 * 24 * 60 * 60 * 1000);
 
-    const response = await this.productsService.getProductCandles({
+    // Parse through schema to transform ISO timestamps to Unix timestamps
+    const request = GetProductCandlesRequestSchema.parse({
       productId,
       granularity: Granularity.ONE_DAY,
       start: start.toISOString(),
       end: end.toISOString(),
     });
+
+    const response = await this.productsService.getProductCandles(request);
 
     return CandleInputArraySchema.parse(response.candles ?? []);
   }

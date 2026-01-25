@@ -183,6 +183,43 @@ describe('TechnicalAnalysisService', () => {
       );
     });
 
+    it('should pass Unix timestamps (not ISO strings) to getProductCandles', async () => {
+      // Regression test: TechnicalAnalysisService must convert ISO dates to Unix timestamps
+      // before calling ProductsService.getProductCandles, since the Coinbase API expects
+      // Unix timestamps for the candles endpoint.
+      const mockCandles = createMockCandles(100);
+      getProductCandlesMock.mockResolvedValue({
+        candles: asCandles(mockCandles),
+      });
+      calculateRsiMock.mockReturnValue({
+        period: 14,
+        values: [55],
+        latestValue: 55,
+      });
+
+      await service.analyzeTechnicalIndicators({
+        productId: 'BTC-USD',
+        granularity: Granularity.ONE_HOUR,
+        indicators: [IndicatorType.RSI],
+      });
+
+      expect(getProductCandlesMock).toHaveBeenCalled();
+      const callArgs = getProductCandlesMock.mock.calls[0][0];
+
+      // Unix timestamps are numeric strings (e.g., "1704067200")
+      // ISO strings contain letters (e.g., "2024-01-01T00:00:00.000Z")
+      const isUnixTimestamp = (value: string): boolean => /^\d+$/.test(value);
+
+      expect(isUnixTimestamp(callArgs.start)).toBe(true);
+      expect(isUnixTimestamp(callArgs.end)).toBe(true);
+
+      // Additional check: values should be reasonable Unix timestamps (after year 2000)
+      const startTs = parseInt(callArgs.start, 10);
+      const endTs = parseInt(callArgs.end, 10);
+      expect(startTs).toBeGreaterThan(946684800); // Jan 1, 2000
+      expect(endTs).toBeGreaterThan(startTs);
+    });
+
     it('should calculate all indicators when none specified', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock.mockResolvedValue({
@@ -589,9 +626,10 @@ describe('TechnicalAnalysisService', () => {
 
       // The time range calculation should be based on 300, not 500
       const call = getProductCandlesMock.mock.calls[0][0];
-      const start = new Date(call.start).getTime();
-      const end = new Date(call.end).getTime();
-      const durationMs = end - start;
+      // Unix timestamps are in seconds, convert to ms for comparison
+      const startMs = parseInt(call.start, 10) * 1000;
+      const endMs = parseInt(call.end, 10) * 1000;
+      const durationMs = endMs - startMs;
       const expectedDuration = 300 * 3600 * 1000; // 300 hours in ms
 
       // Should be approximately 300 hours
@@ -612,9 +650,10 @@ describe('TechnicalAnalysisService', () => {
       });
 
       const call = getProductCandlesMock.mock.calls[0][0];
-      const start = new Date(call.start).getTime();
-      const end = new Date(call.end).getTime();
-      const durationMs = end - start;
+      // Unix timestamps are in seconds, convert to ms for comparison
+      const startMs = parseInt(call.start, 10) * 1000;
+      const endMs = parseInt(call.end, 10) * 1000;
+      const durationMs = endMs - startMs;
       const expectedDuration = 5 * 3600 * 1000; // 5 hours in ms
 
       // Should be at least 5 hours
