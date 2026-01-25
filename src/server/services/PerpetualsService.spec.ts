@@ -9,7 +9,7 @@ import {
   GetPerpetualsPositionResponseSchema,
   GetPortfolioSummaryResponseSchema,
   GetPortfolioBalanceResponseSchema,
-} from './PerpetualsService.schema';
+} from './PerpetualsService.response';
 
 describe('PerpetualsService', () => {
   let service: PerpetualsService;

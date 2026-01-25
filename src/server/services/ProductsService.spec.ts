@@ -5,10 +5,10 @@ import { Granularity } from './ProductsService.types';
 import type {
   GetBestBidAskResponse,
   GetProductBookResponse,
-} from './ProductsService.schema';
-import type { Product } from './common.schema';
+} from './ProductsService.response';
+import type { Product } from './common.response';
 import { ProductsService } from './ProductsService';
-import { ProductType } from './FeesService.schema';
+import { ProductType } from './FeesService.request';
 
 describe('ProductsService', () => {
   let service: ProductsService;

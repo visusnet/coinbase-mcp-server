@@ -2,13 +2,15 @@ import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk
 import type {
   ListAccountsRequest,
   GetAccountRequest,
+} from './AccountsService.request';
+import type {
   ListAccountsResponse,
   GetAccountResponse,
-} from './AccountsService.schema';
+} from './AccountsService.response';
 import {
   ListAccountsResponseSchema,
   GetAccountResponseSchema,
-} from './AccountsService.schema';
+} from './AccountsService.response';
 
 /**
  * Wrapper service for Coinbase Accounts API.

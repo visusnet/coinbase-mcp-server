@@ -6,7 +6,7 @@ import { AccountsService } from './AccountsService';
 import {
   ListAccountsResponseSchema,
   GetAccountResponseSchema,
-} from './AccountsService.schema';
+} from './AccountsService.response';
 
 describe('AccountsService', () => {
   let service: AccountsService;

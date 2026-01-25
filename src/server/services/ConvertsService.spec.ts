@@ -3,7 +3,7 @@ import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk
 import { Method } from '@coinbase-sample/core-ts';
 import { mockResponse } from '@test/serviceMocks';
 import { ConvertsService } from './ConvertsService';
-import { TradeStatus } from './ConvertsService.schema';
+import { TradeStatus } from './ConvertsService.types';
 
 describe('ConvertsService', () => {
   let service: ConvertsService;

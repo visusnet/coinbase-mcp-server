@@ -1,22 +1,22 @@
 import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
 import type {
+  ListPerpetualsPositionsRequest,
+  GetPerpetualsPositionRequest,
+  GetPortfolioSummaryRequest,
+  GetPortfolioBalanceRequest,
+} from './PerpetualsService.request';
+import type {
   ListPerpetualsPositionsResponse,
   GetPerpetualsPositionResponse,
   GetPortfolioSummaryResponse,
   GetPortfolioBalanceResponse,
-} from './PerpetualsService.types';
+} from './PerpetualsService.response';
 import {
   ListPerpetualsPositionsResponseSchema,
   GetPerpetualsPositionResponseSchema,
   GetPortfolioSummaryResponseSchema,
   GetPortfolioBalanceResponseSchema,
-} from './PerpetualsService.schema';
-import type {
-  ListPerpetualsPositionsRequest,
-  GetPerpetualsPositionRequest,
-  GetPortfolioSummaryRequest,
-  GetPortfolioBalanceRequest,
-} from './PerpetualsService.schema';
+} from './PerpetualsService.response';
 
 /**
  * Wrapper service for Coinbase Perpetuals API.

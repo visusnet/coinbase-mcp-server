@@ -18,15 +18,23 @@ Direct SDK usage, no abstraction layers (YAGNI).
 
 ```
 src/
-├── index.ts                         # Entry point, credentials validation
+├── index.ts                              # Entry point, credentials validation
 ├── server/
-│   ├── CoinbaseMcpServer.ts         # MCP server, tools, SDK integration
-│   ├── TechnicalIndicatorsService.ts # Technical indicator calculations
-│   ├── TechnicalAnalysisService.ts   # Server-side indicator analysis (reduced context)
-│   └── indicators/                   # Manual indicator implementations
-│       └── *.ts                      # Helper functions (e.g., chartPatterns.ts, swingPoints.ts)
+│   ├── CoinbaseMcpServer.ts              # MCP server, tools, SDK integration
+│   ├── services/
+│   │   ├── common.request.ts             # Shared request schemas
+│   │   ├── common.response.ts            # Shared response schemas
+│   │   ├── schema.helpers.ts             # Transform helpers (stringToNumber, etc.)
+│   │   ├── {Service}.ts                  # Service implementation
+│   │   ├── {Service}.request.ts          # Request schemas
+│   │   ├── {Service}.response.ts         # Response schemas
+│   │   └── {Service}.types.ts            # Enums and shared types
+│   ├── tools/
+│   │   └── {Domain}ToolRegistry.ts       # Tool registration by domain
+│   └── indicators/                       # Manual indicator implementations
+│       └── *.ts                          # Helper functions (chartPatterns.ts, etc.)
 └── test/
-    └── serviceMocks.ts               # Test mocks
+    └── serviceMocks.ts                   # Test mocks
 ```
 
 ## Environment
@@ -41,6 +49,7 @@ cp .env.example .env
 See `.claude/rules/` for context-specific guidelines:
 
 - `core.md` - Essential standards (always loaded)
+- `zod.md` - Zod schema patterns (loaded for src/**/*.ts)
 - `testing.md` - Test patterns (loaded for *.spec.ts)
 - `api.md` - API development (loaded for src/**/*.ts)
 - `indicators.md` - Indicator tools (loaded for TechnicalIndicatorsService.ts)
@@ -48,9 +57,11 @@ See `.claude/rules/` for context-specific guidelines:
 
 ## Key Patterns
 
-- **Timestamps**: Most APIs accept ISO 8601, Product Candles requires Unix (use `toUnixTimestamp()`)
+- **Timestamps**: Most APIs accept ISO 8601, Product Candles requires Unix (use `isoToUnix` from schema.helpers.ts)
 - **Error handling**: Wrap SDK calls in try-catch, return consistent MCP error format
 - **Testing**: 100% coverage, use `serviceMocks.ts` pattern
+- **Schemas**: Split into `.request.ts` and `.response.ts` files; all types use `z.output<typeof ...>`
+- **Descriptions**: Every schema and property must have `.describe()` for MCP documentation
 
 ## Debugging
 

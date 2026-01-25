@@ -10,7 +10,7 @@ import {
   PreviewEditOrderRequestSchema,
   PreviewOrderRequestSchema,
   ClosePositionRequestSchema,
-} from '../services/OrdersService.schema';
+} from '../services/OrdersService.request';
 import { ToolRegistry } from './ToolRegistry';
 
 /**

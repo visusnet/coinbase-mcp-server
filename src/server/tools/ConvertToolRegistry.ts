@@ -4,7 +4,7 @@ import {
   CreateConvertQuoteRequestSchema,
   CommitConvertTradeRequestSchema,
   GetConvertTradeRequestSchema,
-} from '../services/ConvertsService.schema';
+} from '../services/ConvertsService.request';
 import { ToolRegistry } from './ToolRegistry';
 
 /**

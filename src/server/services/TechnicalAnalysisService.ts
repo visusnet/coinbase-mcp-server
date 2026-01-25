@@ -8,12 +8,12 @@
 
 import type { ProductsService } from '.';
 import type { TechnicalIndicatorsService } from './TechnicalIndicatorsService';
-import { CandleInputArraySchema, type CandleInput } from './common.schema';
+import { CandleInputArraySchema, type CandleInput } from './common.response';
 import { Granularity } from './ProductsService.types';
 import type {
   AnalyzeTechnicalIndicatorsRequest,
   AnalyzeTechnicalIndicatorsBatchRequest,
-} from './TechnicalAnalysisService.schema';
+} from './TechnicalAnalysisService.request';
 import {
   AnalyzeTechnicalIndicatorsResponse,
   AnalyzeTechnicalIndicatorsBatchResponse,

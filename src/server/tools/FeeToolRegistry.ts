@@ -1,6 +1,6 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { FeesService } from '../services';
-import { GetTransactionsSummaryRequestSchema } from '../services/FeesService.schema';
+import { GetTransactionsSummaryRequestSchema } from '../services/FeesService.request';
 import { ToolRegistry } from './ToolRegistry';
 
 /**

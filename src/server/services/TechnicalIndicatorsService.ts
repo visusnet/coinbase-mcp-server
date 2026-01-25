@@ -77,7 +77,7 @@ import {
 import { detectChartPatterns } from '../indicators/chartPatterns';
 import { detectSwingPoints } from '../indicators/swingPoints';
 
-import type { CandleInput } from './common.schema';
+import type { CandleInput } from './common.response';
 import type {
   CalculateRsiRequest,
   CalculateMacdRequest,
@@ -103,7 +103,7 @@ import type {
   DetectRsiDivergenceRequest,
   DetectChartPatternsRequest,
   DetectSwingPointsRequest,
-} from './TechnicalIndicatorsService.schema';
+} from './TechnicalIndicatorsService.request';
 import type {
   CalculateRsiResponse,
   CalculateMacdResponse,
@@ -133,7 +133,7 @@ import type {
 
 // Re-export all types for external consumers
 export type * from './TechnicalIndicatorsService.types';
-export type * from './TechnicalIndicatorsService.schema';
+export type * from './TechnicalIndicatorsService.request';
 export type { PivotPointsOutput } from '../indicators/pivotPoints';
 
 const DEFAULT_RSI_PERIOD = 14;

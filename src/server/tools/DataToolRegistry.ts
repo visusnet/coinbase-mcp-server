@@ -1,6 +1,6 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { DataService } from '../services';
-import { GetAPIKeyPermissionsRequestSchema } from '../services/DataService.schema';
+import { GetAPIKeyPermissionsRequestSchema } from '../services/DataService.request';
 import { ToolRegistry } from './ToolRegistry';
 
 /**

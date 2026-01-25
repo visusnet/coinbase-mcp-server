@@ -1,17 +1,15 @@
 import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
-import type {
-  GetFuturesPositionRequest,
-  ListFuturesPositionsResponse,
-  GetFuturesPositionResponse,
-  GetFuturesBalanceSummaryResponse,
-  ListFuturesSweepsResponse,
-} from './FuturesService.schema';
+import type { GetFuturesPositionRequest } from './FuturesService.request';
 import {
   ListFuturesPositionsResponseSchema,
   GetFuturesPositionResponseSchema,
   GetFuturesBalanceSummaryResponseSchema,
   ListFuturesSweepsResponseSchema,
-} from './FuturesService.schema';
+  type ListFuturesPositionsResponse,
+  type GetFuturesPositionResponse,
+  type GetFuturesBalanceSummaryResponse,
+  type ListFuturesSweepsResponse,
+} from './FuturesService.response';
 
 /**
  * Wrapper service for Coinbase Futures API.

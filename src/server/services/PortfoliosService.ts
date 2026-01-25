@@ -7,13 +7,15 @@ import type {
   EditPortfolioRequest,
   DeletePortfolioRequest,
   MovePortfolioFundsRequest,
+} from './PortfoliosService.request';
+import type {
   ListPortfoliosResponse,
   CreatePortfolioResponse,
   GetPortfolioResponse,
   EditPortfolioResponse,
   DeletePortfolioResponse,
   MovePortfolioFundsResponse,
-} from './PortfoliosService.schema';
+} from './PortfoliosService.response';
 import {
   ListPortfoliosResponseSchema,
   CreatePortfolioResponseSchema,
@@ -21,7 +23,7 @@ import {
   EditPortfolioResponseSchema,
   DeletePortfolioResponseSchema,
   MovePortfolioFundsResponseSchema,
-} from './PortfoliosService.schema';
+} from './PortfoliosService.response';
 
 /**
  * Wrapper service for Coinbase Portfolios API.

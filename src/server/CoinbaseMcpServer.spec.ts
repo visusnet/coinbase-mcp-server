@@ -6,15 +6,15 @@ import request from 'supertest';
 import {
   CancelOrderFailureReason,
   OrderExecutionStatus,
+  OrderSide,
   OrderType,
   TimeInForceType,
-} from './services/OrdersService.schema';
-import { OrderSide } from './services/OrdersService.types';
+} from './services/OrdersService.types';
 import {
   ContractExpiryType,
   ProductType,
   ProductVenue,
-} from './services/FeesService.schema';
+} from './services/FeesService.request';
 import * as StreamableHttpModule from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import {
   mockAccountsService,
@@ -735,7 +735,7 @@ describe('CoinbaseMcpServer Integration Tests', () => {
 
       it('should call getProduct via MCP tool get_public_product', async () => {
         const args = { productId: 'BTC-USD' };
-        const result = {
+        const product = {
           productId: 'BTC-USD',
           price: 50000,
           pricePercentageChange24h: 2.5,
@@ -764,6 +764,7 @@ describe('CoinbaseMcpServer Integration Tests', () => {
           baseDisplaySymbol: 'BTC',
           quoteDisplaySymbol: 'USD',
         };
+        const result = { product };
         mockPublicService.getProduct.mockResolvedValueOnce(result);
 
         const response = await client.callTool({

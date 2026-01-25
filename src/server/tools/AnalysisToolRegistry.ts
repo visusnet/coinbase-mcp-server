@@ -3,7 +3,7 @@ import type { TechnicalAnalysisService } from '../services';
 import {
   AnalyzeTechnicalIndicatorsRequestSchema,
   AnalyzeTechnicalIndicatorsBatchRequestSchema,
-} from '../services/TechnicalAnalysisService.schema';
+} from '../services/TechnicalAnalysisService.request';
 import { ToolRegistry } from './ToolRegistry';
 
 /**

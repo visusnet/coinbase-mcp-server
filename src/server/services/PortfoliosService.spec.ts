@@ -3,7 +3,7 @@ import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk
 import { Method } from '@coinbase-sample/core-ts';
 import { mockResponse } from '@test/serviceMocks';
 import { PortfoliosService } from './PortfoliosService';
-import { FuturesPositionSide } from './PortfoliosService.schema';
+import { FuturesPositionSide } from './PortfoliosService.response';
 
 describe('PortfoliosService', () => {
   let service: PortfoliosService;

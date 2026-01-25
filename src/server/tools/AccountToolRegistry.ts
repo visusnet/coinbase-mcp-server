@@ -3,7 +3,7 @@ import type { AccountsService } from '../services';
 import {
   ListAccountsRequestSchema,
   GetAccountRequestSchema,
-} from '../services/AccountsService.schema';
+} from '../services/AccountsService.request';
 import { ToolRegistry } from './ToolRegistry';
 
 /**

@@ -1,18 +1,20 @@
 import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
 import { Method } from '@coinbase-sample/core-ts';
-import {
-  CreateConvertQuoteResponseSchema,
-  CommitConvertTradeResponseSchema,
-  GetConvertTradeResponseSchema,
-} from './ConvertsService.schema';
 import type {
   CreateConvertQuoteRequest,
   CommitConvertTradeRequest,
   GetConvertTradeRequest,
+} from './ConvertsService.request';
+import type {
   CreateConvertQuoteResponse,
   CommitConvertTradeResponse,
   GetConvertTradeResponse,
-} from './ConvertsService.schema';
+} from './ConvertsService.response';
+import {
+  CreateConvertQuoteResponseSchema,
+  CommitConvertTradeResponseSchema,
+  GetConvertTradeResponseSchema,
+} from './ConvertsService.response';
 
 /**
  * Wrapper service for Coinbase Converts API.

@@ -7,7 +7,7 @@ import type {
   SpreadStatus,
   ProductCandles,
 } from './ProductsService.types';
-import type { Product, L2Level, PriceBook, Candle } from './common.schema';
+import type { Product, L2Level, PriceBook, Candle } from './common.response';
 import {
   ListProductsResponseSchema,
   GetProductResponseSchema,
@@ -15,7 +15,15 @@ import {
   GetProductBookResponseSchema,
   GetBestBidAskResponseSchema,
   GetProductMarketTradesResponseSchema,
-} from './ProductsService.schema';
+} from './ProductsService.response';
+import type {
+  ListProductsResponse,
+  GetProductResponse,
+  GetProductCandlesResponse,
+  GetProductBookResponse,
+  GetBestBidAskResponse,
+  GetProductMarketTradesResponse,
+} from './ProductsService.response';
 import type {
   ListProductsRequest,
   GetProductRequest,
@@ -25,13 +33,7 @@ import type {
   GetProductMarketTradesRequest,
   GetMarketSnapshotRequest,
   GetProductCandlesBatchRequest,
-  ListProductsResponse,
-  GetProductResponse,
-  GetProductCandlesResponse,
-  GetProductBookResponse,
-  GetBestBidAskResponse,
-  GetProductMarketTradesResponse,
-} from './ProductsService.schema';
+} from './ProductsService.request';
 
 /**
  * Wrapper service for Coinbase Products API.

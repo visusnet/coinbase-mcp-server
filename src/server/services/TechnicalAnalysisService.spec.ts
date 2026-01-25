@@ -2,10 +2,10 @@ import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { TechnicalAnalysisService } from './TechnicalAnalysisService';
 import type { ProductsService } from '.';
 import type { TechnicalIndicatorsService } from './TechnicalIndicatorsService';
-import type { CandleInput } from './common.schema';
+import type { CandleInput } from './common.response';
 import { Granularity } from './ProductsService.types';
 import { IndicatorType } from './TechnicalAnalysisService.types';
-import type { Candle } from './common.schema';
+import type { Candle } from './common.response';
 
 // Helper to convert test candles to our Candle type (with numbers)
 const asCandles = (candles: CandleInput[]): Candle[] =>

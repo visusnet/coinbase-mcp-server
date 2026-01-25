@@ -81,14 +81,14 @@ describe('PublicService', () => {
         url: 'market/products/BTC-USD',
         queryParams: {},
       });
-      expect(result.productId).toBe('BTC-USD');
-      expect(result.price).toBe(50000);
-      expect(result.pricePercentageChange24h).toBe(2.5);
-      expect(result.volume24h).toBe(1000000);
-      expect(result.volumePercentageChange24h).toBe(5.0);
-      expect(result.baseIncrement).toBe(0.00000001);
-      expect(result.quoteIncrement).toBe(0.01);
-      expect(result.midMarketPrice).toBe(50001);
+      expect(result.product.productId).toBe('BTC-USD');
+      expect(result.product.price).toBe(50000);
+      expect(result.product.pricePercentageChange24h).toBe(2.5);
+      expect(result.product.volume24h).toBe(1000000);
+      expect(result.product.volumePercentageChange24h).toBe(5.0);
+      expect(result.product.baseIncrement).toBe(0.00000001);
+      expect(result.product.quoteIncrement).toBe(0.01);
+      expect(result.product.midMarketPrice).toBe(50001);
     });
   });
 

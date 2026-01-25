@@ -10,7 +10,7 @@ import {
   GetFuturesPositionResponseSchema,
   GetFuturesBalanceSummaryResponseSchema,
   ListFuturesSweepsResponseSchema,
-} from './FuturesService.schema';
+} from './FuturesService.response';
 
 describe('FuturesService', () => {
   let service: FuturesService;

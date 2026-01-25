@@ -5,13 +5,15 @@ import type {
   ListPublicProductsRequest,
   GetPublicProductBookRequest,
   GetPublicMarketTradesRequest,
+} from './PublicService.request';
+import type {
   GetPublicProductCandlesResponse,
   GetPublicProductResponse,
   ListPublicProductsResponse,
   GetPublicProductBookResponse,
   GetPublicMarketTradesResponse,
   GetServerTimeResponse,
-} from './PublicService.schema';
+} from './PublicService.response';
 import {
   GetPublicProductResponseSchema,
   ListPublicProductsResponseSchema,
@@ -19,7 +21,7 @@ import {
   GetPublicProductBookResponseSchema,
   GetPublicMarketTradesResponseSchema,
   GetServerTimeResponseSchema,
-} from './PublicService.schema';
+} from './PublicService.response';
 
 /**
  * Wrapper service for Coinbase Public API.

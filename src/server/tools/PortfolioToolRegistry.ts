@@ -7,7 +7,7 @@ import {
   MovePortfolioFundsRequestSchema,
   EditPortfolioRequestSchema,
   DeletePortfolioRequestSchema,
-} from '../services/PortfoliosService.schema';
+} from '../services/PortfoliosService.request';
 import { ToolRegistry } from './ToolRegistry';
 
 /**

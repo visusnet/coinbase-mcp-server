@@ -9,7 +9,7 @@ import {
   GetProductMarketTradesRequestSchema,
   GetBestBidAskRequestSchema,
   GetMarketSnapshotRequestSchema,
-} from '../services/ProductsService.schema';
+} from '../services/ProductsService.request';
 import { ToolRegistry } from './ToolRegistry';
 
 /**

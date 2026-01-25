@@ -6,7 +6,7 @@ import {
   GetPublicProductBookRequestSchema,
   GetPublicProductCandlesRequestSchema,
   GetPublicMarketTradesRequestSchema,
-} from '../services/PublicService.schema';
+} from '../services/PublicService.request';
 import { ToolRegistry } from './ToolRegistry';
 
 /**

@@ -5,7 +5,7 @@ import {
   GetPerpetualsPositionRequestSchema,
   GetPortfolioSummaryRequestSchema,
   GetPortfolioBalanceRequestSchema,
-} from '../services/PerpetualsService.schema';
+} from '../services/PerpetualsService.request';
 import { ToolRegistry } from './ToolRegistry';
 
 /**

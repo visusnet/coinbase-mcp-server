@@ -1,9 +1,9 @@
 import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
-import type {
-  GetTransactionsSummaryRequest,
-  GetTransactionsSummaryResponse,
-} from './FeesService.schema';
-import { GetTransactionsSummaryResponseSchema } from './FeesService.schema';
+import type { GetTransactionsSummaryRequest } from './FeesService.request';
+import {
+  GetTransactionsSummaryResponseSchema,
+  type GetTransactionsSummaryResponse,
+} from './FeesService.response';
 
 /**
  * Wrapper service for Coinbase Fees API.

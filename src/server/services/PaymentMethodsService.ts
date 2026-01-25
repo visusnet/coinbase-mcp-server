@@ -1,13 +1,11 @@
 import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
-import type {
-  GetPaymentMethodRequest,
-  ListPaymentMethodsResponse,
-  GetPaymentMethodResponse,
-} from './PaymentMethodsService.schema';
+import type { GetPaymentMethodRequest } from './PaymentMethodsService.request';
 import {
   ListPaymentMethodsResponseSchema,
   GetPaymentMethodResponseSchema,
-} from './PaymentMethodsService.schema';
+  type ListPaymentMethodsResponse,
+  type GetPaymentMethodResponse,
+} from './PaymentMethodsService.response';
 
 /**
  * Wrapper service for Coinbase Payment Methods API.

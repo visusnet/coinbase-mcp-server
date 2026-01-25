@@ -10,6 +10,8 @@ import type {
   PreviewEditOrderRequest,
   ClosePositionRequest,
   PreviewOrderRequest,
+} from './OrdersService.request';
+import type {
   ListOrdersResponse,
   GetOrderResponse,
   CreateOrderResponse,
@@ -19,7 +21,7 @@ import type {
   PreviewEditOrderResponse,
   ClosePositionResponse,
   PreviewOrderResponse,
-} from './OrdersService.schema';
+} from './OrdersService.response';
 import {
   ListOrdersResponseSchema,
   GetOrderResponseSchema,
@@ -30,7 +32,7 @@ import {
   PreviewEditOrderResponseSchema,
   ClosePositionResponseSchema,
   PreviewOrderResponseSchema,
-} from './OrdersService.schema';
+} from './OrdersService.response';
 
 /**
  * Wrapper service for Coinbase Orders API.

@@ -1,5 +1,5 @@
 // Wrapper types with numbers for API convenience
-import type { Candle, L2Level } from './common.schema';
+import type { Candle, L2Level } from './common.response';
 
 // =============================================================================
 // Product Candles Types

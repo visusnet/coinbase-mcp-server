@@ -6,7 +6,7 @@ import {
   ContractExpiryType,
   ProductType,
   ProductVenue,
-} from './FeesService.schema';
+} from './FeesService.request';
 
 describe('FeesService', () => {
   let service: FeesService;

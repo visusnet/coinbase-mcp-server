@@ -1,6 +1,6 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { FuturesService } from '../services';
-import { GetFuturesPositionRequestSchema } from '../services/FuturesService.schema';
+import { GetFuturesPositionRequestSchema } from '../services/FuturesService.request';
 import { ToolRegistry } from './ToolRegistry';
 
 /**

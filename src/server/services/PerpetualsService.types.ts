@@ -1,11 +1,11 @@
 // Wrapper types with numbers for API convenience
-import type { Amount } from './common.schema';
+import type { Amount } from './common.response';
 import type {
   PortfolioMarginType,
   PortfolioMarginFlags,
   PortfolioLiquidationStatus,
-} from './PortfoliosService.schema';
-import type { PositionSide } from './PerpetualsService.schema';
+} from './PortfoliosService.response';
+import type { PositionSide } from './PerpetualsService.response';
 
 // =============================================================================
 // Our Types (with number values instead of string)
@@ -103,23 +103,4 @@ export interface PortfolioBalance {
   readonly portfolioUuid?: string;
   readonly balances?: Balance[];
   readonly isMarginLimitReached?: boolean;
-}
-
-// Response types with our wrapper types
-export interface ListPerpetualsPositionsResponse {
-  readonly positions?: Position[];
-  readonly summary?: PositionSummary;
-}
-
-export interface GetPerpetualsPositionResponse {
-  readonly position?: Position;
-}
-
-export interface GetPortfolioSummaryResponse {
-  readonly portfolios?: Portfolio[];
-  readonly summary?: PortfoliosSummary;
-}
-
-export interface GetPortfolioBalanceResponse {
-  readonly portfolioBalances?: PortfolioBalance[];
 }

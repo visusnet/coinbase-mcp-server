@@ -25,7 +25,7 @@ import {
   DetectSwingPointsRequestSchema,
   CalculateFibonacciRetracementRequestSchema,
   CalculatePivotPointsRequestSchema,
-} from '../services/TechnicalIndicatorsService.schema';
+} from '../services/TechnicalIndicatorsService.request';
 import { ToolRegistry } from './ToolRegistry';
 
 /**

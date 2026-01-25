@@ -3,7 +3,7 @@ import type { PaymentMethodsService } from '../services';
 import {
   ListPaymentMethodsRequestSchema,
   GetPaymentMethodRequestSchema,
-} from '../services/PaymentMethodsService.schema';
+} from '../services/PaymentMethodsService.request';
 import { ToolRegistry } from './ToolRegistry';
 
 /**
