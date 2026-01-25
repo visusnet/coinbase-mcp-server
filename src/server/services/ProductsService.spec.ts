@@ -1,20 +1,14 @@
 import { describe, expect, it, jest, beforeEach } from '@jest/globals';
-import { ProductType } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/ProductType';
 import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
 import { mockResponse } from '@test/serviceMocks';
 import { Granularity } from './ProductsService.types';
-import type { Product as SdkProduct } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/Product';
 import type {
   GetBestBidAskResponse,
   GetProductBookResponse,
-  SdkGetProductResponse,
-} from './ProductsService.types';
-import type { Product } from './common.types';
-import {
-  toListProductsResponse,
-  toGetProductResponse,
-} from './ProductsService.convert';
+} from './ProductsService.schema';
+import type { Product } from './common.schema';
 import { ProductsService } from './ProductsService';
+import { ProductType } from './FeesService.schema';
 
 describe('ProductsService', () => {
   let service: ProductsService;
@@ -34,8 +28,8 @@ describe('ProductsService', () => {
 
   describe('pass-through methods', () => {
     it('listProducts should delegate to SDK with empty object when no request', async () => {
-      const mockSdkResponse = { products: [] };
-      mockClient.request.mockResolvedValue(mockResponse(mockSdkResponse));
+      const mockApiResponse = { products: [] };
+      mockClient.request.mockResolvedValue(mockResponse(mockApiResponse));
 
       const result = await service.listProducts();
 
@@ -43,11 +37,11 @@ describe('ProductsService', () => {
         url: 'products',
         queryParams: {},
       });
-      expect(result).toEqual(toListProductsResponse(mockSdkResponse));
+      expect(result).toEqual({ products: [], numProducts: undefined });
     });
 
     it('listProducts should convert SDK response numbers', async () => {
-      const mockSdkResponse = {
+      const mockApiResponse = {
         products: [
           {
             productId: 'BTC-USD',
@@ -77,10 +71,10 @@ describe('ProductsService', () => {
             _new: false,
             baseDisplaySymbol: 'BTC',
             quoteDisplaySymbol: 'USD',
-          } as SdkProduct,
+          },
         ],
       };
-      mockClient.request.mockResolvedValue(mockResponse(mockSdkResponse));
+      mockClient.request.mockResolvedValue(mockResponse(mockApiResponse));
 
       const result = await service.listProducts({ limit: 10 });
 
@@ -88,11 +82,13 @@ describe('ProductsService', () => {
         url: 'products',
         queryParams: { limit: 10 },
       });
-      expect(result).toEqual(toListProductsResponse(mockSdkResponse));
+      // Verify number conversion happened
+      expect(result.products?.[0].price).toBe(50000);
+      expect(result.products?.[0].volume24h).toBe(1000000);
     });
 
     it('getProduct should convert SDK response numbers', async () => {
-      const mockSdkProduct: SdkGetProductResponse = {
+      const mockProduct = {
         productId: 'BTC-USD',
         price: '50000',
         pricePercentageChange24h: '2.5',
@@ -120,10 +116,8 @@ describe('ProductsService', () => {
         _new: false,
         baseDisplaySymbol: 'BTC',
         quoteDisplaySymbol: 'USD',
-        // SDK types incorrectly declare GetProductResponse as { body?: Product }
-        // but SDK actually returns Product directly (SDK bug)
-      } as unknown as SdkGetProductResponse;
-      mockClient.request.mockResolvedValue(mockResponse(mockSdkProduct));
+      };
+      mockClient.request.mockResolvedValue(mockResponse(mockProduct));
 
       const result = await service.getProduct({ productId: 'BTC-USD' });
 
@@ -131,11 +125,13 @@ describe('ProductsService', () => {
         url: 'products/BTC-USD',
         queryParams: {},
       });
-      expect(result).toEqual(toGetProductResponse(mockSdkProduct));
+      // Verify number conversion happened
+      expect(result.product.price).toBe(50000);
+      expect(result.product.volume24h).toBe(1000000);
     });
 
     it('getProduct should pass getTradabilityStatus when provided', async () => {
-      const mockSdkProduct: SdkGetProductResponse = {
+      const mockProduct = {
         productId: 'BTC-USD',
         price: '50000',
         pricePercentageChange24h: '2.5',
@@ -163,8 +159,8 @@ describe('ProductsService', () => {
         _new: false,
         baseDisplaySymbol: 'BTC',
         quoteDisplaySymbol: 'USD',
-      } as unknown as SdkGetProductResponse;
-      mockClient.request.mockResolvedValue(mockResponse(mockSdkProduct));
+      };
+      mockClient.request.mockResolvedValue(mockResponse(mockProduct));
 
       const result = await service.getProduct({
         productId: 'BTC-USD',
@@ -175,11 +171,13 @@ describe('ProductsService', () => {
         url: 'products/BTC-USD',
         queryParams: { getTradabilityStatus: true },
       });
-      expect(result).toEqual(toGetProductResponse(mockSdkProduct));
+      // Verify number conversion happened
+      expect(result.product.price).toBe(50000);
+      expect(result.product.productType).toBe(ProductType.Spot);
     });
 
     it('getProductBook should delegate to SDK and convert response', async () => {
-      const mockSdkResponse = {
+      const mockApiResponse = {
         pricebook: {
           productId: 'BTC-USD',
           bids: [{ price: '100', size: '1.5' }],
@@ -190,7 +188,7 @@ describe('ProductsService', () => {
         spreadBps: '10',
         spreadAbsolute: '1',
       };
-      mockClient.request.mockResolvedValue(mockResponse(mockSdkResponse));
+      mockClient.request.mockResolvedValue(mockResponse(mockApiResponse));
 
       const result = await service.getProductBook({ productId: 'BTC-USD' });
 
@@ -212,8 +210,8 @@ describe('ProductsService', () => {
     });
 
     it('getBestBidAsk should delegate to SDK with empty object when no request', async () => {
-      const mockSdkResponse = { pricebooks: [] };
-      mockClient.request.mockResolvedValue(mockResponse(mockSdkResponse));
+      const mockApiResponse = { pricebooks: [] };
+      mockClient.request.mockResolvedValue(mockResponse(mockApiResponse));
 
       const result = await service.getBestBidAsk();
 
@@ -225,7 +223,7 @@ describe('ProductsService', () => {
     });
 
     it('getBestBidAsk should convert SDK response to our types', async () => {
-      const mockSdkResponse = {
+      const mockApiResponse = {
         pricebooks: [
           {
             productId: 'BTC-USD',
@@ -234,7 +232,7 @@ describe('ProductsService', () => {
           },
         ],
       };
-      mockClient.request.mockResolvedValue(mockResponse(mockSdkResponse));
+      mockClient.request.mockResolvedValue(mockResponse(mockApiResponse));
 
       const result = await service.getBestBidAsk({ productIds: ['BTC-USD'] });
 
@@ -255,7 +253,7 @@ describe('ProductsService', () => {
     });
 
     it('getProductMarketTrades should delegate to SDK and convert response', async () => {
-      const mockSdkResponse = {
+      const mockApiResponse = {
         trades: [
           { tradeId: '123', price: '100.5', size: '1.5' },
           { tradeId: '124', price: '101.0', size: '2.0' },
@@ -263,7 +261,7 @@ describe('ProductsService', () => {
         bestBid: '100.0',
         bestAsk: '101.0',
       };
-      mockClient.request.mockResolvedValue(mockResponse(mockSdkResponse));
+      mockClient.request.mockResolvedValue(mockResponse(mockApiResponse));
 
       const result = await service.getProductMarketTrades({
         productId: 'BTC-USD',
@@ -287,14 +285,15 @@ describe('ProductsService', () => {
       });
     });
 
-    it('getProductCandles should convert timestamps and delegate to SDK', async () => {
+    it('getProductCandles should delegate pre-transformed request to SDK', async () => {
       const candlesData = { candles: [] };
       mockClient.request.mockResolvedValue(mockResponse(candlesData));
 
+      // Service receives pre-transformed data from MCP layer (timestamps already Unix strings)
       const result = await service.getProductCandles({
         productId: 'BTC-USD',
-        start: '2025-01-01T00:00:00Z',
-        end: '2025-01-02T00:00:00Z',
+        start: '1735689600',
+        end: '1735776000',
         granularity: Granularity.ONE_HOUR,
       });
 
@@ -718,22 +717,40 @@ describe('ProductsService', () => {
   });
 
   describe('getProductCandles', () => {
-    // The SDK accepts ISO 8601 timestamp strings for candle requests,
-    // but the REST API expects Unix timestamps. The toUnixTimestamp method
-    // handles conversion while also supporting already-formatted Unix timestamps.
-    describe('Timestamp Conversion for REST API Compatibility', () => {
-      it('should reject invalid ISO 8601 timestamps with descriptive error', async () => {
-        const args = {
-          productId: 'BTC-USD',
-          start: 'invalid-date-string',
-          end: '2025-12-31T23:59:59Z',
-          granularity: Granularity.ONE_DAY,
-        };
+    // The MCP layer handles ISO 8601 to Unix timestamp conversion via field-level transforms.
+    // The service receives pre-transformed data with Unix timestamp strings.
+    it('should pass pre-transformed timestamps to API', async () => {
+      const candlesData = {
+        candles: [
+          {
+            start: '1735689600',
+            low: '49000',
+            high: '51000',
+            open: '50000',
+            close: '50500',
+            volume: '1000',
+          },
+        ],
+      };
+      mockClient.request.mockResolvedValue(mockResponse(candlesData));
 
-        await expect(service.getProductCandles(args)).rejects.toThrow(
-          'Invalid timestamp: invalid-date-string',
-        );
+      const result = await service.getProductCandles({
+        productId: 'BTC-USD',
+        start: '1735689600',
+        end: '1735776000',
+        granularity: Granularity.ONE_DAY,
       });
+
+      expect(mockClient.request).toHaveBeenCalledWith({
+        url: 'products/BTC-USD/candles',
+        queryParams: {
+          start: '1735689600',
+          end: '1735776000',
+          granularity: Granularity.ONE_DAY,
+          limit: 350,
+        },
+      });
+      expect(result.candles?.[0].start).toBe(1735689600);
     });
   });
 
@@ -741,26 +758,26 @@ describe('ProductsService', () => {
     it('returns candles for multiple products', async () => {
       const mockCandles = [
         {
-          start: '1704067200',
-          low: '95000',
-          high: '96000',
-          open: '95500',
-          close: '95800',
-          volume: '100',
+          start: 1704067200,
+          low: 95000,
+          high: 96000,
+          open: 95500,
+          close: 95800,
+          volume: 100,
         },
         {
-          start: '1704066300',
-          low: '94000',
-          high: '95500',
-          open: '94500',
-          close: '95500',
-          volume: '150',
+          start: 1704066300,
+          low: 94000,
+          high: 95500,
+          open: 94500,
+          close: 95500,
+          volume: 150,
         },
       ];
 
       jest.spyOn(service, 'getProductCandles').mockResolvedValue({
         candles: mockCandles,
-      } as never);
+      });
 
       const result = await service.getProductCandlesBatch({
         productIds: ['BTC-EUR', 'ETH-EUR'],

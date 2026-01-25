@@ -1,6 +1,9 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { PaymentMethodsService } from '../services';
-import { GetPaymentMethodRequestSchema } from '../services/PaymentMethodsService.schema';
+import {
+  ListPaymentMethodsRequestSchema,
+  GetPaymentMethodRequestSchema,
+} from '../services/PaymentMethodsService.schema';
 import { ToolRegistry } from './ToolRegistry';
 
 /**
@@ -20,7 +23,7 @@ export class PaymentToolRegistry extends ToolRegistry {
       {
         title: 'List Payment Methods',
         description: 'Get a list of available payment methods',
-        inputSchema: {},
+        inputSchema: ListPaymentMethodsRequestSchema.shape,
       },
       this.call(
         this.paymentMethods.listPaymentMethods.bind(this.paymentMethods),

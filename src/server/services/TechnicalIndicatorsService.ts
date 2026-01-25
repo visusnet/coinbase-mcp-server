@@ -58,6 +58,7 @@ import {
   calculateWoodiePivotPoints,
   calculateCamarillaPivotPoints,
   calculateDemarkPivotPoints,
+  type PivotPointsOutput,
 } from '../indicators/pivotPoints';
 
 import {
@@ -76,61 +77,64 @@ import {
 import { detectChartPatterns } from '../indicators/chartPatterns';
 import { detectSwingPoints } from '../indicators/swingPoints';
 
+import type { CandleInput } from './common.schema';
 import type {
-  CandleInput,
-  CalculateRsiInput,
-  CalculateRsiOutput,
-  CalculateMacdInput,
-  CalculateMacdOutput,
-  CalculateSmaInput,
-  CalculateSmaOutput,
-  CalculateEmaInput,
-  CalculateEmaOutput,
-  CalculateBollingerBandsInput,
+  CalculateRsiRequest,
+  CalculateMacdRequest,
+  CalculateSmaRequest,
+  CalculateEmaRequest,
+  CalculateBollingerBandsRequest,
+  CalculateAtrRequest,
+  CalculateStochasticRequest,
+  CalculateAdxRequest,
+  CalculateObvRequest,
+  CalculateVwapRequest,
+  CalculateCciRequest,
+  CalculateWilliamsRRequest,
+  CalculateRocRequest,
+  CalculateMfiRequest,
+  CalculatePsarRequest,
+  CalculateIchimokuCloudRequest,
+  CalculateKeltnerChannelsRequest,
+  CalculateFibonacciRetracementRequest,
+  DetectCandlestickPatternsRequest,
+  CalculateVolumeProfileRequest,
+  CalculatePivotPointsRequest,
+  DetectRsiDivergenceRequest,
+  DetectChartPatternsRequest,
+  DetectSwingPointsRequest,
+} from './TechnicalIndicatorsService.schema';
+import type {
+  CalculateRsiResponse,
+  CalculateMacdResponse,
+  CalculateSmaResponse,
+  CalculateEmaResponse,
   BollingerBandsValue,
-  CalculateBollingerBandsOutput,
-  CalculateAtrInput,
-  CalculateAtrOutput,
-  CalculateStochasticInput,
-  CalculateStochasticOutput,
-  CalculateAdxInput,
-  CalculateAdxOutput,
-  CalculateObvInput,
-  CalculateObvOutput,
-  CalculateVwapInput,
-  CalculateVwapOutput,
-  CalculateCciInput,
-  CalculateCciOutput,
-  CalculateWilliamsRInput,
-  CalculateWilliamsROutput,
-  CalculateRocInput,
-  CalculateRocOutput,
-  CalculateMfiInput,
-  CalculateMfiOutput,
-  CalculatePsarInput,
-  CalculatePsarOutput,
-  CalculateIchimokuCloudInput,
-  CalculateIchimokuCloudOutput,
-  CalculateKeltnerChannelsInput,
-  CalculateKeltnerChannelsOutput,
-  CalculateFibonacciRetracementInput,
-  CalculateFibonacciRetracementOutput,
-  DetectCandlestickPatternsInput,
-  DetectCandlestickPatternsOutput,
-  CalculateVolumeProfileInput,
-  CalculateVolumeProfileOutput,
-  CalculatePivotPointsInput,
-  PivotPointsOutput,
-  DetectRsiDivergenceInput,
-  DetectRsiDivergenceOutput,
-  DetectChartPatternsInput,
-  DetectChartPatternsOutput,
-  DetectSwingPointsInput,
-  DetectSwingPointsOutput,
+  CalculateBollingerBandsResponse,
+  CalculateAtrResponse,
+  CalculateStochasticResponse,
+  CalculateAdxResponse,
+  CalculateObvResponse,
+  CalculateVwapResponse,
+  CalculateCciResponse,
+  CalculateWilliamsRResponse,
+  CalculateRocResponse,
+  CalculateMfiResponse,
+  CalculatePsarResponse,
+  CalculateIchimokuCloudResponse,
+  CalculateKeltnerChannelsResponse,
+  CalculateFibonacciRetracementResponse,
+  DetectCandlestickPatternsResponse,
+  CalculateVolumeProfileResponse,
+  DetectRsiDivergenceResponse,
+  DetectChartPatternsResponse,
+  DetectSwingPointsResponse,
 } from './TechnicalIndicatorsService.types';
 
 // Re-export all types for external consumers
 export type * from './TechnicalIndicatorsService.types';
+export type * from './TechnicalIndicatorsService.schema';
+export type { PivotPointsOutput } from '../indicators/pivotPoints';
 
 const DEFAULT_RSI_PERIOD = 14;
 const DEFAULT_SMA_PERIOD = 20;
@@ -169,7 +173,7 @@ export class TechnicalIndicatorsService {
    * @param input - Candles and optional period (default: 14)
    * @returns RSI values array and latest value
    */
-  public calculateRsi(input: CalculateRsiInput): CalculateRsiOutput {
+  public calculateRsi(input: CalculateRsiRequest): CalculateRsiResponse {
     const period = input.period ?? DEFAULT_RSI_PERIOD;
     const closePrices = extractClosePrices(input.candles);
 
@@ -192,7 +196,7 @@ export class TechnicalIndicatorsService {
    * @param input - Candles and optional periods (default: 12/26/9)
    * @returns MACD line, signal line, and histogram values
    */
-  public calculateMacd(input: CalculateMacdInput): CalculateMacdOutput {
+  public calculateMacd(input: CalculateMacdRequest): CalculateMacdResponse {
     const fastPeriod = input.fastPeriod ?? DEFAULT_MACD_FAST_PERIOD;
     const slowPeriod = input.slowPeriod ?? DEFAULT_MACD_SLOW_PERIOD;
     const signalPeriod = input.signalPeriod ?? DEFAULT_MACD_SIGNAL_PERIOD;
@@ -223,7 +227,7 @@ export class TechnicalIndicatorsService {
    * @param input - Candles and optional period (default: 20)
    * @returns SMA values array and latest value
    */
-  public calculateSma(input: CalculateSmaInput): CalculateSmaOutput {
+  public calculateSma(input: CalculateSmaRequest): CalculateSmaResponse {
     const period = input.period ?? DEFAULT_SMA_PERIOD;
     const closePrices = extractClosePrices(input.candles);
 
@@ -246,7 +250,7 @@ export class TechnicalIndicatorsService {
    * @param input - Candles and optional period (default: 20)
    * @returns EMA values array and latest value
    */
-  public calculateEma(input: CalculateEmaInput): CalculateEmaOutput {
+  public calculateEma(input: CalculateEmaRequest): CalculateEmaResponse {
     const period = input.period ?? DEFAULT_EMA_PERIOD;
     const closePrices = extractClosePrices(input.candles);
 
@@ -270,8 +274,8 @@ export class TechnicalIndicatorsService {
    * @returns Upper, middle, lower bands, %B, and bandwidth values
    */
   public calculateBollingerBands(
-    input: CalculateBollingerBandsInput,
-  ): CalculateBollingerBandsOutput {
+    input: CalculateBollingerBandsRequest,
+  ): CalculateBollingerBandsResponse {
     const period = input.period ?? DEFAULT_BOLLINGER_PERIOD;
     const stdDev = input.stdDev ?? DEFAULT_BOLLINGER_STD_DEV;
     const closePrices = extractClosePrices(input.candles);
@@ -305,7 +309,7 @@ export class TechnicalIndicatorsService {
    * @param input - Candles and optional period (default: 14)
    * @returns ATR values array and latest value
    */
-  public calculateAtr(input: CalculateAtrInput): CalculateAtrOutput {
+  public calculateAtr(input: CalculateAtrRequest): CalculateAtrResponse {
     const period = input.period ?? DEFAULT_ATR_PERIOD;
     const high = extractHighPrices(input.candles);
     const low = extractLowPrices(input.candles);
@@ -351,8 +355,8 @@ export class TechnicalIndicatorsService {
    * const result = service.calculateStochastic({ candles, kPeriod: 5, dPeriod: 3 });
    */
   public calculateStochastic(
-    input: CalculateStochasticInput,
-  ): CalculateStochasticOutput {
+    input: CalculateStochasticRequest,
+  ): CalculateStochasticResponse {
     const kPeriod = input.kPeriod ?? DEFAULT_STOCHASTIC_K_PERIOD;
     const dPeriod = input.dPeriod ?? DEFAULT_STOCHASTIC_D_PERIOD;
     const high = extractHighPrices(input.candles);
@@ -382,7 +386,7 @@ export class TechnicalIndicatorsService {
    * @param input - Candles and optional period (default: 14)
    * @returns ADX, +DI, and -DI values array and latest value
    */
-  public calculateAdx(input: CalculateAdxInput): CalculateAdxOutput {
+  public calculateAdx(input: CalculateAdxRequest): CalculateAdxResponse {
     const period = input.period ?? DEFAULT_ADX_PERIOD;
     const high = extractHighPrices(input.candles);
     const low = extractLowPrices(input.candles);
@@ -409,7 +413,7 @@ export class TechnicalIndicatorsService {
    * @param input - Candles with close prices and volume
    * @returns OBV values array and latest value
    */
-  public calculateObv(input: CalculateObvInput): CalculateObvOutput {
+  public calculateObv(input: CalculateObvRequest): CalculateObvResponse {
     const close = extractClosePrices(input.candles);
     const volume = extractVolumes(input.candles);
 
@@ -431,7 +435,7 @@ export class TechnicalIndicatorsService {
    * @param input - Candles with OHLCV data
    * @returns VWAP values array and latest value
    */
-  public calculateVwap(input: CalculateVwapInput): CalculateVwapOutput {
+  public calculateVwap(input: CalculateVwapRequest): CalculateVwapResponse {
     const high = extractHighPrices(input.candles);
     const low = extractLowPrices(input.candles);
     const close = extractClosePrices(input.candles);
@@ -457,7 +461,7 @@ export class TechnicalIndicatorsService {
    * @param input - Candles and optional period (default: 20)
    * @returns CCI values array and latest value
    */
-  public calculateCci(input: CalculateCciInput): CalculateCciOutput {
+  public calculateCci(input: CalculateCciRequest): CalculateCciResponse {
     const period = input.period ?? DEFAULT_CCI_PERIOD;
     const high = extractHighPrices(input.candles);
     const low = extractLowPrices(input.candles);
@@ -485,8 +489,8 @@ export class TechnicalIndicatorsService {
    * @returns Williams %R values array and latest value
    */
   public calculateWilliamsR(
-    input: CalculateWilliamsRInput,
-  ): CalculateWilliamsROutput {
+    input: CalculateWilliamsRRequest,
+  ): CalculateWilliamsRResponse {
     const period = input.period ?? DEFAULT_WILLIAMS_R_PERIOD;
     const high = extractHighPrices(input.candles);
     const low = extractLowPrices(input.candles);
@@ -512,7 +516,7 @@ export class TechnicalIndicatorsService {
    * @param input - Candles and optional period (default: 12)
    * @returns ROC values array and latest value
    */
-  public calculateRoc(input: CalculateRocInput): CalculateRocOutput {
+  public calculateRoc(input: CalculateRocRequest): CalculateRocResponse {
     const period = input.period ?? DEFAULT_ROC_PERIOD;
     const closePrices = extractClosePrices(input.candles);
 
@@ -535,7 +539,7 @@ export class TechnicalIndicatorsService {
    * @param input - Candles and optional period (default: 14)
    * @returns MFI values array and latest value
    */
-  public calculateMfi(input: CalculateMfiInput): CalculateMfiOutput {
+  public calculateMfi(input: CalculateMfiRequest): CalculateMfiResponse {
     const period = input.period ?? DEFAULT_MFI_PERIOD;
     const high = extractHighPrices(input.candles);
     const low = extractLowPrices(input.candles);
@@ -564,7 +568,7 @@ export class TechnicalIndicatorsService {
    * @param input - Candles and optional step/max parameters
    * @returns PSAR values array and latest value
    */
-  public calculatePsar(input: CalculatePsarInput): CalculatePsarOutput {
+  public calculatePsar(input: CalculatePsarRequest): CalculatePsarResponse {
     const step = input.step ?? DEFAULT_PSAR_STEP;
     const max = input.max ?? DEFAULT_PSAR_MAX;
     const high = extractHighPrices(input.candles);
@@ -593,8 +597,8 @@ export class TechnicalIndicatorsService {
    * @returns Ichimoku Cloud values array and latest value
    */
   public calculateIchimokuCloud(
-    input: CalculateIchimokuCloudInput,
-  ): CalculateIchimokuCloudOutput {
+    input: CalculateIchimokuCloudRequest,
+  ): CalculateIchimokuCloudResponse {
     const conversionPeriod =
       input.conversionPeriod ?? DEFAULT_ICHIMOKU_CONVERSION_PERIOD;
     const basePeriod = input.basePeriod ?? DEFAULT_ICHIMOKU_BASE_PERIOD;
@@ -647,8 +651,8 @@ export class TechnicalIndicatorsService {
    * @returns Keltner Channels values array and latest value
    */
   public calculateKeltnerChannels(
-    input: CalculateKeltnerChannelsInput,
-  ): CalculateKeltnerChannelsOutput {
+    input: CalculateKeltnerChannelsRequest,
+  ): CalculateKeltnerChannelsResponse {
     const maPeriod = input.maPeriod ?? DEFAULT_KELTNER_MA_PERIOD;
     const atrPeriod = input.atrPeriod ?? DEFAULT_KELTNER_ATR_PERIOD;
     const multiplier = input.multiplier ?? DEFAULT_KELTNER_MULTIPLIER;
@@ -687,8 +691,8 @@ export class TechnicalIndicatorsService {
    * @returns Fibonacci retracement levels with corresponding prices
    */
   public calculateFibonacciRetracement(
-    input: CalculateFibonacciRetracementInput,
-  ): CalculateFibonacciRetracementOutput {
+    input: CalculateFibonacciRetracementRequest,
+  ): CalculateFibonacciRetracementResponse {
     const { start, end } = input;
     const trend = end > start ? 'uptrend' : 'downtrend';
 
@@ -718,8 +722,8 @@ export class TechnicalIndicatorsService {
    * @returns Detected patterns with bullish/bearish summary
    */
   public detectCandlestickPatterns(
-    input: DetectCandlestickPatternsInput,
-  ): DetectCandlestickPatternsOutput {
+    input: DetectCandlestickPatternsRequest,
+  ): DetectCandlestickPatternsResponse {
     const open = extractOpenPrices(input.candles);
     const high = extractHighPrices(input.candles);
     const low = extractLowPrices(input.candles);
@@ -816,8 +820,8 @@ export class TechnicalIndicatorsService {
    * @returns Volume profile zones with point of control and value area
    */
   public calculateVolumeProfile(
-    input: CalculateVolumeProfileInput,
-  ): CalculateVolumeProfileOutput {
+    input: CalculateVolumeProfileRequest,
+  ): CalculateVolumeProfileResponse {
     const noOfBars = input.noOfBars ?? 12;
 
     const zones = calculateZones(
@@ -851,7 +855,7 @@ export class TechnicalIndicatorsService {
    * @returns Pivot Point with Support and Resistance levels
    */
   public calculatePivotPoints(
-    input: CalculatePivotPointsInput,
+    input: CalculatePivotPointsRequest,
   ): PivotPointsOutput {
     const { high, low, close } = input;
     const open = input.open ?? close;
@@ -879,8 +883,8 @@ export class TechnicalIndicatorsService {
    * @returns Detected divergences with their characteristics
    */
   public detectRsiDivergence(
-    input: DetectRsiDivergenceInput,
-  ): DetectRsiDivergenceOutput {
+    input: DetectRsiDivergenceRequest,
+  ): DetectRsiDivergenceResponse {
     const rsiPeriod = input.rsiPeriod ?? 14;
     const lookbackPeriod = input.lookbackPeriod ?? 14;
     const closePrices = extractClosePrices(input.candles);
@@ -950,8 +954,8 @@ export class TechnicalIndicatorsService {
    * @returns Detected patterns with price targets
    */
   public detectChartPatterns(
-    input: DetectChartPatternsInput,
-  ): DetectChartPatternsOutput {
+    input: DetectChartPatternsRequest,
+  ): DetectChartPatternsResponse {
     const lookbackPeriod = input.lookbackPeriod ?? 50;
 
     const high = extractHighPrices(input.candles);
@@ -995,8 +999,8 @@ export class TechnicalIndicatorsService {
    * @returns Detected swing points with trend analysis
    */
   public detectSwingPoints(
-    input: DetectSwingPointsInput,
-  ): DetectSwingPointsOutput {
+    input: DetectSwingPointsRequest,
+  ): DetectSwingPointsResponse {
     const lookback = input.lookback ?? 2;
     const highs = extractHighPrices(input.candles);
     const lows = extractLowPrices(input.candles);

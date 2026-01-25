@@ -1,11 +1,9 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
-import type { Portfolio as SdkPortfolio } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/Portfolio';
-import type { PortfolioBreakdown as SdkPortfolioBreakdown } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/PortfolioBreakdown';
-import { FuturesPositionSide } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/FuturesPositionSide.js';
 import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
 import { Method } from '@coinbase-sample/core-ts';
 import { mockResponse } from '@test/serviceMocks';
 import { PortfoliosService } from './PortfoliosService';
+import { FuturesPositionSide } from './PortfoliosService.schema';
 
 describe('PortfoliosService', () => {
   let service: PortfoliosService;
@@ -25,7 +23,7 @@ describe('PortfoliosService', () => {
 
   describe('listPortfolios', () => {
     it('should convert SDK response to our types', async () => {
-      const sdkPortfolio: SdkPortfolio = {
+      const mockPortfolio = {
         portfolioUuid: 'uuid-1',
         collateral: '10000',
         positionNotional: '5000',
@@ -45,7 +43,7 @@ describe('PortfoliosService', () => {
       };
       mockClient.request.mockResolvedValue(
         mockResponse({
-          portfolios: [sdkPortfolio],
+          portfolios: [mockPortfolio],
         }),
       );
 
@@ -69,13 +67,13 @@ describe('PortfoliosService', () => {
 
   describe('createPortfolio', () => {
     it('should convert SDK response to our types', async () => {
-      const sdkPortfolio: SdkPortfolio = {
+      const mockPortfolio = {
         portfolioUuid: 'new-uuid',
         collateral: '0',
       };
       mockClient.request.mockResolvedValue(
         mockResponse({
-          portfolio: sdkPortfolio,
+          portfolio: mockPortfolio,
         }),
       );
 
@@ -101,7 +99,7 @@ describe('PortfoliosService', () => {
 
   describe('getPortfolio', () => {
     it('should convert SDK response with full breakdown', async () => {
-      const sdkBreakdown: SdkPortfolioBreakdown = {
+      const mockBreakdown = {
         portfolio: {
           portfolioUuid: 'uuid-123',
           collateral: '50000',
@@ -176,7 +174,7 @@ describe('PortfoliosService', () => {
           },
         ],
       };
-      mockClient.request.mockResolvedValue(mockResponse(sdkBreakdown));
+      mockClient.request.mockResolvedValue(mockResponse(mockBreakdown));
 
       const result = await service.getPortfolio({ portfolioUuid: 'uuid-123' });
 
@@ -252,13 +250,13 @@ describe('PortfoliosService', () => {
 
   describe('editPortfolio', () => {
     it('should convert SDK response to our types', async () => {
-      const sdkPortfolio: SdkPortfolio = {
+      const mockPortfolio = {
         portfolioUuid: 'uuid-123',
         collateral: '1000',
       };
       mockClient.request.mockResolvedValue(
         mockResponse({
-          portfolio: sdkPortfolio,
+          portfolio: mockPortfolio,
         }),
       );
 
@@ -306,16 +304,17 @@ describe('PortfoliosService', () => {
   });
 
   describe('movePortfolioFunds', () => {
-    it('should convert funds.value number to string', async () => {
+    it('should pass pre-transformed request to API', async () => {
       const responseData = {
         sourcePortfolioUuid: 'src',
         targetPortfolioUuid: 'tgt',
       };
       mockClient.request.mockResolvedValue(mockResponse(responseData));
 
+      // Service receives pre-transformed data from MCP layer (value already a string)
       const result = await service.movePortfolioFunds({
         funds: {
-          value: 100.5,
+          value: '100.5',
           currency: 'USD',
         },
         sourcePortfolioUuid: 'portfolio-1',
@@ -337,12 +336,12 @@ describe('PortfoliosService', () => {
       expect(result).toEqual(responseData);
     });
 
-    it('should handle integer values', async () => {
+    it('should handle integer string values', async () => {
       mockClient.request.mockResolvedValue(mockResponse({}));
 
       await service.movePortfolioFunds({
         funds: {
-          value: 1000,
+          value: '1000',
           currency: 'BTC',
         },
         sourcePortfolioUuid: 'src',
@@ -363,12 +362,12 @@ describe('PortfoliosService', () => {
       });
     });
 
-    it('should handle small decimal values', async () => {
+    it('should handle small decimal string values', async () => {
       mockClient.request.mockResolvedValue(mockResponse({}));
 
       await service.movePortfolioFunds({
         funds: {
-          value: 0.00000001,
+          value: '0.00000001',
           currency: 'BTC',
         },
         sourcePortfolioUuid: 'src',
@@ -380,7 +379,7 @@ describe('PortfoliosService', () => {
         method: Method.POST,
         bodyParams: {
           funds: {
-            value: '1e-8',
+            value: '0.00000001',
             currency: 'BTC',
           },
           sourcePortfolioUuid: 'src',

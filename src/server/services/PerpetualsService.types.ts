@@ -1,34 +1,18 @@
 // Wrapper types with numbers for API convenience
-import type { PortfolioMarginType } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/PortfolioMarginType';
-import type { PositionSide } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/PositionSide';
-import type { PortfolioLiquidationStatus } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/PortfolioLiquidationStatus';
-import type { PortfolioMarginFlags } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/PortfolioMarginFlags';
-import type { Amount } from './common.types';
-
-// =============================================================================
-// SDK Types (for conversion) - these have our own converted counterparts
-// =============================================================================
-
-export type {
-  ListPerpetualsPositionsResponse as SdkListPerpetualsPositionsResponse,
-  GetPerpetualsPositionResponse as SdkGetPerpetualsPositionResponse,
-  GetPerpetualsPortfolioSummaryResponse as SdkGetPortfolioSummaryResponse,
-  GetPerpetualsPortfoliosBalancesResponse as SdkGetPortfolioBalanceResponse,
-} from '@coinbase-sample/advanced-trade-sdk-ts/dist/rest/perpetuals/types';
-export type { Asset as SdkAsset } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/Asset';
-export type { Balance as SdkBalance } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/Balance';
-export type { Position as SdkPosition } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/Position';
-export type { PositionSummary as SdkPositionSummary } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/PositionSummary';
-export type { Portfolio as SdkPortfolio } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/Portfolio';
-export type { PortfoliosSummary as SdkPortfoliosSummary } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/PortfoliosSummary';
-export type { PortfolioBalance as SdkPortfolioBalance } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/PortfolioBalance';
+import type { Amount } from './common.schema';
+import type {
+  PortfolioMarginType,
+  PortfolioMarginFlags,
+  PortfolioLiquidationStatus,
+} from './PortfoliosService.schema';
+import type { PositionSide } from './PerpetualsService.schema';
 
 // =============================================================================
 // Our Types (with number values instead of string)
 // =============================================================================
 
 // Asset with numbers
-export interface Asset {
+interface Asset {
   readonly assetId?: string;
   readonly assetUuid?: string;
   readonly assetName?: string;
@@ -41,7 +25,7 @@ export interface Asset {
 }
 
 // Balance with numbers
-export interface Balance {
+interface Balance {
   readonly asset?: Asset;
   readonly quantity?: number;
   readonly hold?: number;

@@ -1,22 +1,21 @@
 import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
 import type {
-  SdkListProductsResponse,
-  SdkGetBestBidAskResponse,
-  SdkGetProductBookResponse,
-  ListProductsResponse,
-  GetProductResponse,
-  GetProductCandlesResponse,
-  GetProductBookResponse,
-  GetBestBidAskResponse,
-  GetProductMarketTradesResponse,
   GetMarketSnapshotResponse,
   GetProductCandlesBatchResponse,
   OrderBookData,
   MarketSnapshot,
   SpreadStatus,
   ProductCandles,
-  SdkGetProductResponse,
 } from './ProductsService.types';
+import type { Product, L2Level, PriceBook, Candle } from './common.schema';
+import {
+  ListProductsResponseSchema,
+  GetProductResponseSchema,
+  GetProductCandlesResponseSchema,
+  GetProductBookResponseSchema,
+  GetBestBidAskResponseSchema,
+  GetProductMarketTradesResponseSchema,
+} from './ProductsService.schema';
 import type {
   ListProductsRequest,
   GetProductRequest,
@@ -26,20 +25,13 @@ import type {
   GetProductMarketTradesRequest,
   GetMarketSnapshotRequest,
   GetProductCandlesBatchRequest,
+  ListProductsResponse,
+  GetProductResponse,
+  GetProductCandlesResponse,
+  GetProductBookResponse,
+  GetBestBidAskResponse,
+  GetProductMarketTradesResponse,
 } from './ProductsService.schema';
-import type { Product, L2Level, PriceBook } from './common.types';
-import {
-  toListProductsResponse,
-  toSdkGetProductCandlesRequest,
-  toGetBestBidAskResponse,
-  toGetProductBookResponse,
-  toGetProductResponse,
-} from './ProductsService.convert';
-import {
-  toCandle,
-  toGetPublicMarketTradesResponse,
-} from './PublicService.convert';
-import type { SdkGetMarketTradesResponse } from './PublicService.types';
 
 /**
  * Wrapper service for Coinbase Products API.
@@ -51,13 +43,11 @@ export class ProductsService {
   public async listProducts(
     request?: ListProductsRequest,
   ): Promise<ListProductsResponse> {
-    const sdkResponse = (
-      await this.client.request({
-        url: 'products',
-        queryParams: request ?? {},
-      })
-    ).data as SdkListProductsResponse;
-    return toListProductsResponse(sdkResponse);
+    const response = await this.client.request({
+      url: 'products',
+      queryParams: request ?? {},
+    });
+    return ListProductsResponseSchema.parse(response.data);
   }
 
   public async getProduct(
@@ -69,48 +59,41 @@ export class ProductsService {
         getTradabilityStatus: request.getTradabilityStatus,
       };
     }
-    const sdkResponse = (
-      await this.client.request({
-        url: `products/${request.productId}`,
-        queryParams,
-      })
-    ).data as SdkGetProductResponse;
-    return toGetProductResponse(sdkResponse);
+    const response = await this.client.request({
+      url: `products/${request.productId}`,
+      queryParams,
+    });
+    return GetProductResponseSchema.parse(response.data);
   }
 
   /**
-   * Get product candles with automatic ISO 8601 to Unix timestamp conversion.
-   * The SDK expects ISO 8601 but the underlying API requires Unix timestamps.
+   * Get product candles.
+   * Receives pre-transformed request (ISO 8601 already converted to Unix timestamps by MCP layer).
    */
   public async getProductCandles(
     request: GetProductCandlesRequest,
   ): Promise<GetProductCandlesResponse> {
-    const sdkRequest = toSdkGetProductCandlesRequest(request);
     const queryParams = {
-      start: sdkRequest.start,
-      end: sdkRequest.end,
-      granularity: sdkRequest.granularity,
-      limit: sdkRequest.limit || 350,
+      start: request.start,
+      end: request.end,
+      granularity: request.granularity,
+      limit: request.limit || 350,
     };
-    const sdkResponse = (
-      await this.client.request({
-        url: `products/${request.productId}/candles`,
-        queryParams,
-      })
-    ).data as GetProductCandlesResponse;
-    return sdkResponse;
+    const response = await this.client.request({
+      url: `products/${request.productId}/candles`,
+      queryParams,
+    });
+    return GetProductCandlesResponseSchema.parse(response.data);
   }
 
   public async getProductBook(
     request: GetProductBookRequest,
   ): Promise<GetProductBookResponse> {
-    const sdkResponse = (
-      await this.client.request({
-        url: 'product_book',
-        queryParams: request,
-      })
-    ).data as SdkGetProductBookResponse;
-    return toGetProductBookResponse(sdkResponse);
+    const response = await this.client.request({
+      url: 'product_book',
+      queryParams: request,
+    });
+    return GetProductBookResponseSchema.parse(response.data);
   }
 
   public async getBestBidAsk(
@@ -122,25 +105,21 @@ export class ProductsService {
         productIds: request.productIds.join(','),
       };
     }
-    const sdkResponse = (
-      await this.client.request({
-        url: 'best_bid_ask',
-        queryParams,
-      })
-    ).data as SdkGetBestBidAskResponse;
-    return toGetBestBidAskResponse(sdkResponse);
+    const response = await this.client.request({
+      url: 'best_bid_ask',
+      queryParams,
+    });
+    return GetBestBidAskResponseSchema.parse(response.data);
   }
 
   public async getProductMarketTrades(
     request: GetProductMarketTradesRequest,
   ): Promise<GetProductMarketTradesResponse> {
-    const sdkResponse = (
-      await this.client.request({
-        url: `products/${request.productId}/ticker`,
-        queryParams: request,
-      })
-    ).data as SdkGetMarketTradesResponse;
-    return toGetPublicMarketTradesResponse(sdkResponse);
+    const response = await this.client.request({
+      url: `products/${request.productId}/ticker`,
+      queryParams: request,
+    });
+    return GetProductMarketTradesResponseSchema.parse(response.data);
   }
 
   public async getMarketSnapshot({
@@ -212,8 +191,7 @@ export class ProductsService {
             end,
             granularity,
           });
-          const sdkCandles = response.candles ?? [];
-          const candles = sdkCandles.map(toCandle);
+          const candles: Candle[] = response.candles ?? [];
           productCandlesByProductId[productId] = {
             candles,
             latest: candles[0] ?? null,

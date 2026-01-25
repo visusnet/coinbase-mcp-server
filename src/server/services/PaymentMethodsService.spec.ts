@@ -37,9 +37,11 @@ describe('PaymentMethodsService', () => {
   describe('getPaymentMethod', () => {
     it('should delegate to SDK', async () => {
       const responseData = {
-        id: 'pm-123',
-        type: 'BANK_ACCOUNT',
-        name: 'Test Bank',
+        paymentMethod: {
+          id: 'pm-123',
+          type: 'BANK_ACCOUNT',
+          name: 'Test Bank',
+        },
       };
       mockClient.request.mockResolvedValue(mockResponse(responseData));
 

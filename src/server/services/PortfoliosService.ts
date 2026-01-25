@@ -1,32 +1,27 @@
 import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
 import { Method } from '@coinbase-sample/core-ts';
 import type {
-  SdkListPortfoliosResponse,
-  SdkCreatePortfolioResponse,
-  SdkGetPortfolioResponse,
-  SdkEditPortfolioResponse,
-  ListPortfoliosResponse,
-  CreatePortfolioResponse,
-  GetPortfolioResponse,
-  EditPortfolioResponse,
-  DeletePortfolioResponse,
-  MovePortfolioFundsResponse,
-} from './PortfoliosService.types';
-import type {
   ListPortfoliosRequest,
   CreatePortfolioRequest,
   GetPortfolioRequest,
   EditPortfolioRequest,
   DeletePortfolioRequest,
   MovePortfolioFundsRequest,
+  ListPortfoliosResponse,
+  CreatePortfolioResponse,
+  GetPortfolioResponse,
+  EditPortfolioResponse,
+  DeletePortfolioResponse,
+  MovePortfolioFundsResponse,
 } from './PortfoliosService.schema';
 import {
-  toListPortfoliosResponse,
-  toCreatePortfolioResponse,
-  toGetPortfolioResponse,
-  toEditPortfolioResponse,
-  toSdkMovePortfolioFundsRequest,
-} from './PortfoliosService.convert';
+  ListPortfoliosResponseSchema,
+  CreatePortfolioResponseSchema,
+  GetPortfolioResponseSchema,
+  EditPortfolioResponseSchema,
+  DeletePortfolioResponseSchema,
+  MovePortfolioFundsResponseSchema,
+} from './PortfoliosService.schema';
 
 /**
  * Wrapper service for Coinbase Portfolios API.
@@ -42,8 +37,7 @@ export class PortfoliosService {
       url: 'portfolios',
       queryParams: request ?? {},
     });
-    const sdkResponse = response.data as SdkListPortfoliosResponse;
-    return toListPortfoliosResponse(sdkResponse);
+    return ListPortfoliosResponseSchema.parse(response.data);
   }
 
   public async createPortfolio(
@@ -54,8 +48,7 @@ export class PortfoliosService {
       method: Method.POST,
       bodyParams: request,
     });
-    const sdkResponse = response.data as SdkCreatePortfolioResponse;
-    return toCreatePortfolioResponse(sdkResponse);
+    return CreatePortfolioResponseSchema.parse(response.data);
   }
 
   public async getPortfolio(
@@ -65,8 +58,7 @@ export class PortfoliosService {
       url: `portfolios/${request.portfolioUuid}`,
       queryParams: {},
     });
-    const sdkResponse = response.data as SdkGetPortfolioResponse;
-    return toGetPortfolioResponse(sdkResponse);
+    return GetPortfolioResponseSchema.parse(response.data);
   }
 
   public async editPortfolio(
@@ -77,8 +69,7 @@ export class PortfoliosService {
       method: Method.PUT,
       bodyParams: { ...request, portfolioUuid: undefined },
     });
-    const sdkResponse = response.data as SdkEditPortfolioResponse;
-    return toEditPortfolioResponse(sdkResponse);
+    return EditPortfolioResponseSchema.parse(response.data);
   }
 
   public async deletePortfolio(
@@ -88,7 +79,7 @@ export class PortfoliosService {
       url: `portfolios/${request.portfolioUuid}`,
       method: Method.DELETE,
     });
-    return response.data as DeletePortfolioResponse;
+    return DeletePortfolioResponseSchema.parse(response.data);
   }
 
   public async movePortfolioFunds(
@@ -97,8 +88,8 @@ export class PortfoliosService {
     const response = await this.client.request({
       url: 'portfolios/move_funds',
       method: Method.POST,
-      bodyParams: toSdkMovePortfolioFundsRequest(request),
+      bodyParams: request,
     });
-    return response.data as MovePortfolioFundsResponse;
+    return MovePortfolioFundsResponseSchema.parse(response.data);
   }
 }

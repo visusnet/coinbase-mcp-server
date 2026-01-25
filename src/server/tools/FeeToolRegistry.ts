@@ -1,9 +1,6 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { FeesService } from '../services';
-import { ProductType } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/ProductType.js';
-import { ContractExpiryType } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/ContractExpiryType.js';
-import { ProductVenue } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/ProductVenue.js';
-import * as z from 'zod';
+import { GetTransactionsSummaryRequestSchema } from '../services/FeesService.schema';
 import { ToolRegistry } from './ToolRegistry';
 
 /**
@@ -23,15 +20,7 @@ export class FeeToolRegistry extends ToolRegistry {
       {
         title: 'Get Transaction Summary',
         description: 'Get a summary of transactions with fee tiers',
-        inputSchema: {
-          productType: z
-            .nativeEnum(ProductType)
-            .describe('Product type (SPOT, FUTURE)'),
-          contractExpiryType: z
-            .nativeEnum(ContractExpiryType)
-            .describe('Contract expiry type (for futures)'),
-          productVenue: z.nativeEnum(ProductVenue).describe('Product venue'),
-        },
+        inputSchema: GetTransactionsSummaryRequestSchema.shape,
       },
       this.call(this.fees.getTransactionSummary.bind(this.fees)),
     );

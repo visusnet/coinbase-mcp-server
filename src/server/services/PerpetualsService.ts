@@ -1,26 +1,22 @@
 import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
 import type {
-  SdkListPerpetualsPositionsResponse,
-  SdkGetPerpetualsPositionResponse,
-  SdkGetPortfolioSummaryResponse,
-  SdkGetPortfolioBalanceResponse,
   ListPerpetualsPositionsResponse,
   GetPerpetualsPositionResponse,
   GetPortfolioSummaryResponse,
   GetPortfolioBalanceResponse,
 } from './PerpetualsService.types';
+import {
+  ListPerpetualsPositionsResponseSchema,
+  GetPerpetualsPositionResponseSchema,
+  GetPortfolioSummaryResponseSchema,
+  GetPortfolioBalanceResponseSchema,
+} from './PerpetualsService.schema';
 import type {
   ListPerpetualsPositionsRequest,
   GetPerpetualsPositionRequest,
   GetPortfolioSummaryRequest,
   GetPortfolioBalanceRequest,
 } from './PerpetualsService.schema';
-import {
-  toListPerpetualsPositionsResponse,
-  toGetPerpetualsPositionResponse,
-  toGetPortfolioSummaryResponse,
-  toGetPortfolioBalanceResponse,
-} from './PerpetualsService.convert';
 
 /**
  * Wrapper service for Coinbase Perpetuals API.
@@ -36,8 +32,7 @@ export class PerpetualsService {
       url: `intx/positions/${request.portfolioUuid}`,
       queryParams: {},
     });
-    const sdkResponse = response.data as SdkListPerpetualsPositionsResponse;
-    return toListPerpetualsPositionsResponse(sdkResponse);
+    return ListPerpetualsPositionsResponseSchema.parse(response.data);
   }
 
   public async getPosition(
@@ -47,8 +42,7 @@ export class PerpetualsService {
       url: `intx/positions/${request.portfolioUuid}/${request.symbol}`,
       queryParams: {},
     });
-    const sdkResponse = response.data as SdkGetPerpetualsPositionResponse;
-    return toGetPerpetualsPositionResponse(sdkResponse);
+    return GetPerpetualsPositionResponseSchema.parse(response.data);
   }
 
   public async getPortfolioSummary(
@@ -58,8 +52,7 @@ export class PerpetualsService {
       url: `intx/portfolio/${request.portfolioUuid}`,
       queryParams: {},
     });
-    const sdkResponse = response.data as SdkGetPortfolioSummaryResponse;
-    return toGetPortfolioSummaryResponse(sdkResponse);
+    return GetPortfolioSummaryResponseSchema.parse(response.data);
   }
 
   public async getPortfolioBalance(
@@ -69,7 +62,6 @@ export class PerpetualsService {
       url: `intx/balances/${request.portfolioUuid}`,
       queryParams: {},
     });
-    const sdkResponse = response.data as SdkGetPortfolioBalanceResponse;
-    return toGetPortfolioBalanceResponse(sdkResponse);
+    return GetPortfolioBalanceResponseSchema.parse(response.data);
   }
 }

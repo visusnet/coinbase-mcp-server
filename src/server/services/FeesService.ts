@@ -1,10 +1,9 @@
 import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
 import type {
-  SdkGetTransactionSummaryResponse,
   GetTransactionsSummaryRequest,
   GetTransactionsSummaryResponse,
-} from './FeesService.types';
-import { toGetTransactionsSummaryResponse } from './FeesService.convert';
+} from './FeesService.schema';
+import { GetTransactionsSummaryResponseSchema } from './FeesService.schema';
 
 /**
  * Wrapper service for Coinbase Fees API.
@@ -20,7 +19,6 @@ export class FeesService {
       url: 'transaction_summary',
       queryParams: request,
     });
-    const sdkResponse = response.data as SdkGetTransactionSummaryResponse;
-    return toGetTransactionsSummaryResponse(sdkResponse);
+    return GetTransactionsSummaryResponseSchema.parse(response.data);
   }
 }

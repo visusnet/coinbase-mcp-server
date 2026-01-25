@@ -1,12 +1,4 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
-import { CancelOrderFailureReason } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/CancelOrderFailureReason';
-import { OrderExecutionStatus } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/OrderExecutionStatus';
-import { OrderPlacementSource } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/OrderPlacementSource';
-import { OrderType } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/OrderType';
-import { ProductType } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/ProductType';
-import { RejectReason } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/RejectReason';
-import { StopTriggerStatus } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/StopTriggerStatus';
-import { TimeInForceType } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/TimeInForceType';
 import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
 import { Method } from '@coinbase-sample/core-ts';
 import { mockResponse } from '@test/serviceMocks';
@@ -30,18 +22,19 @@ describe('OrdersService', () => {
   });
 
   describe('createOrder', () => {
-    it('should convert number fields to strings for market order', async () => {
+    it('should pass pre-transformed request for market order', async () => {
       const responseData = { success: true, orderId: '123' };
       mockClient.request.mockResolvedValue(mockResponse(responseData));
 
+      // Service receives pre-transformed data (strings from MCP layer)
       await service.createOrder({
         clientOrderId: 'test-123',
         productId: 'BTC-USD',
         side: OrderSide.Buy,
         orderConfiguration: {
           marketMarketIoc: {
-            quoteSize: 100.5,
-            baseSize: 0.001,
+            quoteSize: '100.5',
+            baseSize: '0.001',
           },
         },
       });
@@ -63,7 +56,7 @@ describe('OrdersService', () => {
       });
     });
 
-    it('should convert number fields to strings for limit GTC order', async () => {
+    it('should pass pre-transformed request for limit GTC order', async () => {
       mockClient.request.mockResolvedValue(mockResponse({ success: true }));
 
       await service.createOrder({
@@ -72,8 +65,8 @@ describe('OrdersService', () => {
         side: OrderSide.Sell,
         orderConfiguration: {
           limitLimitGtc: {
-            baseSize: 1.5,
-            limitPrice: 2000.25,
+            baseSize: '1.5',
+            limitPrice: '2000.25',
             postOnly: true,
           },
         },
@@ -97,7 +90,7 @@ describe('OrdersService', () => {
       });
     });
 
-    it('should convert number fields to strings for stop-limit GTC order', async () => {
+    it('should pass pre-transformed request for stop-limit GTC order', async () => {
       mockClient.request.mockResolvedValue(mockResponse({ success: true }));
 
       await service.createOrder({
@@ -106,9 +99,9 @@ describe('OrdersService', () => {
         side: OrderSide.Sell,
         orderConfiguration: {
           stopLimitStopLimitGtc: {
-            baseSize: 0.5,
-            limitPrice: 40000,
-            stopPrice: 41000,
+            baseSize: '0.5',
+            limitPrice: '40000',
+            stopPrice: '41000',
           },
         },
       });
@@ -125,14 +118,13 @@ describe('OrdersService', () => {
               baseSize: '0.5',
               limitPrice: '40000',
               stopPrice: '41000',
-              stopDirection: undefined,
             },
           },
         },
       });
     });
 
-    it('should convert number fields to strings for trigger bracket GTC order', async () => {
+    it('should pass pre-transformed request for trigger bracket GTC order', async () => {
       mockClient.request.mockResolvedValue(mockResponse({ success: true }));
 
       await service.createOrder({
@@ -141,9 +133,9 @@ describe('OrdersService', () => {
         side: OrderSide.Buy,
         orderConfiguration: {
           triggerBracketGtc: {
-            baseSize: 0.1,
-            limitPrice: 42000,
-            stopTriggerPrice: 43000,
+            baseSize: '0.1',
+            limitPrice: '42000',
+            stopTriggerPrice: '43000',
           },
         },
       });
@@ -166,7 +158,7 @@ describe('OrdersService', () => {
       });
     });
 
-    it('should convert number fields to strings for limit GTD order', async () => {
+    it('should pass pre-transformed request for limit GTD order', async () => {
       mockClient.request.mockResolvedValue(mockResponse({ success: true }));
 
       await service.createOrder({
@@ -175,8 +167,8 @@ describe('OrdersService', () => {
         side: OrderSide.Buy,
         orderConfiguration: {
           limitLimitGtd: {
-            baseSize: 0.1,
-            limitPrice: 50000,
+            baseSize: '0.1',
+            limitPrice: '50000',
             endTime: '2025-12-31T23:59:59Z',
             postOnly: true,
           },
@@ -202,7 +194,7 @@ describe('OrdersService', () => {
       });
     });
 
-    it('should convert number fields to strings for limit FOK order', async () => {
+    it('should pass pre-transformed request for limit FOK order', async () => {
       mockClient.request.mockResolvedValue(mockResponse({ success: true }));
 
       await service.createOrder({
@@ -211,8 +203,8 @@ describe('OrdersService', () => {
         side: OrderSide.Buy,
         orderConfiguration: {
           limitLimitFok: {
-            baseSize: 0.5,
-            limitPrice: 48000,
+            baseSize: '0.5',
+            limitPrice: '48000',
           },
         },
       });
@@ -234,7 +226,7 @@ describe('OrdersService', () => {
       });
     });
 
-    it('should convert number fields to strings for SOR limit IOC order', async () => {
+    it('should pass pre-transformed request for SOR limit IOC order', async () => {
       mockClient.request.mockResolvedValue(mockResponse({ success: true }));
 
       await service.createOrder({
@@ -243,8 +235,8 @@ describe('OrdersService', () => {
         side: OrderSide.Buy,
         orderConfiguration: {
           sorLimitIoc: {
-            baseSize: 0.25,
-            limitPrice: 47000,
+            baseSize: '0.25',
+            limitPrice: '47000',
           },
         },
       });
@@ -266,7 +258,7 @@ describe('OrdersService', () => {
       });
     });
 
-    it('should convert number fields to strings for stop-limit GTD order', async () => {
+    it('should pass pre-transformed request for stop-limit GTD order', async () => {
       mockClient.request.mockResolvedValue(mockResponse({ success: true }));
 
       await service.createOrder({
@@ -275,9 +267,9 @@ describe('OrdersService', () => {
         side: OrderSide.Sell,
         orderConfiguration: {
           stopLimitStopLimitGtd: {
-            baseSize: 0.5,
-            limitPrice: 39000,
-            stopPrice: 40000,
+            baseSize: '0.5',
+            limitPrice: '39000',
+            stopPrice: '40000',
             endTime: '2025-12-31T23:59:59Z',
           },
         },
@@ -296,14 +288,13 @@ describe('OrdersService', () => {
               limitPrice: '39000',
               stopPrice: '40000',
               endTime: '2025-12-31T23:59:59Z',
-              stopDirection: undefined,
             },
           },
         },
       });
     });
 
-    it('should convert number fields to strings for trigger bracket GTD order', async () => {
+    it('should pass pre-transformed request for trigger bracket GTD order', async () => {
       mockClient.request.mockResolvedValue(mockResponse({ success: true }));
 
       await service.createOrder({
@@ -312,9 +303,9 @@ describe('OrdersService', () => {
         side: OrderSide.Buy,
         orderConfiguration: {
           triggerBracketGtd: {
-            baseSize: 0.2,
-            limitPrice: 45000,
-            stopTriggerPrice: 46000,
+            baseSize: '0.2',
+            limitPrice: '45000',
+            stopTriggerPrice: '46000',
             endTime: '2025-12-31T23:59:59Z',
           },
         },
@@ -341,13 +332,14 @@ describe('OrdersService', () => {
   });
 
   describe('editOrder', () => {
-    it('should convert number fields to strings', async () => {
+    it('should pass pre-transformed request', async () => {
       mockClient.request.mockResolvedValue(mockResponse({ success: true }));
 
+      // Service receives pre-transformed data (strings from MCP layer)
       await service.editOrder({
         orderId: 'order-123',
-        price: 50000.5,
-        size: 0.05,
+        price: '50000.5',
+        size: '0.05',
       });
 
       expect(mockClient.request).toHaveBeenCalledWith({
@@ -363,7 +355,7 @@ describe('OrdersService', () => {
   });
 
   describe('editOrderPreview', () => {
-    it('should convert number fields to strings', async () => {
+    it('should pass pre-transformed request', async () => {
       mockClient.request.mockResolvedValue(
         mockResponse({
           errors: [],
@@ -373,8 +365,8 @@ describe('OrdersService', () => {
 
       await service.editOrderPreview({
         orderId: 'order-456',
-        price: 45000,
-        size: 0.1,
+        price: '45000',
+        size: '0.1',
       });
 
       expect(mockClient.request).toHaveBeenCalledWith({
@@ -390,13 +382,13 @@ describe('OrdersService', () => {
   });
 
   describe('closePosition', () => {
-    it('should convert optional size to string', async () => {
+    it('should pass pre-transformed request with size', async () => {
       mockClient.request.mockResolvedValue(mockResponse({ success: true }));
 
       await service.closePosition({
         clientOrderId: 'close-123',
         productId: 'BTC-USD',
-        size: 0.5,
+        size: '0.5',
       });
 
       expect(mockClient.request).toHaveBeenCalledWith({
@@ -424,14 +416,13 @@ describe('OrdersService', () => {
         bodyParams: {
           clientOrderId: 'close-456',
           productId: 'ETH-USD',
-          size: undefined,
         },
       });
     });
   });
 
   describe('createOrderPreview', () => {
-    it('should convert number fields to strings', async () => {
+    it('should pass pre-transformed request', async () => {
       mockClient.request.mockResolvedValue(
         mockResponse({
           orderTotal: '50000',
@@ -452,8 +443,8 @@ describe('OrdersService', () => {
         side: OrderSide.Buy,
         orderConfiguration: {
           limitLimitGtc: {
-            baseSize: 0.01,
-            limitPrice: 50000,
+            baseSize: '0.01',
+            limitPrice: '50000',
           },
         },
       });
@@ -468,7 +459,6 @@ describe('OrdersService', () => {
             limitLimitGtc: {
               baseSize: '0.01',
               limitPrice: '50000',
-              postOnly: undefined,
             },
           },
         },
@@ -478,8 +468,8 @@ describe('OrdersService', () => {
 
   describe('response conversion methods', () => {
     it('listOrders should delegate to SDK and convert response', async () => {
-      const mockSdkResponse = { orders: [], hasNext: false };
-      mockClient.request.mockResolvedValue(mockResponse(mockSdkResponse));
+      const mockApiResponse = { orders: [], hasNext: false };
+      mockClient.request.mockResolvedValue(mockResponse(mockApiResponse));
 
       const result = await service.listOrders({ limit: 10 });
 
@@ -491,8 +481,8 @@ describe('OrdersService', () => {
     });
 
     it('listOrders should delegate to SDK with empty object when no request', async () => {
-      const mockSdkResponse = { orders: [], hasNext: false };
-      mockClient.request.mockResolvedValue(mockResponse(mockSdkResponse));
+      const mockApiResponse = { orders: [], hasNext: false };
+      mockClient.request.mockResolvedValue(mockResponse(mockApiResponse));
 
       const result = await service.listOrders();
 
@@ -505,7 +495,7 @@ describe('OrdersService', () => {
 
     it('getOrder should delegate to SDK and convert numeric strings to numbers', async () => {
       // SDK response wraps order in { order: {...} }
-      const mockSdkResponse = {
+      const mockApiResponse = {
         order: {
           orderId: '123',
           productId: 'BTC-USD',
@@ -513,8 +503,8 @@ describe('OrdersService', () => {
           orderConfiguration: {},
           side: OrderSide.Buy,
           clientOrderId: 'client-123',
-          status: OrderExecutionStatus.Open,
-          timeInForce: TimeInForceType.GoodUntilCancelled,
+          status: 'OPEN',
+          timeInForce: 'GOOD_UNTIL_CANCELLED',
           createdTime: '2025-01-01T00:00:00Z',
           completionPercentage: '50.5',
           filledSize: '0.5',
@@ -527,19 +517,19 @@ describe('OrdersService', () => {
           totalFees: '15.75',
           sizeInclusiveOfFees: false,
           totalValueAfterFees: '22484.375',
-          triggerStatus: StopTriggerStatus.InvalidOrderType,
-          orderType: OrderType.Limit,
-          rejectReason: RejectReason.RejectReasonUnspecified,
+          triggerStatus: 'INVALID_ORDER_TYPE',
+          orderType: 'LIMIT',
+          rejectReason: 'REJECT_REASON_UNSPECIFIED',
           settled: false,
-          productType: ProductType.Spot,
+          productType: 'SPOT',
           rejectMessage: '',
           cancelMessage: '',
-          orderPlacementSource: OrderPlacementSource.RetailAdvanced,
+          orderPlacementSource: 'RETAIL_ADVANCED',
           outstandingHoldAmount: '100.5',
           leverage: '2.0',
         },
       };
-      mockClient.request.mockResolvedValue(mockResponse(mockSdkResponse));
+      mockClient.request.mockResolvedValue(mockResponse(mockApiResponse));
 
       const result = await service.getOrder({ orderId: '123' });
 
@@ -565,9 +555,13 @@ describe('OrdersService', () => {
 
     it('cancelOrders should delegate to SDK', async () => {
       const responseData = {
-        success: true,
-        failureReason: CancelOrderFailureReason.UnknownCancelFailureReason,
-        orderId: '123',
+        results: [
+          {
+            success: true,
+            failureReason: 'UNKNOWN_CANCEL_FAILURE_REASON',
+            orderId: '123',
+          },
+        ],
       };
       mockClient.request.mockResolvedValue(mockResponse(responseData));
 

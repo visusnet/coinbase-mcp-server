@@ -15,6 +15,10 @@ import type {
 } from '@server/services';
 import { jest } from '@jest/globals';
 
+// =============================================================================
+// Mock Response Helper
+// =============================================================================
+
 /**
  * Helper to create a mock response for client.request() calls.
  * Wraps the data in a CoinbaseResponse-like structure.

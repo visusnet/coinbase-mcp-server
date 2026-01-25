@@ -1,28 +1,23 @@
 import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
 import { Method } from '@coinbase-sample/core-ts';
-import type {
-  SdkCreateConvertQuoteResponse,
-  SdkCommitConvertTradeResponse,
-  SdkGetConvertTradeResponse,
-  CreateConvertQuoteResponse,
-  CommitConvertTradeResponse,
-  GetConvertTradeResponse,
-} from './ConvertsService.types';
+import {
+  CreateConvertQuoteResponseSchema,
+  CommitConvertTradeResponseSchema,
+  GetConvertTradeResponseSchema,
+} from './ConvertsService.schema';
 import type {
   CreateConvertQuoteRequest,
   CommitConvertTradeRequest,
   GetConvertTradeRequest,
+  CreateConvertQuoteResponse,
+  CommitConvertTradeResponse,
+  GetConvertTradeResponse,
 } from './ConvertsService.schema';
-import {
-  toSdkCreateConvertQuoteRequest,
-  toCreateConvertQuoteResponse,
-  toCommitConvertTradeResponse,
-  toGetConvertTradeResponse,
-} from './ConvertsService.convert';
 
 /**
  * Wrapper service for Coinbase Converts API.
- * Converts number types to strings for SDK calls and SDK responses to numbers.
+ * Receives pre-transformed request data (numbers already converted to strings by MCP layer).
+ * Converts SDK response strings to numbers.
  */
 export class ConvertsService {
   public constructor(private readonly client: CoinbaseAdvTradeClient) {}
@@ -33,10 +28,9 @@ export class ConvertsService {
     const response = await this.client.request({
       url: 'convert/quote',
       method: Method.POST,
-      bodyParams: toSdkCreateConvertQuoteRequest(request),
+      bodyParams: request,
     });
-    const sdkResponse = response.data as SdkCreateConvertQuoteResponse;
-    return toCreateConvertQuoteResponse(sdkResponse);
+    return CreateConvertQuoteResponseSchema.parse(response.data);
   }
 
   public async commitConvertTrade(
@@ -47,8 +41,7 @@ export class ConvertsService {
       method: Method.POST,
       bodyParams: request,
     });
-    const sdkResponse = response.data as SdkCommitConvertTradeResponse;
-    return toCommitConvertTradeResponse(sdkResponse);
+    return CommitConvertTradeResponseSchema.parse(response.data);
   }
 
   public async getConvertTrade(
@@ -61,7 +54,6 @@ export class ConvertsService {
         toAccount: request.toAccount,
       },
     });
-    const sdkResponse = response.data as SdkGetConvertTradeResponse;
-    return toGetConvertTradeResponse(sdkResponse);
+    return GetConvertTradeResponseSchema.parse(response.data);
   }
 }

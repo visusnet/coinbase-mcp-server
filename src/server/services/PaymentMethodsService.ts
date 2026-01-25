@@ -1,9 +1,13 @@
 import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
 import type {
+  GetPaymentMethodRequest,
   ListPaymentMethodsResponse,
   GetPaymentMethodResponse,
-} from './PaymentMethodsService.types';
-import type { GetPaymentMethodRequest } from './PaymentMethodsService.schema';
+} from './PaymentMethodsService.schema';
+import {
+  ListPaymentMethodsResponseSchema,
+  GetPaymentMethodResponseSchema,
+} from './PaymentMethodsService.schema';
 
 /**
  * Wrapper service for Coinbase Payment Methods API.
@@ -17,7 +21,7 @@ export class PaymentMethodsService {
       url: 'payment_methods',
       queryParams: {},
     });
-    return response.data as ListPaymentMethodsResponse;
+    return ListPaymentMethodsResponseSchema.parse(response.data);
   }
 
   public async getPaymentMethod(
@@ -27,6 +31,6 @@ export class PaymentMethodsService {
       url: `payment_methods/${request.paymentMethodId}`,
       queryParams: {},
     });
-    return response.data as GetPaymentMethodResponse;
+    return GetPaymentMethodResponseSchema.parse(response.data);
   }
 }

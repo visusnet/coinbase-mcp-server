@@ -1,13 +1,8 @@
 import { describe, expect, it, jest, beforeEach } from '@jest/globals';
-import { ProductType } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/ProductType';
-import { OrderSide } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/OrderSide.js';
-import type { Product as SdkProduct } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/Product';
-import type { Candle as SdkCandle } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/Candle';
-import type { GetProductBookResponse as SdkGetProductBookResponse } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/GetProductBookResponse';
-import type { GetMarketTradesResponse as SdkGetMarketTradesResponse } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/GetMarketTradesResponse';
 import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
 import { mockResponse } from '@test/serviceMocks';
 import { Granularity } from './ProductsService.types';
+import { OrderSide } from './OrdersService.types';
 import { PublicService } from './PublicService';
 
 describe('PublicService', () => {
@@ -46,7 +41,7 @@ describe('PublicService', () => {
 
   describe('getProduct', () => {
     it('should convert SDK response to our types', async () => {
-      const sdkProduct: SdkProduct = {
+      const mockProduct = {
         productId: 'BTC-USD',
         price: '50000',
         pricePercentageChange24h: '2.5',
@@ -69,7 +64,7 @@ describe('PublicService', () => {
         postOnly: false,
         tradingDisabled: false,
         auctionMode: false,
-        productType: ProductType.Spot,
+        productType: 'SPOT',
         quoteCurrencyId: 'USD',
         baseCurrencyId: 'BTC',
         baseDisplaySymbol: 'BTC',
@@ -78,7 +73,7 @@ describe('PublicService', () => {
         priceIncrement: '0.01',
         approximateQuote24hVolume: '50000000000',
       };
-      mockClient.request.mockResolvedValue(mockResponse(sdkProduct));
+      mockClient.request.mockResolvedValue(mockResponse(mockProduct));
 
       const result = await service.getProduct({ productId: 'BTC-USD' });
 
@@ -99,7 +94,7 @@ describe('PublicService', () => {
 
   describe('listProducts', () => {
     it('should convert SDK response to our types', async () => {
-      const sdkProduct: SdkProduct = {
+      const mockProduct = {
         productId: 'ETH-USD',
         price: '3000',
         pricePercentageChange24h: '1.5',
@@ -122,7 +117,7 @@ describe('PublicService', () => {
         postOnly: false,
         tradingDisabled: false,
         auctionMode: false,
-        productType: ProductType.Spot,
+        productType: 'SPOT',
         quoteCurrencyId: 'USD',
         baseCurrencyId: 'ETH',
         baseDisplaySymbol: 'ETH',
@@ -130,7 +125,7 @@ describe('PublicService', () => {
       };
       mockClient.request.mockResolvedValue(
         mockResponse({
-          products: [sdkProduct],
+          products: [mockProduct],
           numProducts: 1,
         }),
       );
@@ -162,7 +157,7 @@ describe('PublicService', () => {
 
   describe('getProductBook', () => {
     it('should convert SDK response to our types', async () => {
-      const sdkResponse: SdkGetProductBookResponse = {
+      const mockBookResponse = {
         pricebook: {
           productId: 'BTC-USD',
           bids: [
@@ -180,7 +175,7 @@ describe('PublicService', () => {
         spreadBps: '4',
         spreadAbsolute: '2',
       };
-      mockClient.request.mockResolvedValue(mockResponse(sdkResponse));
+      mockClient.request.mockResolvedValue(mockResponse(mockBookResponse));
 
       const result = await service.getProductBook({ productId: 'BTC-USD' });
 
@@ -203,7 +198,7 @@ describe('PublicService', () => {
 
   describe('getProductMarketTrades', () => {
     it('should convert SDK response to our types', async () => {
-      const sdkResponse: SdkGetMarketTradesResponse = {
+      const mockTradesResponse = {
         trades: [
           {
             tradeId: 'trade-1',
@@ -226,7 +221,7 @@ describe('PublicService', () => {
         bestBid: '49998',
         bestAsk: '50001',
       };
-      mockClient.request.mockResolvedValue(mockResponse(sdkResponse));
+      mockClient.request.mockResolvedValue(mockResponse(mockTradesResponse));
 
       const result = await service.getProductMarketTrades({
         productId: 'BTC-USD',
@@ -263,8 +258,8 @@ describe('PublicService', () => {
   });
 
   describe('getProductCandles', () => {
-    it('should convert SDK response and timestamps', async () => {
-      const sdkCandles: SdkCandle[] = [
+    it('should pass pre-transformed request and convert SDK response', async () => {
+      const mockCandles = [
         {
           start: '1735689600',
           low: '49500',
@@ -284,14 +279,15 @@ describe('PublicService', () => {
       ];
       mockClient.request.mockResolvedValue(
         mockResponse({
-          candles: sdkCandles,
+          candles: mockCandles,
         }),
       );
 
+      // Service receives pre-transformed data from MCP layer (timestamps already Unix strings)
       const result = await service.getProductCandles({
         productId: 'BTC-USD',
-        start: '2025-01-01T00:00:00Z',
-        end: '2025-01-02T00:00:00Z',
+        start: '1735689600',
+        end: '1735776000',
         granularity: Granularity.ONE_HOUR,
       });
 
@@ -302,7 +298,6 @@ describe('PublicService', () => {
           start: '1735689600',
           end: '1735776000',
           granularity: Granularity.ONE_HOUR,
-          limit: undefined,
         },
       });
       expect(result.candles).toHaveLength(2);
@@ -320,23 +315,12 @@ describe('PublicService', () => {
 
       const result = await service.getProductCandles({
         productId: 'BTC-USD',
-        start: '2025-01-01T00:00:00Z',
-        end: '2025-01-02T00:00:00Z',
+        start: '1735689600',
+        end: '1735776000',
         granularity: Granularity.ONE_HOUR,
       });
 
       expect(result.candles).toBeUndefined();
-    });
-
-    it('should reject invalid ISO 8601 timestamps', async () => {
-      await expect(
-        service.getProductCandles({
-          productId: 'BTC-USD',
-          start: 'invalid-date-string',
-          end: '2025-12-31T23:59:59Z',
-          granularity: Granularity.ONE_DAY,
-        }),
-      ).rejects.toThrow('Invalid timestamp: invalid-date-string');
     });
   });
 });

@@ -1,5 +1,13 @@
 import { z } from 'zod';
-import { ProductType, Granularity } from './ProductsService.types';
+import { ProductType } from './FeesService.schema';
+import { Granularity } from './ProductsService.types';
+import { stringToNumber, isoToUnix } from './schema.helpers';
+import {
+  ProductSchema,
+  CandleSchema,
+  PriceBookSchema,
+  HistoricalMarketTradeSchema,
+} from './common.schema';
 
 // =============================================================================
 // Request Schemas
@@ -32,8 +40,8 @@ export const GetProductBookRequestSchema = z.object({
 
 export const GetProductCandlesRequestSchema = z.object({
   productId: z.string().describe('Trading pair (e.g., BTC-USD)'),
-  start: z.string().describe('Start time (ISO 8601 format)'),
-  end: z.string().describe('End time (ISO 8601 format)'),
+  start: isoToUnix.describe('Start time (ISO 8601 format)'),
+  end: isoToUnix.describe('End time (ISO 8601 format)'),
   granularity: z
     .nativeEnum(Granularity)
     .describe(
@@ -91,19 +99,94 @@ export const GetMarketSnapshotRequestSchema = z.object({
 // Request Types (derived from schemas)
 // =============================================================================
 
-export type ListProductsRequest = z.infer<typeof ListProductsRequestSchema>;
-export type GetProductRequest = z.infer<typeof GetProductRequestSchema>;
-export type GetProductBookRequest = z.infer<typeof GetProductBookRequestSchema>;
-export type GetProductCandlesRequest = z.infer<
+export type ListProductsRequest = z.input<typeof ListProductsRequestSchema>;
+export type GetProductRequest = z.input<typeof GetProductRequestSchema>;
+export type GetProductBookRequest = z.input<typeof GetProductBookRequestSchema>;
+export type GetProductCandlesRequest = z.output<
   typeof GetProductCandlesRequestSchema
 >;
-export type GetProductCandlesBatchRequest = z.infer<
+export type GetProductCandlesBatchRequest = z.input<
   typeof GetProductCandlesBatchRequestSchema
 >;
-export type GetProductMarketTradesRequest = z.infer<
+export type GetProductMarketTradesRequest = z.input<
   typeof GetProductMarketTradesRequestSchema
 >;
-export type GetBestBidAskRequest = z.infer<typeof GetBestBidAskRequestSchema>;
-export type GetMarketSnapshotRequest = z.infer<
+export type GetBestBidAskRequest = z.input<typeof GetBestBidAskRequestSchema>;
+export type GetMarketSnapshotRequest = z.input<
   typeof GetMarketSnapshotRequestSchema
+>;
+
+// =============================================================================
+// Response Schemas
+// =============================================================================
+
+/**
+ * ListProductsResponse schema with number conversion.
+ */
+export const ListProductsResponseSchema = z.object({
+  products: z.array(ProductSchema).optional().describe('List of products'),
+  numProducts: stringToNumber.describe('Total number of products'),
+});
+
+/**
+ * GetProductResponse schema - SDK returns product directly.
+ */
+export const GetProductResponseSchema = ProductSchema.transform((product) => ({
+  product,
+}));
+
+/**
+ * GetProductCandlesResponse schema with number conversion.
+ */
+export const GetProductCandlesResponseSchema = z.object({
+  candles: z.array(CandleSchema).optional().describe('List of candles'),
+});
+
+/**
+ * GetProductBookResponse schema with number conversion.
+ */
+export const GetProductBookResponseSchema = z.object({
+  pricebook: PriceBookSchema.describe('Price book data'),
+  last: stringToNumber.describe('Last trade price'),
+  midMarket: stringToNumber.describe('Mid-market price'),
+  spreadBps: stringToNumber.describe('Spread in basis points'),
+  spreadAbsolute: stringToNumber.describe('Absolute spread'),
+});
+
+/**
+ * GetBestBidAskResponse schema with number conversion.
+ */
+export const GetBestBidAskResponseSchema = z.object({
+  pricebooks: z.array(PriceBookSchema).describe('List of price books'),
+});
+
+/**
+ * GetProductMarketTradesResponse schema with number conversion.
+ */
+export const GetProductMarketTradesResponseSchema = z.object({
+  trades: z
+    .array(HistoricalMarketTradeSchema)
+    .optional()
+    .describe('List of trades'),
+  bestBid: stringToNumber.describe('Best bid price'),
+  bestAsk: stringToNumber.describe('Best ask price'),
+});
+
+// =============================================================================
+// Response Types (derived from schemas)
+// =============================================================================
+
+export type ListProductsResponse = z.output<typeof ListProductsResponseSchema>;
+export type GetProductResponse = z.output<typeof GetProductResponseSchema>;
+export type GetProductCandlesResponse = z.output<
+  typeof GetProductCandlesResponseSchema
+>;
+export type GetProductBookResponse = z.output<
+  typeof GetProductBookResponseSchema
+>;
+export type GetBestBidAskResponse = z.output<
+  typeof GetBestBidAskResponseSchema
+>;
+export type GetProductMarketTradesResponse = z.output<
+  typeof GetProductMarketTradesResponseSchema
 >;

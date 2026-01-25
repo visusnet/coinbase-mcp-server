@@ -1,5 +1,8 @@
 import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
-import type { GetAPIKeyPermissionsResponse } from './DataService.types';
+import {
+  GetAPIKeyPermissionsResponseSchema,
+  type GetAPIKeyPermissionsResponse,
+} from './DataService.schema';
 
 /**
  * Wrapper service for Coinbase Data API.
@@ -13,6 +16,6 @@ export class DataService {
       url: 'key_permissions',
       queryParams: {},
     });
-    return response.data as GetAPIKeyPermissionsResponse;
+    return GetAPIKeyPermissionsResponseSchema.parse(response.data);
   }
 }

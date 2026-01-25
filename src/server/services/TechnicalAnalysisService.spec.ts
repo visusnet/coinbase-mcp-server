@@ -1,23 +1,21 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { TechnicalAnalysisService } from './TechnicalAnalysisService';
 import type { ProductsService } from '.';
-import type {
-  TechnicalIndicatorsService,
-  CandleInput,
-} from './TechnicalIndicatorsService';
+import type { TechnicalIndicatorsService } from './TechnicalIndicatorsService';
+import type { CandleInput } from './common.schema';
 import { Granularity } from './ProductsService.types';
 import { IndicatorType } from './TechnicalAnalysisService.types';
-import type { Candle } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/Candle';
+import type { Candle } from './common.schema';
 
-// Helper to convert test candles to SDK Candle type (SDK uses strings)
-const asSdkCandles = (candles: CandleInput[]): Candle[] =>
+// Helper to convert test candles to our Candle type (with numbers)
+const asCandles = (candles: CandleInput[]): Candle[] =>
   candles.map((c) => ({
-    start: '',
-    open: String(c.open),
-    high: String(c.high),
-    low: String(c.low),
-    close: String(c.close),
-    volume: String(c.volume),
+    start: 0,
+    open: c.open,
+    high: c.high,
+    low: c.low,
+    close: c.close,
+    volume: c.volume,
   }));
 
 describe('TechnicalAnalysisService', () => {
@@ -137,7 +135,7 @@ describe('TechnicalAnalysisService', () => {
     it('should fetch candles and calculate requested indicators', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       calculateRsiMock.mockReturnValue({
@@ -162,7 +160,7 @@ describe('TechnicalAnalysisService', () => {
     it('should use default candle count of 100', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
       calculateRsiMock.mockReturnValue({
         period: 14,
@@ -188,7 +186,7 @@ describe('TechnicalAnalysisService', () => {
     it('should calculate all indicators when none specified', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       // Set up mocks for all indicators
@@ -394,7 +392,7 @@ describe('TechnicalAnalysisService', () => {
         { open: 90, high: 100, low: 85, close: 95, volume: 600 },
       ];
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       const result = await service.analyzeTechnicalIndicators({
@@ -412,7 +410,7 @@ describe('TechnicalAnalysisService', () => {
     it('should return aggregated signal with score and direction', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       calculateRsiMock.mockReturnValue({
@@ -449,7 +447,7 @@ describe('TechnicalAnalysisService', () => {
     it('should not include raw candles in response', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       const result = await service.analyzeTechnicalIndicators({
@@ -483,18 +481,18 @@ describe('TechnicalAnalysisService', () => {
     it('should fetch daily candles for pivot points', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock
-        .mockResolvedValueOnce({ candles: asSdkCandles(mockCandles) }) // Main candles
+        .mockResolvedValueOnce({ candles: asCandles(mockCandles) }) // Main candles
         .mockResolvedValueOnce({
           candles: [
             {
-              open: '100',
-              high: '110',
-              low: '95',
-              close: '105',
-              volume: '1000',
+              open: 100,
+              high: 110,
+              low: 95,
+              close: 105,
+              volume: 1000,
             },
-            { open: '95', high: '105', low: '90', close: '100', volume: '800' },
-            { open: '90', high: '100', low: '85', close: '95', volume: '600' },
+            { open: 95, high: 105, low: 90, close: 100, volume: 800 },
+            { open: 90, high: 100, low: 85, close: 95, volume: 600 },
           ],
         }); // Daily candles
 
@@ -533,7 +531,7 @@ describe('TechnicalAnalysisService', () => {
     it('should use swing points for Fibonacci calculation', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       detectSwingPointsMock.mockReturnValue({
@@ -579,7 +577,7 @@ describe('TechnicalAnalysisService', () => {
     it('should limit candle count to maximum of 300', async () => {
       const mockCandles = createMockCandles(300);
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       await service.analyzeTechnicalIndicators({
@@ -603,7 +601,7 @@ describe('TechnicalAnalysisService', () => {
     it('should enforce minimum candle count of 5', async () => {
       const mockCandles = createMockCandles(5);
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       await service.analyzeTechnicalIndicators({
@@ -626,7 +624,7 @@ describe('TechnicalAnalysisService', () => {
     it('should include timestamp in response', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       const beforeCall = new Date().toISOString();
@@ -647,7 +645,7 @@ describe('TechnicalAnalysisService', () => {
     it('should interpret RSI overbought (>=70) as bearish', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       calculateRsiMock.mockReturnValue({
@@ -668,7 +666,7 @@ describe('TechnicalAnalysisService', () => {
     it('should interpret RSI oversold (<=30) as bullish', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       calculateRsiMock.mockReturnValue({
@@ -689,7 +687,7 @@ describe('TechnicalAnalysisService', () => {
     it('should detect MACD bullish crossover', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       calculateMacdMock.mockReturnValue({
@@ -715,7 +713,7 @@ describe('TechnicalAnalysisService', () => {
     it('should interpret ADX strong trend (>=25)', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       calculateAdxMock.mockReturnValue({
@@ -736,7 +734,7 @@ describe('TechnicalAnalysisService', () => {
     it('should detect MACD bearish crossover', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       calculateMacdMock.mockReturnValue({
@@ -762,7 +760,7 @@ describe('TechnicalAnalysisService', () => {
     it('should interpret Stochastic oversold as bullish', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       calculateStochasticMock.mockReturnValue({
@@ -784,7 +782,7 @@ describe('TechnicalAnalysisService', () => {
     it('should interpret Stochastic overbought as bearish', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       calculateStochasticMock.mockReturnValue({
@@ -806,7 +804,7 @@ describe('TechnicalAnalysisService', () => {
     it('should interpret ADX with MDI > PDI as bearish signal', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       calculateAdxMock.mockReturnValue({
@@ -828,7 +826,7 @@ describe('TechnicalAnalysisService', () => {
     it('should interpret CCI oversold (<-100) as bullish', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       calculateCciMock.mockReturnValue({
@@ -849,7 +847,7 @@ describe('TechnicalAnalysisService', () => {
     it('should interpret CCI overbought (>100) as bearish', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       calculateCciMock.mockReturnValue({
@@ -870,7 +868,7 @@ describe('TechnicalAnalysisService', () => {
     it('should interpret Williams %R oversold (<-80) as bullish', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       calculateWilliamsRMock.mockReturnValue({
@@ -891,7 +889,7 @@ describe('TechnicalAnalysisService', () => {
     it('should interpret Williams %R overbought (>-20) as bearish', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       calculateWilliamsRMock.mockReturnValue({
@@ -912,7 +910,7 @@ describe('TechnicalAnalysisService', () => {
     it('should interpret ROC positive as bullish', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       calculateRocMock.mockReturnValue({
@@ -933,7 +931,7 @@ describe('TechnicalAnalysisService', () => {
     it('should interpret ROC negative as bearish', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       calculateRocMock.mockReturnValue({
@@ -955,7 +953,7 @@ describe('TechnicalAnalysisService', () => {
       // Set close price above SMA (150 > 100)
       const mockCandles = createMockCandles(100, { closePrice: 150 });
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       calculateSmaMock.mockReturnValue({
@@ -977,7 +975,7 @@ describe('TechnicalAnalysisService', () => {
       // Set close price below SMA (80 < 100)
       const mockCandles = createMockCandles(100, { closePrice: 80 });
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       calculateSmaMock.mockReturnValue({
@@ -998,7 +996,7 @@ describe('TechnicalAnalysisService', () => {
     it('should interpret EMA price above as bullish trend', async () => {
       const mockCandles = createMockCandles(100, { closePrice: 150 });
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       calculateEmaMock.mockReturnValue({
@@ -1019,7 +1017,7 @@ describe('TechnicalAnalysisService', () => {
     it('should interpret EMA price below as bearish trend', async () => {
       const mockCandles = createMockCandles(100, { closePrice: 80 });
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       calculateEmaMock.mockReturnValue({
@@ -1040,7 +1038,7 @@ describe('TechnicalAnalysisService', () => {
     it('should interpret Ichimoku bullish signal', async () => {
       const mockCandles = createMockCandles(100, { closePrice: 110 });
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       calculateIchimokuCloudMock.mockReturnValue({
@@ -1072,7 +1070,7 @@ describe('TechnicalAnalysisService', () => {
     it('should interpret Ichimoku bearish signal', async () => {
       const mockCandles = createMockCandles(100, { closePrice: 80 });
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       calculateIchimokuCloudMock.mockReturnValue({
@@ -1104,7 +1102,7 @@ describe('TechnicalAnalysisService', () => {
     it('should interpret PSAR below price as uptrend', async () => {
       const mockCandles = createMockCandles(100, { closePrice: 110 });
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       calculatePsarMock.mockReturnValue({
@@ -1126,7 +1124,7 @@ describe('TechnicalAnalysisService', () => {
     it('should interpret PSAR above price as downtrend', async () => {
       const mockCandles = createMockCandles(100, { closePrice: 90 });
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       calculatePsarMock.mockReturnValue({
@@ -1148,7 +1146,7 @@ describe('TechnicalAnalysisService', () => {
     it('should interpret Bollinger Bands price near lower band as oversold', async () => {
       const mockCandles = createMockCandles(100, { closePrice: 92 });
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       calculateBollingerBandsMock.mockReturnValue({
@@ -1180,7 +1178,7 @@ describe('TechnicalAnalysisService', () => {
     it('should interpret Bollinger Bands price near upper band as overbought', async () => {
       const mockCandles = createMockCandles(100, { closePrice: 108 });
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       calculateBollingerBandsMock.mockReturnValue({
@@ -1212,7 +1210,7 @@ describe('TechnicalAnalysisService', () => {
     it('should interpret OBV rising trend', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       calculateObvMock.mockReturnValue({
@@ -1232,7 +1230,7 @@ describe('TechnicalAnalysisService', () => {
     it('should interpret OBV falling trend', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       calculateObvMock.mockReturnValue({
@@ -1252,7 +1250,7 @@ describe('TechnicalAnalysisService', () => {
     it('should interpret MFI oversold (<20) as bullish', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       calculateMfiMock.mockReturnValue({
@@ -1273,7 +1271,7 @@ describe('TechnicalAnalysisService', () => {
     it('should interpret MFI overbought (>80) as bearish', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       calculateMfiMock.mockReturnValue({
@@ -1294,7 +1292,7 @@ describe('TechnicalAnalysisService', () => {
     it('should interpret VWAP price above as bullish position', async () => {
       const mockCandles = createMockCandles(100, { closePrice: 110 });
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       calculateVwapMock.mockReturnValue({
@@ -1314,7 +1312,7 @@ describe('TechnicalAnalysisService', () => {
     it('should interpret VWAP price below as bearish position', async () => {
       const mockCandles = createMockCandles(100, { closePrice: 90 });
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       calculateVwapMock.mockReturnValue({
@@ -1334,7 +1332,7 @@ describe('TechnicalAnalysisService', () => {
     it('should interpret candlestick patterns bullish bias', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       detectCandlestickPatternsMock.mockReturnValue({
@@ -1358,7 +1356,7 @@ describe('TechnicalAnalysisService', () => {
     it('should interpret candlestick patterns bearish bias', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       detectCandlestickPatternsMock.mockReturnValue({
@@ -1382,7 +1380,7 @@ describe('TechnicalAnalysisService', () => {
     it('should interpret RSI bullish divergence', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       detectRsiDivergenceMock.mockReturnValue({
@@ -1427,7 +1425,7 @@ describe('TechnicalAnalysisService', () => {
     it('should interpret RSI bearish divergence', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       detectRsiDivergenceMock.mockReturnValue({
@@ -1472,7 +1470,7 @@ describe('TechnicalAnalysisService', () => {
     it('should interpret chart patterns bullish direction', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       detectChartPatternsMock.mockReturnValue({
@@ -1525,7 +1523,7 @@ describe('TechnicalAnalysisService', () => {
     it('should interpret chart patterns bearish direction', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       detectChartPatternsMock.mockReturnValue({
@@ -1578,7 +1576,7 @@ describe('TechnicalAnalysisService', () => {
     it('should interpret swing points downtrend', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       detectSwingPointsMock.mockReturnValue({
@@ -1601,7 +1599,7 @@ describe('TechnicalAnalysisService', () => {
     it('should interpret swing points sideways trend', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       detectSwingPointsMock.mockReturnValue({
@@ -1624,16 +1622,16 @@ describe('TechnicalAnalysisService', () => {
     it('should handle pivot points woodie type', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock
-        .mockResolvedValueOnce({ candles: asSdkCandles(mockCandles) })
+        .mockResolvedValueOnce({ candles: asCandles(mockCandles) })
         .mockResolvedValueOnce({
           candles: [
-            { open: '90', high: '100', low: '85', close: '95', volume: '800' }, // Older
+            { open: 90, high: 100, low: 85, close: 95, volume: 800 }, // Older
             {
-              open: '100',
-              high: '110',
-              low: '95',
-              close: '105',
-              volume: '1000',
+              open: 100,
+              high: 110,
+              low: 95,
+              close: 105,
+              volume: 1000,
             }, // Previous day
           ],
         });
@@ -1659,16 +1657,16 @@ describe('TechnicalAnalysisService', () => {
     it('should handle pivot points demark type', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock
-        .mockResolvedValueOnce({ candles: asSdkCandles(mockCandles) })
+        .mockResolvedValueOnce({ candles: asCandles(mockCandles) })
         .mockResolvedValueOnce({
           candles: [
-            { open: '90', high: '100', low: '85', close: '95', volume: '800' }, // Older
+            { open: 90, high: 100, low: 85, close: 95, volume: 800 }, // Older
             {
-              open: '100',
-              high: '110',
-              low: '95',
-              close: '105',
-              volume: '1000',
+              open: 100,
+              high: 110,
+              low: 95,
+              close: 105,
+              volume: 1000,
             }, // Previous day
           ],
         });
@@ -1692,16 +1690,16 @@ describe('TechnicalAnalysisService', () => {
     it('should handle pivot points camarilla type', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock
-        .mockResolvedValueOnce({ candles: asSdkCandles(mockCandles) })
+        .mockResolvedValueOnce({ candles: asCandles(mockCandles) })
         .mockResolvedValueOnce({
           candles: [
-            { open: '90', high: '100', low: '85', close: '95', volume: '800' }, // Older
+            { open: 90, high: 100, low: 85, close: 95, volume: 800 }, // Older
             {
-              open: '100',
-              high: '110',
-              low: '95',
-              close: '105',
-              volume: '1000',
+              open: 100,
+              high: 110,
+              low: 95,
+              close: 105,
+              volume: 1000,
             }, // Previous day
           ],
         });
@@ -1731,7 +1729,7 @@ describe('TechnicalAnalysisService', () => {
     it('should interpret ROC neutral (value = 0)', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       calculateRocMock.mockReturnValue({
@@ -1752,7 +1750,7 @@ describe('TechnicalAnalysisService', () => {
     it('should interpret ATR normal volatility (1.5% to 3%)', async () => {
       const mockCandles = createMockCandles(100, { closePrice: 100 }); // Current price = 100
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       // ATR of 2 with price 100 = 2% volatility (normal)
@@ -1774,7 +1772,7 @@ describe('TechnicalAnalysisService', () => {
     it('should interpret ATR low volatility (<1.5%)', async () => {
       const mockCandles = createMockCandles(100, { closePrice: 100 }); // Current price = 100
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       // ATR of 1 with price 100 = 1% volatility (low)
@@ -1796,7 +1794,7 @@ describe('TechnicalAnalysisService', () => {
     it('should calculate aggregated signal with all indicator types', async () => {
       const mockCandles = createMockCandles(100, { closePrice: 150 });
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       // Mock all indicators with bullish signals
@@ -2045,7 +2043,7 @@ describe('TechnicalAnalysisService', () => {
     it('should calculate aggregated signal with bearish indicators', async () => {
       const mockCandles = createMockCandles(100, { closePrice: 80 });
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       // Mock all indicators with bearish signals
@@ -2294,7 +2292,7 @@ describe('TechnicalAnalysisService', () => {
     it('should interpret MACD no crossover as none', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       // MACD remains above signal line (no crossover)
@@ -2321,7 +2319,7 @@ describe('TechnicalAnalysisService', () => {
     it('should interpret ADX moderate strength (20-25)', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       calculateAdxMock.mockReturnValue({
@@ -2342,7 +2340,7 @@ describe('TechnicalAnalysisService', () => {
     it('should interpret ADX weak strength (<20)', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       calculateAdxMock.mockReturnValue({
@@ -2363,7 +2361,7 @@ describe('TechnicalAnalysisService', () => {
     it('should interpret Stochastic neutral (20 < k < 80)', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       calculateStochasticMock.mockReturnValue({
@@ -2385,7 +2383,7 @@ describe('TechnicalAnalysisService', () => {
     it('should interpret CCI neutral (-100 < value < 100)', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       calculateCciMock.mockReturnValue({
@@ -2406,7 +2404,7 @@ describe('TechnicalAnalysisService', () => {
     it('should interpret Williams %R neutral (-80 < value < -20)', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       calculateWilliamsRMock.mockReturnValue({
@@ -2427,7 +2425,7 @@ describe('TechnicalAnalysisService', () => {
     it('should interpret Ichimoku neutral signal', async () => {
       const mockCandles = createMockCandles(100, { closePrice: 102 }); // Price in the cloud
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       calculateIchimokuCloudMock.mockReturnValue({
@@ -2459,7 +2457,7 @@ describe('TechnicalAnalysisService', () => {
     it('should return BUY direction for score between 20 and 50', async () => {
       const mockCandles = createMockCandles(100, { closePrice: 105 });
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       // Set up 5 indicators: 2 bullish, 3 neutral = 40% bullish = score 40
@@ -2509,7 +2507,7 @@ describe('TechnicalAnalysisService', () => {
     it('should return SELL direction for score between -50 and -20', async () => {
       const mockCandles = createMockCandles(100, { closePrice: 95 });
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       // Set up 5 indicators: 2 bearish, 3 neutral = 40% bearish = score -40
@@ -2559,7 +2557,7 @@ describe('TechnicalAnalysisService', () => {
     it('should return NEUTRAL direction when signals are balanced', async () => {
       const mockCandles = createMockCandles(100, { closePrice: 100 }); // Price at SMA/EMA level
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       // Set up indicators with balanced signals
@@ -2588,7 +2586,7 @@ describe('TechnicalAnalysisService', () => {
     it('should return LOW confidence with less than 5 signals', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       // Use only 1 indicator (less than 5 signals)
@@ -2610,7 +2608,7 @@ describe('TechnicalAnalysisService', () => {
     it('should return LOW confidence with low agreement rate', async () => {
       const mockCandles = createMockCandles(100, { closePrice: 100 });
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       // Set up 6 indicators with mixed signals (low agreement)
@@ -2676,37 +2674,37 @@ describe('TechnicalAnalysisService', () => {
         candles: [
           {
             open: undefined,
-            high: '102',
-            low: '98',
-            close: '101',
-            volume: '1000',
+            high: 102,
+            low: 98,
+            close: 101,
+            volume: 1000,
           },
           {
-            open: '101',
+            open: 101,
             high: undefined,
-            low: '98',
-            close: '102',
-            volume: '1000',
+            low: 98,
+            close: 102,
+            volume: 1000,
           },
           {
-            open: '102',
-            high: '105',
+            open: 102,
+            high: 105,
             low: undefined,
-            close: '103',
-            volume: '1000',
+            close: 103,
+            volume: 1000,
           },
           {
-            open: '103',
-            high: '106',
-            low: '100',
+            open: 103,
+            high: 106,
+            low: 100,
             close: undefined,
-            volume: '1000',
+            volume: 1000,
           },
           {
-            open: '104',
-            high: '107',
-            low: '101',
-            close: '105',
+            open: 104,
+            high: 107,
+            low: 101,
+            close: 105,
             volume: undefined,
           },
         ] as never,
@@ -2753,8 +2751,8 @@ describe('TechnicalAnalysisService', () => {
       // Create candles with first candle having open=0 (edge case for division by zero)
       // Service uses candles[length-1] as oldest and candles[0] as latest
       const candlesWithZeroOpen = [
-        { open: '101', high: '105', low: '99', close: '104', volume: '1100' }, // Latest (index 0)
-        { open: '0', high: '102', low: '98', close: '101', volume: '1000' }, // Oldest with open=0
+        { open: 101, high: 105, low: 99, close: 104, volume: 1100 }, // Latest (index 0)
+        { open: 0, high: 102, low: 98, close: 101, volume: 1000 }, // Oldest with open=0
       ];
       getProductCandlesMock.mockResolvedValue({
         candles: candlesWithZeroOpen,
@@ -2779,7 +2777,7 @@ describe('TechnicalAnalysisService', () => {
     it('should handle MACD with null signal and histogram', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       calculateMacdMock.mockReturnValue({
@@ -2803,23 +2801,23 @@ describe('TechnicalAnalysisService', () => {
     it('should handle daily candles for pivot points (triggers fetchDailyCandles null handling)', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock
-        .mockResolvedValueOnce({ candles: asSdkCandles(mockCandles) })
+        .mockResolvedValueOnce({ candles: asCandles(mockCandles) })
         .mockResolvedValueOnce({
           // Need at least 2 daily candles (service uses index 1 for previous day)
           candles: [
             {
-              open: '105',
-              high: '115',
-              low: '100',
-              close: '110',
-              volume: '1100',
+              open: 105,
+              high: 115,
+              low: 100,
+              close: 110,
+              volume: 1100,
             }, // Current incomplete day
             {
-              open: '100',
-              high: '110',
-              low: '95',
-              close: '105',
-              volume: '1000',
+              open: 100,
+              high: 110,
+              low: 95,
+              close: 105,
+              volume: 1000,
             }, // Previous day
           ],
         });
@@ -2847,7 +2845,7 @@ describe('TechnicalAnalysisService', () => {
     it('should handle Stochastic with valid values', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       calculateStochasticMock.mockReturnValue({
@@ -2869,8 +2867,8 @@ describe('TechnicalAnalysisService', () => {
     it('should handle ATR when current price is zero (edge case)', async () => {
       // Create candles where the latest close price is 0
       const candlesWithZeroPrice = [
-        { open: '0', high: '0', low: '0', close: '0', volume: '1000' },
-        { open: '100', high: '105', low: '95', close: '101', volume: '1000' },
+        { open: 0, high: 0, low: 0, close: 0, volume: 1000 },
+        { open: 100, high: 105, low: 95, close: 101, volume: 1000 },
       ];
       getProductCandlesMock.mockResolvedValue({
         candles: candlesWithZeroPrice,
@@ -2895,7 +2893,7 @@ describe('TechnicalAnalysisService', () => {
     it('should not include indicators when latestValue is null', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       // All indicators return null latestValue
@@ -2952,7 +2950,7 @@ describe('TechnicalAnalysisService', () => {
     it('should handle volume profile with valid values', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       calculateVolumeProfileMock.mockReturnValue({
@@ -2981,7 +2979,7 @@ describe('TechnicalAnalysisService', () => {
     it('should handle OBV with null latestValue', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       calculateObvMock.mockReturnValue({
@@ -3002,7 +3000,7 @@ describe('TechnicalAnalysisService', () => {
     it('should interpret OBV flat trend when values are equal', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       // OBV with equal latest and previous values
@@ -3023,7 +3021,7 @@ describe('TechnicalAnalysisService', () => {
     it('should handle volume profile with null valueAreaHigh/Low', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       calculateVolumeProfileMock.mockReturnValue({
@@ -3054,7 +3052,7 @@ describe('TechnicalAnalysisService', () => {
     it('should handle fetchDailyCandles with null API fields', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock
-        .mockResolvedValueOnce({ candles: asSdkCandles(mockCandles) })
+        .mockResolvedValueOnce({ candles: asCandles(mockCandles) })
         .mockResolvedValueOnce({
           candles: [
             {
@@ -3098,7 +3096,7 @@ describe('TechnicalAnalysisService', () => {
     it('should handle swing points with null latest prices', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       // Swing points with null latest values
@@ -3127,7 +3125,7 @@ describe('TechnicalAnalysisService', () => {
     it('should handle RSI divergence with null latest divergence', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       detectRsiDivergenceMock.mockReturnValue({
@@ -3153,7 +3151,7 @@ describe('TechnicalAnalysisService', () => {
     it('should handle chart patterns with no patterns detected', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       detectChartPatternsMock.mockReturnValue({
@@ -3176,7 +3174,7 @@ describe('TechnicalAnalysisService', () => {
     it('should handle addSignalFromIndicator with null values', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       // Return indicators that don't contribute to signals
@@ -3198,7 +3196,7 @@ describe('TechnicalAnalysisService', () => {
     it('should handle candlestick patterns neutral bias (neither bullish nor bearish)', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       // Candlestick patterns with no bullish or bearish bias
@@ -3223,7 +3221,7 @@ describe('TechnicalAnalysisService', () => {
     it('should handle MACD crossover with null previous values', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       // MACD with null values in previous entry
@@ -3251,7 +3249,7 @@ describe('TechnicalAnalysisService', () => {
     it('should handle fetchDailyCandles with null candles response', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock
-        .mockResolvedValueOnce({ candles: asSdkCandles(mockCandles) })
+        .mockResolvedValueOnce({ candles: asCandles(mockCandles) })
         .mockResolvedValueOnce({
           candles: undefined, // Null candles array
         } as never);
@@ -3272,7 +3270,7 @@ describe('TechnicalAnalysisService', () => {
     it('should analyze multiple products in parallel', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       const result = await service.analyzeTechnicalIndicatorsBatch({
@@ -3294,7 +3292,7 @@ describe('TechnicalAnalysisService', () => {
     it('should handle errors for individual products', async () => {
       const mockCandles = createMockCandles(100);
       getProductCandlesMock
-        .mockResolvedValueOnce({ candles: asSdkCandles(mockCandles) })
+        .mockResolvedValueOnce({ candles: asCandles(mockCandles) })
         .mockRejectedValueOnce(new Error('Product not found'));
 
       const result = await service.analyzeTechnicalIndicatorsBatch({
@@ -3317,7 +3315,7 @@ describe('TechnicalAnalysisService', () => {
 
       // First product: bullish
       getProductCandlesMock.mockResolvedValueOnce({
-        candles: asSdkCandles(bullishCandles),
+        candles: asCandles(bullishCandles),
       });
       calculateRsiMock.mockReturnValueOnce({
         values: [25], // Oversold = bullish
@@ -3327,7 +3325,7 @@ describe('TechnicalAnalysisService', () => {
 
       // Second product: bearish
       getProductCandlesMock.mockResolvedValueOnce({
-        candles: asSdkCandles(bearishCandles),
+        candles: asCandles(bearishCandles),
       });
       calculateRsiMock.mockReturnValueOnce({
         values: [75], // Overbought = bearish
@@ -3364,7 +3362,7 @@ describe('TechnicalAnalysisService', () => {
     it('should pass candleCount and indicators to individual analyses', async () => {
       const mockCandles = createMockCandles(50);
       getProductCandlesMock.mockResolvedValue({
-        candles: asSdkCandles(mockCandles),
+        candles: asCandles(mockCandles),
       });
 
       await service.analyzeTechnicalIndicatorsBatch({

@@ -7,16 +7,15 @@
  */
 
 import type { ProductsService } from '.';
-import type {
-  TechnicalIndicatorsService,
-  CandleInput,
-} from './TechnicalIndicatorsService';
-import { toCandleInputs } from './TechnicalAnalysisService.convert';
+import type { TechnicalIndicatorsService } from './TechnicalIndicatorsService';
+import { CandleInputArraySchema, type CandleInput } from './common.schema';
 import { Granularity } from './ProductsService.types';
-import {
+import type {
   AnalyzeTechnicalIndicatorsRequest,
-  AnalyzeTechnicalIndicatorsResponse,
   AnalyzeTechnicalIndicatorsBatchRequest,
+} from './TechnicalAnalysisService.schema';
+import {
+  AnalyzeTechnicalIndicatorsResponse,
   AnalyzeTechnicalIndicatorsBatchResponse,
   IndicatorType,
   MomentumIndicators,
@@ -198,7 +197,7 @@ export class TechnicalAnalysisService {
       end: end.toISOString(),
     });
 
-    return toCandleInputs(response.candles);
+    return CandleInputArraySchema.parse(response.candles ?? []);
   }
 
   /**
@@ -217,7 +216,7 @@ export class TechnicalAnalysisService {
       end: end.toISOString(),
     });
 
-    return toCandleInputs(response.candles);
+    return CandleInputArraySchema.parse(response.candles ?? []);
   }
 
   /**
