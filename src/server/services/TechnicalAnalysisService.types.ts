@@ -5,8 +5,6 @@
  * provides integrated candle fetching and indicator calculation.
  */
 
-import { Granularity } from './ProductsService.types';
-
 /**
  * All supported indicator types (24 total).
  *
@@ -49,34 +47,6 @@ export enum IndicatorType {
   // Support/Resistance (2)
   PIVOT_POINTS = 'pivot_points',
   FIBONACCI = 'fibonacci',
-}
-
-/**
- * Request input for analyze_technical_indicators tool.
- */
-export interface AnalyzeTechnicalIndicatorsRequest {
-  /** Product ID (e.g., "BTC-USD") */
-  readonly productId: string;
-  /** Candle granularity (e.g., FIFTEEN_MINUTE, ONE_HOUR) */
-  readonly granularity: Granularity;
-  /** Number of candles to fetch (default: 100) */
-  readonly candleCount?: number;
-  /** Specific indicators to calculate (default: all 24) */
-  readonly indicators?: readonly IndicatorType[];
-}
-
-/**
- * Request input for analyze_technical_indicators_batch tool.
- */
-export interface AnalyzeTechnicalIndicatorsBatchRequest {
-  /** Product IDs to analyze (e.g., ["BTC-USD", "ETH-USD"]) */
-  readonly productIds: readonly string[];
-  /** Candle granularity (e.g., FIFTEEN_MINUTE, ONE_HOUR) */
-  readonly granularity: Granularity;
-  /** Number of candles to fetch (default: 100) */
-  readonly candleCount?: number;
-  /** Specific indicators to calculate (default: all 24) */
-  readonly indicators?: readonly IndicatorType[];
 }
 
 /**

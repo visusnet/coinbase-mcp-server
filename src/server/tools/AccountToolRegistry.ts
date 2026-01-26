@@ -1,6 +1,9 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { AccountsService } from '../services';
-import * as z from 'zod';
+import {
+  ListAccountsRequestSchema,
+  GetAccountRequestSchema,
+} from '../services/AccountsService.request';
 import { ToolRegistry } from './ToolRegistry';
 
 /**
@@ -15,28 +18,24 @@ export class AccountToolRegistry extends ToolRegistry {
   }
 
   public register(): void {
-    this.server.registerTool(
+    this.registerTool(
       'list_accounts',
       {
         title: 'List Accounts',
         description: 'Get a list of all accounts with their balances',
-        inputSchema: {},
+        inputSchema: ListAccountsRequestSchema.shape,
       },
-      this.call(this.accounts.listAccounts.bind(this.accounts)),
+      this.accounts.listAccounts.bind(this.accounts),
     );
 
-    this.server.registerTool(
+    this.registerTool(
       'get_account',
       {
         title: 'Get Account',
         description: 'Get details of a specific account by UUID',
-        inputSchema: {
-          accountUuid: z
-            .string()
-            .describe('The UUID of the account to retrieve'),
-        },
+        inputSchema: GetAccountRequestSchema.shape,
       },
-      this.call(this.accounts.getAccount.bind(this.accounts)),
+      this.accounts.getAccount.bind(this.accounts),
     );
   }
 }

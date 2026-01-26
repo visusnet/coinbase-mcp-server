@@ -1,52 +1,59 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
-import { createSdkPaymentMethodsServiceMock } from '@test/serviceMocks';
+import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
+import { mockResponse } from '@test/serviceMocks';
 import { PaymentMethodsService } from './PaymentMethodsService';
-
-const mockSdkService = createSdkPaymentMethodsServiceMock();
-
-// Mock the SDK
-jest.mock('@coinbase-sample/advanced-trade-sdk-ts/dist/index.js', () => ({
-  PaymentMethodsService: jest.fn().mockImplementation(() => mockSdkService),
-  CoinbaseAdvTradeClient: jest.fn(),
-}));
 
 describe('PaymentMethodsService', () => {
   let service: PaymentMethodsService;
+  let mockClient: {
+    request: jest.MockedFunction<CoinbaseAdvTradeClient['request']>;
+  };
 
   beforeEach(() => {
     jest.clearAllMocks();
-    service = new PaymentMethodsService({} as never);
+    mockClient = {
+      request: jest.fn<CoinbaseAdvTradeClient['request']>(),
+    };
+    service = new PaymentMethodsService(
+      mockClient as unknown as CoinbaseAdvTradeClient,
+    );
   });
 
   describe('listPaymentMethods', () => {
     it('should delegate to SDK', async () => {
-      const mockResponse = { paymentMethods: [] };
-      mockSdkService.listPaymentMethods.mockResolvedValue(mockResponse);
+      const responseData = { paymentMethods: [] };
+      mockClient.request.mockResolvedValue(mockResponse(responseData));
 
       const result = await service.listPaymentMethods();
 
-      expect(mockSdkService.listPaymentMethods).toHaveBeenCalled();
-      expect(result).toBe(mockResponse);
+      expect(mockClient.request).toHaveBeenCalledWith({
+        url: 'payment_methods',
+        queryParams: {},
+      });
+      expect(result).toEqual(responseData);
     });
   });
 
   describe('getPaymentMethod', () => {
     it('should delegate to SDK', async () => {
-      const mockResponse = {
-        id: 'pm-123',
-        type: 'BANK_ACCOUNT',
-        name: 'Test Bank',
+      const responseData = {
+        paymentMethod: {
+          id: 'pm-123',
+          type: 'BANK_ACCOUNT',
+          name: 'Test Bank',
+        },
       };
-      mockSdkService.getPaymentMethod.mockResolvedValue(mockResponse);
+      mockClient.request.mockResolvedValue(mockResponse(responseData));
 
       const result = await service.getPaymentMethod({
         paymentMethodId: 'pm-123',
       });
 
-      expect(mockSdkService.getPaymentMethod).toHaveBeenCalledWith({
-        paymentMethodId: 'pm-123',
+      expect(mockClient.request).toHaveBeenCalledWith({
+        url: 'payment_methods/pm-123',
+        queryParams: {},
       });
-      expect(result).toBe(mockResponse);
+      expect(result).toEqual(responseData);
     });
   });
 });

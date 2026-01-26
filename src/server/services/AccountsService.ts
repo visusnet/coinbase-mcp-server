@@ -1,46 +1,40 @@
-import {
-  AccountsService as SdkAccountsService,
-  CoinbaseAdvTradeClient,
-} from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
+import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
 import type {
-  SdkListAccountsResponse,
-  SdkGetAccountResponse,
   ListAccountsRequest,
-  ListAccountsResponse,
   GetAccountRequest,
+} from './AccountsService.request';
+import type {
+  ListAccountsResponse,
   GetAccountResponse,
-} from './AccountsService.types';
+} from './AccountsService.response';
 import {
-  toListAccountsResponse,
-  toGetAccountResponse,
-} from './AccountsService.convert';
+  ListAccountsResponseSchema,
+  GetAccountResponseSchema,
+} from './AccountsService.response';
 
 /**
  * Wrapper service for Coinbase Accounts API.
  * Converts response types from strings to numbers.
  */
 export class AccountsService {
-  private readonly sdk: SdkAccountsService;
-
-  public constructor(client: CoinbaseAdvTradeClient) {
-    this.sdk = new SdkAccountsService(client);
-  }
+  public constructor(private readonly client: CoinbaseAdvTradeClient) {}
 
   public async listAccounts(
     request?: ListAccountsRequest,
   ): Promise<ListAccountsResponse> {
-    const sdkResponse = (await this.sdk.listAccounts(
-      request ?? {},
-    )) as SdkListAccountsResponse;
-    return toListAccountsResponse(sdkResponse);
+    const response = await this.client.request({
+      url: 'accounts',
+      queryParams: request ?? {},
+    });
+    return ListAccountsResponseSchema.parse(response.data);
   }
 
   public async getAccount(
     request: GetAccountRequest,
   ): Promise<GetAccountResponse> {
-    const sdkResponse = (await this.sdk.getAccount(
-      request,
-    )) as SdkGetAccountResponse;
-    return toGetAccountResponse(sdkResponse);
+    const response = await this.client.request({
+      url: `accounts/${request.accountUuid}`,
+    });
+    return GetAccountResponseSchema.parse(response.data);
   }
 }

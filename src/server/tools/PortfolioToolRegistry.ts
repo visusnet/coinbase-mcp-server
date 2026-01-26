@@ -1,6 +1,13 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { PortfoliosService } from '../services';
-import * as z from 'zod';
+import {
+  ListPortfoliosRequestSchema,
+  CreatePortfolioRequestSchema,
+  GetPortfolioRequestSchema,
+  MovePortfolioFundsRequestSchema,
+  EditPortfolioRequestSchema,
+  DeletePortfolioRequestSchema,
+} from '../services/PortfoliosService.request';
 import { ToolRegistry } from './ToolRegistry';
 
 /**
@@ -15,86 +22,64 @@ export class PortfolioToolRegistry extends ToolRegistry {
   }
 
   public register(): void {
-    this.server.registerTool(
+    this.registerTool(
       'list_portfolios',
       {
         title: 'List Portfolios',
         description: 'Get a list of all portfolios',
-        inputSchema: {},
+        inputSchema: ListPortfoliosRequestSchema.shape,
       },
-      this.call(this.portfolios.listPortfolios.bind(this.portfolios)),
+      this.portfolios.listPortfolios.bind(this.portfolios),
     );
 
-    this.server.registerTool(
+    this.registerTool(
       'create_portfolio',
       {
         title: 'Create Portfolio',
         description: 'Create a new portfolio',
-        inputSchema: {
-          name: z.string().describe('Name of the portfolio'),
-        },
+        inputSchema: CreatePortfolioRequestSchema.shape,
       },
-      this.call(this.portfolios.createPortfolio.bind(this.portfolios)),
+      this.portfolios.createPortfolio.bind(this.portfolios),
     );
 
-    this.server.registerTool(
+    this.registerTool(
       'get_portfolio',
       {
         title: 'Get Portfolio',
         description: 'Get details of a specific portfolio',
-        inputSchema: {
-          portfolioUuid: z.string().describe('The UUID of the portfolio'),
-        },
+        inputSchema: GetPortfolioRequestSchema.shape,
       },
-      this.call(this.portfolios.getPortfolio.bind(this.portfolios)),
+      this.portfolios.getPortfolio.bind(this.portfolios),
     );
 
-    this.server.registerTool(
+    this.registerTool(
       'move_portfolio_funds',
       {
         title: 'Move Portfolio Funds',
         description: 'Move funds between portfolios',
-        inputSchema: {
-          funds: z
-            .object({
-              value: z.number().describe('Amount to transfer'),
-              currency: z.string().describe('Currency code (e.g., USD, BTC)'),
-            })
-            .describe('Fund movement details (amount, currency)'),
-          sourcePortfolioUuid: z.string().describe('Source portfolio UUID'),
-          targetPortfolioUuid: z.string().describe('Target portfolio UUID'),
-        },
+        inputSchema: MovePortfolioFundsRequestSchema.shape,
       },
-      this.call(this.portfolios.movePortfolioFunds.bind(this.portfolios)),
+      this.portfolios.movePortfolioFunds.bind(this.portfolios),
     );
 
-    this.server.registerTool(
+    this.registerTool(
       'edit_portfolio',
       {
         title: 'Edit Portfolio',
         description: 'Edit portfolio details (name)',
-        inputSchema: {
-          portfolioUuid: z
-            .string()
-            .describe('The UUID of the portfolio to edit'),
-          name: z.string().describe('New name for the portfolio'),
-        },
+        inputSchema: EditPortfolioRequestSchema.shape,
       },
-      this.call(this.portfolios.editPortfolio.bind(this.portfolios)),
+      this.portfolios.editPortfolio.bind(this.portfolios),
     );
 
-    this.server.registerTool(
+    this.registerTool(
       'delete_portfolio',
       {
         title: 'Delete Portfolio',
         description: 'Delete a portfolio',
-        inputSchema: {
-          portfolioUuid: z
-            .string()
-            .describe('The UUID of the portfolio to delete'),
-        },
+        inputSchema: DeletePortfolioRequestSchema.shape,
       },
-      this.call(this.portfolios.deletePortfolio.bind(this.portfolios)),
+      this.portfolios.deletePortfolio.bind(this.portfolios),
     );
   }
 }

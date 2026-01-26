@@ -1,60 +1,61 @@
-import {
-  ConvertsService as SdkConvertsService,
-  CoinbaseAdvTradeClient,
-} from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
+import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
+import { Method } from '@coinbase-sample/core-ts';
 import type {
-  SdkCreateConvertQuoteResponse,
-  SdkCommitConvertTradeResponse,
-  SdkGetConvertTradeResponse,
   CreateConvertQuoteRequest,
-  CreateConvertQuoteResponse,
   CommitConvertTradeRequest,
-  CommitConvertTradeResponse,
   GetConvertTradeRequest,
+} from './ConvertsService.request';
+import type {
+  CreateConvertQuoteResponse,
+  CommitConvertTradeResponse,
   GetConvertTradeResponse,
-} from './ConvertsService.types';
+} from './ConvertsService.response';
 import {
-  toSdkCreateConvertQuoteRequest,
-  toCreateConvertQuoteResponse,
-  toCommitConvertTradeResponse,
-  toGetConvertTradeResponse,
-} from './ConvertsService.convert';
+  CreateConvertQuoteResponseSchema,
+  CommitConvertTradeResponseSchema,
+  GetConvertTradeResponseSchema,
+} from './ConvertsService.response';
 
 /**
  * Wrapper service for Coinbase Converts API.
- * Converts number types to strings for SDK calls and SDK responses to numbers.
+ * Receives pre-transformed request data (numbers already converted to strings by MCP layer).
+ * Converts SDK response strings to numbers.
  */
 export class ConvertsService {
-  private readonly sdk: SdkConvertsService;
-
-  public constructor(client: CoinbaseAdvTradeClient) {
-    this.sdk = new SdkConvertsService(client);
-  }
+  public constructor(private readonly client: CoinbaseAdvTradeClient) {}
 
   public async createConvertQuote(
     request: CreateConvertQuoteRequest,
   ): Promise<CreateConvertQuoteResponse> {
-    const sdkResponse = (await this.sdk.createConvertQuote(
-      toSdkCreateConvertQuoteRequest(request),
-    )) as SdkCreateConvertQuoteResponse;
-    return toCreateConvertQuoteResponse(sdkResponse);
+    const response = await this.client.request({
+      url: 'convert/quote',
+      method: Method.POST,
+      bodyParams: request,
+    });
+    return CreateConvertQuoteResponseSchema.parse(response.data);
   }
 
   public async commitConvertTrade(
     request: CommitConvertTradeRequest,
   ): Promise<CommitConvertTradeResponse> {
-    const sdkResponse = (await this.sdk.commitConvertTrade(
-      request,
-    )) as SdkCommitConvertTradeResponse;
-    return toCommitConvertTradeResponse(sdkResponse);
+    const response = await this.client.request({
+      url: `convert/trade/${request.tradeId}`,
+      method: Method.POST,
+      bodyParams: request,
+    });
+    return CommitConvertTradeResponseSchema.parse(response.data);
   }
 
   public async getConvertTrade(
     request: GetConvertTradeRequest,
   ): Promise<GetConvertTradeResponse> {
-    const sdkResponse = (await this.sdk.GetConvertTrade(
-      request,
-    )) as SdkGetConvertTradeResponse;
-    return toGetConvertTradeResponse(sdkResponse);
+    const response = await this.client.request({
+      url: `convert/trade/${request.tradeId}`,
+      queryParams: {
+        fromAccount: request.fromAccount,
+        toAccount: request.toAccount,
+      },
+    });
+    return GetConvertTradeResponseSchema.parse(response.data);
   }
 }

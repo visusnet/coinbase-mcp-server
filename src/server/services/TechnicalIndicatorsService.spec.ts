@@ -1,8 +1,6 @@
 import { describe, it, expect } from '@jest/globals';
-import {
-  TechnicalIndicatorsService,
-  CandleInput,
-} from './TechnicalIndicatorsService';
+import { TechnicalIndicatorsService } from './TechnicalIndicatorsService';
+import type { CandleInput } from './common.response';
 import type {
   StandardPivotPointsOutput,
   FibonacciPivotPointsOutput,

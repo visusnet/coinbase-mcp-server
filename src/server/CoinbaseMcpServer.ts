@@ -2,10 +2,9 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { createMcpExpressApp } from '@modelcontextprotocol/sdk/server/express.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import type { Express, Request, Response } from 'express';
-import {
-  CoinbaseAdvTradeClient,
-  CoinbaseAdvTradeCredentials,
-} from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
+import { logger } from '../logger';
+import { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
+import { CoinbaseCredentials } from '@server/websocket/CoinbaseCredentials';
 import {
   AccountsService,
   OrdersService,
@@ -20,7 +19,9 @@ import {
   PublicService,
   TechnicalIndicatorsService,
   TechnicalAnalysisService,
-} from './services';
+  MarketEventService,
+} from '@server/services';
+import { WebSocketPool } from '@server/websocket/WebSocketPool';
 import { ToolRegistry } from './tools/ToolRegistry';
 import { AccountToolRegistry } from './tools/AccountToolRegistry';
 import { OrderToolRegistry } from './tools/OrderToolRegistry';
@@ -35,6 +36,7 @@ import { PerpetualsToolRegistry } from './tools/PerpetualsToolRegistry';
 import { DataToolRegistry } from './tools/DataToolRegistry';
 import { IndicatorToolRegistry } from './tools/IndicatorToolRegistry';
 import { AnalysisToolRegistry } from './tools/AnalysisToolRegistry';
+import { MarketEventToolRegistry } from './tools/MarketEventToolRegistry';
 
 export class CoinbaseMcpServer {
   private readonly app: Express;
@@ -52,9 +54,10 @@ export class CoinbaseMcpServer {
   private readonly data: DataService;
   private readonly technicalIndicators: TechnicalIndicatorsService;
   private readonly technicalAnalysis: TechnicalAnalysisService;
+  private readonly marketEvent: MarketEventService;
 
   constructor(apiKey: string, privateKey: string) {
-    const credentials = new CoinbaseAdvTradeCredentials(apiKey, privateKey);
+    const credentials = new CoinbaseCredentials(apiKey, privateKey);
     this.client = new CoinbaseAdvTradeClient(credentials);
 
     // Initialize all services with the client
@@ -74,6 +77,7 @@ export class CoinbaseMcpServer {
       this.products,
       this.technicalIndicators,
     );
+    this.marketEvent = new MarketEventService(new WebSocketPool(credentials));
 
     this.app = createMcpExpressApp();
 
@@ -96,7 +100,7 @@ export class CoinbaseMcpServer {
           void server.close();
         });
       } catch (error) {
-        console.error('Error handling MCP request:', error);
+        logger.server.error({ err: error }, 'Error handling MCP request');
         if (!res.headersSent) {
           res.status(500).json({
             jsonrpc: '2.0',
@@ -137,6 +141,7 @@ export class CoinbaseMcpServer {
       new DataToolRegistry(server, this.data),
       new IndicatorToolRegistry(server, this.technicalIndicators),
       new AnalysisToolRegistry(server, this.technicalAnalysis),
+      new MarketEventToolRegistry(server, this.marketEvent),
     ];
 
     registries.forEach((r) => {
@@ -159,7 +164,7 @@ export class CoinbaseMcpServer {
                 type: 'text',
                 text: `You are a Coinbase Advanced Trade assistant.
 
-TOOL CATEGORIES (72 total):
+TOOL CATEGORIES (73 total):
 - Accounts (2): list_accounts, get_account
 - Orders (9): create_order, preview_order, list_orders, get_order, cancel_orders, edit_order, preview_edit_order, list_fills, close_position
 - Products (8): list_products, get_product, get_product_candles, get_product_candles_batch, get_best_bid_ask, get_market_snapshot, get_product_book, get_market_trades
@@ -172,6 +177,7 @@ TOOL CATEGORIES (72 total):
 - Info (2): get_api_key_permissions, get_transaction_summary
 - Technical Indicators (24): calculate_rsi, calculate_macd, calculate_sma, calculate_ema, calculate_bollinger_bands, calculate_atr, calculate_stochastic, calculate_adx, calculate_obv, calculate_vwap, calculate_cci, calculate_williams_r, calculate_roc, calculate_mfi, calculate_psar, calculate_ichimoku_cloud, calculate_keltner_channels, calculate_fibonacci_retracement, detect_candlestick_patterns, calculate_volume_profile, calculate_pivot_points, detect_rsi_divergence, detect_chart_patterns, detect_swing_points
 - Technical Analysis (2): analyze_technical_indicators, analyze_technical_indicators_batch
+- Market Events (1): wait_for_market_event
 
 BEST PRACTICES:
 1. Always preview_order before create_order
@@ -181,7 +187,8 @@ BEST PRACTICES:
 5. Provide market context when relevant
 6. Use analyze_technical_indicators for efficient multi-indicator analysis (reduces context by ~90%)
 7. Use analyze_technical_indicators_batch when analyzing multiple products (returns ranking by signal score)
-8. Use individual indicator tools (calculate_*, detect_*) when you need specific indicator values`,
+8. Use individual indicator tools (calculate_*, detect_*) when you need specific indicator values
+9. Use wait_for_market_event for event-driven monitoring instead of polling with sleep`,
               },
             },
           ],
@@ -225,15 +232,15 @@ BEST PRACTICES:
 
   public listen(port: number): void {
     const server = this.app.listen(port, () => {
-      console.log(`Coinbase MCP Server listening on port ${port}`);
+      logger.server.info(`Coinbase MCP Server listening on port ${port}`);
     });
 
     server.on('error', (error: NodeJS.ErrnoException) => {
       if (error.code === 'EADDRINUSE') {
-        console.error(`Error: Port ${port} is already in use`);
-        console.error('Try a different port with: PORT=<port> npm start');
+        logger.server.error(`Port ${port} is already in use`);
+        logger.server.error('Try a different port with: PORT=<port> npm start');
       } else {
-        console.error(`Error starting server: ${error.message}`);
+        logger.server.error(`Error starting server: ${error.message}`);
       }
       process.exit(1);
     });

@@ -1,28 +1,32 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import * as z from 'zod';
 import type { TechnicalIndicatorsService } from '../services';
+import {
+  CalculateRsiRequestSchema,
+  CalculateMacdRequestSchema,
+  CalculateStochasticRequestSchema,
+  CalculateAdxRequestSchema,
+  CalculateCciRequestSchema,
+  CalculateWilliamsRRequestSchema,
+  CalculateRocRequestSchema,
+  CalculateSmaRequestSchema,
+  CalculateEmaRequestSchema,
+  CalculateIchimokuCloudRequestSchema,
+  CalculateBollingerBandsRequestSchema,
+  CalculateAtrRequestSchema,
+  CalculateKeltnerChannelsRequestSchema,
+  CalculatePsarRequestSchema,
+  CalculateObvRequestSchema,
+  CalculateVwapRequestSchema,
+  CalculateMfiRequestSchema,
+  CalculateVolumeProfileRequestSchema,
+  DetectCandlestickPatternsRequestSchema,
+  DetectRsiDivergenceRequestSchema,
+  DetectChartPatternsRequestSchema,
+  DetectSwingPointsRequestSchema,
+  CalculateFibonacciRetracementRequestSchema,
+  CalculatePivotPointsRequestSchema,
+} from '../services/TechnicalIndicatorsService.request';
 import { ToolRegistry } from './ToolRegistry';
-
-/**
- * Shared candle schema for technical indicator inputs.
- */
-const candleSchema = z.object({
-  open: z.number().describe('Opening price'),
-  high: z.number().describe('High price'),
-  low: z.number().describe('Low price'),
-  close: z.number().describe('Closing price'),
-  volume: z.number().describe('Volume'),
-});
-
-/**
- * Creates candle array schema with minimum count.
- */
-function candlesSchema(minCount: number, description?: string) {
-  return z
-    .array(candleSchema)
-    .min(minCount)
-    .describe(description ?? 'Array of candle data');
-}
 
 /**
  * Registry for technical indicator MCP tools (24 tools).
@@ -45,7 +49,7 @@ export class IndicatorToolRegistry extends ToolRegistry {
   }
 
   private registerMomentumIndicators(): void {
-    this.server.registerTool(
+    this.registerTool(
       'calculate_rsi',
       {
         title: 'Calculate RSI',
@@ -53,27 +57,12 @@ export class IndicatorToolRegistry extends ToolRegistry {
           'Calculate Relative Strength Index (RSI) from candle data. ' +
           'RSI measures momentum and identifies overbought (>70) or oversold (<30) conditions. ' +
           'Input candles should be in the same format as returned by get_product_candles.',
-        inputSchema: {
-          candles: candlesSchema(
-            2,
-            'Array of candle data (minimum 2 candles required)',
-          ),
-          period: z
-            .number()
-            .int()
-            .min(2)
-            .optional()
-            .describe(
-              'Number of candles to analyze (default: 14). ' +
-                'Lower values (7-9) react faster but produce more false signals. ' +
-                'Higher values (21-25) are slower but more reliable.',
-            ),
-        },
+        inputSchema: CalculateRsiRequestSchema.shape,
       },
-      this.call(this.indicators.calculateRsi.bind(this.indicators)),
+      this.indicators.calculateRsi.bind(this.indicators),
     );
 
-    this.server.registerTool(
+    this.registerTool(
       'calculate_macd',
       {
         title: 'Calculate MACD',
@@ -81,32 +70,12 @@ export class IndicatorToolRegistry extends ToolRegistry {
           'Calculate Moving Average Convergence Divergence (MACD) from candle data. ' +
           'MACD shows trend direction and momentum. Bullish when MACD crosses above signal line, ' +
           'bearish when it crosses below. Histogram shows the difference between MACD and signal.',
-        inputSchema: {
-          candles: candlesSchema(2),
-          fastPeriod: z
-            .number()
-            .int()
-            .min(2)
-            .optional()
-            .describe('Fast EMA period (default: 12)'),
-          slowPeriod: z
-            .number()
-            .int()
-            .min(2)
-            .optional()
-            .describe('Slow EMA period (default: 26)'),
-          signalPeriod: z
-            .number()
-            .int()
-            .min(2)
-            .optional()
-            .describe('Signal line period (default: 9)'),
-        },
+        inputSchema: CalculateMacdRequestSchema.shape,
       },
-      this.call(this.indicators.calculateMacd.bind(this.indicators)),
+      this.indicators.calculateMacd.bind(this.indicators),
     );
 
-    this.server.registerTool(
+    this.registerTool(
       'calculate_stochastic',
       {
         title: 'Calculate Stochastic Oscillator',
@@ -115,32 +84,12 @@ export class IndicatorToolRegistry extends ToolRegistry {
           'Returns %K (fast line) and %D (signal line) values. ' +
           '%K above %D is bullish, below is bearish. ' +
           'Values above 80 indicate overbought, below 20 indicate oversold.',
-        inputSchema: {
-          candles: candlesSchema(2),
-          kPeriod: z
-            .number()
-            .int()
-            .min(1)
-            .optional()
-            .describe(
-              'Period for %K line calculation (default: 14). ' +
-                'Number of periods to use for the raw stochastic calculation.',
-            ),
-          dPeriod: z
-            .number()
-            .int()
-            .min(1)
-            .optional()
-            .describe(
-              'Period for %D signal line smoothing (default: 3). ' +
-                'Moving average period applied to %K to create %D.',
-            ),
-        },
+        inputSchema: CalculateStochasticRequestSchema.shape,
       },
-      this.call(this.indicators.calculateStochastic.bind(this.indicators)),
+      this.indicators.calculateStochastic.bind(this.indicators),
     );
 
-    this.server.registerTool(
+    this.registerTool(
       'calculate_adx',
       {
         title: 'Calculate ADX (Average Directional Index)',
@@ -149,23 +98,12 @@ export class IndicatorToolRegistry extends ToolRegistry {
           'Measures trend strength regardless of direction. ' +
           'ADX > 25 indicates strong trend, < 20 indicates weak/no trend. ' +
           'Returns ADX, +DI (bullish pressure), and -DI (bearish pressure).',
-        inputSchema: {
-          candles: candlesSchema(2),
-          period: z
-            .number()
-            .int()
-            .min(1)
-            .optional()
-            .describe(
-              'Period for ADX calculation (default: 14). ' +
-                'Shorter periods give faster signals but more noise.',
-            ),
-        },
+        inputSchema: CalculateAdxRequestSchema.shape,
       },
-      this.call(this.indicators.calculateAdx.bind(this.indicators)),
+      this.indicators.calculateAdx.bind(this.indicators),
     );
 
-    this.server.registerTool(
+    this.registerTool(
       'calculate_cci',
       {
         title: 'Calculate CCI (Commodity Channel Index)',
@@ -174,20 +112,12 @@ export class IndicatorToolRegistry extends ToolRegistry {
           'Measures price deviation from statistical mean. ' +
           'Readings above +100 suggest overbought, below -100 suggest oversold. ' +
           'Useful for identifying cyclical trends in commodities and stocks.',
-        inputSchema: {
-          candles: candlesSchema(2),
-          period: z
-            .number()
-            .int()
-            .min(1)
-            .optional()
-            .describe('Period for CCI calculation (default: 20)'),
-        },
+        inputSchema: CalculateCciRequestSchema.shape,
       },
-      this.call(this.indicators.calculateCci.bind(this.indicators)),
+      this.indicators.calculateCci.bind(this.indicators),
     );
 
-    this.server.registerTool(
+    this.registerTool(
       'calculate_williams_r',
       {
         title: 'Calculate Williams %R',
@@ -196,20 +126,12 @@ export class IndicatorToolRegistry extends ToolRegistry {
           'Momentum indicator similar to Stochastic but inverted scale (-100 to 0). ' +
           'Readings above -20 suggest overbought, below -80 suggest oversold. ' +
           'Useful for identifying potential reversal points.',
-        inputSchema: {
-          candles: candlesSchema(2),
-          period: z
-            .number()
-            .int()
-            .min(1)
-            .optional()
-            .describe('Period for Williams %R calculation (default: 14)'),
-        },
+        inputSchema: CalculateWilliamsRRequestSchema.shape,
       },
-      this.call(this.indicators.calculateWilliamsR.bind(this.indicators)),
+      this.indicators.calculateWilliamsR.bind(this.indicators),
     );
 
-    this.server.registerTool(
+    this.registerTool(
       'calculate_roc',
       {
         title: 'Calculate ROC (Rate of Change)',
@@ -218,22 +140,14 @@ export class IndicatorToolRegistry extends ToolRegistry {
           'Momentum oscillator measuring percentage change between current price and price n periods ago. ' +
           'Positive values indicate upward momentum, negative values indicate downward momentum. ' +
           'Useful for identifying trend strength and potential reversals.',
-        inputSchema: {
-          candles: candlesSchema(2),
-          period: z
-            .number()
-            .int()
-            .min(1)
-            .optional()
-            .describe('Period for ROC calculation (default: 12)'),
-        },
+        inputSchema: CalculateRocRequestSchema.shape,
       },
-      this.call(this.indicators.calculateRoc.bind(this.indicators)),
+      this.indicators.calculateRoc.bind(this.indicators),
     );
   }
 
   private registerMovingAverages(): void {
-    this.server.registerTool(
+    this.registerTool(
       'calculate_sma',
       {
         title: 'Calculate SMA',
@@ -241,23 +155,12 @@ export class IndicatorToolRegistry extends ToolRegistry {
           'Calculate Simple Moving Average (SMA) from candle data. ' +
           'SMA equally weights all prices in the period, providing a smoothed trend line. ' +
           'Common periods: 10 (short-term), 20/50 (medium-term), 200 (long-term trend).',
-        inputSchema: {
-          candles: candlesSchema(1),
-          period: z
-            .number()
-            .int()
-            .min(1)
-            .optional()
-            .describe(
-              'Number of candles for SMA calculation (default: 20). ' +
-                'Common values: 10, 20, 50, 100, 200.',
-            ),
-        },
+        inputSchema: CalculateSmaRequestSchema.shape,
       },
-      this.call(this.indicators.calculateSma.bind(this.indicators)),
+      this.indicators.calculateSma.bind(this.indicators),
     );
 
-    this.server.registerTool(
+    this.registerTool(
       'calculate_ema',
       {
         title: 'Calculate EMA',
@@ -265,23 +168,12 @@ export class IndicatorToolRegistry extends ToolRegistry {
           'Calculate Exponential Moving Average (EMA) from candle data. ' +
           'EMA gives more weight to recent prices, making it more responsive than SMA. ' +
           'Common periods: 9 (short-term), 20 (medium-term), 50/200 (long-term trends).',
-        inputSchema: {
-          candles: candlesSchema(1),
-          period: z
-            .number()
-            .int()
-            .min(1)
-            .optional()
-            .describe(
-              'Number of candles for EMA calculation (default: 20). ' +
-                'Common values: 9, 12, 20, 26, 50, 200.',
-            ),
-        },
+        inputSchema: CalculateEmaRequestSchema.shape,
       },
-      this.call(this.indicators.calculateEma.bind(this.indicators)),
+      this.indicators.calculateEma.bind(this.indicators),
     );
 
-    this.server.registerTool(
+    this.registerTool(
       'calculate_ichimoku_cloud',
       {
         title: 'Calculate Ichimoku Cloud',
@@ -292,43 +184,14 @@ export class IndicatorToolRegistry extends ToolRegistry {
           'leading span A (Senkou Span A), and leading span B (Senkou Span B). ' +
           'Price above cloud is bullish, below is bearish. ' +
           'Cloud color (green/red) indicates future trend direction.',
-        inputSchema: {
-          candles: candlesSchema(
-            52,
-            'Array of candle data (minimum 52 for span period)',
-          ),
-          conversionPeriod: z
-            .number()
-            .int()
-            .min(1)
-            .optional()
-            .describe('Tenkan-sen period (default: 9)'),
-          basePeriod: z
-            .number()
-            .int()
-            .min(1)
-            .optional()
-            .describe('Kijun-sen period (default: 26)'),
-          spanPeriod: z
-            .number()
-            .int()
-            .min(1)
-            .optional()
-            .describe('Senkou Span B period (default: 52)'),
-          displacement: z
-            .number()
-            .int()
-            .min(1)
-            .optional()
-            .describe('Cloud displacement (default: 26)'),
-        },
+        inputSchema: CalculateIchimokuCloudRequestSchema.shape,
       },
-      this.call(this.indicators.calculateIchimokuCloud.bind(this.indicators)),
+      this.indicators.calculateIchimokuCloud.bind(this.indicators),
     );
   }
 
   private registerVolatilityIndicators(): void {
-    this.server.registerTool(
+    this.registerTool(
       'calculate_bollinger_bands',
       {
         title: 'Calculate Bollinger Bands',
@@ -336,25 +199,12 @@ export class IndicatorToolRegistry extends ToolRegistry {
           'Calculate Bollinger Bands from candle data. ' +
           'Returns upper, middle (SMA), and lower bands plus %B (position within bands). ' +
           'Price near upper band suggests overbought, near lower suggests oversold.',
-        inputSchema: {
-          candles: candlesSchema(2),
-          period: z
-            .number()
-            .int()
-            .min(2)
-            .optional()
-            .describe('SMA period for middle band (default: 20)'),
-          stdDev: z
-            .number()
-            .min(0.1)
-            .optional()
-            .describe('Standard deviation multiplier (default: 2)'),
-        },
+        inputSchema: CalculateBollingerBandsRequestSchema.shape,
       },
-      this.call(this.indicators.calculateBollingerBands.bind(this.indicators)),
+      this.indicators.calculateBollingerBands.bind(this.indicators),
     );
 
-    this.server.registerTool(
+    this.registerTool(
       'calculate_atr',
       {
         title: 'Calculate ATR (Average True Range)',
@@ -362,24 +212,12 @@ export class IndicatorToolRegistry extends ToolRegistry {
           'Calculate ATR from candle data. ' +
           'Measures market volatility by decomposing the entire range of an asset price for a period. ' +
           'Higher ATR indicates higher volatility. Useful for setting stop-losses and position sizing.',
-        inputSchema: {
-          candles: candlesSchema(2),
-          period: z
-            .number()
-            .int()
-            .min(1)
-            .optional()
-            .describe(
-              'Number of periods for ATR calculation (default: 14). ' +
-                'Shorter periods (e.g., 7) react faster to volatility changes, ' +
-                'longer periods (e.g., 21) provide smoother readings.',
-            ),
-        },
+        inputSchema: CalculateAtrRequestSchema.shape,
       },
-      this.call(this.indicators.calculateAtr.bind(this.indicators)),
+      this.indicators.calculateAtr.bind(this.indicators),
     );
 
-    this.server.registerTool(
+    this.registerTool(
       'calculate_keltner_channels',
       {
         title: 'Calculate Keltner Channels',
@@ -389,35 +227,12 @@ export class IndicatorToolRegistry extends ToolRegistry {
           'Returns middle (EMA), upper, and lower channel values. ' +
           'Price below lower channel suggests oversold, above upper suggests overbought. ' +
           'BB squeeze inside Keltner signals volatility breakout.',
-        inputSchema: {
-          candles: candlesSchema(20),
-          maPeriod: z
-            .number()
-            .int()
-            .min(1)
-            .optional()
-            .describe('Moving average period (default: 20)'),
-          atrPeriod: z
-            .number()
-            .int()
-            .min(1)
-            .optional()
-            .describe('ATR period (default: 10)'),
-          multiplier: z
-            .number()
-            .min(0.1)
-            .optional()
-            .describe('ATR multiplier for channel width (default: 2)'),
-          useSMA: z
-            .boolean()
-            .optional()
-            .describe('Use SMA instead of EMA (default: false)'),
-        },
+        inputSchema: CalculateKeltnerChannelsRequestSchema.shape,
       },
-      this.call(this.indicators.calculateKeltnerChannels.bind(this.indicators)),
+      this.indicators.calculateKeltnerChannels.bind(this.indicators),
     );
 
-    this.server.registerTool(
+    this.registerTool(
       'calculate_psar',
       {
         title: 'Calculate Parabolic SAR',
@@ -426,28 +241,14 @@ export class IndicatorToolRegistry extends ToolRegistry {
           'Trend-following indicator that provides potential entry and exit points. ' +
           'SAR below price indicates uptrend, SAR above price indicates downtrend. ' +
           'SAR flips signal trend reversals.',
-        inputSchema: {
-          candles: candlesSchema(2),
-          step: z
-            .number()
-            .min(0.001)
-            .max(1)
-            .optional()
-            .describe('Acceleration factor step (default: 0.02)'),
-          max: z
-            .number()
-            .min(0.01)
-            .max(1)
-            .optional()
-            .describe('Maximum acceleration factor (default: 0.2)'),
-        },
+        inputSchema: CalculatePsarRequestSchema.shape,
       },
-      this.call(this.indicators.calculatePsar.bind(this.indicators)),
+      this.indicators.calculatePsar.bind(this.indicators),
     );
   }
 
   private registerVolumeIndicators(): void {
-    this.server.registerTool(
+    this.registerTool(
       'calculate_obv',
       {
         title: 'Calculate OBV (On-Balance Volume)',
@@ -456,14 +257,12 @@ export class IndicatorToolRegistry extends ToolRegistry {
           'Measures buying and selling pressure using volume flow. ' +
           'Rising OBV confirms uptrend, falling OBV confirms downtrend. ' +
           'Divergence between price and OBV can signal reversals.',
-        inputSchema: {
-          candles: candlesSchema(2),
-        },
+        inputSchema: CalculateObvRequestSchema.shape,
       },
-      this.call(this.indicators.calculateObv.bind(this.indicators)),
+      this.indicators.calculateObv.bind(this.indicators),
     );
 
-    this.server.registerTool(
+    this.registerTool(
       'calculate_vwap',
       {
         title: 'Calculate VWAP (Volume Weighted Average Price)',
@@ -472,14 +271,12 @@ export class IndicatorToolRegistry extends ToolRegistry {
           'Represents the average price weighted by volume. ' +
           'Price above VWAP suggests bullish bias, below suggests bearish. ' +
           'Often used as intraday support/resistance level.',
-        inputSchema: {
-          candles: candlesSchema(1),
-        },
+        inputSchema: CalculateVwapRequestSchema.shape,
       },
-      this.call(this.indicators.calculateVwap.bind(this.indicators)),
+      this.indicators.calculateVwap.bind(this.indicators),
     );
 
-    this.server.registerTool(
+    this.registerTool(
       'calculate_mfi',
       {
         title: 'Calculate MFI (Money Flow Index)',
@@ -488,20 +285,12 @@ export class IndicatorToolRegistry extends ToolRegistry {
           'Volume-weighted RSI that measures buying and selling pressure. ' +
           'Readings above 80 suggest overbought, below 20 suggest oversold. ' +
           'Divergences between MFI and price can signal potential reversals.',
-        inputSchema: {
-          candles: candlesSchema(2),
-          period: z
-            .number()
-            .int()
-            .min(1)
-            .optional()
-            .describe('Period for MFI calculation (default: 14)'),
-        },
+        inputSchema: CalculateMfiRequestSchema.shape,
       },
-      this.call(this.indicators.calculateMfi.bind(this.indicators)),
+      this.indicators.calculateMfi.bind(this.indicators),
     );
 
-    this.server.registerTool(
+    this.registerTool(
       'calculate_volume_profile',
       {
         title: 'Calculate Volume Profile',
@@ -510,22 +299,14 @@ export class IndicatorToolRegistry extends ToolRegistry {
           'Divides price range into zones and shows volume distribution at each level. ' +
           'Returns zones with bullish/bearish volume, Point of Control (highest volume zone), ' +
           'and Value Area (70% of volume). Useful for identifying support/resistance levels.',
-        inputSchema: {
-          candles: candlesSchema(1),
-          noOfBars: z
-            .number()
-            .int()
-            .positive()
-            .optional()
-            .describe('Number of price zones (default: 12)'),
-        },
+        inputSchema: CalculateVolumeProfileRequestSchema.shape,
       },
-      this.call(this.indicators.calculateVolumeProfile.bind(this.indicators)),
+      this.indicators.calculateVolumeProfile.bind(this.indicators),
     );
   }
 
   private registerPatternDetection(): void {
-    this.server.registerTool(
+    this.registerTool(
       'detect_candlestick_patterns',
       {
         title: 'Detect Candlestick Patterns',
@@ -535,16 +316,12 @@ export class IndicatorToolRegistry extends ToolRegistry {
           'bearish (Shooting Star, Evening Star, Three Black Crows, Marubozu, Harami Cross, etc.), and neutral (Doji). ' +
           'Returns overall bullish/bearish bias and list of detected patterns. ' +
           'Useful for identifying potential reversals and continuation signals.',
-        inputSchema: {
-          candles: candlesSchema(1),
-        },
+        inputSchema: DetectCandlestickPatternsRequestSchema.shape,
       },
-      this.call(
-        this.indicators.detectCandlestickPatterns.bind(this.indicators),
-      ),
+      this.indicators.detectCandlestickPatterns.bind(this.indicators),
     );
 
-    this.server.registerTool(
+    this.registerTool(
       'detect_rsi_divergence',
       {
         title: 'Detect RSI Divergence',
@@ -555,26 +332,12 @@ export class IndicatorToolRegistry extends ToolRegistry {
           'hidden bullish (price higher lows, RSI lower lows), and ' +
           'hidden bearish (price lower highs, RSI higher highs). ' +
           'Returns divergences with strength classification (weak/medium/strong).',
-        inputSchema: {
-          candles: z
-            .array(candleSchema)
-            .describe('Array of candle data (oldest first)'),
-          rsiPeriod: z
-            .number()
-            .optional()
-            .describe('RSI period for calculation (default: 14)'),
-          lookbackPeriod: z
-            .number()
-            .optional()
-            .describe(
-              'Lookback period for peak/trough detection (default: 14)',
-            ),
-        },
+        inputSchema: DetectRsiDivergenceRequestSchema.shape,
       },
-      this.call(this.indicators.detectRsiDivergence.bind(this.indicators)),
+      this.indicators.detectRsiDivergence.bind(this.indicators),
     );
 
-    this.server.registerTool(
+    this.registerTool(
       'detect_chart_patterns',
       {
         title: 'Detect Chart Patterns',
@@ -583,20 +346,12 @@ export class IndicatorToolRegistry extends ToolRegistry {
           'Identifies reversal patterns (Double Top/Bottom, Head & Shoulders) ' +
           'and continuation patterns (Ascending/Descending Triangles, Bull/Bear Flags). ' +
           'Returns patterns with direction, confidence level, and price targets.',
-        inputSchema: {
-          candles: z
-            .array(candleSchema)
-            .describe('Array of candle data (oldest first)'),
-          lookbackPeriod: z
-            .number()
-            .optional()
-            .describe('Lookback period for pattern detection (default: 50)'),
-        },
+        inputSchema: DetectChartPatternsRequestSchema.shape,
       },
-      this.call(this.indicators.detectChartPatterns.bind(this.indicators)),
+      this.indicators.detectChartPatterns.bind(this.indicators),
     );
 
-    this.server.registerTool(
+    this.registerTool(
       'detect_swing_points',
       {
         title: 'Detect Swing Points (Williams Fractals)',
@@ -605,28 +360,14 @@ export class IndicatorToolRegistry extends ToolRegistry {
           "A swing high occurs when a bar's high is higher than the surrounding bars. " +
           "A swing low occurs when a bar's low is lower than the surrounding bars. " +
           'Useful for identifying support/resistance levels, trend direction, and Fibonacci retracement points.',
-        inputSchema: {
-          candles: candlesSchema(
-            5,
-            'Array of candle data (minimum 5 for default lookback)',
-          ),
-          lookback: z
-            .number()
-            .int()
-            .min(1)
-            .max(10)
-            .optional()
-            .describe(
-              'Number of bars on each side to compare (default: 2, resulting in 5-bar pattern)',
-            ),
-        },
+        inputSchema: DetectSwingPointsRequestSchema.shape,
       },
-      this.call(this.indicators.detectSwingPoints.bind(this.indicators)),
+      this.indicators.detectSwingPoints.bind(this.indicators),
     );
   }
 
   private registerSupportResistance(): void {
-    this.server.registerTool(
+    this.registerTool(
       'calculate_fibonacci_retracement',
       {
         title: 'Calculate Fibonacci Retracement',
@@ -636,21 +377,12 @@ export class IndicatorToolRegistry extends ToolRegistry {
           'Returns key retracement levels (0%, 23.6%, 38.2%, 50%, 61.8%, 78.6%, 100%) ' +
           'plus extension levels (127.2%, 161.8%, 261.8%, 423.6%). ' +
           'Price bouncing at 38.2% or 61.8% suggests support/resistance.',
-        inputSchema: {
-          start: z
-            .number()
-            .describe('Start price (low for uptrend, high for downtrend)'),
-          end: z
-            .number()
-            .describe('End price (high for uptrend, low for downtrend)'),
-        },
+        inputSchema: CalculateFibonacciRetracementRequestSchema.shape,
       },
-      this.call(
-        this.indicators.calculateFibonacciRetracement.bind(this.indicators),
-      ),
+      this.indicators.calculateFibonacciRetracement.bind(this.indicators),
     );
 
-    this.server.registerTool(
+    this.registerTool(
       'calculate_pivot_points',
       {
         title: 'Calculate Pivot Points',
@@ -659,23 +391,9 @@ export class IndicatorToolRegistry extends ToolRegistry {
           'Supports Standard, Fibonacci, Woodie, Camarilla, and DeMark calculation types. ' +
           'Returns pivot point with support (S1-S3) and resistance (R1-R3) levels. ' +
           'Used to identify potential support/resistance levels for the next trading period.',
-        inputSchema: {
-          high: z.number().describe('Previous period high price'),
-          low: z.number().describe('Previous period low price'),
-          close: z.number().describe('Previous period closing price'),
-          open: z
-            .number()
-            .optional()
-            .describe(
-              'Previous period opening price (required for DeMark type)',
-            ),
-          type: z
-            .enum(['standard', 'fibonacci', 'woodie', 'camarilla', 'demark'])
-            .optional()
-            .describe('Pivot point calculation type (default: standard)'),
-        },
+        inputSchema: CalculatePivotPointsRequestSchema.shape,
       },
-      this.call(this.indicators.calculatePivotPoints.bind(this.indicators)),
+      this.indicators.calculatePivotPoints.bind(this.indicators),
     );
   }
 }

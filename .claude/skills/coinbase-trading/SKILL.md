@@ -54,7 +54,20 @@ result = analyze_technical_indicators(
   productId="BTC-EUR",
   granularity="ONE_HOUR",
   candleCount=100,
-  indicators=["rsi", "macd", "bollinger", "adx", "obv", "pivots"]
+  indicators=[
+    // Momentum (7)
+    "rsi", "macd", "stochastic", "adx", "cci", "williams_r", "roc",
+    // Trend (4)
+    "sma", "ema", "ichimoku", "psar",
+    // Volatility (3)
+    "bollinger_bands", "atr", "keltner",
+    // Volume (4)
+    "obv", "mfi", "vwap", "volume_profile",
+    // Patterns (4)
+    "candlestick_patterns", "rsi_divergence", "chart_patterns", "swing_points",
+    // Support/Resistance (2)
+    "pivot_points", "fibonacci"
+  ]
 )
 ```
 
@@ -105,7 +118,101 @@ The MCP server provides 24 technical indicator tools. **Always use these instead
 - `detect_candlestick_patterns` - 31 candlestick patterns
 - `detect_chart_patterns` - Double Top/Bottom, H&S, Triangles, Flags
 
+**Market Events:**
+- `wait_for_market_event` - Event-driven monitoring for price conditions
+
 **Interval formats**: `interval=5m`, `interval=30m`, `interval=1h`, `interval=60s`
+
+### Event-Driven Position Monitoring
+
+Use `wait_for_market_event` instead of polling with sleep intervals for efficient, immediate reaction to market conditions.
+
+**When to use `wait_for_market_event` vs `sleep`:**
+
+| Situation | Tool | Reason |
+|-----------|------|--------|
+| Waiting for next cycle (no condition) | `sleep` | Simple interval waiting |
+| Waiting for stop-loss/take-profit | `wait_for_market_event` | Immediate reaction to price thresholds |
+| Waiting for entry signal | `wait_for_market_event` | Buy breakout/dip |
+| Waiting for volatility spike | `wait_for_market_event` | Volume/percent change condition |
+
+**Stop-Loss / Take-Profit Monitoring:**
+
+```
+wait_for_market_event({
+  subscriptions: [{
+    productId: "BTC-EUR",
+    conditions: [
+      { field: "price", operator: "lte", value: stopLossPrice },
+      { field: "price", operator: "gte", value: takeProfitPrice }
+    ],
+    logic: "any"
+  }],
+  timeout: 55
+})
+```
+
+**Trailing Stop Monitoring:**
+
+```
+wait_for_market_event({
+  subscriptions: [{
+    productId: "BTC-EUR",
+    conditions: [
+      { field: "price", operator: "lte", value: trailingStopPrice }
+    ]
+  }],
+  timeout: 55
+})
+```
+
+**Entry Signal Waiting (Buy the Dip):**
+
+```
+wait_for_market_event({
+  subscriptions: [{
+    productId: "BTC-EUR",
+    conditions: [
+      { field: "price", operator: "crossBelow", value: 60000 },
+      { field: "percentChange24h", operator: "lt", value: -5 }
+    ],
+    logic: "any"
+  }],
+  timeout: 55
+})
+```
+
+**Available Condition Fields:**
+- `price` - Current price
+- `volume24h` - 24-hour volume
+- `percentChange24h` - 24-hour percent change
+- `high24h` - 24-hour high
+- `low24h` - 24-hour low
+
+**Available Condition Operators:**
+- `gt` - Greater than
+- `gte` - Greater than or equal
+- `lt` - Less than
+- `lte` - Less than or equal
+- `crossAbove` - Crosses threshold upward (requires previous value below)
+- `crossBelow` - Crosses threshold downward (requires previous value above)
+
+**Response Handling:**
+
+```
+response = wait_for_market_event(...)
+
+IF response.status == "triggered":
+  // Condition was met - act immediately
+  // response.productId - which product triggered
+  // response.triggeredConditions - which conditions were met
+  // response.ticker - current ticker data
+
+ELSE IF response.status == "timeout":
+  // Timeout reached - perform normal analysis
+  // response.lastTickers - last known ticker for each product
+  // response.duration - how long we waited
+```
 
 ### Fee Optimization
 
@@ -284,7 +391,7 @@ candles_15m = get_product_candles(pair, FIFTEEN_MINUTE, 100)
 
 // Higher timeframes - for trend confirmation
 candles_1h = get_product_candles(pair, ONE_HOUR, 100)
-candles_4h = get_product_candles(pair, FOUR_HOUR, 60)
+candles_6h = get_product_candles(pair, SIX_HOUR, 60)
 candles_daily = get_product_candles(pair, ONE_DAY, 30)
 
 // Current price
@@ -297,7 +404,7 @@ current_price = get_best_bid_ask(pair)
 |-----------|---------|---------|
 | 15 min | 100 | Entry/Exit timing, primary signals |
 | 1 hour | 100 | Short-term trend confirmation |
-| 4 hour | 60 | Medium-term trend confirmation |
+| 6 hour | 60 | Medium-term trend confirmation |
 | Daily | 30 | Long-term trend confirmation |
 
 ### 3. Technical Analysis
@@ -433,7 +540,7 @@ See [indicators.md](indicators.md) for detailed calculation formulas.
 After calculating indicators on the primary 15m timeframe, determine trend direction for higher timeframes:
 
 ```
-// For each higher timeframe (1h, 4h, daily):
+// For each higher timeframe (1h, 6h, daily):
 //
 // 1. Calculate MACD (12, 26, 9)
 // 2. Calculate EMA alignment (EMA9 > EMA21 > EMA50)
@@ -449,7 +556,7 @@ ELSE:
 
 // Store trend for each timeframe:
 trend_1h = calculate_trend(candles_1h)
-trend_4h = calculate_trend(candles_4h)
+trend_6h = calculate_trend(candles_6h)
 trend_daily = calculate_trend(candles_daily)
 ```
 
@@ -459,7 +566,7 @@ trend_daily = calculate_trend(candles_daily)
 BTC-EUR Trend Analysis:
   15m: MACD bullish, EMA aligned up, RSI 65
   1h: BULLISH (MACD +120, EMA 9>21>50, +DI>-DI)
-  4h: BULLISH (MACD +80, EMA aligned, ADX 28)
+  6h: BULLISH (MACD +80, EMA aligned, ADX 28)
   Daily: NEUTRAL (MACD near zero, sideways)
 ```
 
@@ -796,16 +903,16 @@ Apply trend alignment rules BEFORE executing trades:
 IF signal_15m > 40:  // BUY signal detected
 
   // Check higher timeframe alignment
-  IF trend_daily == "bearish" OR trend_4h == "bearish":
+  IF trend_daily == "bearish" OR trend_6h == "bearish":
     Log: "BUY signal rejected: conflicts with higher timeframe trend"
-    Log: "  Daily: {trend_daily}, 4h: {trend_4h}, 1h: {trend_1h}"
+    Log: "  Daily: {trend_daily}, 6h: {trend_6h}, 1h: {trend_1h}"
     signal_strength = signal_strength × 0.3  // Reduce by 70%
 
   ELSE IF trend_1h == "bearish":
     Log: "BUY signal weakened: 1h trend bearish (pullback zone)"
     signal_strength = signal_strength × 0.7  // Reduce by 30%
 
-  ELSE IF trend_daily == "bullish" AND trend_4h == "bullish":
+  ELSE IF trend_daily == "bullish" AND trend_6h == "bullish":
     Log: "BUY signal CONFIRMED: aligned with higher timeframes ✓"
     // No reduction, proceed with full strength
 
@@ -813,24 +920,24 @@ IF signal_15m > 40:  // BUY signal detected
 IF signal_15m < -40:  // SELL signal detected
 
   // Check higher timeframe alignment
-  IF trend_daily == "bullish" OR trend_4h == "bullish":
+  IF trend_daily == "bullish" OR trend_6h == "bullish":
     Log: "SELL signal rejected: conflicts with higher timeframe trend"
-    Log: "  Daily: {trend_daily}, 4h: {trend_4h}, 1h: {trend_1h}"
+    Log: "  Daily: {trend_daily}, 6h: {trend_6h}, 1h: {trend_1h}"
     signal_strength = signal_strength × 0.3  // Reduce by 70%
 
   ELSE IF trend_1h == "bullish":
     Log: "SELL signal weakened: 1h trend bullish (rally in downtrend)"
     signal_strength = signal_strength × 0.7  // Reduce by 30%
 
-  ELSE IF trend_daily == "bearish" AND trend_4h == "bearish":
+  ELSE IF trend_daily == "bearish" AND trend_6h == "bearish":
     Log: "SELL signal CONFIRMED: aligned with higher timeframes ✓"
     // No reduction, proceed with full strength
 ```
 
 **Ideal Entry Scenarios**:
 
-- **BUY**: Daily bullish + 4h bullish + 1h pullback (bearish) → Strong BUY on 15m reversal
-- **SELL**: Daily bearish + 4h bearish + 1h rally (bullish) → Strong SELL on 15m reversal
+- **BUY**: Daily bullish + 6h bullish + 1h pullback (bearish) → Strong BUY on 15m reversal
+- **SELL**: Daily bearish + 6h bearish + 1h rally (bullish) → Strong SELL on 15m reversal
 
 **Trade Filters** (do NOT trade if):
 
@@ -1216,10 +1323,43 @@ If the argument contains "dry-run":
 After each trading cycle:
 
 1. **Output report** (as described above)
-2. **Execute sleep**: `sleep <seconds>` based on configured interval (default: 900 = 15 minutes)
-3. **Start over**: Begin again at step 1 (check portfolio status)
+2. **Wait for next event**:
+   - **With open positions**: Use `wait_for_market_event` with SL/TP conditions
+   - **Without positions, with entry signal**: Use `wait_for_market_event` with entry conditions
+   - **Without positions, no signal**: Use `sleep` for next analysis cycle
+3. **Handle response**:
+   - `status: "triggered"` → Act immediately (execute SL/TP, check entry)
+   - `status: "timeout"` → Perform normal analysis
+4. **Start over**: Begin again at step 1 (check portfolio status)
 
-**Parse interval from arguments:**
+**Example: Event-Driven SL/TP Monitoring**
+
+```
+// After analysis, with BTC position open
+// Entry @ 95,000€, SL @ 91,200€, TP @ 98,800€
+
+response = wait_for_market_event({
+  subscriptions: [{
+    productId: "BTC-EUR",
+    conditions: [
+      { field: "price", operator: "lte", value: 91200 },  // SL
+      { field: "price", operator: "gte", value: 98800 }   // TP
+    ],
+    logic: "any"
+  }],
+  timeout: 55
+})
+
+IF response.status == "triggered":
+  IF response.triggeredConditions[0].operator == "lte":
+    → Execute STOP-LOSS (Market Order)
+  ELSE:
+    → Execute TAKE-PROFIT (Limit Order)
+ELSE:
+  → Perform normal analysis cycle
+```
+
+**Fallback to sleep (when no position or signal):**
 
 - `interval=5m` → `sleep 300`
 - `interval=15m` → `sleep 900` (default)
@@ -1227,10 +1367,20 @@ After each trading cycle:
 - `interval=1h` → `sleep 3600`
 - `interval=60s` → `sleep 60`
 
+**Benefits of Event-Driven Monitoring:**
+
+| Aspect | Sleep-Polling (15min) | Event-Driven |
+|--------|----------------------|--------------|
+| SL/TP Detection | Up to 15 minutes late | Within seconds |
+| Token Usage | Higher (frequent analysis) | Lower (waits for events) |
+| API Calls | Every interval | Only on triggers |
+| Reaction Time | Interval-dependent | Near-instant |
+
 The agent runs indefinitely until the user stops it with Ctrl+C.
 
 **Important during the loop:**
 
 - Load/save positions from trading-state.json each cycle
-- Check stop-loss/take-profit on each cycle
-- Show at the end of each cycle: "Next cycle in X minutes at Y... (sleep Z)"
+- Use `wait_for_market_event` for positions with active SL/TP
+- Fall back to `sleep` when no conditions to monitor
+- Show at the end of each cycle: "Monitoring SL/TP..." or "Next cycle in X minutes..."

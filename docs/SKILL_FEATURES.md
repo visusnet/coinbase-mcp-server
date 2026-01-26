@@ -6,15 +6,16 @@ Complete overview of all features of the autonomous trading agent.
 
 ## 📊 Overview
 
-| Category             | Features      |
-|----------------------|---------------|
-| Risk Management      | 6             |
-| Order Management     | 5             |
-| Technical Analysis   | 6 Categories  |
-| Sentiment Analysis   | 2             |
-| Liquidity Management | 1             |
-| Capital Management   | 4             |
-| State Management     | 1             |
+| Category              | Features      |
+|-----------------------|---------------|
+| Risk Management       | 6             |
+| Order Management      | 6             |
+| Technical Analysis    | 6 Categories  |
+| Sentiment Analysis    | 2             |
+| Liquidity Management  | 1             |
+| Capital Management    | 4             |
+| Event-Driven Monitoring | 1           |
+| State Management      | 1             |
 
 ---
 
@@ -346,6 +347,94 @@ Checks orderbook before altcoin entries.
 | < 0.2%       | Full Position | 100%          |
 
 **Bypassed for**: BTC-EUR, ETH-EUR, Limit Orders, Exits
+
+---
+
+## ⚡ Event-Driven Monitoring
+
+### Long-Polling Market Events
+
+Use `wait_for_market_event` for efficient, event-driven position monitoring instead of polling with sleep intervals.
+
+| Parameter     | Value           | Description                           |
+|---------------|-----------------|---------------------------------------|
+| Max Timeout   | 55 seconds      | Avoids MCP timeout (60s)              |
+| Max Subscriptions | 10          | Products to monitor per call          |
+| Max Conditions | 5 per product  | Conditions per subscription           |
+| Logic Modes   | any / all       | OR (any condition) / AND (all)        |
+
+**Available Fields:**
+
+| Field            | Description             |
+|------------------|-------------------------|
+| price            | Current price           |
+| volume24h        | 24-hour trading volume  |
+| percentChange24h | 24-hour percent change  |
+| high24h          | 24-hour high            |
+| low24h           | 24-hour low             |
+
+**Available Operators:**
+
+| Operator    | Description                                  |
+|-------------|----------------------------------------------|
+| gt          | Greater than                                 |
+| gte         | Greater than or equal                        |
+| lt          | Less than                                    |
+| lte         | Less than or equal                           |
+| crossAbove  | Price crosses threshold upward               |
+| crossBelow  | Price crosses threshold downward             |
+
+**Use Cases:**
+
+| Scenario                  | Configuration                                    |
+|---------------------------|--------------------------------------------------|
+| Stop-Loss Monitoring      | `price lte {stopLossPrice}`                      |
+| Take-Profit Monitoring    | `price gte {takeProfitPrice}`                    |
+| Trailing Stop             | `price lte {trailingStopPrice}`                  |
+| Buy the Dip               | `price crossBelow {targetPrice}`                 |
+| Breakout Entry            | `price crossAbove {resistanceLevel}`             |
+| Volatility Alert          | `percentChange24h lt -5` OR `gt 5`               |
+
+**Example: SL/TP Monitoring**
+
+```
+wait_for_market_event({
+  subscriptions: [{
+    productId: "BTC-EUR",
+    conditions: [
+      { field: "price", operator: "lte", value: 91200 },  // SL
+      { field: "price", operator: "gte", value: 98800 }   // TP
+    ],
+    logic: "any"
+  }],
+  timeout: 55
+})
+```
+
+**Response Types:**
+
+| Status    | Meaning                          | Action                        |
+|-----------|----------------------------------|-------------------------------|
+| triggered | Condition met                    | Execute SL/TP/Entry           |
+| timeout   | 55s elapsed without trigger      | Perform normal analysis cycle |
+
+**Benefits vs Sleep-Polling:**
+
+| Aspect           | Sleep (15min)          | Event-Driven            |
+|------------------|------------------------|-------------------------|
+| SL/TP Detection  | Up to 15 minutes late  | Within seconds          |
+| Token Usage      | Higher                 | Lower                   |
+| API Calls        | Every interval         | Only on triggers        |
+| Reaction Time    | Interval-dependent     | Near-instant            |
+
+**Integration with Trading Loop:**
+
+```
+After each analysis cycle:
+1. If open positions → wait_for_market_event with SL/TP conditions
+2. If no positions but entry signal → wait_for_market_event with entry conditions
+3. If no positions and no signal → sleep for next analysis cycle
+```
 
 ---
 

@@ -1,207 +1,135 @@
-// Wrapper types that accept numbers for API convenience (SDK requires strings)
-import type { OrderSide } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/OrderSide.js';
-import type { StopPriceDirection } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/StopPriceDirection.js';
-import type { Edit } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/Edit';
-import type { MarginType } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/MarginType';
-import type { OrderConfiguration as SdkOrderConfiguration } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/OrderConfiguration';
-import type { OrderExecutionStatus } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/OrderExecutionStatus';
-import type { OrderPlacementSource } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/OrderPlacementSource';
-import type { OrderType } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/OrderType';
-import type { ProductType } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/ProductType';
-import type { RejectReason } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/RejectReason';
-import type { StopTriggerStatus } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/StopTriggerStatus';
-import type { TimeInForceType } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/TimeInForceType';
-
 // =============================================================================
-// SDK Types (for conversion) - these have our own converted counterparts
+// Request Enums
 // =============================================================================
 
-export type {
-  ListOrdersResponse as SdkListOrdersResponse,
-  GetOrderResponse as SdkGetOrderResponse,
-  CreateOrderRequest as SdkCreateOrderRequest,
-  EditOrderRequest as SdkEditOrderRequest,
-  EditOrderPreviewRequest as SdkPreviewEditOrderRequest,
-  ClosePositionRequest as SdkClosePositionRequest,
-  CreateOrderPreviewRequest as SdkPreviewOrderRequest,
-} from '@coinbase-sample/advanced-trade-sdk-ts/dist/rest/orders/types';
+/** Order side for buy/sell orders */
+export enum OrderSide {
+  Buy = 'BUY',
+  Sell = 'SELL',
+}
+
+/** Stop price direction for stop-limit orders */
+export enum StopPriceDirection {
+  Up = 'STOP_DIRECTION_STOP_UP',
+  Down = 'STOP_DIRECTION_STOP_DOWN',
+}
 
 // =============================================================================
-// Our Types (with number values instead of string)
+// Response Enums
 // =============================================================================
 
-/** Market order configuration for immediate-or-cancel execution */
-export interface MarketMarketIoc {
-  readonly quoteSize?: number;
-  readonly baseSize?: number;
+/** Order execution status */
+export enum OrderExecutionStatus {
+  Pending = 'PENDING',
+  Open = 'OPEN',
+  Filled = 'FILLED',
+  Cancelled = 'CANCELLED',
+  Expired = 'EXPIRED',
+  Failed = 'FAILED',
+  UnknownOrderStatus = 'UNKNOWN_ORDER_STATUS',
+  Queued = 'QUEUED',
+  CancelQueued = 'CANCEL_QUEUED',
 }
 
-/** Limit order configuration for good-till-cancelled execution */
-export interface LimitLimitGtc {
-  readonly baseSize: number;
-  readonly limitPrice: number;
-  readonly postOnly?: boolean;
+/** Time in force type */
+export enum TimeInForceType {
+  UnknownTimeInForce = 'UNKNOWN_TIME_IN_FORCE',
+  GoodUntilDateTime = 'GOOD_UNTIL_DATE_TIME',
+  GoodUntilCancelled = 'GOOD_UNTIL_CANCELLED',
+  ImmediateOrCancel = 'IMMEDIATE_OR_CANCEL',
+  FillOrKill = 'FILL_OR_KILL',
 }
 
-export interface LimitLimitGtd {
-  readonly baseSize: number;
-  readonly limitPrice: number;
-  readonly endTime: string;
-  readonly postOnly?: boolean;
+/** Order type */
+export enum OrderType {
+  UnknownOrderType = 'UNKNOWN_ORDER_TYPE',
+  Market = 'MARKET',
+  Limit = 'LIMIT',
+  Stop = 'STOP',
+  StopLimit = 'STOP_LIMIT',
+  Bracket = 'BRACKET',
 }
 
-export interface LimitLimitFok {
-  readonly baseSize: number;
-  readonly limitPrice: number;
+/** Cancel order failure reason */
+export enum CancelOrderFailureReason {
+  UnknownCancelFailureReason = 'UNKNOWN_CANCEL_FAILURE_REASON',
+  InvalidCancelRequest = 'INVALID_CANCEL_REQUEST',
+  UnknownCancelOrder = 'UNKNOWN_CANCEL_ORDER',
+  CommanderRejectedCancelOrder = 'COMMANDER_REJECTED_CANCEL_ORDER',
+  DuplicateCancelRequest = 'DUPLICATE_CANCEL_REQUEST',
+  InvalidCancelProductId = 'INVALID_CANCEL_PRODUCT_ID',
+  InvalidCancelFcmTradingSession = 'INVALID_CANCEL_FCM_TRADING_SESSION',
+  NotAllowedToCancel = 'NOT_ALLOWED_TO_CANCEL',
+  OrderIsFullyFilled = 'ORDER_IS_FULLY_FILLED',
+  OrderIsBeingReplaced = 'ORDER_IS_BEING_REPLACED',
 }
 
-export interface SorLimitIoc {
-  readonly baseSize: number;
-  readonly limitPrice: number;
+/** Liquidity indicator for fills */
+export enum LiquidityIndicator {
+  UnknownLiquidityIndicator = 'UNKNOWN_LIQUIDITY_INDICATOR',
+  Maker = 'MAKER',
+  Taker = 'TAKER',
 }
 
-/** Stop-limit order configuration for good-till-cancelled execution */
-export interface StopLimitStopLimitGtc {
-  readonly baseSize: number;
-  readonly limitPrice: number;
-  readonly stopPrice: number;
-  readonly stopDirection?: StopPriceDirection;
+/** Edit order failure reason */
+export enum EditOrderFailureReason {
+  UnknownEditOrderFailureReason = 'UNKNOWN_EDIT_ORDER_FAILURE_REASON',
+  CommanderRejectedEditOrder = 'COMMANDER_REJECTED_EDIT_ORDER',
+  CannotEditToBelowFilledSize = 'CANNOT_EDIT_TO_BELOW_FILLED_SIZE',
+  OrderNotFound = 'ORDER_NOT_FOUND',
+  CallerIdMismatch = 'CALLER_ID_MISMATCH',
+  OnlyLimitOrderEditsSupported = 'ONLY_LIMIT_ORDER_EDITS_SUPPORTED',
+  InvalidEditedSize = 'INVALID_EDITED_SIZE',
+  InvalidEditedPrice = 'INVALID_EDITED_PRICE',
+  InvalidOriginalSize = 'INVALID_ORIGINAL_SIZE',
+  InvalidOriginalPrice = 'INVALID_ORIGINAL_PRICE',
+  EditRequestEqualToOriginalRequest = 'EDIT_REQUEST_EQUAL_TO_ORIGINAL_REQUEST',
+  OnlyOpenOrdersCanBeEdited = 'ONLY_OPEN_ORDERS_CAN_BE_EDITED',
+  SizeInQuoteEditsNotAllowed = 'SIZE_IN_QUOTE_EDITS_NOT_ALLOWED',
+  OrderIsAlreadyBeingReplaced = 'ORDER_IS_ALREADY_BEING_REPLACED',
 }
 
-export interface StopLimitStopLimitGtd {
-  readonly baseSize: number;
-  readonly limitPrice: number;
-  readonly stopPrice: number;
-  readonly endTime: string;
-  readonly stopDirection?: StopPriceDirection;
+/** New order failure reason */
+export enum NewOrderFailureReason {
+  UnknownFailureReason = 'UNKNOWN_FAILURE_REASON',
+  UnsupportedOrderConfiguration = 'UNSUPPORTED_ORDER_CONFIGURATION',
+  InvalidSide = 'INVALID_SIDE',
+  InvalidProductId = 'INVALID_PRODUCT_ID',
+  InvalidSizePrecision = 'INVALID_SIZE_PRECISION',
+  InvalidPricePrecision = 'INVALID_PRICE_PRECISION',
+  InsufficientFund = 'INSUFFICIENT_FUND',
+  InvalidLedgerBalance = 'INVALID_LEDGER_BALANCE',
+  OrderEntryDisabled = 'ORDER_ENTRY_DISABLED',
+  IneligiblePair = 'INELIGIBLE_PAIR',
+  InvalidLimitPricePostOnly = 'INVALID_LIMIT_PRICE_POST_ONLY',
+  InvalidLimitPrice = 'INVALID_LIMIT_PRICE',
+  InvalidNoLiquidity = 'INVALID_NO_LIQUIDITY',
+  InvalidRequest = 'INVALID_REQUEST',
+  CommanderRejectedNewOrder = 'COMMANDER_REJECTED_NEW_ORDER',
+  InsufficientFunds = 'INSUFFICIENT_FUNDS',
+  InLiquidation = 'IN_LIQUIDATION',
+  InvalidMarginType = 'INVALID_MARGIN_TYPE',
+  InvalidLeverage = 'INVALID_LEVERAGE',
+  UntradableProduct = 'UNTRADABLE_PRODUCT',
+  InvalidFcmTradingSession = 'INVALID_FCM_TRADING_SESSION',
+  GeofencingRestriction = 'GEOFENCING_RESTRICTION',
 }
 
-/** Trigger bracket order configuration for good-till-cancelled execution */
-export interface TriggerBracketGtc {
-  readonly baseSize: number;
-  readonly limitPrice: number;
-  readonly stopTriggerPrice: number;
+/** Preview failure reason */
+export enum PreviewFailureReason {
+  UnknownPreviewFailureReason = 'UNKNOWN_PREVIEW_FAILURE_REASON',
+  PreviewMissingCommissionRate = 'PREVIEW_MISSING_COMMISSION_RATE',
+  PreviewInvalidSide = 'PREVIEW_INVALID_SIDE',
+  PreviewInvalidOrderConfig = 'PREVIEW_INVALID_ORDER_CONFIG',
+  PreviewInvalidProductId = 'PREVIEW_INVALID_PRODUCT_ID',
+  PreviewInvalidSizePrecision = 'PREVIEW_INVALID_SIZE_PRECISION',
+  PreviewInvalidPricePrecision = 'PREVIEW_INVALID_PRICE_PRECISION',
+  PreviewInsufficientFund = 'PREVIEW_INSUFFICIENT_FUND',
 }
 
-export interface TriggerBracketGtd {
-  readonly baseSize: number;
-  readonly limitPrice: number;
-  readonly stopTriggerPrice: number;
-  readonly endTime: string;
+/** Preview warning message */
+export enum PreviewWarningMsg {
+  Unknown = 'UNKNOWN',
+  BigOrder = 'BIG_ORDER',
+  SmallOrder = 'SMALL_ORDER',
 }
-
-// Full order configuration with all types
-export interface OrderConfiguration {
-  readonly marketMarketIoc?: MarketMarketIoc;
-  readonly limitLimitGtc?: LimitLimitGtc;
-  readonly limitLimitGtd?: LimitLimitGtd;
-  readonly limitLimitFok?: LimitLimitFok;
-  readonly sorLimitIoc?: SorLimitIoc;
-  readonly stopLimitStopLimitGtc?: StopLimitStopLimitGtc;
-  readonly stopLimitStopLimitGtd?: StopLimitStopLimitGtd;
-  readonly triggerBracketGtc?: TriggerBracketGtc;
-  readonly triggerBracketGtd?: TriggerBracketGtd;
-}
-
-// Create order request with number types
-export interface CreateOrderRequest {
-  readonly clientOrderId: string;
-  readonly productId: string;
-  readonly side: OrderSide;
-  readonly orderConfiguration: OrderConfiguration;
-}
-
-// Edit order request with number types
-export interface EditOrderRequest {
-  readonly orderId: string;
-  readonly price: number;
-  readonly size: number;
-}
-
-// Preview edit order request with number types
-export interface PreviewEditOrderRequest {
-  readonly orderId: string;
-  readonly price: number;
-  readonly size: number;
-}
-
-// Close position request with number types
-export interface ClosePositionRequest {
-  readonly clientOrderId: string;
-  readonly productId: string;
-  readonly size?: number;
-}
-
-// Preview order request with number types
-export interface PreviewOrderRequest {
-  readonly productId: string;
-  readonly side: OrderSide;
-  readonly orderConfiguration: OrderConfiguration;
-}
-
-// Order type with numbers instead of strings for numeric fields
-export interface Order {
-  readonly orderId: string;
-  readonly productId: string;
-  readonly userId: string;
-  readonly orderConfiguration: SdkOrderConfiguration;
-  readonly side: OrderSide;
-  readonly clientOrderId: string;
-  readonly status: OrderExecutionStatus;
-  readonly timeInForce?: TimeInForceType;
-  readonly createdTime: string;
-  readonly completionPercentage: number;
-  readonly filledSize?: number;
-  readonly averageFilledPrice: number;
-  readonly fee?: number;
-  readonly numberOfFills: number;
-  readonly filledValue?: number;
-  readonly pendingCancel: boolean;
-  readonly sizeInQuote: boolean;
-  readonly totalFees: number;
-  readonly sizeInclusiveOfFees: boolean;
-  readonly totalValueAfterFees: number;
-  readonly triggerStatus?: StopTriggerStatus;
-  readonly orderType?: OrderType;
-  readonly rejectReason?: RejectReason;
-  readonly settled?: boolean;
-  readonly productType?: ProductType;
-  readonly rejectMessage?: string;
-  readonly cancelMessage?: string;
-  readonly orderPlacementSource?: OrderPlacementSource;
-  readonly outstandingHoldAmount?: number;
-  readonly isLiquidation?: boolean;
-  readonly lastFillTime?: string;
-  readonly editHistory?: Array<Edit>;
-  readonly leverage?: number;
-  readonly marginType?: MarginType;
-  readonly retailPortfolioId?: string;
-}
-
-// Response type aliases with our Order type
-export type GetOrderResponse = Order;
-
-// ListOrdersResponse with our Order type
-export interface ListOrdersResponse {
-  readonly orders?: Order[];
-  readonly cursor?: string;
-  readonly hasNext: boolean;
-}
-
-// Re-export other response types unchanged (no numeric fields to convert)
-export type {
-  CreateOrderResponse,
-  ListOrdersRequest,
-  GetOrderRequest,
-  CancelOrdersRequest,
-  CancelOrderResponse as CancelOrdersResponse,
-  ListFillsRequest,
-  ListFillsResponse,
-  EditOrderResponse,
-  EditOrderPreviewResponse as PreviewEditOrderResponse,
-  ClosePositionResponse,
-  CreateOrderPreviewResponse as PreviewOrderResponse,
-} from '@coinbase-sample/advanced-trade-sdk-ts/dist/rest/orders/types';
-
-// Re-export OrderSide for convenience
-export { OrderSide } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/OrderSide.js';

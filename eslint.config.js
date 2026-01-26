@@ -38,6 +38,10 @@ export default tseslint.config(
     rules: {
       ...jest.configs['flat/recommended'].rules,
       '@typescript-eslint/no-require-imports': 'off',
+      'jest/expect-expect': [
+        'error',
+        { assertFunctionNames: ['expect', 'expectResponseToContain'] },
+      ],
     },
   },
   {
