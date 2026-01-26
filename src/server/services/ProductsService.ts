@@ -1,113 +1,127 @@
-import {
-  ProductsService as SdkProductsService,
-  CoinbaseAdvTradeClient,
-} from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
+import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
 import type {
-  SdkListProductsResponse,
-  SdkGetBestBidAskResponse,
-  SdkGetProductBookResponse,
-  ListProductsRequest,
-  ListProductsResponse,
-  GetProductRequest,
-  GetProductResponse,
-  GetProductCandlesRequest,
-  GetProductCandlesResponse,
-  GetProductBookRequest,
-  GetProductBookResponse,
-  GetBestBidAskRequest,
-  GetBestBidAskResponse,
-  GetProductMarketTradesRequest,
-  GetProductMarketTradesResponse,
-  GetMarketSnapshotRequest,
   GetMarketSnapshotResponse,
-  GetProductCandlesBatchRequest,
   GetProductCandlesBatchResponse,
   OrderBookData,
   MarketSnapshot,
   SpreadStatus,
   ProductCandles,
-  SdkGetProductResponse,
 } from './ProductsService.types';
-import type { Product, L2Level, PriceBook } from './common.types';
+import type { Product, L2Level, PriceBook, Candle } from './common.response';
 import {
-  toListProductsResponse,
-  toSdkGetProductCandlesRequest,
-  toGetBestBidAskResponse,
-  toGetProductBookResponse,
-  toGetProductResponse,
-} from './ProductsService.convert';
-import {
-  toCandle,
-  toGetPublicMarketTradesResponse,
-} from './PublicService.convert';
-import type { SdkGetMarketTradesResponse } from './PublicService.types';
+  ListProductsResponseSchema,
+  GetProductResponseSchema,
+  GetProductCandlesResponseSchema,
+  GetProductBookResponseSchema,
+  GetBestBidAskResponseSchema,
+  GetProductMarketTradesResponseSchema,
+} from './ProductsService.response';
+import type {
+  ListProductsResponse,
+  GetProductResponse,
+  GetProductCandlesResponse,
+  GetProductBookResponse,
+  GetBestBidAskResponse,
+  GetProductMarketTradesResponse,
+} from './ProductsService.response';
+import type {
+  ListProductsRequest,
+  GetProductRequest,
+  GetProductCandlesRequest,
+  GetProductBookRequest,
+  GetBestBidAskRequest,
+  GetProductMarketTradesRequest,
+  GetMarketSnapshotRequest,
+  GetProductCandlesBatchRequest,
+} from './ProductsService.request';
 
 /**
  * Wrapper service for Coinbase Products API.
  * Delegates to SDK service and handles timestamp conversion.
  */
 export class ProductsService {
-  private readonly sdk: SdkProductsService;
-
-  public constructor(client: CoinbaseAdvTradeClient) {
-    this.sdk = new SdkProductsService(client);
-  }
+  public constructor(private readonly client: CoinbaseAdvTradeClient) {}
 
   public async listProducts(
     request?: ListProductsRequest,
   ): Promise<ListProductsResponse> {
-    const sdkResponse = (await this.sdk.listProducts(
-      request ?? {},
-    )) as SdkListProductsResponse;
-    return toListProductsResponse(sdkResponse);
+    const response = await this.client.request({
+      url: 'products',
+      queryParams: request ?? {},
+    });
+    return ListProductsResponseSchema.parse(response.data);
   }
 
   public async getProduct(
     request: GetProductRequest,
   ): Promise<GetProductResponse> {
-    const sdkResponse = (await this.sdk.getProduct(
-      request,
-    )) as SdkGetProductResponse;
-    return toGetProductResponse(sdkResponse);
+    let queryParams = {};
+    if (request.getTradabilityStatus) {
+      queryParams = {
+        getTradabilityStatus: request.getTradabilityStatus,
+      };
+    }
+    const response = await this.client.request({
+      url: `products/${request.productId}`,
+      queryParams,
+    });
+    return GetProductResponseSchema.parse(response.data);
   }
 
   /**
-   * Get product candles with automatic ISO 8601 to Unix timestamp conversion.
-   * The SDK expects ISO 8601 but the underlying API requires Unix timestamps.
+   * Get product candles.
+   * Receives pre-transformed request (ISO 8601 already converted to Unix timestamps by MCP layer).
    */
-  public getProductCandles(
+  public async getProductCandles(
     request: GetProductCandlesRequest,
   ): Promise<GetProductCandlesResponse> {
-    return this.sdk.getProductCandles(
-      toSdkGetProductCandlesRequest(request),
-    ) as Promise<GetProductCandlesResponse>;
+    const queryParams = {
+      start: request.start,
+      end: request.end,
+      granularity: request.granularity,
+      limit: request.limit || 350,
+    };
+    const response = await this.client.request({
+      url: `products/${request.productId}/candles`,
+      queryParams,
+    });
+    return GetProductCandlesResponseSchema.parse(response.data);
   }
 
   public async getProductBook(
     request: GetProductBookRequest,
   ): Promise<GetProductBookResponse> {
-    const sdkResponse = (await this.sdk.getProductBook(
-      request,
-    )) as SdkGetProductBookResponse;
-    return toGetProductBookResponse(sdkResponse);
+    const response = await this.client.request({
+      url: 'product_book',
+      queryParams: request,
+    });
+    return GetProductBookResponseSchema.parse(response.data);
   }
 
   public async getBestBidAsk(
     request?: GetBestBidAskRequest,
   ): Promise<GetBestBidAskResponse> {
-    const sdkResponse = (await this.sdk.getBestBidAsk(
-      request ?? {},
-    )) as SdkGetBestBidAskResponse;
-    return toGetBestBidAskResponse(sdkResponse);
+    let queryParams = {};
+    if (request?.productIds) {
+      queryParams = {
+        productIds: request.productIds.join(','),
+      };
+    }
+    const response = await this.client.request({
+      url: 'best_bid_ask',
+      queryParams,
+    });
+    return GetBestBidAskResponseSchema.parse(response.data);
   }
 
   public async getProductMarketTrades(
     request: GetProductMarketTradesRequest,
   ): Promise<GetProductMarketTradesResponse> {
-    const sdkResponse = (await this.sdk.getProductMarketTrades(
-      request,
-    )) as SdkGetMarketTradesResponse;
-    return toGetPublicMarketTradesResponse(sdkResponse);
+    const response = await this.client.request({
+      url: `products/${request.productId}/ticker`,
+      queryParams: request,
+    });
+    return GetProductMarketTradesResponseSchema.parse(response.data);
   }
 
   public async getMarketSnapshot({
@@ -179,8 +193,7 @@ export class ProductsService {
             end,
             granularity,
           });
-          const sdkCandles = response.candles ?? [];
-          const candles = sdkCandles.map(toCandle);
+          const candles: Candle[] = response.candles ?? [];
           productCandlesByProductId[productId] = {
             candles,
             latest: candles[0] ?? null,
@@ -348,6 +361,9 @@ function findBestAndWorstPerformers(
 
   for (const [id, snapshot] of Object.entries(snapshots)) {
     const change = snapshot.change24hPercent;
+    if (change === undefined) {
+      continue;
+    }
     if (change > bestPerformer.change) {
       bestPerformer = { id, change };
     }

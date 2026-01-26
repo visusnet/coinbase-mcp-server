@@ -4,7 +4,7 @@
 
 This server now uses the official `@coinbase-sample/advanced-trade-sdk-ts` SDK directly, eliminating all custom domain/repository layers.
 
-**Total Tools: 72**
+**Total Tools: 73**
 
 ## Accounts (2)
 
@@ -116,3 +116,7 @@ This server now uses the official `@coinbase-sample/advanced-trade-sdk-ts` SDK d
 
 - ✅ `analyze_technical_indicators` - Calculate multiple indicators server-side, reducing context usage by ~90-95%. Fetches candles and returns computed values, aggregated signals, and price summary
 - ✅ `analyze_technical_indicators_batch` - Analyze multiple products in parallel. Returns results for each product with a summary ranking by signal score
+
+## Market Events (1)
+
+- ✅ `wait_for_market_event` - Wait for specific market conditions via real-time WebSocket. Monitors ticker data and triggers when conditions are met or timeout reached. Supports operators: gt, gte, lt, lte, crossAbove, crossBelow. Fields: price, volume24h, percentChange24h, high24h, low24h. Use instead of polling for efficient event-driven monitoring

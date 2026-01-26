@@ -1,31 +1,30 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
-import { ProductType } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/ProductType.js';
-import { ContractExpiryType } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/ContractExpiryType.js';
-import { ProductVenue } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/ProductVenue.js';
-import { GstType } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/GstType.js';
-import type { GetTransactionSummaryResponse as SdkGetTransactionSummaryResponse } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/GetTransactionSummaryResponse';
-import { createSdkFeesServiceMock } from '@test/serviceMocks';
+import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
+import { mockResponse } from '@test/serviceMocks';
 import { FeesService } from './FeesService';
-
-const mockSdkService = createSdkFeesServiceMock();
-
-// Mock the SDK
-jest.mock('@coinbase-sample/advanced-trade-sdk-ts/dist/index.js', () => ({
-  FeesService: jest.fn().mockImplementation(() => mockSdkService),
-  CoinbaseAdvTradeClient: jest.fn(),
-}));
+import {
+  ContractExpiryType,
+  ProductType,
+  ProductVenue,
+} from './FeesService.request';
 
 describe('FeesService', () => {
   let service: FeesService;
+  let mockClient: {
+    request: jest.MockedFunction<CoinbaseAdvTradeClient['request']>;
+  };
 
   beforeEach(() => {
     jest.clearAllMocks();
-    service = new FeesService({} as never);
+    mockClient = {
+      request: jest.fn<CoinbaseAdvTradeClient['request']>(),
+    };
+    service = new FeesService(mockClient as unknown as CoinbaseAdvTradeClient);
   });
 
   describe('getTransactionSummary', () => {
     it('should convert SDK response to our types', async () => {
-      const sdkResponse: SdkGetTransactionSummaryResponse = {
+      const mockResponse_ = {
         totalVolume: 1000,
         totalFees: 10,
         feeTier: {
@@ -38,14 +37,14 @@ describe('FeesService', () => {
           aopTo: '100000',
         },
         marginRate: { value: '0.05' },
-        goodsAndServicesTax: { rate: '0.10', type: GstType.Inclusive },
+        goodsAndServicesTax: { rate: '0.10', type: 'INCLUSIVE' },
         advancedTradeOnlyVolume: 500,
         advancedTradeOnlyFees: 5,
         coinbaseProVolume: 500,
         coinbaseProFees: 5,
         totalBalance: '50000',
       };
-      mockSdkService.getTransactionSummary.mockResolvedValue(sdkResponse);
+      mockClient.request.mockResolvedValue(mockResponse(mockResponse_));
 
       const result = await service.getTransactionSummary({
         productType: ProductType.Spot,
@@ -53,24 +52,27 @@ describe('FeesService', () => {
         productVenue: ProductVenue.Cbe,
       });
 
-      expect(mockSdkService.getTransactionSummary).toHaveBeenCalledWith({
-        productType: ProductType.Spot,
-        contractExpiryType: ContractExpiryType.UnknownContractExpiryType,
-        productVenue: ProductVenue.Cbe,
+      expect(mockClient.request).toHaveBeenCalledWith({
+        url: 'transaction_summary',
+        queryParams: {
+          productType: ProductType.Spot,
+          contractExpiryType: ContractExpiryType.UnknownContractExpiryType,
+          productVenue: ProductVenue.Cbe,
+        },
       });
       // Verify conversions - numeric fields already numbers, string fields converted
       expect(result.totalVolume).toBe(1000);
       expect(result.totalFees).toBe(10);
-      expect(result.feeTier.pricingTier).toBe('Advanced');
-      expect(result.feeTier.usdFrom).toBe(0);
-      expect(result.feeTier.usdTo).toBe(10000);
-      expect(result.feeTier.takerFeeRate).toBe(0.006);
-      expect(result.feeTier.makerFeeRate).toBe(0.004);
-      expect(result.feeTier.aopFrom).toBe(0);
-      expect(result.feeTier.aopTo).toBe(100000);
+      expect(result.feeTier?.pricingTier).toBe('Advanced');
+      expect(result.feeTier?.usdFrom).toBe(0);
+      expect(result.feeTier?.usdTo).toBe(10000);
+      expect(result.feeTier?.takerFeeRate).toBe(0.006);
+      expect(result.feeTier?.makerFeeRate).toBe(0.004);
+      expect(result.feeTier?.aopFrom).toBe(0);
+      expect(result.feeTier?.aopTo).toBe(100000);
       expect(result.marginRate?.value).toBe(0.05);
       expect(result.goodsAndServicesTax?.rate).toBe(0.1);
-      expect(result.goodsAndServicesTax?.type).toBe(GstType.Inclusive);
+      expect(result.goodsAndServicesTax?.type).toBe('INCLUSIVE');
       expect(result.advancedTradeOnlyVolume).toBe(500);
       expect(result.advancedTradeOnlyFees).toBe(5);
       expect(result.coinbaseProVolume).toBe(500);
@@ -79,12 +81,12 @@ describe('FeesService', () => {
     });
 
     it('should handle response without optional fields', async () => {
-      const sdkResponse: SdkGetTransactionSummaryResponse = {
+      const mockResponse_ = {
         totalVolume: 1000,
         totalFees: 10,
         feeTier: { pricingTier: 'Basic' },
       };
-      mockSdkService.getTransactionSummary.mockResolvedValue(sdkResponse);
+      mockClient.request.mockResolvedValue(mockResponse(mockResponse_));
 
       const result = await service.getTransactionSummary({
         productType: ProductType.Spot,
@@ -94,7 +96,7 @@ describe('FeesService', () => {
 
       expect(result.totalVolume).toBe(1000);
       expect(result.totalFees).toBe(10);
-      expect(result.feeTier.pricingTier).toBe('Basic');
+      expect(result.feeTier?.pricingTier).toBe('Basic');
       expect(result.marginRate).toBeUndefined();
       expect(result.goodsAndServicesTax).toBeUndefined();
       expect(result.totalBalance).toBeUndefined();

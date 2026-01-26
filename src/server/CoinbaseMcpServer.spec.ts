@@ -2,17 +2,20 @@ import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
-import type { GetAccountsResponse } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/GetAccountsResponse';
-import { CancelOrderFailureReason } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/CancelOrderFailureReason';
-import { OrderExecutionStatus } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/OrderExecutionStatus';
-import { OrderPlacementSource } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/OrderPlacementSource';
-import { OrderType } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/OrderType';
-import { ProductType } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/ProductType';
-import { RejectReason } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/RejectReason';
-import { StopTriggerStatus } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/StopTriggerStatus';
-import { TimeInForceType } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/TimeInForceType';
-import { OrderSide } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/OrderSide';
 import request from 'supertest';
+import {
+  CancelOrderFailureReason,
+  OrderExecutionStatus,
+  OrderSide,
+  OrderType,
+  TimeInForceType,
+} from './services/OrdersService.types';
+import {
+  ContractExpiryType,
+  ProductType,
+  ProductVenue,
+} from './services/FeesService.request';
+import { PortfolioType } from './services/common.response';
 import * as StreamableHttpModule from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import {
   mockAccountsService,
@@ -28,9 +31,16 @@ import {
   mockDataService,
   mockTechnicalIndicatorsService,
   mockTechnicalAnalysisService,
+  mockMarketEventService,
   mockServices,
 } from '@test/serviceMocks';
-import { Granularity } from './services';
+import { mockLogger } from '@test/loggerMock';
+import { Granularity } from '@server/services';
+
+const logger = mockLogger();
+jest.mock('../logger', () => ({
+  logger,
+}));
 
 mockServices();
 
@@ -44,6 +54,9 @@ describe('CoinbaseMcpServer Integration Tests', () => {
     '-----BEGIN EC PRIVATE KEY-----\ntest\n-----END EC PRIVATE KEY-----';
 
   beforeEach(async () => {
+    // Clear all mocks between tests
+    jest.clearAllMocks();
+
     // Create server instance
     coinbaseMcpServer = new CoinbaseMcpServer(apiKey, privateKey);
     const mcpServer = coinbaseMcpServer.getMcpServer();
@@ -77,7 +90,7 @@ describe('CoinbaseMcpServer Integration Tests', () => {
         const result = {
           accounts: [],
           hasNext: false,
-        } satisfies GetAccountsResponse;
+        };
         mockAccountsService.listAccounts.mockResolvedValueOnce(result);
 
         const response = await client.callTool({
@@ -148,14 +161,14 @@ describe('CoinbaseMcpServer Integration Tests', () => {
           totalFees: 0,
           sizeInclusiveOfFees: false,
           totalValueAfterFees: 0,
-          triggerStatus: StopTriggerStatus.InvalidOrderType,
+          triggerStatus: 'INVALID_ORDER_TYPE',
           orderType: OrderType.Limit,
-          rejectReason: RejectReason.RejectReasonUnspecified,
+          rejectReason: 'REJECT_REASON_UNSPECIFIED',
           settled: false,
-          productType: ProductType.Spot,
+          productType: 'SPOT',
           rejectMessage: '',
           cancelMessage: '',
-          orderPlacementSource: OrderPlacementSource.RetailAdvanced,
+          orderPlacementSource: 'RETAIL_ADVANCED',
           outstandingHoldAmount: 0,
         };
         mockOrdersService.getOrder.mockResolvedValueOnce(result);
@@ -173,7 +186,7 @@ describe('CoinbaseMcpServer Integration Tests', () => {
         const args = {
           clientOrderId: 'client-order-123',
           productId: 'BTC-USD',
-          side: 'BUY',
+          side: OrderSide.Buy,
           orderConfiguration: {},
         };
         const result = { success: true, orderId: 'order-123' };
@@ -191,9 +204,14 @@ describe('CoinbaseMcpServer Integration Tests', () => {
       it('should call cancelOrders via MCP tool cancel_orders', async () => {
         const args = { orderIds: ['order-123', 'order-456'] };
         const result = {
-          success: true,
-          failureReason: CancelOrderFailureReason.UnknownCancelFailureReason,
-          orderId: 'order-123',
+          results: [
+            {
+              success: true,
+              failureReason:
+                CancelOrderFailureReason.UnknownCancelFailureReason,
+              orderId: 'order-123',
+            },
+          ],
         };
         mockOrdersService.cancelOrders.mockResolvedValueOnce(result);
 
@@ -230,7 +248,12 @@ describe('CoinbaseMcpServer Integration Tests', () => {
           arguments: args,
         });
 
-        expect(mockOrdersService.editOrder).toHaveBeenCalledWith(args);
+        // Schema transforms numbers to strings before passing to service
+        expect(mockOrdersService.editOrder).toHaveBeenCalledWith({
+          orderId: 'order-123',
+          price: '50000',
+          size: '0.1',
+        });
         expectResponseToContain(response, result);
       });
 
@@ -238,7 +261,7 @@ describe('CoinbaseMcpServer Integration Tests', () => {
         const args = { orderId: 'order-123', price: 50000, size: 0.1 };
         const result = {
           errors: [],
-          slippage: '0.01',
+          slippage: 0.01,
         };
         mockOrdersService.editOrderPreview.mockResolvedValueOnce(result);
 
@@ -247,27 +270,32 @@ describe('CoinbaseMcpServer Integration Tests', () => {
           arguments: args,
         });
 
-        expect(mockOrdersService.editOrderPreview).toHaveBeenCalledWith(args);
+        // Schema transforms numbers to strings before passing to service
+        expect(mockOrdersService.editOrderPreview).toHaveBeenCalledWith({
+          orderId: 'order-123',
+          price: '50000',
+          size: '0.1',
+        });
         expectResponseToContain(response, result);
       });
 
       it('should call createOrderPreview via MCP tool preview_order', async () => {
         const args = {
           productId: 'BTC-USD',
-          side: 'BUY',
+          side: OrderSide.Buy,
           orderConfiguration: {},
         };
         const result = {
-          orderTotal: '50000',
-          commissionTotal: '50',
+          orderTotal: 50000,
+          commissionTotal: 50,
           errs: [],
           warning: [],
-          quoteSize: '50000',
-          baseSize: '0.01',
-          bestBid: '49990',
-          bestAsk: '50010',
+          quoteSize: 50000,
+          baseSize: 0.01,
+          bestBid: 49990,
+          bestAsk: 50010,
           isMax: false,
-          slippage: '0.01',
+          slippage: 0.01,
         };
         mockOrdersService.createOrderPreview.mockResolvedValueOnce(result);
 
@@ -335,7 +363,7 @@ describe('CoinbaseMcpServer Integration Tests', () => {
             postOnly: false,
             tradingDisabled: false,
             auctionMode: false,
-            productType: ProductType.Spot,
+            productType: 'SPOT',
             quoteCurrencyId: 'USD',
             baseCurrencyId: 'BTC',
             _new: false,
@@ -385,17 +413,21 @@ describe('CoinbaseMcpServer Integration Tests', () => {
           arguments: args,
         });
 
-        expect(mockProductsService.getProductCandles).toHaveBeenCalledWith(
-          args,
-        );
+        // Schema transforms ISO timestamps to Unix timestamps before passing to service
+        expect(mockProductsService.getProductCandles).toHaveBeenCalledWith({
+          productId: 'BTC-USD',
+          start: '1704067200',
+          end: '1704153600',
+          granularity: 'ONE_HOUR',
+        });
         expectResponseToContain(response, result);
       });
 
       it('should call getProductCandlesBatch via MCP tool get_product_candles_batch', async () => {
         const args = {
           productIds: ['BTC-EUR', 'ETH-EUR'],
-          start: new Date().toISOString(),
-          end: new Date().toISOString(),
+          start: '2024-01-01T00:00:00Z',
+          end: '2024-01-02T00:00:00Z',
           granularity: Granularity.FIFTEEN_MINUTE,
         };
         const result = {
@@ -417,8 +449,14 @@ describe('CoinbaseMcpServer Integration Tests', () => {
           arguments: args,
         });
 
+        // Schema transforms ISO timestamps to Unix timestamps before passing to service
         expect(mockProductsService.getProductCandlesBatch).toHaveBeenCalledWith(
-          args,
+          {
+            productIds: ['BTC-EUR', 'ETH-EUR'],
+            start: '1704067200',
+            end: '1704153600',
+            granularity: Granularity.FIFTEEN_MINUTE,
+          },
         );
         expectResponseToContain(response, result);
       });
@@ -483,9 +521,9 @@ describe('CoinbaseMcpServer Integration Tests', () => {
     describe('Fees', () => {
       it('should call getTransactionSummary via MCP tool get_transaction_summary', async () => {
         const args = {
-          productType: 'SPOT',
-          contractExpiryType: 'UNKNOWN_CONTRACT_EXPIRY_TYPE',
-          productVenue: 'UNKNOWN_VENUE_TYPE',
+          productType: ProductType.Spot,
+          contractExpiryType: ContractExpiryType.UnknownContractExpiryType,
+          productVenue: ProductVenue.UnknownVenueType,
         };
         const result = {
           totalVolume: 0,
@@ -531,7 +569,14 @@ describe('CoinbaseMcpServer Integration Tests', () => {
 
       it('should call createPortfolio via MCP tool create_portfolio', async () => {
         const args = { name: 'My Portfolio' };
-        const result = { portfolio: { portfolioUuid: 'new-uuid' } };
+        const result = {
+          portfolio: {
+            name: 'My Portfolio',
+            uuid: 'new-uuid',
+            type: PortfolioType.Consumer,
+            deleted: false,
+          },
+        };
         mockPortfoliosService.createPortfolio.mockResolvedValueOnce(result);
 
         const response = await client.callTool({
@@ -547,7 +592,9 @@ describe('CoinbaseMcpServer Integration Tests', () => {
 
       it('should call getPortfolio via MCP tool get_portfolio', async () => {
         const args = { portfolioUuid: 'portfolio-123' };
-        const result = { portfolio: { portfolioUuid: 'portfolio-123' } };
+        const result = {
+          breakdown: { portfolio: { portfolioUuid: 'portfolio-123' } },
+        };
         mockPortfoliosService.getPortfolio.mockResolvedValueOnce(result);
 
         const response = await client.callTool({
@@ -576,15 +623,25 @@ describe('CoinbaseMcpServer Integration Tests', () => {
           arguments: args,
         });
 
-        expect(mockPortfoliosService.movePortfolioFunds).toHaveBeenCalledWith(
-          args,
-        );
+        // Schema transforms funds.value to string before passing to service
+        expect(mockPortfoliosService.movePortfolioFunds).toHaveBeenCalledWith({
+          funds: { value: '100', currency: 'USD' },
+          sourcePortfolioUuid: 'source-123',
+          targetPortfolioUuid: 'target-456',
+        });
         expectResponseToContain(response, result);
       });
 
       it('should call editPortfolio via MCP tool edit_portfolio', async () => {
         const args = { portfolioUuid: 'portfolio-123', name: 'Updated Name' };
-        const result = { portfolio: { portfolioUuid: 'portfolio-123' } };
+        const result = {
+          portfolio: {
+            name: 'Updated Name',
+            uuid: 'portfolio-123',
+            type: PortfolioType.Default,
+            deleted: false,
+          },
+        };
         mockPortfoliosService.editPortfolio.mockResolvedValueOnce(result);
 
         const response = await client.callTool({
@@ -633,9 +690,12 @@ describe('CoinbaseMcpServer Integration Tests', () => {
           arguments: args,
         });
 
-        expect(mockConvertsService.createConvertQuote).toHaveBeenCalledWith(
-          args,
-        );
+        // Schema transforms amount to string before passing to service
+        expect(mockConvertsService.createConvertQuote).toHaveBeenCalledWith({
+          fromAccount: 'account-123',
+          toAccount: 'account-456',
+          amount: '100',
+        });
         expectResponseToContain(response, result);
       });
 
@@ -708,7 +768,7 @@ describe('CoinbaseMcpServer Integration Tests', () => {
 
       it('should call getProduct via MCP tool get_public_product', async () => {
         const args = { productId: 'BTC-USD' };
-        const result = {
+        const product = {
           productId: 'BTC-USD',
           price: 50000,
           pricePercentageChange24h: 2.5,
@@ -731,12 +791,13 @@ describe('CoinbaseMcpServer Integration Tests', () => {
           postOnly: false,
           tradingDisabled: false,
           auctionMode: false,
-          productType: ProductType.Spot,
+          productType: 'SPOT',
           quoteCurrencyId: 'USD',
           baseCurrencyId: 'BTC',
           baseDisplaySymbol: 'BTC',
           quoteDisplaySymbol: 'USD',
         };
+        const result = { product };
         mockPublicService.getProduct.mockResolvedValueOnce(result);
 
         const response = await client.callTool({
@@ -793,7 +854,13 @@ describe('CoinbaseMcpServer Integration Tests', () => {
           arguments: args,
         });
 
-        expect(mockPublicService.getProductCandles).toHaveBeenCalledWith(args);
+        // Schema transforms ISO timestamps to Unix timestamps before passing to service
+        expect(mockPublicService.getProductCandles).toHaveBeenCalledWith({
+          productId: 'BTC-USD',
+          start: '1704067200',
+          end: '1704153600',
+          granularity: 'ONE_HOUR',
+        });
         expectResponseToContain(response, result);
       });
 
@@ -836,9 +903,11 @@ describe('CoinbaseMcpServer Integration Tests', () => {
       it('should call getPaymentMethod via MCP tool get_payment_method', async () => {
         const args = { paymentMethodId: 'payment-123' };
         const result = {
-          id: 'payment-123',
-          type: 'BANK_ACCOUNT',
-          name: 'Test Bank',
+          paymentMethod: {
+            id: 'payment-123',
+            type: 'BANK_ACCOUNT',
+            name: 'Test Bank',
+          },
         };
         mockPaymentMethodsService.getPaymentMethod.mockResolvedValueOnce(
           result,
@@ -1942,6 +2011,105 @@ describe('CoinbaseMcpServer Integration Tests', () => {
     });
   });
 
+  describe('Market Events', () => {
+    it('should call waitForEvent via MCP tool wait_for_market_event', async () => {
+      const args = {
+        subscriptions: [
+          {
+            productId: 'BTC-EUR',
+            conditions: [{ field: 'price', operator: 'gt', value: 65000 }],
+          },
+        ],
+      };
+      const result = {
+        status: 'triggered' as const,
+        productId: 'BTC-EUR',
+        triggeredConditions: [
+          {
+            field: 'price',
+            operator: 'gt',
+            threshold: 65000,
+            actualValue: 66000,
+          },
+        ],
+        ticker: {
+          price: 66000,
+          volume24h: 1000000,
+          percentChange24h: 2.5,
+          high24h: 67000,
+          low24h: 65000,
+          high52w: 100000,
+          low52w: 30000,
+          bestBid: 65900,
+          bestAsk: 66100,
+          bestBidQuantity: 1.5,
+          bestAskQuantity: 2.0,
+          timestamp: '2025-01-25T12:00:00.000Z',
+        },
+        timestamp: '2025-01-25T12:00:00.000Z',
+      };
+      mockMarketEventService.waitForEvent.mockResolvedValueOnce(result);
+
+      const response = await client.callTool({
+        name: 'wait_for_market_event',
+        arguments: args,
+      });
+
+      expect(mockMarketEventService.waitForEvent).toHaveBeenCalledWith({
+        ...args,
+        timeout: 55,
+        subscriptions: [
+          {
+            ...args.subscriptions[0],
+            logic: 'any',
+          },
+        ],
+      });
+      expectResponseToContain(response, result);
+    });
+
+    it('should handle wait_for_market_event timeout', async () => {
+      const args = {
+        subscriptions: [
+          {
+            productId: 'BTC-EUR',
+            conditions: [{ field: 'price', operator: 'lt', value: 50000 }],
+          },
+        ],
+        timeout: 30,
+      };
+      const result = {
+        status: 'timeout' as const,
+        lastTickers: {
+          'BTC-EUR': {
+            price: 60000,
+            volume24h: 1000000,
+            percentChange24h: 2.5,
+            high24h: 62000,
+            low24h: 58000,
+            high52w: 100000,
+            low52w: 30000,
+            bestBid: 59900,
+            bestAsk: 60100,
+            bestBidQuantity: 1.5,
+            bestAskQuantity: 2.0,
+            timestamp: '2025-01-25T12:00:00.000Z',
+          },
+        },
+        duration: 30,
+        timestamp: '2025-01-25T12:00:30.000Z',
+      };
+      mockMarketEventService.waitForEvent.mockResolvedValueOnce(result);
+
+      const response = await client.callTool({
+        name: 'wait_for_market_event',
+        arguments: args,
+      });
+
+      expectResponseToContain(response, result);
+    });
+  });
+
   describe('Prompts', () => {
     it('should register assist prompt', async () => {
       const prompts = await client.listPrompts({});
@@ -1968,6 +2136,7 @@ describe('CoinbaseMcpServer Integration Tests', () => {
       expect(contentStr).toContain('list_accounts');
       expect(contentStr).toContain('create_order');
       expect(contentStr).toContain('calculate_rsi');
+      expect(contentStr).toContain('wait_for_market_event');
     });
   });
 
@@ -1978,9 +2147,6 @@ describe('CoinbaseMcpServer Integration Tests', () => {
     });
 
     it('should start listening on specified port', () => {
-      const consoleSpy = jest
-        .spyOn(console, 'log')
-        .mockImplementation(() => {});
       const mockServer = { on: jest.fn() };
       const mockListen = jest.fn((_port: number, callback: () => void) => {
         callback();
@@ -1996,18 +2162,13 @@ describe('CoinbaseMcpServer Integration Tests', () => {
       coinbaseMcpServer.listen(3000);
 
       expect(mockListen).toHaveBeenCalledWith(3000, expect.any(Function));
-      expect(consoleSpy).toHaveBeenCalledWith(
+      expect(logger.server.info).toHaveBeenCalledWith(
         'Coinbase MCP Server listening on port 3000',
       );
       expect(mockServer.on).toHaveBeenCalledWith('error', expect.any(Function));
-
-      consoleSpy.mockRestore();
     });
 
     it('should handle EADDRINUSE error with helpful message', () => {
-      const consoleErrorSpy = jest
-        .spyOn(console, 'error')
-        .mockImplementation(() => {});
       const processExitSpy = jest
         .spyOn(process, 'exit')
         .mockImplementation(() => undefined as never);
@@ -2028,22 +2189,18 @@ describe('CoinbaseMcpServer Integration Tests', () => {
       error.code = 'EADDRINUSE';
       errorHandler(error);
 
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
-        'Error: Port 3000 is already in use',
+      expect(logger.server.error).toHaveBeenCalledWith(
+        'Port 3000 is already in use',
       );
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
+      expect(logger.server.error).toHaveBeenCalledWith(
         'Try a different port with: PORT=<port> npm start',
       );
       expect(processExitSpy).toHaveBeenCalledWith(1);
 
-      consoleErrorSpy.mockRestore();
       processExitSpy.mockRestore();
     });
 
     it('should handle other server errors', () => {
-      const consoleErrorSpy = jest
-        .spyOn(console, 'error')
-        .mockImplementation(() => {});
       const processExitSpy = jest
         .spyOn(process, 'exit')
         .mockImplementation(() => undefined as never);
@@ -2064,12 +2221,11 @@ describe('CoinbaseMcpServer Integration Tests', () => {
       error.code = 'EACCES';
       errorHandler(error);
 
-      expect(consoleErrorSpy).toHaveBeenCalledWith(
+      expect(logger.server.error).toHaveBeenCalledWith(
         'Error starting server: permission denied',
       );
       expect(processExitSpy).toHaveBeenCalledWith(1);
 
-      consoleErrorSpy.mockRestore();
       processExitSpy.mockRestore();
     });
   });
@@ -2106,10 +2262,6 @@ describe('CoinbaseMcpServer Integration Tests', () => {
     });
 
     it('should handle errors in POST /mcp with 500 response', async () => {
-      const errorSpy = jest
-        .spyOn(console, 'error')
-        .mockImplementation(() => {});
-
       // Spy on StreamableHTTPServerTransport to make it throw an error
       const spy = jest
         .spyOn(StreamableHttpModule, 'StreamableHTTPServerTransport')
@@ -2135,12 +2287,11 @@ describe('CoinbaseMcpServer Integration Tests', () => {
         },
         id: null,
       });
-      expect(errorSpy).toHaveBeenCalledWith(
-        'Error handling MCP request:',
-        expect.any(Error),
+      expect(logger.server.error).toHaveBeenCalledWith(
+        { err: expect.any(Error) },
+        'Error handling MCP request',
       );
 
-      errorSpy.mockRestore();
       spy.mockRestore();
     });
   });

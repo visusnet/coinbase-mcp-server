@@ -1,63 +1,54 @@
+import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
+import type { GetFuturesPositionRequest } from './FuturesService.request';
 import {
-  FuturesService as SdkFuturesService,
-  CoinbaseAdvTradeClient,
-} from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
-import type {
-  SdkListFuturesPositionsResponse,
-  SdkGetFuturesPositionResponse,
-  SdkGetFuturesBalanceSummaryResponse,
-  SdkListFuturesSweepsResponse,
-  ListFuturesPositionsResponse,
-  GetFuturesPositionRequest,
-  GetFuturesPositionResponse,
-  GetFuturesBalanceSummaryResponse,
-  ListFuturesSweepsResponse,
-} from './FuturesService.types';
-import {
-  toListFuturesPositionsResponse,
-  toGetFuturesPositionResponse,
-  toGetFuturesBalanceSummaryResponse,
-  toListFuturesSweepsResponse,
-} from './FuturesService.convert';
+  ListFuturesPositionsResponseSchema,
+  GetFuturesPositionResponseSchema,
+  GetFuturesBalanceSummaryResponseSchema,
+  ListFuturesSweepsResponseSchema,
+  type ListFuturesPositionsResponse,
+  type GetFuturesPositionResponse,
+  type GetFuturesBalanceSummaryResponse,
+  type ListFuturesSweepsResponse,
+} from './FuturesService.response';
 
 /**
  * Wrapper service for Coinbase Futures API.
  * Converts SDK responses with string numbers to our types with numeric values.
  */
 export class FuturesService {
-  private readonly sdk: SdkFuturesService;
-
-  public constructor(client: CoinbaseAdvTradeClient) {
-    this.sdk = new SdkFuturesService(client);
-  }
+  public constructor(private readonly client: CoinbaseAdvTradeClient) {}
 
   public async listPositions(): Promise<ListFuturesPositionsResponse> {
-    const sdkResponse = (await this.sdk.listPositions(
-      {},
-    )) as SdkListFuturesPositionsResponse;
-    return toListFuturesPositionsResponse(sdkResponse);
+    const response = await this.client.request({
+      url: 'cfm/positions',
+      queryParams: {},
+    });
+    return ListFuturesPositionsResponseSchema.parse(response.data);
   }
 
   public async getPosition(
     request: GetFuturesPositionRequest,
   ): Promise<GetFuturesPositionResponse> {
-    const sdkResponse = (await this.sdk.getPosition(
-      request,
-    )) as SdkGetFuturesPositionResponse;
-    return toGetFuturesPositionResponse(sdkResponse);
+    const response = await this.client.request({
+      url: `cfm/positions/${request.productId}`,
+      queryParams: {},
+    });
+    return GetFuturesPositionResponseSchema.parse(response.data);
   }
 
   public async getBalanceSummary(): Promise<GetFuturesBalanceSummaryResponse> {
-    const sdkResponse = (await this.sdk.getBalanceSummary(
-      {},
-    )) as SdkGetFuturesBalanceSummaryResponse;
-    return toGetFuturesBalanceSummaryResponse(sdkResponse);
+    const response = await this.client.request({
+      url: 'cfm/balance_summary',
+      queryParams: {},
+    });
+    return GetFuturesBalanceSummaryResponseSchema.parse(response.data);
   }
 
   public async listSweeps(): Promise<ListFuturesSweepsResponse> {
-    const sdkResponse = (await this.sdk.listSweeps(
-      {},
-    )) as SdkListFuturesSweepsResponse;
-    return toListFuturesSweepsResponse(sdkResponse);
+    const response = await this.client.request({
+      url: 'cfm/sweeps',
+      queryParams: {},
+    });
+    return ListFuturesSweepsResponseSchema.parse(response.data);
   }
 }

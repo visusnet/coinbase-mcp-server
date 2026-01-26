@@ -1,4 +1,7 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import { z, type ZodRawShape } from 'zod';
+
+import { logger } from '../../logger';
 
 /**
  * MCP tool result structure with index signature for SDK compatibility
@@ -11,16 +14,43 @@ export interface ToolResult {
 
 /**
  * Abstract base class for domain-specific tool registries.
- * Provides the `call` wrapper method for consistent error handling.
+ * Provides the `registerTool` wrapper method for consistent error handling and logging.
  */
 export abstract class ToolRegistry {
-  constructor(protected readonly server: McpServer) {}
+  constructor(private readonly server: McpServer) {}
 
   /**
-   * Wraps a service method call to produce MCP tool results with error handling.
+   * Registers a tool with the MCP server, wrapping the handler with logging and error handling.
+   * Type-safe: the callback's input type must match the schema's output type.
+   * @param name - The tool name (used for registration and logging)
+   * @param options - Tool options (title, description, inputSchema)
+   * @param fn - The service method to call (input type inferred from schema)
    */
-  protected call<I, R>(fn: (input: I) => R | Promise<R>) {
+  protected registerTool<S extends ZodRawShape>(
+    name: string,
+    options: {
+      title: string;
+      description: string;
+      inputSchema: S;
+    },
+    fn: (input: z.output<z.ZodObject<S>>) => unknown,
+  ): void {
+    // Type assertion needed: MCP SDK expects a different callback signature,
+    // but our ToolResult is compatible with the expected return type.
+    this.server.registerTool(
+      name,
+      options,
+      this.call(name, fn) as Parameters<typeof this.server.registerTool>[2],
+    );
+  }
+
+  /**
+   * Wraps a service method call to produce MCP tool results with logging and error handling.
+   */
+  private call<I>(toolName: string, fn: (input: I) => unknown) {
     return async (input: I): Promise<ToolResult> => {
+      logger.tools.info(`${toolName} called`);
+      logger.tools.debug(input as object, `${toolName} parameters`);
       try {
         const response = await Promise.resolve(fn(input));
         return {
@@ -31,6 +61,7 @@ export abstract class ToolRegistry {
         };
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
+        logger.tools.error({ err: error }, `${toolName} failed`);
         return {
           content: [{ type: 'text' as const, text: message }],
           isError: true,

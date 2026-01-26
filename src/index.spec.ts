@@ -6,10 +6,16 @@ import {
   beforeEach,
   afterEach,
 } from '@jest/globals';
+import { mockLogger } from '@test/loggerMock';
 
 // Mock dotenv to prevent .env file loading
 jest.mock('dotenv', () => ({
   config: jest.fn(),
+}));
+
+const logger = mockLogger();
+jest.mock('./logger', () => ({
+  logger,
 }));
 
 // Mock the CoinbaseMcpServer before importing index
@@ -26,16 +32,12 @@ jest.mock('@server/CoinbaseMcpServer', () => {
 describe('main', () => {
   let originalEnv: NodeJS.ProcessEnv;
   let mockExit: jest.SpiedFunction<(code?: number) => never>;
-  let mockConsoleError: jest.SpiedFunction<typeof console.error>;
 
   beforeEach(() => {
     originalEnv = { ...process.env };
     mockExit = jest
       .spyOn(process, 'exit')
       .mockImplementation(() => undefined as never);
-    mockConsoleError = jest
-      .spyOn(console, 'error')
-      .mockImplementation(() => {});
 
     // Clear the module cache to ensure fresh import
     jest.resetModules();
@@ -49,7 +51,6 @@ describe('main', () => {
   afterEach(() => {
     process.env = originalEnv;
     mockExit.mockRestore();
-    mockConsoleError.mockRestore();
   });
 
   it('should start server with environment variables set', () => {
@@ -101,8 +102,8 @@ describe('main', () => {
 
     require('./index');
 
-    expect(mockConsoleError).toHaveBeenCalledWith(
-      'Error: COINBASE_API_KEY_NAME and COINBASE_PRIVATE_KEY environment variables must be set',
+    expect(logger.server.error).toHaveBeenCalledWith(
+      'COINBASE_API_KEY_NAME and COINBASE_PRIVATE_KEY environment variables must be set',
     );
     expect(mockExit).toHaveBeenCalledWith(1);
   });
@@ -113,8 +114,8 @@ describe('main', () => {
 
     require('./index');
 
-    expect(mockConsoleError).toHaveBeenCalledWith(
-      'Error: COINBASE_API_KEY_NAME and COINBASE_PRIVATE_KEY environment variables must be set',
+    expect(logger.server.error).toHaveBeenCalledWith(
+      'COINBASE_API_KEY_NAME and COINBASE_PRIVATE_KEY environment variables must be set',
     );
     expect(mockExit).toHaveBeenCalledWith(1);
   });
@@ -125,8 +126,8 @@ describe('main', () => {
 
     require('./index');
 
-    expect(mockConsoleError).toHaveBeenCalledWith(
-      'Error: COINBASE_API_KEY_NAME and COINBASE_PRIVATE_KEY environment variables must be set',
+    expect(logger.server.error).toHaveBeenCalledWith(
+      'COINBASE_API_KEY_NAME and COINBASE_PRIVATE_KEY environment variables must be set',
     );
     expect(mockExit).toHaveBeenCalledWith(1);
   });

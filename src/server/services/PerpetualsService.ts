@@ -1,72 +1,67 @@
-import {
-  PerpetualsService as SdkPerpetualsService,
-  CoinbaseAdvTradeClient,
-} from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
+import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
 import type {
-  SdkListPerpetualsPositionsResponse,
-  SdkGetPerpetualsPositionResponse,
-  SdkGetPortfolioSummaryResponse,
-  SdkGetPortfolioBalanceResponse,
   ListPerpetualsPositionsRequest,
-  ListPerpetualsPositionsResponse,
   GetPerpetualsPositionRequest,
-  GetPerpetualsPositionResponse,
   GetPortfolioSummaryRequest,
-  GetPortfolioSummaryResponse,
   GetPortfolioBalanceRequest,
+} from './PerpetualsService.request';
+import type {
+  ListPerpetualsPositionsResponse,
+  GetPerpetualsPositionResponse,
+  GetPortfolioSummaryResponse,
   GetPortfolioBalanceResponse,
-} from './PerpetualsService.types';
+} from './PerpetualsService.response';
 import {
-  toListPerpetualsPositionsResponse,
-  toGetPerpetualsPositionResponse,
-  toGetPortfolioSummaryResponse,
-  toGetPortfolioBalanceResponse,
-} from './PerpetualsService.convert';
+  ListPerpetualsPositionsResponseSchema,
+  GetPerpetualsPositionResponseSchema,
+  GetPortfolioSummaryResponseSchema,
+  GetPortfolioBalanceResponseSchema,
+} from './PerpetualsService.response';
 
 /**
  * Wrapper service for Coinbase Perpetuals API.
  * Converts SDK responses with string numbers to our types with numeric values.
  */
 export class PerpetualsService {
-  private readonly sdk: SdkPerpetualsService;
-
-  public constructor(client: CoinbaseAdvTradeClient) {
-    this.sdk = new SdkPerpetualsService(client);
-  }
+  public constructor(private readonly client: CoinbaseAdvTradeClient) {}
 
   public async listPositions(
     request: ListPerpetualsPositionsRequest,
   ): Promise<ListPerpetualsPositionsResponse> {
-    const sdkResponse = (await this.sdk.listPositions(
-      request,
-    )) as SdkListPerpetualsPositionsResponse;
-    return toListPerpetualsPositionsResponse(sdkResponse);
+    const response = await this.client.request({
+      url: `intx/positions/${request.portfolioUuid}`,
+      queryParams: {},
+    });
+    return ListPerpetualsPositionsResponseSchema.parse(response.data);
   }
 
   public async getPosition(
     request: GetPerpetualsPositionRequest,
   ): Promise<GetPerpetualsPositionResponse> {
-    const sdkResponse = (await this.sdk.getPosition(
-      request,
-    )) as SdkGetPerpetualsPositionResponse;
-    return toGetPerpetualsPositionResponse(sdkResponse);
+    const response = await this.client.request({
+      url: `intx/positions/${request.portfolioUuid}/${request.symbol}`,
+      queryParams: {},
+    });
+    return GetPerpetualsPositionResponseSchema.parse(response.data);
   }
 
   public async getPortfolioSummary(
     request: GetPortfolioSummaryRequest,
   ): Promise<GetPortfolioSummaryResponse> {
-    const sdkResponse = (await this.sdk.getPortfolioSummary(
-      request,
-    )) as SdkGetPortfolioSummaryResponse;
-    return toGetPortfolioSummaryResponse(sdkResponse);
+    const response = await this.client.request({
+      url: `intx/portfolio/${request.portfolioUuid}`,
+      queryParams: {},
+    });
+    return GetPortfolioSummaryResponseSchema.parse(response.data);
   }
 
   public async getPortfolioBalance(
     request: GetPortfolioBalanceRequest,
   ): Promise<GetPortfolioBalanceResponse> {
-    const sdkResponse = (await this.sdk.getPortfolioBalance(
-      request,
-    )) as SdkGetPortfolioBalanceResponse;
-    return toGetPortfolioBalanceResponse(sdkResponse);
+    const response = await this.client.request({
+      url: `intx/balances/${request.portfolioUuid}`,
+      queryParams: {},
+    });
+    return GetPortfolioBalanceResponseSchema.parse(response.data);
   }
 }
