@@ -138,11 +138,11 @@ Add the MCP server to your Claude settings (e.g., `~/.claude/settings.json`):
 }
 ```
 
-Now you can use all 72 tools (46 Coinbase API + 24 indicators + 2 analysis) and the `/coinbase:assist` prompt in Claude, but without the autonomous `/trade` skill.
+Now you can use all 73 tools (46 Coinbase API + 24 indicators + 2 analysis + 1 market event) and the `/coinbase:assist` prompt in Claude, but without the autonomous `/trade` skill.
 
 ## Features
 
-### 72 Tools: Trading, Indicators & Analysis
+### 73 Tools: Trading, Indicators & Analysis
 
 Full access to the Coinbase Advanced Trading API **plus a fully autonomous trading skill for Claude**:
 
@@ -258,7 +258,7 @@ coinbase-mcp-server/
 ├── src/
 │   ├── index.ts                 # HTTP server entry point
 │   └── server/
-│       └── CoinbaseMcpServer.ts # MCP server with 72 tools
+│       └── CoinbaseMcpServer.ts # MCP server with 73 tools
 ├── .claude/
 │   ├── settings.json            # MCP server config (auto-loaded)
 │   └── commands/
@@ -283,7 +283,7 @@ npm run inspect    # Open MCP Inspector for debugging
 1. Start the server: `npm run start:dev`
 2. In another terminal: `npm run inspect`
 3. Connect to `http://localhost:3005/mcp`
-4. Test any of the 72 tools interactively
+4. Test any of the 73 tools interactively
 
 ---
 

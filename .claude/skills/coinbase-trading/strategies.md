@@ -237,7 +237,7 @@ Orderbook for SOL-EUR:
 ### Conditions that STRENGTHEN signals
 
 1. **Volume Confirmation**: Above average volume
-2. **Multiple Timeframe Agreement**: 15m + 1h + 4h align
+2. **Multiple Timeframe Agreement**: 15m + 1h + 6h align
 3. **Trend + Momentum Agree**: ADX confirms, RSI not extreme
 4. **Clear S/R Levels**: Entry near support (buy) or resistance (sell)
 5. **Pattern Completion**: Chart pattern with volume breakout
@@ -344,10 +344,10 @@ stop_loss_price = entry_price × (1 - SL_PERCENT / 100)
 |-----------|---------|
 | 15 min | Entry/Exit timing |
 | 1 hour | Short-term trend |
-| 4 hour | Medium-term trend |
+| 6 hour | Medium-term trend |
 | Daily | Long-term trend |
 
 **Rule**: Only trade in direction of higher timeframe trend.
 
-- Daily bullish + 4h bullish + 1h pullback → BUY opportunity
-- Daily bearish + 4h bearish + 1h rally → SELL opportunity
+- Daily bullish + 6h bullish + 1h pullback → BUY opportunity
+- Daily bearish + 6h bearish + 1h rally → SELL opportunity

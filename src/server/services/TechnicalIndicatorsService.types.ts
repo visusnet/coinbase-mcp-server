@@ -1,56 +1,20 @@
-import type {
-  PivotPointsType,
-  PivotPointsOutput,
-} from '../indicators/pivotPoints';
+import type { PivotPointsType } from '../indicators/pivotPoints';
 import type { RsiDivergence } from '../indicators/rsiDivergence';
 import type { VolumeProfileZone } from '../indicators/volumeProfile';
 import type { ChartPattern } from '../indicators/chartPatterns';
 import type { SwingPoint, SwingTrend } from '../indicators/swingPoints';
 
-// Re-export PivotPointsOutput as it's the return type for calculatePivotPoints
-export type { PivotPointsOutput };
-
-// ============================================================================
-// Our types
-// ============================================================================
+// =============================================================================
+// Response Types - All indicator outputs
+// =============================================================================
 
 /**
- * Candle data structure for technical indicator calculations.
- * All numeric values are provided as numbers (not strings).
+ * Response for RSI calculation
  */
-export interface CandleInput {
-  readonly open: number;
-  readonly high: number;
-  readonly low: number;
-  readonly close: number;
-  readonly volume: number;
-}
-
-/**
- * Input for RSI calculation
- */
-export interface CalculateRsiInput {
-  readonly candles: readonly CandleInput[];
-  readonly period?: number;
-}
-
-/**
- * Output for RSI calculation
- */
-export interface CalculateRsiOutput {
+export interface CalculateRsiResponse {
   readonly period: number;
   readonly values: readonly number[];
   readonly latestValue: number | null;
-}
-
-/**
- * Input for MACD calculation
- */
-export interface CalculateMacdInput {
-  readonly candles: readonly CandleInput[];
-  readonly fastPeriod?: number;
-  readonly slowPeriod?: number;
-  readonly signalPeriod?: number;
 }
 
 /**
@@ -63,9 +27,9 @@ export interface MacdValue {
 }
 
 /**
- * Output for MACD calculation
+ * Response for MACD calculation
  */
-export interface CalculateMacdOutput {
+export interface CalculateMacdResponse {
   readonly fastPeriod: number;
   readonly slowPeriod: number;
   readonly signalPeriod: number;
@@ -74,46 +38,21 @@ export interface CalculateMacdOutput {
 }
 
 /**
- * Input for SMA calculation
+ * Response for SMA calculation
  */
-export interface CalculateSmaInput {
-  readonly candles: readonly CandleInput[];
-  readonly period?: number;
-}
-
-/**
- * Output for SMA calculation
- */
-export interface CalculateSmaOutput {
+export interface CalculateSmaResponse {
   readonly period: number;
   readonly values: readonly number[];
   readonly latestValue: number | null;
 }
 
 /**
- * Input for EMA calculation
+ * Response for EMA calculation
  */
-export interface CalculateEmaInput {
-  readonly candles: readonly CandleInput[];
-  readonly period?: number;
-}
-
-/**
- * Output for EMA calculation
- */
-export interface CalculateEmaOutput {
+export interface CalculateEmaResponse {
   readonly period: number;
   readonly values: readonly number[];
   readonly latestValue: number | null;
-}
-
-/**
- * Input for Bollinger Bands calculation
- */
-export interface CalculateBollingerBandsInput {
-  readonly candles: readonly CandleInput[];
-  readonly period?: number;
-  readonly stdDev?: number;
 }
 
 /**
@@ -128,9 +67,9 @@ export interface BollingerBandsValue {
 }
 
 /**
- * Output for Bollinger Bands calculation
+ * Response for Bollinger Bands calculation
  */
-export interface CalculateBollingerBandsOutput {
+export interface CalculateBollingerBandsResponse {
   readonly period: number;
   readonly stdDev: number;
   readonly values: readonly BollingerBandsValue[];
@@ -138,43 +77,12 @@ export interface CalculateBollingerBandsOutput {
 }
 
 /**
- * Input for ATR calculation
+ * Response for ATR calculation
  */
-export interface CalculateAtrInput {
-  readonly candles: readonly CandleInput[];
-  readonly period?: number;
-}
-
-/**
- * Output for ATR calculation
- */
-export interface CalculateAtrOutput {
+export interface CalculateAtrResponse {
   readonly period: number;
   readonly values: readonly number[];
   readonly latestValue: number | null;
-}
-
-/**
- * Input for Stochastic oscillator calculation.
- *
- * Uses the Slow Stochastic variant (most common in trading platforms):
- * - %K is smoothed using the kPeriod lookback window
- * - %D is a simple moving average of %K over dPeriod
- *
- * @see https://www.investopedia.com/terms/s/stochasticoscillator.asp
- */
-export interface CalculateStochasticInput {
-  readonly candles: readonly CandleInput[];
-  /**
-   * Lookback period for %K calculation (default: 14).
-   * Determines how many periods to consider for the highest high and lowest low.
-   */
-  readonly kPeriod?: number;
-  /**
-   * Signal period for %D calculation (default: 3).
-   * %D is a simple moving average of %K over this many periods.
-   */
-  readonly dPeriod?: number;
 }
 
 /**
@@ -187,7 +95,7 @@ export interface CalculateStochasticInput {
 export interface StochasticValue {
   /**
    * %K (fast line): Measures current close relative to the high-low range.
-   * Formula: (Close - Lowest Low) / (Highest High - Lowest Low) × 100
+   * Formula: (Close - Lowest Low) / (Highest High - Lowest Low) x 100
    */
   readonly k: number;
   /**
@@ -199,21 +107,13 @@ export interface StochasticValue {
 }
 
 /**
- * Output for Stochastic calculation
+ * Response for Stochastic calculation
  */
-export interface CalculateStochasticOutput {
+export interface CalculateStochasticResponse {
   readonly kPeriod: number;
   readonly dPeriod: number;
   readonly values: readonly StochasticValue[];
   readonly latestValue: StochasticValue | null;
-}
-
-/**
- * Input for ADX calculation
- */
-export interface CalculateAdxInput {
-  readonly candles: readonly CandleInput[];
-  readonly period?: number;
 }
 
 /**
@@ -226,140 +126,74 @@ export interface AdxValue {
 }
 
 /**
- * Output for ADX calculation
+ * Response for ADX calculation
  */
-export interface CalculateAdxOutput {
+export interface CalculateAdxResponse {
   readonly period: number;
   readonly values: readonly AdxValue[];
   readonly latestValue: AdxValue | null;
 }
 
 /**
- * Input for OBV calculation
+ * Response for OBV calculation
  */
-export interface CalculateObvInput {
-  readonly candles: readonly CandleInput[];
-}
-
-/**
- * Output for OBV calculation
- */
-export interface CalculateObvOutput {
+export interface CalculateObvResponse {
   readonly values: readonly number[];
   readonly latestValue: number | null;
 }
 
 /**
- * Input for VWAP calculation
+ * Response for VWAP calculation
  */
-export interface CalculateVwapInput {
-  readonly candles: readonly CandleInput[];
-}
-
-/**
- * Output for VWAP calculation
- */
-export interface CalculateVwapOutput {
+export interface CalculateVwapResponse {
   readonly values: readonly number[];
   readonly latestValue: number | null;
 }
 
 /**
- * Input for CCI calculation
+ * Response for CCI calculation
  */
-export interface CalculateCciInput {
-  readonly candles: readonly CandleInput[];
-  readonly period?: number;
-}
-
-/**
- * Output for CCI calculation
- */
-export interface CalculateCciOutput {
+export interface CalculateCciResponse {
   readonly period: number;
   readonly values: readonly number[];
   readonly latestValue: number | null;
 }
 
 /**
- * Input for Williams %R calculation
+ * Response for Williams %R calculation
  */
-export interface CalculateWilliamsRInput {
-  readonly candles: readonly CandleInput[];
-  readonly period?: number;
-}
-
-/**
- * Output for Williams %R calculation
- */
-export interface CalculateWilliamsROutput {
+export interface CalculateWilliamsRResponse {
   readonly period: number;
   readonly values: readonly number[];
   readonly latestValue: number | null;
 }
 
 /**
- * Input for ROC calculation
+ * Response for ROC calculation
  */
-export interface CalculateRocInput {
-  readonly candles: readonly CandleInput[];
-  readonly period?: number;
-}
-
-/**
- * Output for ROC calculation
- */
-export interface CalculateRocOutput {
+export interface CalculateRocResponse {
   readonly period: number;
   readonly values: readonly number[];
   readonly latestValue: number | null;
 }
 
 /**
- * Input for MFI calculation
+ * Response for MFI calculation
  */
-export interface CalculateMfiInput {
-  readonly candles: readonly CandleInput[];
-  readonly period?: number;
-}
-
-/**
- * Output for MFI calculation
- */
-export interface CalculateMfiOutput {
+export interface CalculateMfiResponse {
   readonly period: number;
   readonly values: readonly number[];
   readonly latestValue: number | null;
 }
 
 /**
- * Input for Parabolic SAR calculation
+ * Response for Parabolic SAR calculation
  */
-export interface CalculatePsarInput {
-  readonly candles: readonly CandleInput[];
-  readonly step?: number;
-  readonly max?: number;
-}
-
-/**
- * Output for Parabolic SAR calculation
- */
-export interface CalculatePsarOutput {
+export interface CalculatePsarResponse {
   readonly step: number;
   readonly max: number;
   readonly values: readonly number[];
   readonly latestValue: number | null;
-}
-
-/**
- * Input for Ichimoku Cloud calculation
- */
-export interface CalculateIchimokuCloudInput {
-  readonly candles: readonly CandleInput[];
-  readonly conversionPeriod?: number;
-  readonly basePeriod?: number;
-  readonly spanPeriod?: number;
-  readonly displacement?: number;
 }
 
 /**
@@ -380,26 +214,15 @@ export interface IchimokuCloudDataPoint {
 }
 
 /**
- * Output for Ichimoku Cloud calculation
+ * Response for Ichimoku Cloud calculation
  */
-export interface CalculateIchimokuCloudOutput {
+export interface CalculateIchimokuCloudResponse {
   readonly conversionPeriod: number;
   readonly basePeriod: number;
   readonly spanPeriod: number;
   readonly displacement: number;
   readonly values: readonly IchimokuCloudDataPoint[];
   readonly latestValue: IchimokuCloudDataPoint | null;
-}
-
-/**
- * Input for Keltner Channels calculation
- */
-export interface CalculateKeltnerChannelsInput {
-  readonly candles: readonly CandleInput[];
-  readonly maPeriod?: number;
-  readonly atrPeriod?: number;
-  readonly multiplier?: number;
-  readonly useSMA?: boolean;
 }
 
 /**
@@ -412,9 +235,9 @@ export interface KeltnerChannelsDataPoint {
 }
 
 /**
- * Output for Keltner Channels calculation
+ * Response for Keltner Channels calculation
  */
-export interface CalculateKeltnerChannelsOutput {
+export interface CalculateKeltnerChannelsResponse {
   readonly maPeriod: number;
   readonly atrPeriod: number;
   readonly multiplier: number;
@@ -424,17 +247,9 @@ export interface CalculateKeltnerChannelsOutput {
 }
 
 /**
- * Input for Fibonacci Retracement calculation
+ * Response for Fibonacci Retracement calculation
  */
-export interface CalculateFibonacciRetracementInput {
-  readonly start: number;
-  readonly end: number;
-}
-
-/**
- * Output for Fibonacci Retracement calculation
- */
-export interface CalculateFibonacciRetracementOutput {
+export interface CalculateFibonacciRetracementResponse {
   readonly start: number;
   readonly end: number;
   readonly trend: 'uptrend' | 'downtrend';
@@ -445,16 +260,9 @@ export interface CalculateFibonacciRetracementOutput {
 }
 
 /**
- * Input for Candlestick Patterns detection
+ * Response for Candlestick Patterns detection
  */
-export interface DetectCandlestickPatternsInput {
-  readonly candles: readonly CandleInput[];
-}
-
-/**
- * Output for Candlestick Patterns detection
- */
-export interface DetectCandlestickPatternsOutput {
+export interface DetectCandlestickPatternsResponse {
   readonly bullish: boolean;
   readonly bearish: boolean;
   readonly patterns: {
@@ -466,17 +274,9 @@ export interface DetectCandlestickPatternsOutput {
 }
 
 /**
- * Input for Volume Profile calculation
+ * Response for Volume Profile calculation
  */
-export interface CalculateVolumeProfileInput {
-  readonly candles: readonly CandleInput[];
-  readonly noOfBars?: number;
-}
-
-/**
- * Output for Volume Profile calculation
- */
-export interface CalculateVolumeProfileOutput {
+export interface CalculateVolumeProfileResponse {
   readonly noOfBars: number;
   readonly zones: readonly VolumeProfileZone[];
   readonly pointOfControl: VolumeProfileZone | null;
@@ -485,29 +285,9 @@ export interface CalculateVolumeProfileOutput {
 }
 
 /**
- * Input for Pivot Points calculation
+ * Response for RSI Divergence detection
  */
-export interface CalculatePivotPointsInput {
-  readonly high: number;
-  readonly low: number;
-  readonly close: number;
-  readonly open?: number;
-  readonly type?: PivotPointsType;
-}
-
-/**
- * Input for RSI Divergence detection
- */
-export interface DetectRsiDivergenceInput {
-  readonly candles: readonly CandleInput[];
-  readonly rsiPeriod?: number;
-  readonly lookbackPeriod?: number;
-}
-
-/**
- * Output for RSI Divergence detection
- */
-export interface DetectRsiDivergenceOutput {
+export interface DetectRsiDivergenceResponse {
   readonly rsiPeriod: number;
   readonly lookbackPeriod: number;
   readonly rsiValues: readonly number[];
@@ -518,17 +298,9 @@ export interface DetectRsiDivergenceOutput {
 }
 
 /**
- * Input for Chart Pattern detection
+ * Response for Chart Pattern detection
  */
-export interface DetectChartPatternsInput {
-  readonly candles: readonly CandleInput[];
-  readonly lookbackPeriod?: number;
-}
-
-/**
- * Output for Chart Pattern detection
- */
-export interface DetectChartPatternsOutput {
+export interface DetectChartPatternsResponse {
   readonly lookbackPeriod: number;
   readonly patterns: readonly ChartPattern[];
   readonly bullishPatterns: readonly ChartPattern[];
@@ -537,20 +309,18 @@ export interface DetectChartPatternsOutput {
 }
 
 /**
- * Input for Swing Points detection (Williams Fractal)
+ * Response for Swing Points detection (Williams Fractal)
  */
-export interface DetectSwingPointsInput {
-  readonly candles: readonly CandleInput[];
-  readonly lookback?: number;
-}
-
-/**
- * Output for Swing Points detection (Williams Fractal)
- */
-export interface DetectSwingPointsOutput {
+export interface DetectSwingPointsResponse {
   readonly swingHighs: readonly SwingPoint[];
   readonly swingLows: readonly SwingPoint[];
   readonly latestSwingHigh: SwingPoint | null;
   readonly latestSwingLow: SwingPoint | null;
   readonly trend: SwingTrend;
 }
+
+// =============================================================================
+// Re-exported types for external consumers
+// =============================================================================
+
+export type { PivotPointsType };

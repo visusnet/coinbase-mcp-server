@@ -9,6 +9,7 @@ paths:
 
 - **100% required**: Statements, Branches, Functions, Lines
 - Coverage is a design tool, not just a metric
+- istanbul ignore comments are strictly prohibited
 
 ## Test Structure
 

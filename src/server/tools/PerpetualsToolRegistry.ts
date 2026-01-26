@@ -1,6 +1,11 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { PerpetualsService } from '../services';
-import * as z from 'zod';
+import {
+  ListPerpetualsPositionsRequestSchema,
+  GetPerpetualsPositionRequestSchema,
+  GetPortfolioSummaryRequestSchema,
+  GetPortfolioBalanceRequestSchema,
+} from '../services/PerpetualsService.request';
 import { ToolRegistry } from './ToolRegistry';
 
 /**
@@ -15,53 +20,44 @@ export class PerpetualsToolRegistry extends ToolRegistry {
   }
 
   public register(): void {
-    this.server.registerTool(
+    this.registerTool(
       'list_perpetuals_positions',
       {
         title: 'List Perpetuals Positions',
         description: 'Get all perpetuals positions',
-        inputSchema: {
-          portfolioUuid: z.string().describe('Portfolio UUID'),
-        },
+        inputSchema: ListPerpetualsPositionsRequestSchema.shape,
       },
-      this.call(this.perpetuals.listPositions.bind(this.perpetuals)),
+      this.perpetuals.listPositions.bind(this.perpetuals),
     );
 
-    this.server.registerTool(
+    this.registerTool(
       'get_perpetuals_position',
       {
         title: 'Get Perpetuals Position',
         description: 'Get a specific perpetuals position',
-        inputSchema: {
-          portfolioUuid: z.string().describe('Portfolio UUID'),
-          symbol: z.string().describe('Product symbol'),
-        },
+        inputSchema: GetPerpetualsPositionRequestSchema.shape,
       },
-      this.call(this.perpetuals.getPosition.bind(this.perpetuals)),
+      this.perpetuals.getPosition.bind(this.perpetuals),
     );
 
-    this.server.registerTool(
+    this.registerTool(
       'get_perpetuals_portfolio_summary',
       {
         title: 'Get Perpetuals Portfolio Summary',
         description: 'Get perpetuals portfolio summary',
-        inputSchema: {
-          portfolioUuid: z.string().describe('Portfolio UUID'),
-        },
+        inputSchema: GetPortfolioSummaryRequestSchema.shape,
       },
-      this.call(this.perpetuals.getPortfolioSummary.bind(this.perpetuals)),
+      this.perpetuals.getPortfolioSummary.bind(this.perpetuals),
     );
 
-    this.server.registerTool(
+    this.registerTool(
       'get_perpetuals_portfolio_balance',
       {
         title: 'Get Perpetuals Portfolio Balance',
         description: 'Get perpetuals portfolio balance',
-        inputSchema: {
-          portfolioUuid: z.string().describe('Portfolio UUID'),
-        },
+        inputSchema: GetPortfolioBalanceRequestSchema.shape,
       },
-      this.call(this.perpetuals.getPortfolioBalance.bind(this.perpetuals)),
+      this.perpetuals.getPortfolioBalance.bind(this.perpetuals),
     );
   }
 }

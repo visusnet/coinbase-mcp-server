@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { CoinbaseMcpServer } from './server/CoinbaseMcpServer.js';
 import { config } from 'dotenv';
+import { logger } from './logger';
 
 config({ quiet: true }); // Load .env file
 
@@ -9,8 +10,8 @@ function main() {
   const privateKey = process.env.COINBASE_PRIVATE_KEY;
 
   if (!apiKeyName || !privateKey) {
-    console.error(
-      'Error: COINBASE_API_KEY_NAME and COINBASE_PRIVATE_KEY environment variables must be set',
+    logger.server.error(
+      'COINBASE_API_KEY_NAME and COINBASE_PRIVATE_KEY environment variables must be set',
     );
     process.exit(1);
   }

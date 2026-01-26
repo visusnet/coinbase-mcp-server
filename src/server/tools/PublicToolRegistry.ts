@@ -1,7 +1,12 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import * as z from 'zod';
 import type { PublicService } from '../services';
-import { Granularity } from '../services';
+import {
+  GetPublicProductRequestSchema,
+  ListPublicProductsRequestSchema,
+  GetPublicProductBookRequestSchema,
+  GetPublicProductCandlesRequestSchema,
+  GetPublicMarketTradesRequestSchema,
+} from '../services/PublicService.request';
 import { ToolRegistry } from './ToolRegistry';
 
 /**
@@ -16,86 +21,64 @@ export class PublicToolRegistry extends ToolRegistry {
   }
 
   public register(): void {
-    this.server.registerTool(
+    this.registerTool(
       'get_server_time',
       {
         title: 'Get Server Time',
         description: 'Get the current server timestamp from Coinbase',
         inputSchema: {},
       },
-      this.call(this.publicService.getServerTime.bind(this.publicService)),
+      this.publicService.getServerTime.bind(this.publicService),
     );
 
-    this.server.registerTool(
+    this.registerTool(
       'get_public_product',
       {
         title: 'Get Public Product',
         description: 'Get public product information (no auth required)',
-        inputSchema: {
-          productId: z.string().describe('Trading pair (e.g., BTC-USD)'),
-        },
+        inputSchema: GetPublicProductRequestSchema.shape,
       },
-      this.call(this.publicService.getProduct.bind(this.publicService)),
+      this.publicService.getProduct.bind(this.publicService),
     );
 
-    this.server.registerTool(
+    this.registerTool(
       'list_public_products',
       {
         title: 'List Public Products',
         description: 'List all public products (no auth required)',
-        inputSchema: {
-          limit: z.number().optional().describe('Optional limit'),
-          offset: z.number().optional().describe('Optional offset'),
-        },
+        inputSchema: ListPublicProductsRequestSchema.shape,
       },
-      this.call(this.publicService.listProducts.bind(this.publicService)),
+      this.publicService.listProducts.bind(this.publicService),
     );
 
-    this.server.registerTool(
+    this.registerTool(
       'get_public_product_book',
       {
         title: 'Get Public Product Book',
         description: 'Get public order book (no auth required)',
-        inputSchema: {
-          productId: z.string().describe('Trading pair (e.g., BTC-USD)'),
-          limit: z.number().optional().describe('Optional limit'),
-        },
+        inputSchema: GetPublicProductBookRequestSchema.shape,
       },
-      this.call(this.publicService.getProductBook.bind(this.publicService)),
+      this.publicService.getProductBook.bind(this.publicService),
     );
 
-    this.server.registerTool(
+    this.registerTool(
       'get_public_product_candles',
       {
         title: 'Get Public Product Candles',
         description: 'Get public candle data (no auth required)',
-        inputSchema: {
-          productId: z.string().describe('Trading pair (e.g., BTC-USD)'),
-          start: z.string().describe('Start time (ISO 8601)'),
-          end: z.string().describe('End time (ISO 8601)'),
-          granularity: z
-            .nativeEnum(Granularity)
-            .describe(
-              'Granularity (e.g., ONE_MINUTE, FIVE_MINUTE, ONE_HOUR, ONE_DAY)',
-            ),
-        },
+        inputSchema: GetPublicProductCandlesRequestSchema.shape,
       },
-      this.call(this.publicService.getProductCandles.bind(this.publicService)),
+      this.publicService.getProductCandles.bind(this.publicService),
     );
 
-    this.server.registerTool(
+    this.registerTool(
       'get_public_market_trades',
       {
         title: 'Get Public Market Trades',
         description: 'Get public market trades (no auth required)',
-        inputSchema: {
-          productId: z.string().describe('Trading pair (e.g., BTC-USD)'),
-          limit: z.number().describe('Limit'),
-        },
+        inputSchema: GetPublicMarketTradesRequestSchema.shape,
       },
-      this.call(
-        this.publicService.getProductMarketTrades.bind(this.publicService),
-      ),
+      this.publicService.getProductMarketTrades.bind(this.publicService),
     );
   }
 }

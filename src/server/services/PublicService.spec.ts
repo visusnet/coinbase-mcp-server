@@ -1,53 +1,47 @@
 import { describe, expect, it, jest, beforeEach } from '@jest/globals';
-import { ProductType } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/ProductType';
-import { OrderSide } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/enums/OrderSide.js';
-import type { Product as SdkProduct } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/Product';
-import type { Candle as SdkCandle } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/Candle';
-import type { GetProductBookResponse as SdkGetProductBookResponse } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/GetProductBookResponse';
-import type { GetMarketTradesResponse as SdkGetMarketTradesResponse } from '@coinbase-sample/advanced-trade-sdk-ts/dist/model/GetMarketTradesResponse';
-import { createSdkPublicServiceMock } from '@test/serviceMocks';
+import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
+import { mockResponse } from '@test/serviceMocks';
 import { Granularity } from './ProductsService.types';
-
-const mockSdkService = createSdkPublicServiceMock();
-
-jest.mock(
-  '@coinbase-sample/advanced-trade-sdk-ts/dist/rest/public/index.js',
-  () => ({
-    PublicService: jest.fn().mockImplementation(() => mockSdkService),
-  }),
-);
-
-// Import after mock is set up
+import { OrderSide } from './OrdersService.types';
 import { PublicService } from './PublicService';
-
-const createService = (): PublicService => new PublicService({} as never);
 
 describe('PublicService', () => {
   let service: PublicService;
+  let mockClient: {
+    request: jest.MockedFunction<CoinbaseAdvTradeClient['request']>;
+  };
 
   beforeEach(() => {
     jest.clearAllMocks();
-    service = createService();
+    mockClient = {
+      request: jest.fn<CoinbaseAdvTradeClient['request']>(),
+    };
+    service = new PublicService(
+      mockClient as unknown as CoinbaseAdvTradeClient,
+    );
   });
 
   describe('getServerTime', () => {
     it('should delegate to SDK with empty object', async () => {
-      const mockResponse = {
+      const responseData = {
         iso: '2025-01-01T00:00:00Z',
         epochSeconds: '1735689600',
       };
-      mockSdkService.getServerTime.mockResolvedValue(mockResponse);
+      mockClient.request.mockResolvedValue(mockResponse(responseData));
 
       const result = await service.getServerTime();
 
-      expect(mockSdkService.getServerTime).toHaveBeenCalledWith({});
-      expect(result).toBe(mockResponse);
+      expect(mockClient.request).toHaveBeenCalledWith({
+        url: 'time',
+        queryParams: {},
+      });
+      expect(result).toEqual(responseData);
     });
   });
 
   describe('getProduct', () => {
     it('should convert SDK response to our types', async () => {
-      const sdkProduct: SdkProduct = {
+      const mockProduct = {
         productId: 'BTC-USD',
         price: '50000',
         pricePercentageChange24h: '2.5',
@@ -70,7 +64,7 @@ describe('PublicService', () => {
         postOnly: false,
         tradingDisabled: false,
         auctionMode: false,
-        productType: ProductType.Spot,
+        productType: 'SPOT',
         quoteCurrencyId: 'USD',
         baseCurrencyId: 'BTC',
         baseDisplaySymbol: 'BTC',
@@ -79,27 +73,28 @@ describe('PublicService', () => {
         priceIncrement: '0.01',
         approximateQuote24hVolume: '50000000000',
       };
-      mockSdkService.getProduct.mockResolvedValue(sdkProduct);
+      mockClient.request.mockResolvedValue(mockResponse(mockProduct));
 
       const result = await service.getProduct({ productId: 'BTC-USD' });
 
-      expect(mockSdkService.getProduct).toHaveBeenCalledWith({
-        productId: 'BTC-USD',
+      expect(mockClient.request).toHaveBeenCalledWith({
+        url: 'market/products/BTC-USD',
+        queryParams: {},
       });
-      expect(result.productId).toBe('BTC-USD');
-      expect(result.price).toBe(50000);
-      expect(result.pricePercentageChange24h).toBe(2.5);
-      expect(result.volume24h).toBe(1000000);
-      expect(result.volumePercentageChange24h).toBe(5.0);
-      expect(result.baseIncrement).toBe(0.00000001);
-      expect(result.quoteIncrement).toBe(0.01);
-      expect(result.midMarketPrice).toBe(50001);
+      expect(result.product.productId).toBe('BTC-USD');
+      expect(result.product.price).toBe(50000);
+      expect(result.product.pricePercentageChange24h).toBe(2.5);
+      expect(result.product.volume24h).toBe(1000000);
+      expect(result.product.volumePercentageChange24h).toBe(5.0);
+      expect(result.product.baseIncrement).toBe(0.00000001);
+      expect(result.product.quoteIncrement).toBe(0.01);
+      expect(result.product.midMarketPrice).toBe(50001);
     });
   });
 
   describe('listProducts', () => {
     it('should convert SDK response to our types', async () => {
-      const sdkProduct: SdkProduct = {
+      const mockProduct = {
         productId: 'ETH-USD',
         price: '3000',
         pricePercentageChange24h: '1.5',
@@ -122,20 +117,25 @@ describe('PublicService', () => {
         postOnly: false,
         tradingDisabled: false,
         auctionMode: false,
-        productType: ProductType.Spot,
+        productType: 'SPOT',
         quoteCurrencyId: 'USD',
         baseCurrencyId: 'ETH',
         baseDisplaySymbol: 'ETH',
         quoteDisplaySymbol: 'USD',
       };
-      mockSdkService.listProducts.mockResolvedValue({
-        products: [sdkProduct],
-        numProducts: 1,
-      });
+      mockClient.request.mockResolvedValue(
+        mockResponse({
+          products: [mockProduct],
+          numProducts: 1,
+        }),
+      );
 
       const result = await service.listProducts({ limit: 10 });
 
-      expect(mockSdkService.listProducts).toHaveBeenCalledWith({ limit: 10 });
+      expect(mockClient.request).toHaveBeenCalledWith({
+        url: 'market/products',
+        queryParams: { limit: 10 },
+      });
       expect(result.products).toHaveLength(1);
       expect(result.products?.[0].productId).toBe('ETH-USD');
       expect(result.products?.[0].price).toBe(3000);
@@ -143,18 +143,21 @@ describe('PublicService', () => {
     });
 
     it('should handle empty request', async () => {
-      mockSdkService.listProducts.mockResolvedValue({ products: [] });
+      mockClient.request.mockResolvedValue(mockResponse({ products: [] }));
 
       const result = await service.listProducts();
 
-      expect(mockSdkService.listProducts).toHaveBeenCalledWith({});
+      expect(mockClient.request).toHaveBeenCalledWith({
+        url: 'market/products',
+        queryParams: {},
+      });
       expect(result.products).toEqual([]);
     });
   });
 
   describe('getProductBook', () => {
     it('should convert SDK response to our types', async () => {
-      const sdkResponse: SdkGetProductBookResponse = {
+      const mockBookResponse = {
         pricebook: {
           productId: 'BTC-USD',
           bids: [
@@ -172,12 +175,13 @@ describe('PublicService', () => {
         spreadBps: '4',
         spreadAbsolute: '2',
       };
-      mockSdkService.getProductBook.mockResolvedValue(sdkResponse);
+      mockClient.request.mockResolvedValue(mockResponse(mockBookResponse));
 
       const result = await service.getProductBook({ productId: 'BTC-USD' });
 
-      expect(mockSdkService.getProductBook).toHaveBeenCalledWith({
-        productId: 'BTC-USD',
+      expect(mockClient.request).toHaveBeenCalledWith({
+        url: 'market/product_book',
+        queryParams: { productId: 'BTC-USD' },
       });
       expect(result.pricebook.productId).toBe('BTC-USD');
       expect(result.pricebook.bids).toHaveLength(2);
@@ -194,7 +198,7 @@ describe('PublicService', () => {
 
   describe('getProductMarketTrades', () => {
     it('should convert SDK response to our types', async () => {
-      const sdkResponse: SdkGetMarketTradesResponse = {
+      const mockTradesResponse = {
         trades: [
           {
             tradeId: 'trade-1',
@@ -217,16 +221,16 @@ describe('PublicService', () => {
         bestBid: '49998',
         bestAsk: '50001',
       };
-      mockSdkService.getProductMarketTrades.mockResolvedValue(sdkResponse);
+      mockClient.request.mockResolvedValue(mockResponse(mockTradesResponse));
 
       const result = await service.getProductMarketTrades({
         productId: 'BTC-USD',
         limit: 10,
       });
 
-      expect(mockSdkService.getProductMarketTrades).toHaveBeenCalledWith({
-        productId: 'BTC-USD',
-        limit: 10,
+      expect(mockClient.request).toHaveBeenCalledWith({
+        url: 'market/products/BTC-USD/ticker',
+        queryParams: { productId: 'BTC-USD', limit: 10 },
       });
       expect(result.trades).toHaveLength(2);
       expect(result.trades?.[0].tradeId).toBe('trade-1');
@@ -240,7 +244,7 @@ describe('PublicService', () => {
     });
 
     it('should handle undefined trades', async () => {
-      mockSdkService.getProductMarketTrades.mockResolvedValue({});
+      mockClient.request.mockResolvedValue(mockResponse({}));
 
       const result = await service.getProductMarketTrades({
         productId: 'BTC-USD',
@@ -254,8 +258,8 @@ describe('PublicService', () => {
   });
 
   describe('getProductCandles', () => {
-    it('should convert SDK response and timestamps', async () => {
-      const sdkCandles: SdkCandle[] = [
+    it('should pass pre-transformed request and convert SDK response', async () => {
+      const mockCandles = [
         {
           start: '1735689600',
           low: '49500',
@@ -273,22 +277,28 @@ describe('PublicService', () => {
           volume: '1500',
         },
       ];
-      mockSdkService.getProductCandles.mockResolvedValue({
-        candles: sdkCandles,
-      });
+      mockClient.request.mockResolvedValue(
+        mockResponse({
+          candles: mockCandles,
+        }),
+      );
 
+      // Service receives pre-transformed data from MCP layer (timestamps already Unix strings)
       const result = await service.getProductCandles({
-        productId: 'BTC-USD',
-        start: '2025-01-01T00:00:00Z',
-        end: '2025-01-02T00:00:00Z',
-        granularity: Granularity.ONE_HOUR,
-      });
-
-      expect(mockSdkService.getProductCandles).toHaveBeenCalledWith({
         productId: 'BTC-USD',
         start: '1735689600',
         end: '1735776000',
         granularity: Granularity.ONE_HOUR,
+      });
+
+      expect(mockClient.request).toHaveBeenCalledWith({
+        url: 'market/products/BTC-USD/candles',
+        queryParams: {
+          productId: 'BTC-USD',
+          start: '1735689600',
+          end: '1735776000',
+          granularity: Granularity.ONE_HOUR,
+        },
       });
       expect(result.candles).toHaveLength(2);
       expect(result.candles?.[0].start).toBe(1735689600);
@@ -301,27 +311,16 @@ describe('PublicService', () => {
     });
 
     it('should handle undefined candles', async () => {
-      mockSdkService.getProductCandles.mockResolvedValue({});
+      mockClient.request.mockResolvedValue(mockResponse({}));
 
       const result = await service.getProductCandles({
         productId: 'BTC-USD',
-        start: '2025-01-01T00:00:00Z',
-        end: '2025-01-02T00:00:00Z',
+        start: '1735689600',
+        end: '1735776000',
         granularity: Granularity.ONE_HOUR,
       });
 
       expect(result.candles).toBeUndefined();
-    });
-
-    it('should reject invalid ISO 8601 timestamps', async () => {
-      await expect(
-        service.getProductCandles({
-          productId: 'BTC-USD',
-          start: 'invalid-date-string',
-          end: '2025-12-31T23:59:59Z',
-          granularity: Granularity.ONE_DAY,
-        }),
-      ).rejects.toThrow('Invalid timestamp: invalid-date-string');
     });
   });
 });

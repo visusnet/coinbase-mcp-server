@@ -685,35 +685,32 @@ Each type returns a different output structure based on its methodology:
 
 **Usage**:
 ```
-result = detect_swing_points(candles, fractalPeriod=2)
+result = detect_swing_points(candles, lookback=2)
 ```
 
 **Output Structure**:
 ```json
 {
-  "fractalPeriod": 2,
-  "swingHigh": {
-    "index": 45,
-    "price": 47500.0,
-    "timestamp": "2024-01-15T10:00:00Z"
-  },
-  "swingLow": {
-    "index": 32,
-    "price": 43200.0,
-    "timestamp": "2024-01-14T22:00:00Z"
-  },
-  "trend": "uptrend",
-  "range": 4300.0
+  "swingHighs": [
+    { "index": 15, "price": 46000.0, "type": "high" },
+    { "index": 45, "price": 47500.0, "type": "high" }
+  ],
+  "swingLows": [
+    { "index": 8, "price": 44000.0, "type": "low" },
+    { "index": 32, "price": 43200.0, "type": "low" }
+  ],
+  "latestSwingHigh": { "index": 45, "price": 47500.0, "type": "high" },
+  "latestSwingLow": { "index": 32, "price": 43200.0, "type": "low" },
+  "trend": "uptrend"
 }
 ```
 
 **Interpretation**:
 
-- `trend: "uptrend"`: Recent swing high after swing low → Bullish (+1)
-- `trend: "downtrend"`: Recent swing low after swing high → Bearish (-1)
+- `trend: "uptrend"`: Latest swing high occurred after latest swing low → Bullish (+1)
+- `trend: "downtrend"`: Latest swing low occurred after latest swing high → Bearish (-1)
 - `trend: "sideways"`: No clear direction
-- Use `swingHigh.price` and `swingLow.price` for Fibonacci retracement calculation
-- `range`: Difference between swing high and swing low prices
+- Use `latestSwingHigh.price` and `latestSwingLow.price` for Fibonacci retracement calculation
 
 ---
 
