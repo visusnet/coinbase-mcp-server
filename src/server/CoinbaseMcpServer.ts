@@ -55,6 +55,7 @@ export class CoinbaseMcpServer {
   private readonly technicalIndicators: TechnicalIndicatorsService;
   private readonly technicalAnalysis: TechnicalAnalysisService;
   private readonly marketEvent: MarketEventService;
+  private readonly webSocketPool: WebSocketPool;
 
   constructor(apiKey: string, privateKey: string) {
     const credentials = new CoinbaseCredentials(apiKey, privateKey);
@@ -77,7 +78,8 @@ export class CoinbaseMcpServer {
       this.products,
       this.technicalIndicators,
     );
-    this.marketEvent = new MarketEventService(new WebSocketPool(credentials));
+    this.webSocketPool = new WebSocketPool(credentials);
+    this.marketEvent = new MarketEventService(this.webSocketPool);
 
     this.app = createMcpExpressApp();
 
@@ -230,10 +232,28 @@ BEST PRACTICES:
     return server;
   }
 
+  /**
+   * Closes the WebSocket pool and releases all resources.
+   */
+  public close(): void {
+    this.webSocketPool.close();
+  }
+
   public listen(port: number): void {
     const server = this.app.listen(port, () => {
       logger.server.info(`Coinbase MCP Server listening on port ${port}`);
     });
+
+    const shutdown = (): void => {
+      logger.server.info('Shutting down...');
+      this.close();
+      server.close(() => {
+        process.exit(0);
+      });
+    };
+
+    process.on('SIGTERM', shutdown);
+    process.on('SIGINT', shutdown);
 
     server.on('error', (error: NodeJS.ErrnoException) => {
       if (error.code === 'EADDRINUSE') {

@@ -2146,6 +2146,12 @@ describe('CoinbaseMcpServer Integration Tests', () => {
       expect(app).toBeDefined();
     });
 
+    it('should close the WebSocket pool', () => {
+      coinbaseMcpServer.close();
+
+      expect(getPoolMockInstance().close).toHaveBeenCalled();
+    });
+
     it('should start listening on specified port', () => {
       const mockServer = { on: jest.fn() };
       const mockListen = jest.fn((_port: number, callback: () => void) => {
@@ -2228,6 +2234,43 @@ describe('CoinbaseMcpServer Integration Tests', () => {
 
       processExitSpy.mockRestore();
     });
+
+    it('should register SIGTERM and SIGINT shutdown handlers on listen', () => {
+      const processOnSpy = jest.spyOn(process, 'on');
+      stubExpressListen(coinbaseMcpServer);
+
+      coinbaseMcpServer.listen(3000);
+
+      expect(processOnSpy).toHaveBeenCalledWith(
+        'SIGTERM',
+        expect.any(Function),
+      );
+      expect(processOnSpy).toHaveBeenCalledWith('SIGINT', expect.any(Function));
+
+      processOnSpy.mockRestore();
+    });
+
+    it('should close WebSocket pool and HTTP server on shutdown signal', () => {
+      const processExitSpy = jest
+        .spyOn(process, 'exit')
+        .mockImplementation(() => undefined as never);
+      const processOnSpy = jest.spyOn(process, 'on');
+      const mockServerClose = jest.fn((cb: () => void) => {
+        cb();
+      });
+      stubExpressListen(coinbaseMcpServer, { close: mockServerClose });
+
+      coinbaseMcpServer.listen(3000);
+      simulateSigterm(processOnSpy);
+
+      expect(logger.server.info).toHaveBeenCalledWith('Shutting down...');
+      expect(getPoolMockInstance().close).toHaveBeenCalled();
+      expect(mockServerClose).toHaveBeenCalled();
+      expect(processExitSpy).toHaveBeenCalledWith(0);
+
+      processExitSpy.mockRestore();
+      processOnSpy.mockRestore();
+    });
   });
 
   describe('Streamable HTTP Routes', () => {
@@ -2296,6 +2339,40 @@ describe('CoinbaseMcpServer Integration Tests', () => {
     });
   });
 });
+
+// Returns the mock WebSocketPool instance created during CoinbaseMcpServer construction
+function getPoolMockInstance(): { close: jest.Mock } {
+  const mock: { WebSocketPool: jest.Mock } = jest.requireMock(
+    '@server/websocket/WebSocketPool',
+  );
+  return mock.WebSocketPool.mock.results[0].value as { close: jest.Mock };
+}
+
+// Stubs app.listen to avoid binding a real port, with optional server overrides
+function stubExpressListen(
+  server: CoinbaseMcpServer,
+  serverOverrides: Record<string, unknown> = {},
+): void {
+  const mockServer = { on: jest.fn(), ...serverOverrides };
+  const mockListen = jest.fn((_port: number, callback: () => void) => {
+    callback();
+    return mockServer;
+  });
+  Object.defineProperty(server.getExpressApp(), 'listen', {
+    value: mockListen,
+    writable: true,
+  });
+}
+
+// Finds and invokes the SIGTERM handler captured by a process.on spy
+function simulateSigterm(
+  processOnSpy: jest.SpiedFunction<typeof process.on>,
+): void {
+  const handler = processOnSpy.mock.calls.find(
+    (call) => call[0] === 'SIGTERM',
+  )?.[1] as () => void;
+  handler();
+}
 
 // Helper function to validate tool response contains expected data
 function expectResponseToContain(

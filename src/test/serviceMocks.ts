@@ -222,7 +222,9 @@ export function mockServices(): void {
 
   jest.mock('@server/websocket/WebSocketPool', () => {
     return {
-      WebSocketPool: jest.fn().mockImplementation(() => ({})),
+      WebSocketPool: jest.fn().mockImplementation(() => ({
+        close: jest.fn(),
+      })),
     };
   });
 
