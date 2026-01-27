@@ -12,9 +12,9 @@ import {
 // =============================================================================
 
 export enum PositionSide {
-  Unknown = 'UNKNOWN',
-  Long = 'LONG',
-  Short = 'SHORT',
+  Unknown = 'POSITION_SIDE_UNKNOWN',
+  Long = 'POSITION_SIDE_LONG',
+  Short = 'POSITION_SIDE_SHORT',
 }
 
 // =============================================================================
