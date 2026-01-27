@@ -120,6 +120,7 @@ export class WebSocketPool {
     return new Promise((resolve, reject) => {
       logger.websocket.debug(`Connecting to ${COINBASE_WS_URL}`);
       this.connection = new WebSocket(COINBASE_WS_URL);
+      let errorOccurred = false;
 
       this.connection.addEventListener('open', () => {
         logger.websocket.debug('Connection opened');
@@ -143,11 +144,16 @@ export class WebSocketPool {
 
       this.connection.addEventListener('close', (event) => {
         logger.websocket.debug({ event }, 'Connection closed');
-        void this.reconnect();
+        // Skip reconnect if the error handler already rejected the promise,
+        // because reconnection will be triggered through the error catch path.
+        if (!errorOccurred) {
+          void this.reconnect();
+        }
       });
 
       this.connection.addEventListener('error', (event) => {
         logger.websocket.error({ event }, 'Connection error');
+        errorOccurred = true;
         reject(new Error('WebSocket connection failed'));
       });
     });
