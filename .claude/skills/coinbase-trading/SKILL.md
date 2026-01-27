@@ -216,10 +216,10 @@ ELSE IF response.status == "timeout":
 
 ### Fee Optimization
 
-- **Maker Fee**: ~0.4% (Limit Orders)
-- **Taker Fee**: ~0.6% (Market Orders)
-- **Min Profit Threshold (Direct)**: 2.0% (must exceed fees)
-- **Min Profit Threshold (Indirect)**: 3.2% (for routes like BTC→EUR→SOL)
+- **Fee Rates**: Fetched dynamically via `get_transaction_summary` (adapts to volume-based fee tier)
+- **Slippage Buffer**: 0.3%
+- **Min Profit (Direct)**: `(entry_fee + exit_fee + slippage) × 2` — computed per trade
+- **Min Profit (Indirect)**: `(entry_fee + exit_fee + slippage) × 4` — computed per trade
 - **Limit Order Timeout**: 120 seconds
 - **Prefer Direct Pairs**: Yes (BTC→X instead of BTC→EUR→X when available)
 
@@ -1040,8 +1040,8 @@ exit_fee = taker_fee  // Exits typically market orders
 round_trip_fee = entry_fee + exit_fee
 slippage_buffer = 0.003  // 0.3% average slippage
 
-MIN_PROFIT_DIRECT = (round_trip_fee + slippage_buffer) × 2  // ~2.2-2.4%
-MIN_PROFIT_INDIRECT = (round_trip_fee + slippage_buffer) × 4  // ~3.8-4.2%
+MIN_PROFIT_DIRECT = (round_trip_fee + slippage_buffer) × 2  // ×2 = safety margin
+MIN_PROFIT_INDIRECT = (round_trip_fee + slippage_buffer) × 4  // ×4 = 2 legs × 2 safety margin
 
 // Check before trading
 IF expected_move < MIN_PROFIT:
@@ -1104,7 +1104,8 @@ IF spread > 10.0:
   → SKIP trade
   → Log: "Suspicious spread: {spread}% (likely data error)"
   → STOP
-```json
+```
+
 1. Decision:
    - Spread > 0.5% → SKIP trade, log "Spread too high: {X}%"
    - Spread 0.2% - 0.5% → Reduce position to 50%
@@ -1113,7 +1114,7 @@ IF spread > 10.0:
 
 ### 11. Execute Order
 
-When a signal is present and expected profit exceeds MIN_PROFIT threshold:
+When a signal is present and expected profit exceeds MIN_PROFIT threshold (computed in Step 9):
 
 **Order Type Selection**:
 
@@ -1127,11 +1128,11 @@ When a signal is present and expected profit exceeds MIN_PROFIT threshold:
 
 1. Call `list_products` to check if direct pair exists (e.g., BTC-SOL)
 2. IF direct pair exists with sufficient liquidity:
-   → Use direct pair, MIN_PROFIT = 2.0%
+   → Use direct pair, MIN_PROFIT = MIN_PROFIT_DIRECT
 3. ELSE (no direct pair or illiquid):
    → Use indirect route (BTC → EUR → SOL)
-   → MIN_PROFIT = 3.2%
-   → Only trade if expected_profit > 3.2%
+   → MIN_PROFIT = MIN_PROFIT_INDIRECT
+   → Only trade if expected_profit > MIN_PROFIT_INDIRECT
 
 **For BUY (Limit Order)**:
 
