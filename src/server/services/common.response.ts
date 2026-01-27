@@ -92,12 +92,14 @@ export type L2Level = z.output<typeof L2LevelSchema>;
 /**
  * PriceBook schema for order book data.
  */
-export const PriceBookSchema = z.object({
-  productId: z.string().describe('Product ID'),
-  bids: z.array(L2LevelSchema).describe('Bid levels'),
-  asks: z.array(L2LevelSchema).describe('Ask levels'),
-  time: z.string().optional().describe('Timestamp'),
-});
+export const PriceBookSchema = z
+  .object({
+    productId: z.string().describe('Product ID'),
+    bids: z.array(L2LevelSchema).describe('Bid levels'),
+    asks: z.array(L2LevelSchema).describe('Ask levels'),
+    time: z.string().optional().describe('Timestamp'),
+  })
+  .describe('Order book data with bids and asks');
 
 export type PriceBook = z.output<typeof PriceBookSchema>;
 
