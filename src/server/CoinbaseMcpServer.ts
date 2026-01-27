@@ -233,7 +233,7 @@ BEST PRACTICES:
   }
 
   /**
-   * Closes the WebSocket pool and releases all resources.
+   * Closes the WebSocket pool.
    */
   public close(): void {
     this.webSocketPool.close();
@@ -246,8 +246,24 @@ BEST PRACTICES:
 
     const shutdown = (): void => {
       logger.server.info('Shutting down...');
-      this.close();
+
+      try {
+        this.close();
+      } catch (error: unknown) {
+        logger.server.error(
+          { err: error },
+          'Error closing WebSocket pool during shutdown',
+        );
+      }
+
+      const forceExitTimeout = setTimeout(() => {
+        logger.server.error('Graceful shutdown timed out, forcing exit');
+        process.exit(1);
+      }, 10_000);
+      forceExitTimeout.unref();
+
       server.close(() => {
+        clearTimeout(forceExitTimeout);
         process.exit(0);
       });
     };
