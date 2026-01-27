@@ -2,12 +2,27 @@ import pino from 'pino';
 import pretty from 'pino-pretty';
 
 /**
+ * Fields to redact from all log output to prevent credential leakage.
+ */
+export const REDACT_PATHS = [
+  'apiKey',
+  'privateKey',
+  'jwt',
+  'token',
+  'secret',
+  'password',
+  'COINBASE_API_KEY_NAME',
+  'COINBASE_PRIVATE_KEY',
+];
+
+/**
  * Central pino configuration.
  * All logger instances are created from this base logger.
  */
 const baseLogger = pino(
   {
     level: process.env.LOG_LEVEL ?? 'debug',
+    redact: REDACT_PATHS,
   },
   pretty({
     colorize: true,
