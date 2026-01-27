@@ -2271,6 +2271,29 @@ describe('CoinbaseMcpServer Integration Tests', () => {
       processExitSpy.mockRestore();
       processOnSpy.mockRestore();
     });
+
+    it('should close WebSocket pool and HTTP server on SIGINT', () => {
+      const processExitSpy = jest
+        .spyOn(process, 'exit')
+        .mockImplementation(() => undefined as never);
+      const processOnSpy = jest.spyOn(process, 'on');
+      const mockServerClose = jest.fn((cb: () => void) => {
+        cb();
+      });
+      stubExpressListen(coinbaseMcpServer, { close: mockServerClose });
+
+      coinbaseMcpServer.listen(3000);
+      simulateSignal(processOnSpy, 'SIGINT');
+
+      expect(logger.server.info).toHaveBeenCalledWith('Shutting down...');
+      expect(getPoolMockInstance().close).toHaveBeenCalled();
+      expect(mockServerClose).toHaveBeenCalled();
+      expect(processExitSpy).toHaveBeenCalledWith(0);
+
+      processExitSpy.mockRestore();
+      processOnSpy.mockRestore();
+    });
+
     it('should still close HTTP server when WebSocket pool close throws', () => {
       const processExitSpy = jest
         .spyOn(process, 'exit')
