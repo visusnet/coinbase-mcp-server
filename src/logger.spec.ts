@@ -31,6 +31,19 @@ describe('logger', () => {
     expect(customLogger.info).toBeDefined();
   });
 
+  it('should export redact paths for credential filtering', async () => {
+    const { REDACT_PATHS } = await import('./logger');
+
+    expect(REDACT_PATHS).toContain('apiKey');
+    expect(REDACT_PATHS).toContain('privateKey');
+    expect(REDACT_PATHS).toContain('jwt');
+    expect(REDACT_PATHS).toContain('token');
+    expect(REDACT_PATHS).toContain('secret');
+    expect(REDACT_PATHS).toContain('password');
+    expect(REDACT_PATHS).toContain('COINBASE_API_KEY_NAME');
+    expect(REDACT_PATHS).toContain('COINBASE_PRIVATE_KEY');
+  });
+
   it('should work for logging', async () => {
     const { logger } = await import('./logger');
 
