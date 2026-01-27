@@ -168,20 +168,22 @@ IF profit_ratio < MIN_PROFIT_THRESHOLD:
   → Skip Trade (not profitable after fees)
 ```
 
-**Minimum Profit Thresholds**:
+**Minimum Profit Thresholds** (dynamic, from `get_transaction_summary`):
 
-- Direct route (e.g., BTC→SOL): 2.0%
-- Indirect route (e.g., BTC→EUR→SOL): 3.2%
+- Direct route: `(entry_fee + exit_fee + 0.3% slippage) × 2`
+- Indirect route: `(entry_fee + exit_fee + 0.3% slippage) × 4`
 
-**Example Calculation**:
+As trading volume increases, Coinbase fee tiers drop and thresholds automatically tighten.
+
+**Example Calculation** (at 0.4% maker / 0.6% taker → Direct min 2.6%, Indirect min 5.2%):
 
 | Scenario | Entry | Target (+5%) | Fees | Net | Profitable? |
 |----------|-------|--------------|------|-----|-------------|
-| Market→Market | 100€ | 105€ | 1.2€ | 3.8€ | ✅ Yes (3.8%) |
-| Limit→Market | 100€ | 105€ | 1.0€ | 4.0€ | ✅ Yes (4.0%) |
-| Limit→Limit | 100€ | 105€ | 0.8€ | 4.2€ | ✅ Yes (4.2%) |
-| Indirect Market→Market | 100€ | 102€ | 1.6€ | 0.4€ | ❌ No (<3.2%) |
-| Direct Limit→Market | 100€ | 102€ | 1.0€ | 1.0€ | ❌ No (<2.0%) |
+| Market→Market | 100€ | 105€ | 1.2€ | 3.8€ | ✅ Yes (3.8% > 2.6%) |
+| Limit→Market | 100€ | 105€ | 1.0€ | 4.0€ | ✅ Yes (4.0% > 2.6%) |
+| Limit→Limit | 100€ | 105€ | 0.8€ | 4.2€ | ✅ Yes (4.2% > 2.6%) |
+| Indirect Market→Market | 100€ | 102€ | 1.6€ | 0.4€ | ❌ No (0.4% < 5.2%) |
+| Direct Limit→Market | 100€ | 102€ | 1.0€ | 1.0€ | ❌ No (1.0% < 2.6%) |
 
 ---
 
