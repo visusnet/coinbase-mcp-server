@@ -44,6 +44,26 @@ describe('logger', () => {
     expect(REDACT_PATHS).toContain('COINBASE_PRIVATE_KEY');
   });
 
+  it('should redact sensitive fields from log output', async () => {
+    const chunks: string[] = [];
+    const capturingStream = new Writable({
+      write(chunk: Buffer, _encoding, callback) {
+        chunks.push(chunk.toString());
+        callback();
+      },
+    });
+
+    const prettyMock = jest.requireMock<jest.Mock>('pino-pretty');
+    prettyMock.mockReturnValueOnce(capturingStream);
+
+    const { logger } = await import('./logger');
+    logger.server.info({ apiKey: 'super-secret-key' }, 'test');
+
+    const output = chunks.join('');
+    expect(output).not.toContain('super-secret-key');
+    expect(output).toContain('[Redacted]');
+  });
+
   it('should work for logging', async () => {
     const { logger } = await import('./logger');
 
