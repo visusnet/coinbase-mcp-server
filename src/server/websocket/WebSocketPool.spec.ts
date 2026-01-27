@@ -533,6 +533,30 @@ describe('WebSocketPool', () => {
       expect(callback).not.toHaveBeenCalled();
     });
 
+    it('should log handler errors separately from parse errors', async () => {
+      const pool = new WebSocketPool(mockCredentials);
+      const callback = jest.fn().mockImplementation(() => {
+        throw new Error('callback bug');
+      });
+
+      const promise = pool.subscribe(['BTC-EUR'], callback);
+      mockWebSocketInstances[0].simulateOpen();
+      await promise;
+
+      mockWebSocketInstances[0].simulateMessage(
+        createTickerMessage('BTC-EUR', '50000', '100', '5', '51000', '49000'),
+      );
+
+      expect(logger.websocket.error).toHaveBeenCalledWith(
+        { err: expect.any(Error) },
+        'Message handler error',
+      );
+      expect(logger.websocket.error).not.toHaveBeenCalledWith(
+        expect.anything(),
+        'Message parse error',
+      );
+    });
+
     it('should handle malformed JSON messages', async () => {
       const pool = new WebSocketPool(mockCredentials);
       const callback = jest.fn();
