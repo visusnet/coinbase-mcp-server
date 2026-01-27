@@ -144,8 +144,9 @@ export class WebSocketPool {
 
       this.connection.addEventListener('close', (event) => {
         logger.websocket.debug({ event }, 'Connection closed');
-        // Skip reconnect if the error handler already rejected the promise,
-        // because reconnection will be triggered through the error catch path.
+        // Skip reconnect if the error handler already rejected the promise.
+        // When called from reconnect(), the rejection triggers a retry via its catch block.
+        // When called from ensureConnection(), the error propagates to the caller.
         if (!errorOccurred) {
           void this.reconnect();
         }
@@ -322,7 +323,8 @@ export class WebSocketPool {
       if (this.subscribedProducts.size > 0) {
         this.sendSubscribe([...this.subscribedProducts]);
       }
-    } catch {
+    } catch (error) {
+      logger.websocket.error({ err: error }, 'Reconnect attempt failed');
       this.isReconnecting = false;
       void this.reconnect();
     }
