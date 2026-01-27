@@ -229,12 +229,12 @@ Strategy-specific TP/SL configurations (selected via session.config.strategy):
 
 **Aggressive (Default)**:
 
-- **Take-Profit**: 1.5× ATR (dynamic, typically 3-5%)
-- **Stop-Loss**: 2.0× ATR (dynamic, typically 4-10%)
+- **Take-Profit**: 2.5× ATR (dynamic, typically 2.5-10%)
+- **Stop-Loss**: 1.5× ATR (dynamic, typically 2.5-6%)
 - **ATR Period**: 14 candles
-- **Min TP**: 2.0% (must exceed fees)
-- **Max SL**: 15.0% (capital protection)
-- **Min SL**: 3.0% (avoid noise triggers)
+- **Min TP**: 2.5% (must exceed fees + margin)
+- **Max SL**: 10.0% (capital protection)
+- **Min SL**: 2.5% (avoid noise triggers)
 
 **Conservative**:
 
@@ -611,8 +611,8 @@ ELSE:
 
 // Calculate TP/SL based on strategy
 IF session.config.strategy == "aggressive":
-  TP_PERCENT = max(2.0, ATR_PERCENT × 1.5)  // 1.5× ATR, floor at 2%
-  SL_PERCENT = clamp(ATR_PERCENT × 2.0, 3.0, 15.0)  // 2.0× ATR, 3-15%
+  TP_PERCENT = max(2.5, ATR_PERCENT × 2.5)  // 2.5× ATR, floor at 2.5%
+  SL_PERCENT = clamp(ATR_PERCENT × 1.5, 2.5, 10.0)  // 1.5× ATR, 2.5-10%
 
 ELSE IF session.config.strategy == "conservative":
   TP_PERCENT = 3.0  // Fixed 3%
@@ -624,8 +624,8 @@ ELSE IF session.config.strategy == "scalping":
 
 ELSE:
   // Default to aggressive if strategy not recognized
-  TP_PERCENT = max(2.0, ATR_PERCENT × 1.5)
-  SL_PERCENT = clamp(ATR_PERCENT × 2.0, 3.0, 15.0)
+  TP_PERCENT = max(2.5, ATR_PERCENT × 2.5)
+  SL_PERCENT = clamp(ATR_PERCENT × 1.5, 2.5, 10.0)
 
 take_profit_price = entry_price × (1 + TP_PERCENT / 100)
 stop_loss_price = entry_price × (1 - SL_PERCENT / 100)
@@ -681,7 +681,7 @@ Position: SOL-EUR
   Highest: 128.50 EUR (+7.7%)
   ATR(14): 8.0%
   Dynamic TP: 143.21 EUR (+20.0%)
-  Dynamic SL: 101.44 EUR (-15.0% capped)
+  Dynamic SL: 107.41 EUR (-10.0% capped)
   Trailing Stop: ACTIVE at 126.57 EUR
   Status: TRAILING (stop rising with price)
 ```

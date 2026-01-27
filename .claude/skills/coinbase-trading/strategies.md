@@ -83,8 +83,8 @@ Each indicator provides a score from -3 to +3:
 
 ## Strategy: Aggressive (Default)
 
-- **Take-Profit**: 1.5× ATR (dynamic, typically 3-5%)
-- **Stop-Loss**: 2.0× ATR (dynamic, typically 4-10%)
+- **Take-Profit**: 2.5× ATR (dynamic, typically 2.5-10%)
+- **Stop-Loss**: 1.5× ATR (dynamic, typically 2.5-6%)
 - **Min Signal Strength**: 2+ categories with confirming signals
 - **Min Technical Score**: > +40% for BUY, < -40% for SELL
 - **ADX Threshold**: > 20 (allow moderate trends)
@@ -314,27 +314,28 @@ stop_loss_price = entry_price × (1 - SL_PERCENT / 100)
 
 | Parameter | Value | Reasoning |
 |-----------|-------|-----------|
-| TP_MULTIPLIER | 1.5 | Achievable within 1-2 days |
-| SL_MULTIPLIER | 2.0 | Room for normal volatility |
-| MIN_TP | 2.0% | Must exceed round-trip fees |
-| MIN_SL | 3.0% | Avoid noise-triggered stops |
-| MAX_SL | 15.0% | Capital protection |
+| TP_MULTIPLIER | 2.5 | R:R ≥ 1.67:1, breakeven at ~37.5% win rate |
+| SL_MULTIPLIER | 1.5 | Tighter SL cuts losers early |
+| MIN_TP | 2.5% | Must exceed round-trip fees + margin |
+| MIN_SL | 2.5% | Avoid noise-triggered stops |
+| MAX_SL | 10.0% | Capital protection |
 
 ### Volatility Categories
 
 | ATR % | Category | Typical TP | Typical SL |
 |-------|----------|------------|------------|
-| < 2% | Low | 2.0% (floor) | 3.0% (floor) |
-| 2-5% | Normal | 4-10% | 4-10% |
-| 5-10% | High | 10-20% | 10-15% (capped) |
-| > 10% | Extreme | 20%+ | 15% (capped) |
+| < 1% | Low | 2.5% (floor) | 2.5% (floor) |
+| 1-4% | Normal | 2.5-10% | 2.5-6% |
+| 4-7% | High | 10-17.5% | 6-10% (capped) |
+| > 7% | Extreme | 17.5%+ | 10% (capped) |
 
 ### Benefits
 
-1. **Adapts to market conditions**: Wider stops in volatile markets
-2. **Reduces premature exits**: Normal swings don't trigger SL
-3. **Realistic targets**: TP based on actual price movement
-4. **Risk management**: MAX_SL prevents catastrophic losses
+1. **Positive R:R structure**: TP/SL = 2.5/1.5 = 1.67:1, breakeven at ~37.5% win rate
+2. **Adapts to market conditions**: Both TP and SL scale with ATR
+3. **Lets winners run**: Wider TP captures more of favorable moves
+4. **Cuts losers early**: Tighter SL limits downside per trade
+5. **Risk management**: MAX_SL at 10% prevents catastrophic single-trade losses
 
 ---
 

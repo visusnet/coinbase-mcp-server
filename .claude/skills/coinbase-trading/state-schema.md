@@ -103,8 +103,8 @@ Single Source of Truth for `.claude/trading-state.json` structure.
       },
       "riskManagement": {
         "entryATR": 9.55,
-        "dynamicSL": 101.44,
-        "dynamicTP": 142.13,
+        "dynamicSL": 107.41,
+        "dynamicTP": 143.21,
         "trailingStop": {
           "active": false,
           "currentStopPrice": null,
