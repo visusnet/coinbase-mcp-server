@@ -2466,7 +2466,10 @@ function simulateSignal(
 ): void {
   const handler = processOnSpy.mock.calls.find(
     (call) => call[0] === signal,
-  )?.[1] as () => void;
+  )?.[1] as (() => void) | undefined;
+  if (!handler) {
+    throw new Error(`No handler registered for signal '${signal}'`);
+  }
   handler();
 }
 
