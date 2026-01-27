@@ -155,12 +155,14 @@ type HeartbeatsChannelMessage = z.output<typeof HeartbeatsChannelMessageSchema>;
 type ErrorMessage = z.output<typeof ErrorMessageSchema>;
 
 /** Union schema for all possible inbound WebSocket messages */
-export const WebSocketMessageSchema = z.union([
-  TickerChannelMessageSchema,
-  SubscriptionsChannelMessageSchema,
-  HeartbeatsChannelMessageSchema,
-  ErrorMessageSchema,
-]);
+export const WebSocketMessageSchema = z
+  .union([
+    TickerChannelMessageSchema,
+    SubscriptionsChannelMessageSchema,
+    HeartbeatsChannelMessageSchema,
+    ErrorMessageSchema,
+  ])
+  .describe('Union of all possible inbound WebSocket messages');
 
 export type WebSocketMessage = z.output<typeof WebSocketMessageSchema>;
 
