@@ -192,6 +192,27 @@ describe('WebSocketPool', () => {
   });
 
   describe('close', () => {
+    it('should not reconnect after close is called', async () => {
+      const pool = new WebSocketPool(mockCredentials);
+      const callback = jest.fn();
+
+      const promise = pool.subscribe(['BTC-EUR'], callback);
+      mockWebSocketInstances[0].simulateOpen();
+      await promise;
+
+      const countBefore = mockWebSocketInstances.length;
+      pool.close();
+
+      // The close event fires on the underlying WebSocket after pool.close()
+      mockWebSocketInstances[0].simulateClose();
+
+      // Advance past reconnect delay
+      jest.advanceTimersByTime(1100);
+      await Promise.resolve();
+
+      expect(mockWebSocketInstances.length).toBe(countBefore);
+    });
+
     it('should close the connection and clean up resources', async () => {
       const pool = new WebSocketPool(mockCredentials);
       const callback = jest.fn();

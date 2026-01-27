@@ -38,6 +38,7 @@ export class WebSocketPool {
   private reconnectAttempts = 0;
   private readonly subscriptions: Map<string, Subscription> = new Map();
   private isReconnecting = false;
+  private isClosed = false;
 
   /**
    * Creates a new WebSocketPool instance.
@@ -49,6 +50,7 @@ export class WebSocketPool {
    * Closes the WebSocket connection and cleans up resources.
    */
   public close(): void {
+    this.isClosed = true;
     this.cleanup();
   }
 
@@ -284,6 +286,10 @@ export class WebSocketPool {
    * Attempts to reconnect with exponential backoff.
    */
   private async reconnect(): Promise<void> {
+    if (this.isClosed) {
+      return;
+    }
+
     if (this.isReconnecting) {
       return;
     }
