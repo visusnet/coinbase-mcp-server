@@ -2271,6 +2271,59 @@ describe('CoinbaseMcpServer Integration Tests', () => {
       processExitSpy.mockRestore();
       processOnSpy.mockRestore();
     });
+    it('should still close HTTP server when WebSocket pool close throws', () => {
+      const processExitSpy = jest
+        .spyOn(process, 'exit')
+        .mockImplementation(() => undefined as never);
+      const processOnSpy = jest.spyOn(process, 'on');
+      const mockServerClose = jest.fn((cb: () => void) => {
+        cb();
+      });
+      stubExpressListen(coinbaseMcpServer, { close: mockServerClose });
+      getPoolMockInstance().close.mockImplementation(() => {
+        throw new Error('WebSocket cleanup failed');
+      });
+
+      coinbaseMcpServer.listen(3000);
+      simulateSigterm(processOnSpy);
+
+      expect(logger.server.error).toHaveBeenCalledWith(
+        { err: expect.any(Error) },
+        'Error closing WebSocket pool during shutdown',
+      );
+      expect(mockServerClose).toHaveBeenCalled();
+      expect(processExitSpy).toHaveBeenCalledWith(0);
+
+      processExitSpy.mockRestore();
+      processOnSpy.mockRestore();
+    });
+
+    it('should force exit when server.close hangs', () => {
+      jest.useFakeTimers();
+      const processExitSpy = jest
+        .spyOn(process, 'exit')
+        .mockImplementation(() => undefined as never);
+      const processOnSpy = jest.spyOn(process, 'on');
+      const mockServerClose = jest.fn();
+      stubExpressListen(coinbaseMcpServer, { close: mockServerClose });
+
+      coinbaseMcpServer.listen(3000);
+      simulateSigterm(processOnSpy);
+
+      expect(mockServerClose).toHaveBeenCalled();
+      expect(processExitSpy).not.toHaveBeenCalled();
+
+      jest.advanceTimersByTime(10_000);
+
+      expect(logger.server.error).toHaveBeenCalledWith(
+        'Graceful shutdown timed out, forcing exit',
+      );
+      expect(processExitSpy).toHaveBeenCalledWith(1);
+
+      processExitSpy.mockRestore();
+      processOnSpy.mockRestore();
+      jest.useRealTimers();
+    });
   });
 
   describe('Streamable HTTP Routes', () => {
