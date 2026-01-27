@@ -818,6 +818,31 @@ describe('WebSocketPool', () => {
       expect(mockWebSocketInstances.length).toBe(3);
     });
 
+    it('should log error when reconnect attempt fails', async () => {
+      const pool = new WebSocketPool(mockCredentials);
+      const callback = jest.fn();
+
+      const promise = pool.subscribe(['BTC-EUR'], callback);
+      mockWebSocketInstances[0].simulateOpen();
+      await promise;
+
+      // Close to trigger reconnect
+      mockWebSocketInstances[0].simulateClose();
+
+      // Advance past first reconnect delay (1s)
+      jest.advanceTimersByTime(1100);
+      await Promise.resolve();
+
+      // Second WebSocket fails - should log the error
+      mockWebSocketInstances[1].simulateError();
+      await Promise.resolve();
+
+      expect(logger.websocket.error).toHaveBeenCalledWith(
+        { err: expect.any(Error) },
+        'Reconnect attempt failed',
+      );
+    });
+
     it('should not trigger duplicate reconnect when error fires before close', async () => {
       const pool = new WebSocketPool(mockCredentials);
       const callback = jest.fn();
