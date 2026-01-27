@@ -56,7 +56,7 @@ export const WaitForMarketEventRequestSchema = z.object({
     .number()
     .min(1)
     .default(55)
-    .describe('Maximum wait time in seconds (default: 55)'),
+    .describe('Wait time in seconds (default: 55)'),
 });
 
 export type WaitForMarketEventRequest = z.output<
