@@ -244,7 +244,12 @@ BEST PRACTICES:
       logger.server.info(`Coinbase MCP Server listening on port ${port}`);
     });
 
+    let isShuttingDown = false;
     const shutdown = (): void => {
+      if (isShuttingDown) {
+        return;
+      }
+      isShuttingDown = true;
       logger.server.info('Shutting down...');
 
       try {
