@@ -2261,7 +2261,7 @@ describe('CoinbaseMcpServer Integration Tests', () => {
       stubExpressListen(coinbaseMcpServer, { close: mockServerClose });
 
       coinbaseMcpServer.listen(3000);
-      simulateSigterm(processOnSpy);
+      simulateSignal(processOnSpy, 'SIGTERM');
 
       expect(logger.server.info).toHaveBeenCalledWith('Shutting down...');
       expect(getPoolMockInstance().close).toHaveBeenCalled();
@@ -2285,7 +2285,7 @@ describe('CoinbaseMcpServer Integration Tests', () => {
       });
 
       coinbaseMcpServer.listen(3000);
-      simulateSigterm(processOnSpy);
+      simulateSignal(processOnSpy, 'SIGTERM');
 
       expect(logger.server.error).toHaveBeenCalledWith(
         { err: expect.any(Error) },
@@ -2308,7 +2308,7 @@ describe('CoinbaseMcpServer Integration Tests', () => {
       stubExpressListen(coinbaseMcpServer, { close: mockServerClose });
 
       coinbaseMcpServer.listen(3000);
-      simulateSigterm(processOnSpy);
+      simulateSignal(processOnSpy, 'SIGTERM');
 
       expect(mockServerClose).toHaveBeenCalled();
       expect(processExitSpy).not.toHaveBeenCalled();
@@ -2323,6 +2323,25 @@ describe('CoinbaseMcpServer Integration Tests', () => {
       processExitSpy.mockRestore();
       processOnSpy.mockRestore();
       jest.useRealTimers();
+    });
+
+    it('should only run shutdown once when SIGTERM is followed by SIGINT', () => {
+      const processExitSpy = jest
+        .spyOn(process, 'exit')
+        .mockImplementation(() => undefined as never);
+      const processOnSpy = jest.spyOn(process, 'on');
+      const mockServerClose = jest.fn();
+      stubExpressListen(coinbaseMcpServer, { close: mockServerClose });
+
+      coinbaseMcpServer.listen(3000);
+      simulateSignal(processOnSpy, 'SIGTERM');
+      simulateSignal(processOnSpy, 'SIGINT');
+
+      expect(mockServerClose).toHaveBeenCalledTimes(1);
+      expect(getPoolMockInstance().close).toHaveBeenCalledTimes(1);
+
+      processExitSpy.mockRestore();
+      processOnSpy.mockRestore();
     });
   });
 
@@ -2417,12 +2436,13 @@ function stubExpressListen(
   });
 }
 
-// Finds and invokes the SIGTERM handler captured by a process.on spy
-function simulateSigterm(
+// Finds and invokes a signal handler captured by a process.on spy
+function simulateSignal(
   processOnSpy: jest.SpiedFunction<typeof process.on>,
+  signal: string,
 ): void {
   const handler = processOnSpy.mock.calls.find(
-    (call) => call[0] === 'SIGTERM',
+    (call) => call[0] === signal,
   )?.[1] as () => void;
   handler();
 }
