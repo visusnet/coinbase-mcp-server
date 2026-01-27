@@ -134,13 +134,20 @@ export class WebSocketPool {
       });
 
       this.connection.addEventListener('message', (event) => {
+        let message: WebSocketMessage;
         try {
-          this.handleMessage(
-            WebSocketMessageSchema.parse(JSON.parse(event.data as string)),
+          message = WebSocketMessageSchema.parse(
+            JSON.parse(event.data as string),
           );
         } catch (error) {
           logger.websocket.error({ err: error }, 'Message parse error');
           logger.websocket.error({ data: event.data }, 'Raw message');
+          return;
+        }
+        try {
+          this.handleMessage(message);
+        } catch (error) {
+          logger.websocket.error({ err: error }, 'Message handler error');
         }
       });
 
