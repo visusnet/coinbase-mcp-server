@@ -8,7 +8,7 @@ Thank you for your interest in contributing! This project welcomes contributions
 2. **Clone your fork** locally:
 
    ```bash
-   git clone https://github.com/YOUR_USERNAME/coinbase-mcp-server.git
+   git clone https://github.com/visusnet/coinbase-mcp-server.git
    cd coinbase-mcp-server
    ```
 
