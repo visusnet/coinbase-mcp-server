@@ -24,6 +24,7 @@ jest.mock('@server/CoinbaseMcpServer', () => {
     CoinbaseMcpServer: jest.fn().mockImplementation(() => {
       return {
         listen: jest.fn(),
+        listenStdio: jest.fn<() => Promise<void>>().mockResolvedValue(),
       };
     }),
   };
@@ -94,6 +95,37 @@ describe('main', () => {
       listen: jest.Mock;
     };
     expect(mockInstance.listen).toHaveBeenCalledWith(3000);
+  });
+
+  it('should start server in stdio mode when --stdio flag is present', async () => {
+    process.env.COINBASE_API_KEY_NAME = 'test-api-key';
+    process.env.COINBASE_PRIVATE_KEY = 'test-private-key';
+
+    // Add --stdio flag to process.argv
+    const originalArgv = process.argv;
+    process.argv = [...originalArgv, '--stdio'];
+
+    try {
+      const { CoinbaseMcpServer } = require('@server/CoinbaseMcpServer') as {
+        CoinbaseMcpServer: jest.MockedClass<
+          typeof import('./server/CoinbaseMcpServer').CoinbaseMcpServer
+        >;
+      };
+
+      require('./index');
+
+      // Wait for the async main function to complete
+      await new Promise((resolve) => setImmediate(resolve));
+
+      const mockInstance = CoinbaseMcpServer.mock.results[0]?.value as {
+        listen: jest.Mock;
+        listenStdio: jest.Mock;
+      };
+      expect(mockInstance.listenStdio).toHaveBeenCalled();
+      expect(mockInstance.listen).not.toHaveBeenCalled();
+    } finally {
+      process.argv = originalArgv;
+    }
   });
 
   it('should exit with error when COINBASE_API_KEY_NAME is missing', () => {

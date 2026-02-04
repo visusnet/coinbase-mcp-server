@@ -42,6 +42,20 @@ jest.mock('../logger', () => ({
   logger,
 }));
 
+// Mock StdioServerTransport globally
+const mockStdioTransport = {
+  start: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
+  send: jest.fn<(msg: unknown) => Promise<void>>().mockResolvedValue(undefined),
+  close: jest.fn<() => Promise<void>>().mockResolvedValue(undefined),
+  onmessage: undefined as ((msg: unknown) => void) | undefined,
+  onerror: undefined as ((error: Error) => void) | undefined,
+  onclose: undefined as (() => void) | undefined,
+};
+
+jest.mock('@modelcontextprotocol/sdk/server/stdio.js', () => ({
+  StdioServerTransport: jest.fn().mockImplementation(() => mockStdioTransport),
+}));
+
 mockServices();
 
 import { CoinbaseMcpServer } from './CoinbaseMcpServer';
@@ -2431,6 +2445,72 @@ describe('CoinbaseMcpServer Integration Tests', () => {
       );
 
       spy.mockRestore();
+    });
+  });
+
+  describe('transport modes', () => {
+    describe('listen', () => {
+      it('should respond to tools/list', async () => {
+        const server = new CoinbaseMcpServer(apiKey, privateKey);
+        const httpServer = server.listen(3457);
+
+        try {
+          const response = await request('http://localhost:3457')
+            .post('/mcp')
+            .set('Accept', 'application/json, text/event-stream')
+            .send({ jsonrpc: '2.0', method: 'tools/list', id: 1 });
+
+          expect(response.status).toBe(200);
+
+          // Parse SSE response to extract JSON-RPC result
+          interface SseMessage {
+            result?: { tools?: unknown[] };
+          }
+          const sseData: SseMessage[] = response.text
+            .split('\n')
+            .filter((line: string) => line.startsWith('data: '))
+            .map((line: string) => JSON.parse(line.slice(6)) as SseMessage);
+
+          // Find the tools/list response (has result.tools)
+          const toolsResponse = sseData.find((msg) => msg.result?.tools);
+
+          expect(toolsResponse).toMatchSnapshot();
+        } finally {
+          httpServer.close();
+        }
+      });
+    });
+
+    describe('listenStdio', () => {
+      const sentMessages: unknown[] = [];
+
+      beforeEach(() => {
+        sentMessages.length = 0;
+        mockStdioTransport.send.mockImplementation((msg: unknown) => {
+          sentMessages.push(msg);
+          return Promise.resolve();
+        });
+      });
+
+      it('should respond to tools/list', async () => {
+        const server = new CoinbaseMcpServer(apiKey, privateKey);
+        await server.listenStdio();
+
+        // Simulate incoming tools/list request via the globally mocked transport
+        if (mockStdioTransport.onmessage) {
+          mockStdioTransport.onmessage({
+            jsonrpc: '2.0',
+            method: 'tools/list',
+            id: 1,
+          });
+        }
+
+        // Wait for response
+        await new Promise((resolve) => setTimeout(resolve, 50));
+
+        expect(sentMessages).toHaveLength(1);
+        expect(sentMessages[0]).toMatchSnapshot();
+      });
     });
   });
 });

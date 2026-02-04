@@ -19,7 +19,8 @@ describe('logger', () => {
     jest.resetModules();
   });
 
-  it('should create loggers with pino-pretty', async () => {
+  it('should create loggers with pino-pretty configured for stderr', async () => {
+    const prettyMock = jest.requireMock<jest.Mock>('pino-pretty');
     const { logger, createLogger } = await import('./logger');
 
     expect(logger.server).toBeDefined();
@@ -29,6 +30,13 @@ describe('logger', () => {
     const customLogger = createLogger('CustomScope');
     expect(customLogger).toBeDefined();
     expect(customLogger.info).toBeDefined();
+
+    // Verify pino-pretty was called with stderr destination (fd 2)
+    expect(prettyMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        destination: 2,
+      }),
+    );
   });
 
   it('should export redact paths for credential filtering', async () => {

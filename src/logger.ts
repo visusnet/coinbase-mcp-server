@@ -29,6 +29,7 @@ const baseLogger = pino(
     translateTime: 'HH:MM:ss.l',
     ignore: 'pid,hostname,scope',
     messageFormat: '[{scope}] {msg}',
+    destination: 2, // stderr - prevents stdout pollution in stdio transport mode
   }),
 );
 
