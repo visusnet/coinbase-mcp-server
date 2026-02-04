@@ -79,6 +79,7 @@
       "mcp__coinbase__analyze_technical_indicators",
       "mcp__coinbase__analyze_technical_indicators_batch",
       "mcp__coinbase__wait_for_market_event",
+      "mcp__coinbase__get_news_sentiment",
       "WebFetch",
       "WebSearch",
       "Skill(coinbase-trading)",
