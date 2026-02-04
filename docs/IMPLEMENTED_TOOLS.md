@@ -4,7 +4,7 @@
 
 This server now uses the official `@coinbase-sample/advanced-trade-sdk-ts` SDK directly, eliminating all custom domain/repository layers.
 
-**Total Tools: 73**
+**Total Tools: 74**
 
 ## Accounts (2)
 
@@ -120,3 +120,7 @@ This server now uses the official `@coinbase-sample/advanced-trade-sdk-ts` SDK d
 ## Market Events (1)
 
 - ✅ `wait_for_market_event` - Wait for specific market conditions via real-time WebSocket. Monitors ticker data and triggers when conditions are met or timeout reached. Supports operators: gt, gte, lt, lte, crossAbove, crossBelow. Fields: price, volume24h, percentChange24h, high24h, low24h. Use instead of polling for efficient event-driven monitoring
+
+## Market Intelligence (1)
+
+- ✅ `get_news_sentiment` - Fetch recent news articles for a trading pair and analyze their sentiment. Returns headlines with individual sentiment scores (AFINN-165 with crypto-specific extensions) and an aggregate sentiment direction (bullish/bearish/neutral). Uses Yahoo Finance for news data

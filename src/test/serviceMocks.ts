@@ -13,6 +13,7 @@ import type {
   TechnicalIndicatorsService,
   TechnicalAnalysisService,
   MarketEventService,
+  NewsService,
 } from '@server/services';
 import { jest } from '@jest/globals';
 
@@ -179,6 +180,10 @@ export const mockMarketEventService = {
   waitForEvent: jest.fn<MarketEventService['waitForEvent']>(),
 } as MockedService<MarketEventService>;
 
+const mockNewsService = {
+  getNewsSentiment: jest.fn<NewsService['getNewsSentiment']>(),
+} as MockedService<NewsService>;
+
 export function mockServices(): void {
   jest.mock('@coinbase-sample/advanced-trade-sdk-ts/dist/index.js', () => {
     return {
@@ -217,6 +222,7 @@ export function mockServices(): void {
       MarketEventService: jest
         .fn()
         .mockImplementation(() => mockMarketEventService),
+      NewsService: jest.fn().mockImplementation(() => mockNewsService),
     };
   });
 

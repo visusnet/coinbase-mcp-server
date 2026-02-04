@@ -121,6 +121,9 @@ The MCP server provides 24 technical indicator tools. **Always use these instead
 **Market Events:**
 - `wait_for_market_event` - Event-driven monitoring for price conditions
 
+**Market Intelligence:**
+- `get_news_sentiment` - Fetch news with sentiment analysis for trading pairs
+
 **Interval formats**: `interval=5m`, `interval=30m`, `interval=1h`, `interval=60s`
 
 ### Event-Driven Position Monitoring
@@ -1310,6 +1313,7 @@ Budget remaining: [X] EUR
 3. **Fees MUST be considered**
 4. **When uncertain: DO NOT trade**
 5. **Stop-loss is SACRED - always enforce it**
+6. **Consider market sentiment before significant trades** - Use `get_news_sentiment` to check recent headlines and sentiment. Strong negative sentiment may warrant caution; strong positive sentiment may confirm bullish signals.
 
 ## Dry-Run Mode
 
