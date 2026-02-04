@@ -12,7 +12,7 @@ import {
  * Delegates to the SDK service with no conversion needed.
  */
 export class PaymentMethodsService {
-  public constructor(private readonly client: CoinbaseAdvTradeClient) {}
+  constructor(private readonly client: CoinbaseAdvTradeClient) {}
 
   public async listPaymentMethods(): Promise<ListPaymentMethodsResponse> {
     const response = await this.client.request({

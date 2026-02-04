@@ -2009,104 +2009,104 @@ describe('CoinbaseMcpServer Integration Tests', () => {
         });
       });
     });
-  });
 
-  describe('Market Events', () => {
-    it('should call waitForEvent via MCP tool wait_for_market_event', async () => {
-      const args = {
-        subscriptions: [
-          {
-            productId: 'BTC-EUR',
-            conditions: [{ field: 'price', operator: 'gt', value: 65000 }],
-          },
-        ],
-      };
-      const result = {
-        status: 'triggered' as const,
-        productId: 'BTC-EUR',
-        triggeredConditions: [
-          {
-            field: 'price',
-            operator: 'gt',
-            threshold: 65000,
-            actualValue: 66000,
-          },
-        ],
-        ticker: {
-          price: 66000,
-          volume24h: 1000000,
-          percentChange24h: 2.5,
-          high24h: 67000,
-          low24h: 65000,
-          high52w: 100000,
-          low52w: 30000,
-          bestBid: 65900,
-          bestAsk: 66100,
-          bestBidQuantity: 1.5,
-          bestAskQuantity: 2.0,
-          timestamp: '2025-01-25T12:00:00.000Z',
-        },
-        timestamp: '2025-01-25T12:00:00.000Z',
-      };
-      mockMarketEventService.waitForEvent.mockResolvedValueOnce(result);
-
-      const response = await client.callTool({
-        name: 'wait_for_market_event',
-        arguments: args,
-      });
-
-      expect(mockMarketEventService.waitForEvent).toHaveBeenCalledWith({
-        ...args,
-        timeout: 55,
-        subscriptions: [
-          {
-            ...args.subscriptions[0],
-            logic: 'any',
-          },
-        ],
-      });
-      expectResponseToContain(response, result);
-    });
-
-    it('should handle wait_for_market_event timeout', async () => {
-      const args = {
-        subscriptions: [
-          {
-            productId: 'BTC-EUR',
-            conditions: [{ field: 'price', operator: 'lt', value: 50000 }],
-          },
-        ],
-        timeout: 30,
-      };
-      const result = {
-        status: 'timeout' as const,
-        lastTickers: {
-          'BTC-EUR': {
-            price: 60000,
+    describe('Market Events', () => {
+      it('should call waitForEvent via MCP tool wait_for_market_event', async () => {
+        const args = {
+          subscriptions: [
+            {
+              productId: 'BTC-EUR',
+              conditions: [{ field: 'price', operator: 'gt', value: 65000 }],
+            },
+          ],
+        };
+        const result = {
+          status: 'triggered' as const,
+          productId: 'BTC-EUR',
+          triggeredConditions: [
+            {
+              field: 'price',
+              operator: 'gt',
+              threshold: 65000,
+              actualValue: 66000,
+            },
+          ],
+          ticker: {
+            price: 66000,
             volume24h: 1000000,
             percentChange24h: 2.5,
-            high24h: 62000,
-            low24h: 58000,
+            high24h: 67000,
+            low24h: 65000,
             high52w: 100000,
             low52w: 30000,
-            bestBid: 59900,
-            bestAsk: 60100,
+            bestBid: 65900,
+            bestAsk: 66100,
             bestBidQuantity: 1.5,
             bestAskQuantity: 2.0,
             timestamp: '2025-01-25T12:00:00.000Z',
           },
-        },
-        duration: 30,
-        timestamp: '2025-01-25T12:00:30.000Z',
-      };
-      mockMarketEventService.waitForEvent.mockResolvedValueOnce(result);
+          timestamp: '2025-01-25T12:00:00.000Z',
+        };
+        mockMarketEventService.waitForEvent.mockResolvedValueOnce(result);
 
-      const response = await client.callTool({
-        name: 'wait_for_market_event',
-        arguments: args,
+        const response = await client.callTool({
+          name: 'wait_for_market_event',
+          arguments: args,
+        });
+
+        expect(mockMarketEventService.waitForEvent).toHaveBeenCalledWith({
+          ...args,
+          timeout: 55,
+          subscriptions: [
+            {
+              ...args.subscriptions[0],
+              logic: 'any',
+            },
+          ],
+        });
+        expectResponseToContain(response, result);
       });
 
-      expectResponseToContain(response, result);
+      it('should handle wait_for_market_event timeout', async () => {
+        const args = {
+          subscriptions: [
+            {
+              productId: 'BTC-EUR',
+              conditions: [{ field: 'price', operator: 'lt', value: 50000 }],
+            },
+          ],
+          timeout: 30,
+        };
+        const result = {
+          status: 'timeout' as const,
+          lastTickers: {
+            'BTC-EUR': {
+              price: 60000,
+              volume24h: 1000000,
+              percentChange24h: 2.5,
+              high24h: 62000,
+              low24h: 58000,
+              high52w: 100000,
+              low52w: 30000,
+              bestBid: 59900,
+              bestAsk: 60100,
+              bestBidQuantity: 1.5,
+              bestAskQuantity: 2.0,
+              timestamp: '2025-01-25T12:00:00.000Z',
+            },
+          },
+          duration: 30,
+          timestamp: '2025-01-25T12:00:30.000Z',
+        };
+        mockMarketEventService.waitForEvent.mockResolvedValueOnce(result);
+
+        const response = await client.callTool({
+          name: 'wait_for_market_event',
+          arguments: args,
+        });
+
+        expectResponseToContain(response, result);
+      });
     });
   });
 

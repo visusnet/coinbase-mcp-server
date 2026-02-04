@@ -22,7 +22,7 @@ import {
  * Converts SDK response strings to numbers.
  */
 export class ConvertsService {
-  public constructor(private readonly client: CoinbaseAdvTradeClient) {}
+  constructor(private readonly client: CoinbaseAdvTradeClient) {}
 
   public async createConvertQuote(
     request: CreateConvertQuoteRequest,

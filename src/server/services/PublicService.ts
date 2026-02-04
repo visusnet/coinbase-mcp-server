@@ -28,7 +28,7 @@ import {
  * Converts SDK response types to our types with number fields.
  */
 export class PublicService {
-  public constructor(private readonly client: CoinbaseAdvTradeClient) {}
+  constructor(private readonly client: CoinbaseAdvTradeClient) {}
 
   public async getServerTime(): Promise<GetServerTimeResponse> {
     const response = await this.client.request({

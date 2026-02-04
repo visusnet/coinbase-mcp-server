@@ -9,7 +9,7 @@ import {
  * Delegates to the SDK service with no conversion needed.
  */
 export class DataService {
-  public constructor(private readonly client: CoinbaseAdvTradeClient) {}
+  constructor(private readonly client: CoinbaseAdvTradeClient) {}
 
   public async getAPIKeyPermissions(): Promise<GetAPIKeyPermissionsResponse> {
     const response = await this.client.request({

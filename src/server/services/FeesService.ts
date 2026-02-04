@@ -10,7 +10,7 @@ import {
  * Converts SDK response types to our types with number fields.
  */
 export class FeesService {
-  public constructor(private readonly client: CoinbaseAdvTradeClient) {}
+  constructor(private readonly client: CoinbaseAdvTradeClient) {}
 
   public async getTransactionSummary(
     request: GetTransactionsSummaryRequest,

@@ -8,7 +8,7 @@ import { ToolRegistry } from './ToolRegistry';
  * Registry for market event MCP tools.
  */
 export class MarketEventToolRegistry extends ToolRegistry {
-  public constructor(
+  constructor(
     server: McpServer,
     private readonly marketEvent: MarketEventService,
   ) {

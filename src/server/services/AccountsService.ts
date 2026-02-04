@@ -17,7 +17,7 @@ import {
  * Converts response types from strings to numbers.
  */
 export class AccountsService {
-  public constructor(private readonly client: CoinbaseAdvTradeClient) {}
+  constructor(private readonly client: CoinbaseAdvTradeClient) {}
 
   public async listAccounts(
     request?: ListAccountsRequest,

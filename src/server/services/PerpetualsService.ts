@@ -23,7 +23,7 @@ import {
  * Converts SDK responses with string numbers to our types with numeric values.
  */
 export class PerpetualsService {
-  public constructor(private readonly client: CoinbaseAdvTradeClient) {}
+  constructor(private readonly client: CoinbaseAdvTradeClient) {}
 
   public async listPositions(
     request: ListPerpetualsPositionsRequest,

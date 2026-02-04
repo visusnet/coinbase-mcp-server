@@ -40,7 +40,7 @@ import type {
  * Delegates to SDK service and handles timestamp conversion.
  */
 export class ProductsService {
-  public constructor(private readonly client: CoinbaseAdvTradeClient) {}
+  constructor(private readonly client: CoinbaseAdvTradeClient) {}
 
   public async listProducts(
     request?: ListProductsRequest,

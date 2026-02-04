@@ -16,7 +16,7 @@ import {
  * Converts SDK responses with string numbers to our types with numeric values.
  */
 export class FuturesService {
-  public constructor(private readonly client: CoinbaseAdvTradeClient) {}
+  constructor(private readonly client: CoinbaseAdvTradeClient) {}
 
   public async listPositions(): Promise<ListFuturesPositionsResponse> {
     const response = await this.client.request({
