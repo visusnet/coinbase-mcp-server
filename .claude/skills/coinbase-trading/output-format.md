@@ -101,6 +101,37 @@ Structured, compact report format for trading cycle output.
 - Use `•` (bullet) as separator between indicator values
 - Mark notable values with 🔥 (e.g., MFI < 20, RSI < 30)
 - Keep RATIONALE to 2-5 lines
-- Box width: 64 characters
 - Emojis at line start to avoid alignment issues
 - Add +3 extra `━` after `**bold**` headlines to compensate for invisible markdown markers
+
+## Box Alignment Rules
+
+**CRITICAL**: Every content line must have exactly 62 visible characters between the `┃` markers.
+
+```
+┃<-- 62 characters of content here, padded with spaces -->┃
+```
+
+**Counting rules**:
+- Box outer width: 64 characters (62 content + 2 for `┃` markers)
+- Each `┃` counts as 1 character
+- Emojis count as 2 characters each (🟡, 🔥, ⏸️, etc.)
+- All other characters count as 1
+
+**Padding procedure**:
+1. Write the content (e.g., `  🟡  #1  ATOM-EUR   +22%   MFI oversold`)
+2. Count: 2 spaces + 2 (emoji) + content length
+3. Pad with spaces until total = 62
+4. Add closing `┃`
+
+**Example calculation**:
+```
+┃  🟡  #1  ATOM-EUR   +22%   MFI 2.8 🔥 extreme oversold       ┃
+  ^^                                  ^^                     ^^^
+  2 + 2(emoji) + 38 chars + 2(emoji) + 18 chars + 0 spaces = 62 ✗
+
+Correct:
+┃  🟡  #1  ATOM-EUR   +22%   MFI 2.8 🔥 extreme oversold       ┃
+```
+
+**Never** leave extra spaces before the closing `┃` — pad to exactly 62.
