@@ -20,6 +20,7 @@ import {
   TechnicalIndicatorsService,
   TechnicalAnalysisService,
   MarketEventService,
+  NewsService,
 } from '@server/services';
 import { WebSocketPool } from '@server/websocket/WebSocketPool';
 import { ToolRegistry } from './tools/ToolRegistry';
@@ -37,6 +38,7 @@ import { DataToolRegistry } from './tools/DataToolRegistry';
 import { IndicatorToolRegistry } from './tools/IndicatorToolRegistry';
 import { AnalysisToolRegistry } from './tools/AnalysisToolRegistry';
 import { MarketEventToolRegistry } from './tools/MarketEventToolRegistry';
+import { NewsToolRegistry } from './tools/NewsToolRegistry';
 
 export class CoinbaseMcpServer {
   private readonly app: Express;
@@ -55,6 +57,7 @@ export class CoinbaseMcpServer {
   private readonly technicalIndicators: TechnicalIndicatorsService;
   private readonly technicalAnalysis: TechnicalAnalysisService;
   private readonly marketEvent: MarketEventService;
+  private readonly news: NewsService;
   private readonly webSocketPool: WebSocketPool;
 
   constructor(apiKey: string, privateKey: string) {
@@ -80,6 +83,7 @@ export class CoinbaseMcpServer {
     );
     this.webSocketPool = new WebSocketPool(credentials);
     this.marketEvent = new MarketEventService(this.webSocketPool);
+    this.news = new NewsService();
 
     this.app = createMcpExpressApp();
 
@@ -144,6 +148,7 @@ export class CoinbaseMcpServer {
       new IndicatorToolRegistry(server, this.technicalIndicators),
       new AnalysisToolRegistry(server, this.technicalAnalysis),
       new MarketEventToolRegistry(server, this.marketEvent),
+      new NewsToolRegistry(server, this.news),
     ];
 
     registries.forEach((r) => {
@@ -166,7 +171,7 @@ export class CoinbaseMcpServer {
                 type: 'text',
                 text: `You are a Coinbase Advanced Trade assistant.
 
-TOOL CATEGORIES (73 total):
+TOOL CATEGORIES (74 total):
 - Accounts (2): list_accounts, get_account
 - Orders (9): create_order, preview_order, list_orders, get_order, cancel_orders, edit_order, preview_edit_order, list_fills, close_position
 - Products (8): list_products, get_product, get_product_candles, get_product_candles_batch, get_best_bid_ask, get_market_snapshot, get_product_book, get_market_trades
@@ -180,6 +185,7 @@ TOOL CATEGORIES (73 total):
 - Technical Indicators (24): calculate_rsi, calculate_macd, calculate_sma, calculate_ema, calculate_bollinger_bands, calculate_atr, calculate_stochastic, calculate_adx, calculate_obv, calculate_vwap, calculate_cci, calculate_williams_r, calculate_roc, calculate_mfi, calculate_psar, calculate_ichimoku_cloud, calculate_keltner_channels, calculate_fibonacci_retracement, detect_candlestick_patterns, calculate_volume_profile, calculate_pivot_points, detect_rsi_divergence, detect_chart_patterns, detect_swing_points
 - Technical Analysis (2): analyze_technical_indicators, analyze_technical_indicators_batch
 - Market Events (1): wait_for_market_event
+- Market Intelligence (1): get_news_sentiment
 
 BEST PRACTICES:
 1. Always preview_order before create_order
@@ -190,7 +196,8 @@ BEST PRACTICES:
 6. Use analyze_technical_indicators for efficient multi-indicator analysis (reduces context by ~90%)
 7. Use analyze_technical_indicators_batch when analyzing multiple products (returns ranking by signal score)
 8. Use individual indicator tools (calculate_*, detect_*) when you need specific indicator values
-9. Use wait_for_market_event for event-driven monitoring instead of polling with sleep`,
+9. Use wait_for_market_event for event-driven monitoring instead of polling with sleep
+10. Consider market sentiment before significant trades - Use get_news_sentiment to check recent headlines`,
               },
             },
           ],
