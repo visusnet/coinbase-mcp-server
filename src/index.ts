@@ -5,7 +5,7 @@ import { logger } from './logger';
 
 config({ quiet: true }); // Load .env file
 
-function main() {
+async function main() {
   const apiKeyName = process.env.COINBASE_API_KEY_NAME;
   const privateKey = process.env.COINBASE_PRIVATE_KEY;
 
@@ -17,8 +17,14 @@ function main() {
   }
 
   const server = new CoinbaseMcpServer(apiKeyName, privateKey);
-  const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
-  server.listen(port);
+  const useStdio = process.argv.includes('--stdio');
+
+  if (useStdio) {
+    await server.listenStdio();
+  } else {
+    const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
+    server.listen(port);
+  }
 }
 
-main();
+void main();

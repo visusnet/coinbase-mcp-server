@@ -1,6 +1,8 @@
+import http from 'http';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { createMcpExpressApp } from '@modelcontextprotocol/sdk/server/express.js';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import type { Express, Request, Response } from 'express';
 import { logger } from '../logger';
 import { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
@@ -246,8 +248,8 @@ BEST PRACTICES:
     this.webSocketPool.close();
   }
 
-  public listen(port: number): void {
-    const server = this.app.listen(port, () => {
+  public listen(port: number): http.Server {
+    const httpServer = this.app.listen(port, () => {
       logger.server.info(`Coinbase MCP Server listening on port ${port}`);
     });
 
@@ -274,7 +276,7 @@ BEST PRACTICES:
       }, 10_000);
       forceExitTimeout.unref();
 
-      server.close(() => {
+      httpServer.close(() => {
         clearTimeout(forceExitTimeout);
         process.exit(0);
       });
@@ -283,7 +285,7 @@ BEST PRACTICES:
     process.on('SIGTERM', shutdown);
     process.on('SIGINT', shutdown);
 
-    server.on('error', (error: NodeJS.ErrnoException) => {
+    httpServer.on('error', (error: NodeJS.ErrnoException) => {
       if (error.code === 'EADDRINUSE') {
         logger.server.error(`Port ${port} is already in use`);
         logger.server.error('Try a different port with: PORT=<port> npm start');
@@ -292,5 +294,14 @@ BEST PRACTICES:
       }
       process.exit(1);
     });
+
+    return httpServer;
+  }
+
+  public async listenStdio(): Promise<void> {
+    const mcpServer = this.createMcpServerInstance();
+    const transport = new StdioServerTransport();
+    await mcpServer.connect(transport);
+    logger.server.info('Coinbase MCP Server running on stdio');
   }
 }
