@@ -57,6 +57,12 @@
     "yahoo-finance2": "^3.13.0",
     "zod": "^3.25.0"
   },
+  "lint-staged": {
+    "src/**/*.ts": [
+      "prettier --write",
+      "eslint --fix"
+    ]
+  },
   "devDependencies": {
     "@eslint-community/eslint-plugin-eslint-comments": "^4.6.0",
     "@eslint/js": "^9.17.0",
@@ -79,6 +85,7 @@
     "husky": "^9.1.7",
     "jest": "^29.7.0",
     "knip": "^5.80.0",
+    "lint-staged": "^16.2.7",
     "markdownlint-cli2": "^0.20.0",
     "prettier": "^3.7.4",
     "rollup": "^4.30.1",
