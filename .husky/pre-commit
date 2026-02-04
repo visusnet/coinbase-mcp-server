@@ -1,1 +1,1 @@
-npm run format && npm run lint:fix && npm run test:types && npm run test:coverage && npm run knip && npm run build
+npx lint-staged && npm run test:types && npm run test:coverage && npm run knip && npm run build
