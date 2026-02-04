@@ -280,10 +280,31 @@ npm run inspect    # Open MCP Inspector for debugging
 
 ### Testing with MCP Inspector
 
+#### Interactive UI
+
 1. Start the server: `npm run start:dev`
 2. In another terminal: `npm run inspect`
 3. Connect to `http://localhost:3005/mcp`
-4. Test any of the 73 tools interactively
+4. Test any of the 74 tools interactively
+
+#### CLI
+
+Use the MCP Inspector CLI to call tools directly without the browser UI:
+
+```bash
+# List all accounts
+npx @modelcontextprotocol/inspector --cli node dist/index.js --stdio \
+  --method tools/call \
+  --tool-name list_accounts
+
+# Get a specific product
+npx @modelcontextprotocol/inspector --cli node dist/index.js --stdio \
+  --method tools/call \
+  --tool-name get_product \
+  --tool-arg productId=BTC-EUR
+```
+
+The `--stdio` flag tells the server to use stdio transport instead of HTTP, which the inspector CLI requires.
 
 ---
 
