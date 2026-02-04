@@ -114,7 +114,7 @@ This server now uses the official `@coinbase-sample/advanced-trade-sdk-ts` SDK d
 
 ## Analysis Tools (2)
 
-- ✅ `analyze_technical_indicators` - Calculate multiple indicators server-side, reducing context usage by ~90-95%. Fetches candles and returns computed values, aggregated signals, and price summary
+- ✅ `analyze_technical_indicators` - Calculate multiple indicators server-side, reducing context usage by ~90-95%. Fetches candles and returns computed values, aggregated signals, price summary, and risk metrics. The response includes an optional `risk` field containing: `volatilityDaily` (daily standard deviation of log returns), `volatilityAnnualized` (annualized volatility), `var95` (Value at Risk at 95% confidence - expected max daily loss %), `maxDrawdown` (maximum peak-to-trough decline as percentage), `sharpeRatio` (risk-adjusted return metric, null if zero volatility), and `riskLevel` (one of: low, moderate, high, extreme)
 - ✅ `analyze_technical_indicators_batch` - Analyze multiple products in parallel. Returns results for each product with a summary ranking by signal score
 
 ## Market Events (1)

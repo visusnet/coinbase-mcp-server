@@ -517,6 +517,22 @@ chart_patterns = detect_chart_patterns(candles)
 → Bearish patterns (double_top, head_and_shoulders): -3
 ```
 
+### Risk Assessment
+
+Before entering trades, check the `risk` field from technical analysis:
+
+| Risk Level | Action |
+|------------|--------|
+| `low` | Normal position sizing |
+| `moderate` | Normal position sizing |
+| `high` | Consider reducing position size by 50% |
+| `extreme` | Skip trade or use minimal position (25%) |
+
+Also consider:
+- `maxDrawdown` > 30% recently → asset is volatile, use caution
+- `var95` > 5% → expect significant daily swings
+- `sharpeRatio` < 0 → risk-adjusted returns are negative
+
 **Calculate Weighted Score**:
 
 ```

@@ -31,6 +31,8 @@ import {
   SignalConfidence,
   IndicatorResults,
   ProductSignalRanking,
+  RiskMetrics,
+  RiskLevel,
 } from './TechnicalAnalysisService.types';
 
 /** Default number of candles to fetch */
@@ -53,6 +55,24 @@ const GRANULARITY_SECONDS: Record<Granularity, number> = {
   [Granularity.SIX_HOUR]: 21600,
   [Granularity.ONE_DAY]: 86400,
 };
+
+/** Periods per year for crypto (trades 24/7/365) */
+const CRYPTO_PERIODS_PER_YEAR: Record<Granularity, number> = {
+  [Granularity.ONE_MINUTE]: 525600, // 60 × 24 × 365
+  [Granularity.FIVE_MINUTE]: 105120, // 12 × 24 × 365
+  [Granularity.FIFTEEN_MINUTE]: 35040, // 4 × 24 × 365
+  [Granularity.THIRTY_MINUTE]: 17520, // 2 × 24 × 365
+  [Granularity.ONE_HOUR]: 8760, // 24 × 365
+  [Granularity.TWO_HOUR]: 4380, // 12 × 365
+  [Granularity.SIX_HOUR]: 1460, // 4 × 365
+  [Granularity.ONE_DAY]: 365,
+};
+
+/** Z-score for 95% confidence VaR (one-tailed) */
+const VAR_95_Z_SCORE = -1.645;
+
+/** Risk-free rate for Sharpe ratio calculation (2% annual) */
+const RISK_FREE_RATE = 0.02;
 
 /**
  * Service for integrated technical analysis.
@@ -158,6 +178,9 @@ export class TechnicalAnalysisService {
     // Calculate aggregated signal
     const signal = this.calculateAggregatedSignal(indicatorResults);
 
+    // Calculate risk metrics
+    const risk = this.calculateRiskMetrics(candles, request.granularity);
+
     return {
       productId: request.productId,
       granularity: request.granularity,
@@ -166,6 +189,7 @@ export class TechnicalAnalysisService {
       price,
       indicators: indicatorResults,
       signal,
+      risk,
     };
   }
 
@@ -1135,5 +1159,182 @@ export class TechnicalAnalysisService {
       return 'MEDIUM';
     }
     return 'LOW';
+  }
+
+  // ============================================================================
+  // Risk Metrics Calculations
+  // ============================================================================
+
+  /**
+   * Calculate log returns from price series.
+   *
+   * @param prices - Array of prices in chronological order (oldest first)
+   * @returns Array of log returns
+   */
+  private calculateLogReturns(prices: number[]): number[] {
+    const logReturns: number[] = [];
+    for (let i = 1; i < prices.length; i++) {
+      if (prices[i - 1] > 0) {
+        logReturns.push(Math.log(prices[i] / prices[i - 1]));
+      }
+    }
+    return logReturns;
+  }
+
+  /**
+   * Calculate daily and annualized volatility from log returns.
+   *
+   * @param logReturns - Array of log returns
+   * @param granularity - Candle granularity for annualization
+   * @returns Object with daily and annualized volatility
+   */
+  private calculateVolatility(
+    logReturns: number[],
+    granularity: Granularity,
+  ): { daily: number; annualized: number } {
+    // Caller guarantees logReturns is non-empty
+    const mean = logReturns.reduce((a, b) => a + b, 0) / logReturns.length;
+    const squaredDiffs = logReturns.map((r) => Math.pow(r - mean, 2));
+    const variance =
+      squaredDiffs.reduce((a, b) => a + b, 0) / logReturns.length;
+    const stdDev = Math.sqrt(variance);
+
+    const periodsPerYear = CRYPTO_PERIODS_PER_YEAR[granularity];
+    const annualized = stdDev * Math.sqrt(periodsPerYear);
+
+    return { daily: stdDev, annualized };
+  }
+
+  /**
+   * Calculate Value at Risk at 95% confidence level.
+   *
+   * @param logReturns - Array of log returns
+   * @returns VaR as a positive percentage (e.g., 0.05 = 5% max expected loss)
+   */
+  private calculateVaR95(logReturns: number[]): number {
+    // Caller guarantees logReturns is non-empty
+    const mean = logReturns.reduce((a, b) => a + b, 0) / logReturns.length;
+    const squaredDiffs = logReturns.map((r) => Math.pow(r - mean, 2));
+    const variance =
+      squaredDiffs.reduce((a, b) => a + b, 0) / logReturns.length;
+    const stdDev = Math.sqrt(variance);
+
+    // VaR95 = -(mean + Z × stdDev) where Z = -1.645
+    return -(mean + VAR_95_Z_SCORE * stdDev);
+  }
+
+  /**
+   * Calculate maximum drawdown from price series.
+   *
+   * @param prices - Array of prices in chronological order (oldest first)
+   * @returns Maximum drawdown as a percentage (e.g., 0.15 = 15% drawdown)
+   */
+  private calculateMaxDrawdown(prices: number[]): number {
+    // Caller guarantees prices has at least 2 elements
+    let maxDrawdown = 0;
+    let peak = prices[0];
+
+    for (let i = 1; i < prices.length; i++) {
+      if (prices[i] > peak) {
+        peak = prices[i];
+      } else {
+        const drawdown = (peak - prices[i]) / peak;
+        if (drawdown > maxDrawdown) {
+          maxDrawdown = drawdown;
+        }
+      }
+    }
+
+    return maxDrawdown;
+  }
+
+  /**
+   * Calculate annualized Sharpe ratio.
+   *
+   * @param logReturns - Array of log returns
+   * @param annualizedVolatility - Annualized volatility
+   * @param granularity - Candle granularity for annualization
+   * @returns Sharpe ratio or null if volatility is zero
+   */
+  private calculateSharpeRatio(
+    logReturns: number[],
+    annualizedVolatility: number,
+    granularity: Granularity,
+  ): number | null {
+    if (annualizedVolatility === 0 || logReturns.length === 0) {
+      return null;
+    }
+
+    const meanLogReturn =
+      logReturns.reduce((a, b) => a + b, 0) / logReturns.length;
+    const periodsPerYear = CRYPTO_PERIODS_PER_YEAR[granularity];
+    const annualizedReturn = Math.exp(meanLogReturn * periodsPerYear) - 1;
+
+    return (annualizedReturn - RISK_FREE_RATE) / annualizedVolatility;
+  }
+
+  /**
+   * Classify risk level based on annualized volatility.
+   *
+   * @param annualizedVolatility - Annualized volatility
+   * @returns Risk level classification
+   */
+  private calculateRiskLevel(annualizedVolatility: number): RiskLevel {
+    if (annualizedVolatility >= 1.0) {
+      return 'extreme';
+    }
+    if (annualizedVolatility >= 0.6) {
+      return 'high';
+    }
+    if (annualizedVolatility >= 0.3) {
+      return 'moderate';
+    }
+    return 'low';
+  }
+
+  /**
+   * Calculate all risk metrics from candle data.
+   *
+   * @param candles - Array of candles (newest first from Coinbase)
+   * @param granularity - Candle granularity for annualization
+   * @returns Risk metrics or undefined if insufficient data
+   */
+  private calculateRiskMetrics(
+    candles: readonly CandleInput[],
+    granularity: Granularity,
+  ): RiskMetrics | undefined {
+    // Need at least 2 candles for 1 return
+    if (candles.length < 2) {
+      return undefined;
+    }
+
+    // Coinbase returns candles newest first, reverse for chronological order
+    const chronologicalCandles = [...candles].reverse();
+    const prices = chronologicalCandles.map((c) => c.close);
+
+    const logReturns = this.calculateLogReturns(prices);
+    if (logReturns.length === 0) {
+      return undefined;
+    }
+
+    const { daily: volatilityDaily, annualized: volatilityAnnualized } =
+      this.calculateVolatility(logReturns, granularity);
+    const var95 = this.calculateVaR95(logReturns);
+    const maxDrawdown = this.calculateMaxDrawdown(prices);
+    const sharpeRatio = this.calculateSharpeRatio(
+      logReturns,
+      volatilityAnnualized,
+      granularity,
+    );
+    const riskLevel = this.calculateRiskLevel(volatilityAnnualized);
+
+    return {
+      volatilityDaily,
+      volatilityAnnualized,
+      var95,
+      maxDrawdown,
+      sharpeRatio,
+      riskLevel,
+    };
   }
 }

@@ -458,6 +458,42 @@ export interface IndicatorResults {
   supportResistance?: SupportResistanceIndicators;
 }
 
+// ============================================================================
+// Risk Metrics Types
+// ============================================================================
+
+/**
+ * Risk level based on annualized volatility.
+ *
+ * Thresholds:
+ * - 'low': < 30% annual volatility
+ * - 'moderate': 30-60% annual volatility
+ * - 'high': 60-100% annual volatility
+ * - 'extreme': > 100% annual volatility
+ */
+export type RiskLevel = 'low' | 'moderate' | 'high' | 'extreme';
+
+/**
+ * Risk metrics calculated from price history.
+ *
+ * Provides quantitative risk assessment to help determine
+ * position sizing and whether to enter trades.
+ */
+export interface RiskMetrics {
+  /** Daily volatility (standard deviation of log returns) */
+  readonly volatilityDaily: number;
+  /** Annualized volatility (daily volatility * sqrt(periods per year)) */
+  readonly volatilityAnnualized: number;
+  /** Value at Risk at 95% confidence (expected max daily loss %) */
+  readonly var95: number;
+  /** Maximum drawdown as percentage (0.15 = 15% drawdown) */
+  readonly maxDrawdown: number;
+  /** Annualized Sharpe ratio (null if zero volatility) */
+  readonly sharpeRatio: number | null;
+  /** Overall risk assessment based on volatility thresholds */
+  readonly riskLevel: RiskLevel;
+}
+
 /**
  * Response from analyze_technical_indicators tool.
  *
@@ -466,6 +502,7 @@ export interface IndicatorResults {
  * - Price summary (current, open, high, low, change24h)
  * - Calculated indicators grouped by category
  * - Aggregated signal (score, direction, confidence)
+ * - Risk metrics (optional, undefined if insufficient data)
  *
  * Does NOT contain raw candle data to minimize context usage.
  */
@@ -484,6 +521,8 @@ export interface AnalyzeTechnicalIndicatorsResponse {
   readonly indicators: IndicatorResults;
   /** Aggregated trading signal */
   readonly signal: AggregatedSignal;
+  /** Risk metrics (undefined if insufficient candle data) */
+  readonly risk?: RiskMetrics;
 }
 
 /**
