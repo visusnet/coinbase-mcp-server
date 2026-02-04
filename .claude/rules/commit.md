@@ -12,6 +12,7 @@
 ## DON'Ts
 - Don't use vague messages like "Update code" or "Fix bug"
 - Do not add a Co-Authored-By line
+- **NEVER use --no-verify** - Pre-commit hooks exist to prevent broken code from being committed. If hooks fail, fix the issue instead of bypassing them.
 
 ## Conventional Commit Scopes
 
