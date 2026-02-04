@@ -72,6 +72,24 @@ import { stringToNumber, numberToString } from './schema.helpers';
 - Response schemas convert raw API data into a structured format
 - Response schemas use `preprocess()` to transform raw API responses before validation
 
+### Exception: Pure Calculation Services
+
+Services that **only perform internal calculations** (no external API calls) may use TypeScript interfaces instead of Zod schemas for responses. The rationale:
+
+1. **No external data to validate** - The service constructs results from its own calculations, not from untrusted external sources
+2. **TypeScript compile-time checks are sufficient** - Shape errors are caught at compile time
+3. **No transformation needed** - Unlike API responses, there's no string-to-number or format conversion
+4. **Performance** - Avoids Zod `.parse()` overhead on frequently called calculation methods
+
+Examples:
+- `TechnicalAnalysisService` - computes indicators from already-validated candle data
+- `TechnicalIndicatorsService` - pure math calculations
+
+For these services:
+- Define types in `{ServiceName}.types.ts` using TypeScript interfaces
+- Use JSDoc comments for documentation instead of `.describe()`
+- Request schemas still use Zod (for MCP tool input validation)
+
 ## Naming Conventions
 
 ### Top-Level Schemas (exported)
