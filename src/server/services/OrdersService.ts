@@ -40,7 +40,7 @@ import {
  * Converts SDK response strings to numbers.
  */
 export class OrdersService {
-  public constructor(private readonly client: CoinbaseAdvTradeClient) {}
+  constructor(private readonly client: CoinbaseAdvTradeClient) {}
 
   public async listOrders(
     request?: ListOrdersRequest,

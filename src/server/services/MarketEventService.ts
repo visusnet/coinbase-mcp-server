@@ -66,7 +66,7 @@ function evaluateOperator(
  * Service for monitoring market events via WebSocket.
  */
 export class MarketEventService {
-  public constructor(private readonly pool: WebSocketPool) {}
+  constructor(private readonly pool: WebSocketPool) {}
 
   /**
    * Waits for market conditions to be met or timeout.

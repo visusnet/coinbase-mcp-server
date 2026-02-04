@@ -11,7 +11,7 @@ const TOKEN_LIFETIME_SECONDS = 120;
  * Inherits REST API authentication from CoinbaseAdvTradeCredentials.
  */
 export class CoinbaseCredentials extends CoinbaseAdvTradeCredentials {
-  public constructor(
+  constructor(
     private readonly apiKey: string,
     private readonly privateKey: string,
   ) {

@@ -44,7 +44,7 @@ export class WebSocketPool {
    * Creates a new WebSocketPool instance.
    * @param credentials - API credentials for authenticated WebSocket connections
    */
-  public constructor(private readonly credentials: CoinbaseCredentials) {}
+  constructor(private readonly credentials: CoinbaseCredentials) {}
 
   /**
    * Closes the WebSocket connection and cleans up resources.

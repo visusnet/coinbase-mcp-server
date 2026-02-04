@@ -30,7 +30,7 @@ import {
  * Converts number types to strings for SDK calls and strings to numbers for responses.
  */
 export class PortfoliosService {
-  public constructor(private readonly client: CoinbaseAdvTradeClient) {}
+  constructor(private readonly client: CoinbaseAdvTradeClient) {}
 
   public async listPortfolios(
     request?: ListPortfoliosRequest,
