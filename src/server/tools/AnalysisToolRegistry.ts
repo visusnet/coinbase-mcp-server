@@ -4,6 +4,7 @@ import {
   AnalyzeTechnicalIndicatorsRequestSchema,
   AnalyzeTechnicalIndicatorsBatchRequestSchema,
 } from '../services/TechnicalAnalysisService.request';
+import { VIEW_API } from './annotations';
 import { ToolRegistry } from './ToolRegistry';
 
 /**
@@ -43,6 +44,7 @@ export class AnalysisToolRegistry extends ToolRegistry {
           'Pivot Points use daily candles (industry standard). ' +
           'Fibonacci uses Williams Fractal swing detection (industry standard).',
         inputSchema: AnalyzeTechnicalIndicatorsRequestSchema.shape,
+        annotations: VIEW_API,
       },
       this.analysis.analyzeTechnicalIndicators.bind(this.analysis),
     );
@@ -57,6 +59,7 @@ export class AnalysisToolRegistry extends ToolRegistry {
           'Returns results for each product with a summary ranking by signal score. ' +
           'Supports the same 24 indicators as analyze_technical_indicators.',
         inputSchema: AnalyzeTechnicalIndicatorsBatchRequestSchema.shape,
+        annotations: VIEW_API,
       },
       this.analysis.analyzeTechnicalIndicatorsBatch.bind(this.analysis),
     );

@@ -1,6 +1,7 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { NewsService } from '../services';
 import { GetNewsSentimentRequestSchema } from '../services/NewsService.request';
+import { VIEW_API } from './annotations';
 import { ToolRegistry } from './ToolRegistry';
 
 /**
@@ -23,6 +24,7 @@ export class NewsToolRegistry extends ToolRegistry {
           'Fetch recent news articles for a trading pair and analyze their sentiment. ' +
           'Returns headlines with individual sentiment scores and an aggregate sentiment direction.',
         inputSchema: GetNewsSentimentRequestSchema.shape,
+        annotations: VIEW_API,
       },
       this.newsService.getNewsSentiment.bind(this.newsService),
     );

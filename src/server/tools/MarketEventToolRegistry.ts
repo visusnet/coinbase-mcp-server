@@ -2,6 +2,7 @@ import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 import type { MarketEventService } from '../services';
 import { WaitForMarketEventRequestSchema } from '../services/MarketEventService.request';
+import { VIEW_API } from './annotations';
 import { ToolRegistry } from './ToolRegistry';
 
 /**
@@ -36,6 +37,7 @@ Operators: gt, gte, lt, lte, crossAbove, crossBelow
 Logic: any (OR), all (AND)
         `.trim(),
         inputSchema: WaitForMarketEventRequestSchema.shape,
+        annotations: VIEW_API,
       },
       this.marketEvent.waitForEvent.bind(this.marketEvent),
     );

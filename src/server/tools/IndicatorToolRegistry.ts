@@ -26,6 +26,7 @@ import {
   CalculateFibonacciRetracementRequestSchema,
   CalculatePivotPointsRequestSchema,
 } from '../services/TechnicalIndicatorsService.request';
+import { PURE_CALCULATION } from './annotations';
 import { ToolRegistry } from './ToolRegistry';
 
 /**
@@ -58,6 +59,7 @@ export class IndicatorToolRegistry extends ToolRegistry {
           'RSI measures momentum and identifies overbought (>70) or oversold (<30) conditions. ' +
           'Input candles should be in the same format as returned by get_product_candles.',
         inputSchema: CalculateRsiRequestSchema.shape,
+        annotations: PURE_CALCULATION,
       },
       this.indicators.calculateRsi.bind(this.indicators),
     );
@@ -71,6 +73,7 @@ export class IndicatorToolRegistry extends ToolRegistry {
           'MACD shows trend direction and momentum. Bullish when MACD crosses above signal line, ' +
           'bearish when it crosses below. Histogram shows the difference between MACD and signal.',
         inputSchema: CalculateMacdRequestSchema.shape,
+        annotations: PURE_CALCULATION,
       },
       this.indicators.calculateMacd.bind(this.indicators),
     );
@@ -85,6 +88,7 @@ export class IndicatorToolRegistry extends ToolRegistry {
           '%K above %D is bullish, below is bearish. ' +
           'Values above 80 indicate overbought, below 20 indicate oversold.',
         inputSchema: CalculateStochasticRequestSchema.shape,
+        annotations: PURE_CALCULATION,
       },
       this.indicators.calculateStochastic.bind(this.indicators),
     );
@@ -99,6 +103,7 @@ export class IndicatorToolRegistry extends ToolRegistry {
           'ADX > 25 indicates strong trend, < 20 indicates weak/no trend. ' +
           'Returns ADX, +DI (bullish pressure), and -DI (bearish pressure).',
         inputSchema: CalculateAdxRequestSchema.shape,
+        annotations: PURE_CALCULATION,
       },
       this.indicators.calculateAdx.bind(this.indicators),
     );
@@ -113,6 +118,7 @@ export class IndicatorToolRegistry extends ToolRegistry {
           'Readings above +100 suggest overbought, below -100 suggest oversold. ' +
           'Useful for identifying cyclical trends in commodities and stocks.',
         inputSchema: CalculateCciRequestSchema.shape,
+        annotations: PURE_CALCULATION,
       },
       this.indicators.calculateCci.bind(this.indicators),
     );
@@ -127,6 +133,7 @@ export class IndicatorToolRegistry extends ToolRegistry {
           'Readings above -20 suggest overbought, below -80 suggest oversold. ' +
           'Useful for identifying potential reversal points.',
         inputSchema: CalculateWilliamsRRequestSchema.shape,
+        annotations: PURE_CALCULATION,
       },
       this.indicators.calculateWilliamsR.bind(this.indicators),
     );
@@ -141,6 +148,7 @@ export class IndicatorToolRegistry extends ToolRegistry {
           'Positive values indicate upward momentum, negative values indicate downward momentum. ' +
           'Useful for identifying trend strength and potential reversals.',
         inputSchema: CalculateRocRequestSchema.shape,
+        annotations: PURE_CALCULATION,
       },
       this.indicators.calculateRoc.bind(this.indicators),
     );
@@ -156,6 +164,7 @@ export class IndicatorToolRegistry extends ToolRegistry {
           'SMA equally weights all prices in the period, providing a smoothed trend line. ' +
           'Common periods: 10 (short-term), 20/50 (medium-term), 200 (long-term trend).',
         inputSchema: CalculateSmaRequestSchema.shape,
+        annotations: PURE_CALCULATION,
       },
       this.indicators.calculateSma.bind(this.indicators),
     );
@@ -169,6 +178,7 @@ export class IndicatorToolRegistry extends ToolRegistry {
           'EMA gives more weight to recent prices, making it more responsive than SMA. ' +
           'Common periods: 9 (short-term), 20 (medium-term), 50/200 (long-term trends).',
         inputSchema: CalculateEmaRequestSchema.shape,
+        annotations: PURE_CALCULATION,
       },
       this.indicators.calculateEma.bind(this.indicators),
     );
@@ -185,6 +195,7 @@ export class IndicatorToolRegistry extends ToolRegistry {
           'Price above cloud is bullish, below is bearish. ' +
           'Cloud color (green/red) indicates future trend direction.',
         inputSchema: CalculateIchimokuCloudRequestSchema.shape,
+        annotations: PURE_CALCULATION,
       },
       this.indicators.calculateIchimokuCloud.bind(this.indicators),
     );
@@ -200,6 +211,7 @@ export class IndicatorToolRegistry extends ToolRegistry {
           'Returns upper, middle (SMA), and lower bands plus %B (position within bands). ' +
           'Price near upper band suggests overbought, near lower suggests oversold.',
         inputSchema: CalculateBollingerBandsRequestSchema.shape,
+        annotations: PURE_CALCULATION,
       },
       this.indicators.calculateBollingerBands.bind(this.indicators),
     );
@@ -213,6 +225,7 @@ export class IndicatorToolRegistry extends ToolRegistry {
           'Measures market volatility by decomposing the entire range of an asset price for a period. ' +
           'Higher ATR indicates higher volatility. Useful for setting stop-losses and position sizing.',
         inputSchema: CalculateAtrRequestSchema.shape,
+        annotations: PURE_CALCULATION,
       },
       this.indicators.calculateAtr.bind(this.indicators),
     );
@@ -228,6 +241,7 @@ export class IndicatorToolRegistry extends ToolRegistry {
           'Price below lower channel suggests oversold, above upper suggests overbought. ' +
           'BB squeeze inside Keltner signals volatility breakout.',
         inputSchema: CalculateKeltnerChannelsRequestSchema.shape,
+        annotations: PURE_CALCULATION,
       },
       this.indicators.calculateKeltnerChannels.bind(this.indicators),
     );
@@ -242,6 +256,7 @@ export class IndicatorToolRegistry extends ToolRegistry {
           'SAR below price indicates uptrend, SAR above price indicates downtrend. ' +
           'SAR flips signal trend reversals.',
         inputSchema: CalculatePsarRequestSchema.shape,
+        annotations: PURE_CALCULATION,
       },
       this.indicators.calculatePsar.bind(this.indicators),
     );
@@ -258,6 +273,7 @@ export class IndicatorToolRegistry extends ToolRegistry {
           'Rising OBV confirms uptrend, falling OBV confirms downtrend. ' +
           'Divergence between price and OBV can signal reversals.',
         inputSchema: CalculateObvRequestSchema.shape,
+        annotations: PURE_CALCULATION,
       },
       this.indicators.calculateObv.bind(this.indicators),
     );
@@ -272,6 +288,7 @@ export class IndicatorToolRegistry extends ToolRegistry {
           'Price above VWAP suggests bullish bias, below suggests bearish. ' +
           'Often used as intraday support/resistance level.',
         inputSchema: CalculateVwapRequestSchema.shape,
+        annotations: PURE_CALCULATION,
       },
       this.indicators.calculateVwap.bind(this.indicators),
     );
@@ -286,6 +303,7 @@ export class IndicatorToolRegistry extends ToolRegistry {
           'Readings above 80 suggest overbought, below 20 suggest oversold. ' +
           'Divergences between MFI and price can signal potential reversals.',
         inputSchema: CalculateMfiRequestSchema.shape,
+        annotations: PURE_CALCULATION,
       },
       this.indicators.calculateMfi.bind(this.indicators),
     );
@@ -300,6 +318,7 @@ export class IndicatorToolRegistry extends ToolRegistry {
           'Returns zones with bullish/bearish volume, Point of Control (highest volume zone), ' +
           'and Value Area (70% of volume). Useful for identifying support/resistance levels.',
         inputSchema: CalculateVolumeProfileRequestSchema.shape,
+        annotations: PURE_CALCULATION,
       },
       this.indicators.calculateVolumeProfile.bind(this.indicators),
     );
@@ -317,6 +336,7 @@ export class IndicatorToolRegistry extends ToolRegistry {
           'Returns overall bullish/bearish bias and list of detected patterns. ' +
           'Useful for identifying potential reversals and continuation signals.',
         inputSchema: DetectCandlestickPatternsRequestSchema.shape,
+        annotations: PURE_CALCULATION,
       },
       this.indicators.detectCandlestickPatterns.bind(this.indicators),
     );
@@ -333,6 +353,7 @@ export class IndicatorToolRegistry extends ToolRegistry {
           'hidden bearish (price lower highs, RSI higher highs). ' +
           'Returns divergences with strength classification (weak/medium/strong).',
         inputSchema: DetectRsiDivergenceRequestSchema.shape,
+        annotations: PURE_CALCULATION,
       },
       this.indicators.detectRsiDivergence.bind(this.indicators),
     );
@@ -347,6 +368,7 @@ export class IndicatorToolRegistry extends ToolRegistry {
           'and continuation patterns (Ascending/Descending Triangles, Bull/Bear Flags). ' +
           'Returns patterns with direction, confidence level, and price targets.',
         inputSchema: DetectChartPatternsRequestSchema.shape,
+        annotations: PURE_CALCULATION,
       },
       this.indicators.detectChartPatterns.bind(this.indicators),
     );
@@ -361,6 +383,7 @@ export class IndicatorToolRegistry extends ToolRegistry {
           "A swing low occurs when a bar's low is lower than the surrounding bars. " +
           'Useful for identifying support/resistance levels, trend direction, and Fibonacci retracement points.',
         inputSchema: DetectSwingPointsRequestSchema.shape,
+        annotations: PURE_CALCULATION,
       },
       this.indicators.detectSwingPoints.bind(this.indicators),
     );
@@ -378,6 +401,7 @@ export class IndicatorToolRegistry extends ToolRegistry {
           'plus extension levels (127.2%, 161.8%, 261.8%, 423.6%). ' +
           'Price bouncing at 38.2% or 61.8% suggests support/resistance.',
         inputSchema: CalculateFibonacciRetracementRequestSchema.shape,
+        annotations: PURE_CALCULATION,
       },
       this.indicators.calculateFibonacciRetracement.bind(this.indicators),
     );
@@ -392,6 +416,7 @@ export class IndicatorToolRegistry extends ToolRegistry {
           'Returns pivot point with support (S1-S3) and resistance (R1-R3) levels. ' +
           'Used to identify potential support/resistance levels for the next trading period.',
         inputSchema: CalculatePivotPointsRequestSchema.shape,
+        annotations: PURE_CALCULATION,
       },
       this.indicators.calculatePivotPoints.bind(this.indicators),
     );

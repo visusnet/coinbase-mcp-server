@@ -4,6 +4,7 @@ import {
   ListPaymentMethodsRequestSchema,
   GetPaymentMethodRequestSchema,
 } from '../services/PaymentMethodsService.request';
+import { VIEW_API } from './annotations';
 import { ToolRegistry } from './ToolRegistry';
 
 /**
@@ -24,6 +25,7 @@ export class PaymentToolRegistry extends ToolRegistry {
         title: 'List Payment Methods',
         description: 'Get a list of available payment methods',
         inputSchema: ListPaymentMethodsRequestSchema.shape,
+        annotations: VIEW_API,
       },
       this.paymentMethods.listPaymentMethods.bind(this.paymentMethods),
     );
@@ -34,6 +36,7 @@ export class PaymentToolRegistry extends ToolRegistry {
         title: 'Get Payment Method',
         description: 'Get details of a specific payment method',
         inputSchema: GetPaymentMethodRequestSchema.shape,
+        annotations: VIEW_API,
       },
       this.paymentMethods.getPaymentMethod.bind(this.paymentMethods),
     );

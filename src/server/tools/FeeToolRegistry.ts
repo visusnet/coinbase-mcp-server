@@ -1,6 +1,7 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { FeesService } from '../services';
 import { GetTransactionsSummaryRequestSchema } from '../services/FeesService.request';
+import { VIEW_API } from './annotations';
 import { ToolRegistry } from './ToolRegistry';
 
 /**
@@ -21,6 +22,7 @@ export class FeeToolRegistry extends ToolRegistry {
         title: 'Get Transaction Summary',
         description: 'Get a summary of transactions with fee tiers',
         inputSchema: GetTransactionsSummaryRequestSchema.shape,
+        annotations: VIEW_API,
       },
       this.fees.getTransactionSummary.bind(this.fees),
     );

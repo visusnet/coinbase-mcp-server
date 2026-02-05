@@ -10,6 +10,7 @@ import {
   GetBestBidAskRequestSchema,
   GetMarketSnapshotRequestSchema,
 } from '../services/ProductsService.request';
+import { VIEW_API } from './annotations';
 import { ToolRegistry } from './ToolRegistry';
 
 /**
@@ -30,6 +31,7 @@ export class ProductToolRegistry extends ToolRegistry {
         title: 'List Products',
         description: 'Get a list of all tradable products',
         inputSchema: ListProductsRequestSchema.shape,
+        annotations: VIEW_API,
       },
       this.products.listProducts.bind(this.products),
     );
@@ -40,6 +42,7 @@ export class ProductToolRegistry extends ToolRegistry {
         title: 'Get Product',
         description: 'Get details of a specific product',
         inputSchema: GetProductRequestSchema.shape,
+        annotations: VIEW_API,
       },
       this.products.getProduct.bind(this.products),
     );
@@ -50,6 +53,7 @@ export class ProductToolRegistry extends ToolRegistry {
         title: 'Get Product Book',
         description: 'Get the order book for a product',
         inputSchema: GetProductBookRequestSchema.shape,
+        annotations: VIEW_API,
       },
       this.products.getProductBook.bind(this.products),
     );
@@ -61,6 +65,7 @@ export class ProductToolRegistry extends ToolRegistry {
         description:
           'Get historic rates (candles) for a product. Use get_product_candles_batch for multiple products.',
         inputSchema: GetProductCandlesRequestSchema.shape,
+        annotations: VIEW_API,
       },
       this.products.getProductCandles.bind(this.products),
     );
@@ -74,6 +79,7 @@ export class ProductToolRegistry extends ToolRegistry {
           'More efficient than calling get_product_candles multiple times. ' +
           'Returns the last N candles (specified by limit) for each product.',
         inputSchema: GetProductCandlesBatchRequestSchema.shape,
+        annotations: VIEW_API,
       },
       this.products.getProductCandlesBatch.bind(this.products),
     );
@@ -84,6 +90,7 @@ export class ProductToolRegistry extends ToolRegistry {
         title: 'Get Market Trades',
         description: 'Get recent trades for a product',
         inputSchema: GetProductMarketTradesRequestSchema.shape,
+        annotations: VIEW_API,
       },
       this.products.getProductMarketTrades.bind(this.products),
     );
@@ -94,6 +101,7 @@ export class ProductToolRegistry extends ToolRegistry {
         title: 'Get Best Bid Ask',
         description: 'Get the best bid and ask prices for one or more products',
         inputSchema: GetBestBidAskRequestSchema.shape,
+        annotations: VIEW_API,
       },
       this.products.getBestBidAsk.bind(this.products),
     );
@@ -107,6 +115,7 @@ export class ProductToolRegistry extends ToolRegistry {
           'Returns price, bid, ask, spread, volume, and 24h change in a single call. ' +
           'Use this instead of separate get_best_bid_ask and get_product calls.',
         inputSchema: GetMarketSnapshotRequestSchema.shape,
+        annotations: VIEW_API,
       },
       this.products.getMarketSnapshot.bind(this.products),
     );
