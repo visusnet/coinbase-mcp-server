@@ -57,7 +57,24 @@ NOT FOR THIS SERVER:
 - News unrelated to specific trading pairs
 - External wallet transfers (on-chain transactions)
 - Other exchanges (Binance, Kraken, etc.)
-- DeFi, NFTs, or on-chain operations`;
+- DeFi, NFTs, or on-chain operations
+
+OUTPUT FORMAT:
+All tools accept an optional "format" parameter:
+- "json" (default): Standard JSON, best for nested data
+- "toon": Compact format, ~35% fewer tokens for lists
+
+Use format:"toon" for list operations (list_accounts, list_orders,
+list_products, get_product_candles) to reduce token usage.
+
+TOON format uses a schema header followed by comma-separated rows:
+  accounts[3]{uuid,name,currency,balance}:
+    abc-123,BTC Wallet,BTC,0.54
+    def-456,ETH Wallet,ETH,2.5
+    ghi-789,EUR Wallet,EUR,1234.56
+  hasNext: false
+
+Read TOON by matching values to the field names in {brackets}.`;
 
 export class CoinbaseMcpServer {
   private readonly app: Express;

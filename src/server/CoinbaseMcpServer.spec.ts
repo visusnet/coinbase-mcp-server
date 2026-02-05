@@ -1959,6 +1959,53 @@ describe('CoinbaseMcpServer Integration Tests', () => {
       });
     });
 
+    describe('Output Format', () => {
+      it('should return JSON format by default', async () => {
+        const args = {};
+        const result = {
+          accounts: [{ uuid: 'abc-123', name: 'BTC Wallet', currency: 'BTC' }],
+          hasNext: false,
+        };
+        mockAccountsService.listAccounts.mockResolvedValueOnce(result);
+
+        const response = await client.callTool({
+          name: 'list_accounts',
+          arguments: args,
+        });
+
+        expect(mockAccountsService.listAccounts).toHaveBeenCalledWith({});
+        const content = (response as { content: { text: string }[] }).content[0]
+          .text;
+        expect(JSON.parse(content)).toEqual(result);
+      });
+
+      it('should return TOON format when format: toon is specified', async () => {
+        const args = { format: 'toon' };
+        const result = {
+          accounts: [
+            { uuid: 'abc-123', name: 'BTC Wallet', currency: 'BTC' },
+            { uuid: 'def-456', name: 'ETH Wallet', currency: 'ETH' },
+          ],
+          hasNext: false,
+        };
+        mockAccountsService.listAccounts.mockResolvedValueOnce(result);
+
+        const response = await client.callTool({
+          name: 'list_accounts',
+          arguments: args,
+        });
+
+        expect(mockAccountsService.listAccounts).toHaveBeenCalledWith({});
+        // TOON format should not be JSON
+        const content = (response as { content: { text: string }[] }).content[0]
+          .text;
+        expect(() => {
+          JSON.parse(content);
+        }).toThrow(); // TOON is not valid JSON
+        expect(content).toContain('accounts'); // Should contain field name
+      });
+    });
+
     describe('Error Handling', () => {
       it('should throw error for unknown tool', async () => {
         expect(

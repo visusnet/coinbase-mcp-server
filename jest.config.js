@@ -18,7 +18,12 @@ export default {
         },
       },
     ],
+    'node_modules/@toon-format/toon/.+\\.(m?js)$': [
+      'babel-jest',
+      { presets: [['@babel/preset-env', { targets: { node: 'current' } }]] },
+    ],
   },
+  transformIgnorePatterns: ['node_modules/(?!@toon-format/toon)'],
   testMatch: ['**/*.spec.ts'],
   collectCoverageFrom: [
     'src/**/*.ts',
