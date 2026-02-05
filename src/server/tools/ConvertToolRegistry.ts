@@ -5,6 +5,7 @@ import {
   CommitConvertTradeRequestSchema,
   GetConvertTradeRequestSchema,
 } from '../services/ConvertsService.request';
+import { DESTRUCTIVE_API, VIEW_API } from './annotations';
 import { ToolRegistry } from './ToolRegistry';
 
 /**
@@ -25,6 +26,7 @@ export class ConvertToolRegistry extends ToolRegistry {
         title: 'Create Convert Quote',
         description: 'Create a quote for converting one currency to another',
         inputSchema: CreateConvertQuoteRequestSchema.shape,
+        annotations: DESTRUCTIVE_API,
       },
       this.converts.createConvertQuote.bind(this.converts),
     );
@@ -35,6 +37,7 @@ export class ConvertToolRegistry extends ToolRegistry {
         title: 'Commit Convert Trade',
         description: 'Commit a currency conversion trade using a quote',
         inputSchema: CommitConvertTradeRequestSchema.shape,
+        annotations: DESTRUCTIVE_API,
       },
       this.converts.commitConvertTrade.bind(this.converts),
     );
@@ -45,6 +48,7 @@ export class ConvertToolRegistry extends ToolRegistry {
         title: 'Get Convert Trade',
         description: 'Get details of a specific conversion trade',
         inputSchema: GetConvertTradeRequestSchema.shape,
+        annotations: VIEW_API,
       },
       this.converts.getConvertTrade.bind(this.converts),
     );

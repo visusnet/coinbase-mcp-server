@@ -4,6 +4,7 @@ import {
   ListAccountsRequestSchema,
   GetAccountRequestSchema,
 } from '../services/AccountsService.request';
+import { VIEW_API } from './annotations';
 import { ToolRegistry } from './ToolRegistry';
 
 /**
@@ -24,6 +25,7 @@ export class AccountToolRegistry extends ToolRegistry {
         title: 'List Accounts',
         description: 'Get a list of all accounts with their balances',
         inputSchema: ListAccountsRequestSchema.shape,
+        annotations: VIEW_API,
       },
       this.accounts.listAccounts.bind(this.accounts),
     );
@@ -34,6 +36,7 @@ export class AccountToolRegistry extends ToolRegistry {
         title: 'Get Account',
         description: 'Get details of a specific account by UUID',
         inputSchema: GetAccountRequestSchema.shape,
+        annotations: VIEW_API,
       },
       this.accounts.getAccount.bind(this.accounts),
     );

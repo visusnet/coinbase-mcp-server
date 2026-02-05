@@ -1,6 +1,7 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { DataService } from '../services';
 import { GetAPIKeyPermissionsRequestSchema } from '../services/DataService.request';
+import { VIEW_API } from './annotations';
 import { ToolRegistry } from './ToolRegistry';
 
 /**
@@ -21,6 +22,7 @@ export class DataToolRegistry extends ToolRegistry {
         title: 'Get API Key Permissions',
         description: 'Get permissions for the current API key',
         inputSchema: GetAPIKeyPermissionsRequestSchema.shape,
+        annotations: VIEW_API,
       },
       this.data.getAPIKeyPermissions.bind(this.data),
     );

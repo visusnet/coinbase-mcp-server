@@ -7,6 +7,7 @@ import {
   GetPublicProductCandlesRequestSchema,
   GetPublicMarketTradesRequestSchema,
 } from '../services/PublicService.request';
+import { VIEW_API } from './annotations';
 import { ToolRegistry } from './ToolRegistry';
 
 /**
@@ -27,6 +28,7 @@ export class PublicToolRegistry extends ToolRegistry {
         title: 'Get Server Time',
         description: 'Get the current server timestamp from Coinbase',
         inputSchema: {},
+        annotations: VIEW_API,
       },
       this.publicService.getServerTime.bind(this.publicService),
     );
@@ -37,6 +39,7 @@ export class PublicToolRegistry extends ToolRegistry {
         title: 'Get Public Product',
         description: 'Get public product information (no auth required)',
         inputSchema: GetPublicProductRequestSchema.shape,
+        annotations: VIEW_API,
       },
       this.publicService.getProduct.bind(this.publicService),
     );
@@ -47,6 +50,7 @@ export class PublicToolRegistry extends ToolRegistry {
         title: 'List Public Products',
         description: 'List all public products (no auth required)',
         inputSchema: ListPublicProductsRequestSchema.shape,
+        annotations: VIEW_API,
       },
       this.publicService.listProducts.bind(this.publicService),
     );
@@ -57,6 +61,7 @@ export class PublicToolRegistry extends ToolRegistry {
         title: 'Get Public Product Book',
         description: 'Get public order book (no auth required)',
         inputSchema: GetPublicProductBookRequestSchema.shape,
+        annotations: VIEW_API,
       },
       this.publicService.getProductBook.bind(this.publicService),
     );
@@ -67,6 +72,7 @@ export class PublicToolRegistry extends ToolRegistry {
         title: 'Get Public Product Candles',
         description: 'Get public candle data (no auth required)',
         inputSchema: GetPublicProductCandlesRequestSchema.shape,
+        annotations: VIEW_API,
       },
       this.publicService.getProductCandles.bind(this.publicService),
     );
@@ -77,6 +83,7 @@ export class PublicToolRegistry extends ToolRegistry {
         title: 'Get Public Market Trades',
         description: 'Get public market trades (no auth required)',
         inputSchema: GetPublicMarketTradesRequestSchema.shape,
+        annotations: VIEW_API,
       },
       this.publicService.getProductMarketTrades.bind(this.publicService),
     );

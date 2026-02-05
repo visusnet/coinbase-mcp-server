@@ -1,0 +1,48 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`PublicToolRegistry should register tools with correct annotations 1`] = `
+[
+  {
+    "annotations": {
+      "openWorldHint": true,
+      "readOnlyHint": true,
+    },
+    "name": "get_server_time",
+  },
+  {
+    "annotations": {
+      "openWorldHint": true,
+      "readOnlyHint": true,
+    },
+    "name": "get_public_product",
+  },
+  {
+    "annotations": {
+      "openWorldHint": true,
+      "readOnlyHint": true,
+    },
+    "name": "list_public_products",
+  },
+  {
+    "annotations": {
+      "openWorldHint": true,
+      "readOnlyHint": true,
+    },
+    "name": "get_public_product_book",
+  },
+  {
+    "annotations": {
+      "openWorldHint": true,
+      "readOnlyHint": true,
+    },
+    "name": "get_public_product_candles",
+  },
+  {
+    "annotations": {
+      "openWorldHint": true,
+      "readOnlyHint": true,
+    },
+    "name": "get_public_market_trades",
+  },
+]
+`;

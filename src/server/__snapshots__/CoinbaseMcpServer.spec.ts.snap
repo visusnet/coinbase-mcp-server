@@ -7,6 +7,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
   "result": {
     "tools": [
       {
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get a list of all accounts with their balances",
         "execution": {
           "taskSupport": "forbidden",
@@ -30,6 +34,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "List Accounts",
       },
       {
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get details of a specific account by UUID",
         "execution": {
           "taskSupport": "forbidden",
@@ -52,6 +60,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Get Account",
       },
       {
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get a list of all historical orders",
         "execution": {
           "taskSupport": "forbidden",
@@ -89,6 +101,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "List Orders",
       },
       {
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get details of a specific order by order ID",
         "execution": {
           "taskSupport": "forbidden",
@@ -111,6 +127,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Get Order",
       },
       {
+        "annotations": {
+          "destructiveHint": true,
+          "openWorldHint": true,
+        },
         "description": "Create a new buy or sell order",
         "execution": {
           "taskSupport": "forbidden",
@@ -381,6 +401,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Create Order",
       },
       {
+        "annotations": {
+          "destructiveHint": true,
+          "openWorldHint": true,
+        },
         "description": "Cancel one or more orders",
         "execution": {
           "taskSupport": "forbidden",
@@ -406,6 +430,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Cancel Orders",
       },
       {
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get a list of fills (executed trades) for orders",
         "execution": {
           "taskSupport": "forbidden",
@@ -443,6 +471,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "List Fills",
       },
       {
+        "annotations": {
+          "destructiveHint": true,
+          "openWorldHint": true,
+        },
         "description": "Edit an existing order (change price or size)",
         "execution": {
           "taskSupport": "forbidden",
@@ -475,6 +507,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Edit Order",
       },
       {
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Preview the result of editing an order before committing",
         "execution": {
           "taskSupport": "forbidden",
@@ -507,6 +543,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Preview Edit Order",
       },
       {
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Preview the result of creating an order before committing",
         "execution": {
           "taskSupport": "forbidden",
@@ -772,6 +812,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Preview Order",
       },
       {
+        "annotations": {
+          "destructiveHint": true,
+          "openWorldHint": true,
+        },
         "description": "Close an open position for a product",
         "execution": {
           "taskSupport": "forbidden",
@@ -803,6 +847,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Close Position",
       },
       {
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get a list of all tradable products",
         "execution": {
           "taskSupport": "forbidden",
@@ -835,6 +883,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "List Products",
       },
       {
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get details of a specific product",
         "execution": {
           "taskSupport": "forbidden",
@@ -861,6 +913,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Get Product",
       },
       {
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get the order book for a product",
         "execution": {
           "taskSupport": "forbidden",
@@ -887,6 +943,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Get Product Book",
       },
       {
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get historic rates (candles) for a product. Use get_product_candles_batch for multiple products.",
         "execution": {
           "taskSupport": "forbidden",
@@ -938,6 +998,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Get Product Candles",
       },
       {
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get historic candle data for multiple trading pairs in a single call. More efficient than calling get_product_candles multiple times. Returns the last N candles (specified by limit) for each product.",
         "execution": {
           "taskSupport": "forbidden",
@@ -991,6 +1055,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Get Product Candles Batch",
       },
       {
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get recent trades for a product",
         "execution": {
           "taskSupport": "forbidden",
@@ -1018,6 +1086,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Get Market Trades",
       },
       {
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get the best bid and ask prices for one or more products",
         "execution": {
           "taskSupport": "forbidden",
@@ -1041,6 +1113,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Get Best Bid Ask",
       },
       {
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get comprehensive market snapshot for one or more trading pairs. Returns price, bid, ask, spread, volume, and 24h change in a single call. Use this instead of separate get_best_bid_ask and get_product calls.",
         "execution": {
           "taskSupport": "forbidden",
@@ -1073,6 +1149,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Get Market Snapshot",
       },
       {
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get a summary of transactions with fee tiers",
         "execution": {
           "taskSupport": "forbidden",
@@ -1120,6 +1200,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Get Transaction Summary",
       },
       {
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get a list of all portfolios",
         "execution": {
           "taskSupport": "forbidden",
@@ -1133,6 +1217,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "List Portfolios",
       },
       {
+        "annotations": {
+          "destructiveHint": true,
+          "openWorldHint": true,
+        },
         "description": "Create a new portfolio",
         "execution": {
           "taskSupport": "forbidden",
@@ -1155,6 +1243,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Create Portfolio",
       },
       {
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get details of a specific portfolio",
         "execution": {
           "taskSupport": "forbidden",
@@ -1177,6 +1269,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Get Portfolio",
       },
       {
+        "annotations": {
+          "destructiveHint": true,
+          "openWorldHint": true,
+        },
         "description": "Move funds between portfolios",
         "execution": {
           "taskSupport": "forbidden",
@@ -1224,6 +1320,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Move Portfolio Funds",
       },
       {
+        "annotations": {
+          "destructiveHint": true,
+          "openWorldHint": true,
+        },
         "description": "Edit portfolio details (name)",
         "execution": {
           "taskSupport": "forbidden",
@@ -1251,6 +1351,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Edit Portfolio",
       },
       {
+        "annotations": {
+          "destructiveHint": true,
+          "openWorldHint": true,
+        },
         "description": "Delete a portfolio",
         "execution": {
           "taskSupport": "forbidden",
@@ -1273,6 +1377,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Delete Portfolio",
       },
       {
+        "annotations": {
+          "destructiveHint": true,
+          "openWorldHint": true,
+        },
         "description": "Create a quote for converting one currency to another",
         "execution": {
           "taskSupport": "forbidden",
@@ -1305,6 +1413,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Create Convert Quote",
       },
       {
+        "annotations": {
+          "destructiveHint": true,
+          "openWorldHint": true,
+        },
         "description": "Commit a currency conversion trade using a quote",
         "execution": {
           "taskSupport": "forbidden",
@@ -1337,6 +1449,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Commit Convert Trade",
       },
       {
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get details of a specific conversion trade",
         "execution": {
           "taskSupport": "forbidden",
@@ -1369,6 +1485,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Get Convert Trade",
       },
       {
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get the current server timestamp from Coinbase",
         "execution": {
           "taskSupport": "forbidden",
@@ -1382,6 +1502,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Get Server Time",
       },
       {
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get public product information (no auth required)",
         "execution": {
           "taskSupport": "forbidden",
@@ -1404,6 +1528,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Get Public Product",
       },
       {
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "List all public products (no auth required)",
         "execution": {
           "taskSupport": "forbidden",
@@ -1427,6 +1555,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "List Public Products",
       },
       {
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get public order book (no auth required)",
         "execution": {
           "taskSupport": "forbidden",
@@ -1453,6 +1585,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Get Public Product Book",
       },
       {
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get public candle data (no auth required)",
         "execution": {
           "taskSupport": "forbidden",
@@ -1504,6 +1640,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Get Public Product Candles",
       },
       {
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get public market trades (no auth required)",
         "execution": {
           "taskSupport": "forbidden",
@@ -1531,6 +1671,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Get Public Market Trades",
       },
       {
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get a list of available payment methods",
         "execution": {
           "taskSupport": "forbidden",
@@ -1544,6 +1688,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "List Payment Methods",
       },
       {
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get details of a specific payment method",
         "execution": {
           "taskSupport": "forbidden",
@@ -1566,6 +1714,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Get Payment Method",
       },
       {
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get all futures positions",
         "execution": {
           "taskSupport": "forbidden",
@@ -1579,6 +1731,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "List Futures Positions",
       },
       {
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get a specific futures position",
         "execution": {
           "taskSupport": "forbidden",
@@ -1601,6 +1757,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Get Futures Position",
       },
       {
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get futures balance summary",
         "execution": {
           "taskSupport": "forbidden",
@@ -1614,6 +1774,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Get Futures Balance Summary",
       },
       {
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get all futures sweeps",
         "execution": {
           "taskSupport": "forbidden",
@@ -1627,6 +1791,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "List Futures Sweeps",
       },
       {
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get all perpetuals positions",
         "execution": {
           "taskSupport": "forbidden",
@@ -1649,6 +1817,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "List Perpetuals Positions",
       },
       {
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get a specific perpetuals position",
         "execution": {
           "taskSupport": "forbidden",
@@ -1676,6 +1848,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Get Perpetuals Position",
       },
       {
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get perpetuals portfolio summary",
         "execution": {
           "taskSupport": "forbidden",
@@ -1698,6 +1874,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Get Perpetuals Portfolio Summary",
       },
       {
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get perpetuals portfolio balance",
         "execution": {
           "taskSupport": "forbidden",
@@ -1720,6 +1900,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Get Perpetuals Portfolio Balance",
       },
       {
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get permissions for the current API key",
         "execution": {
           "taskSupport": "forbidden",
@@ -1733,6 +1917,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Get API Key Permissions",
       },
       {
+        "annotations": {
+          "idempotentHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Calculate Relative Strength Index (RSI) from candle data. RSI measures momentum and identifies overbought (>70) or oversold (<30) conditions. Input candles should be in the same format as returned by get_product_candles.",
         "execution": {
           "taskSupport": "forbidden",
@@ -1788,6 +1976,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Calculate RSI",
       },
       {
+        "annotations": {
+          "idempotentHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Calculate Moving Average Convergence Divergence (MACD) from candle data. MACD shows trend direction and momentum. Bullish when MACD crosses above signal line, bearish when it crosses below. Histogram shows the difference between MACD and signal.",
         "execution": {
           "taskSupport": "forbidden",
@@ -1853,6 +2045,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Calculate MACD",
       },
       {
+        "annotations": {
+          "idempotentHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Calculate Stochastic oscillator from candle data. Returns %K (fast line) and %D (signal line) values. %K above %D is bullish, below is bearish. Values above 80 indicate overbought, below 20 indicate oversold.",
         "execution": {
           "taskSupport": "forbidden",
@@ -1913,6 +2109,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Calculate Stochastic Oscillator",
       },
       {
+        "annotations": {
+          "idempotentHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Calculate ADX from candle data. Measures trend strength regardless of direction. ADX > 25 indicates strong trend, < 20 indicates weak/no trend. Returns ADX, +DI (bullish pressure), and -DI (bearish pressure).",
         "execution": {
           "taskSupport": "forbidden",
@@ -1968,6 +2168,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Calculate ADX (Average Directional Index)",
       },
       {
+        "annotations": {
+          "idempotentHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Calculate CCI from candle data. Measures price deviation from statistical mean. Readings above +100 suggest overbought, below -100 suggest oversold. Useful for identifying cyclical trends in commodities and stocks.",
         "execution": {
           "taskSupport": "forbidden",
@@ -2023,6 +2227,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Calculate CCI (Commodity Channel Index)",
       },
       {
+        "annotations": {
+          "idempotentHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Calculate Williams %R from candle data. Momentum indicator similar to Stochastic but inverted scale (-100 to 0). Readings above -20 suggest overbought, below -80 suggest oversold. Useful for identifying potential reversal points.",
         "execution": {
           "taskSupport": "forbidden",
@@ -2078,6 +2286,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Calculate Williams %R",
       },
       {
+        "annotations": {
+          "idempotentHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Calculate ROC (Rate of Change) from candle data. Momentum oscillator measuring percentage change between current price and price n periods ago. Positive values indicate upward momentum, negative values indicate downward momentum. Useful for identifying trend strength and potential reversals.",
         "execution": {
           "taskSupport": "forbidden",
@@ -2133,6 +2345,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Calculate ROC (Rate of Change)",
       },
       {
+        "annotations": {
+          "idempotentHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Calculate Simple Moving Average (SMA) from candle data. SMA equally weights all prices in the period, providing a smoothed trend line. Common periods: 10 (short-term), 20/50 (medium-term), 200 (long-term trend).",
         "execution": {
           "taskSupport": "forbidden",
@@ -2188,6 +2404,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Calculate SMA",
       },
       {
+        "annotations": {
+          "idempotentHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Calculate Exponential Moving Average (EMA) from candle data. EMA gives more weight to recent prices, making it more responsive than SMA. Common periods: 9 (short-term), 20 (medium-term), 50/200 (long-term trends).",
         "execution": {
           "taskSupport": "forbidden",
@@ -2243,6 +2463,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Calculate EMA",
       },
       {
+        "annotations": {
+          "idempotentHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Calculate Ichimoku Cloud (Ichimoku Kinko Hyo) from candle data. Comprehensive trend indicator with 5 components. Returns conversion line (Tenkan-sen), base line (Kijun-sen), leading span A (Senkou Span A), and leading span B (Senkou Span B). Price above cloud is bullish, below is bearish. Cloud color (green/red) indicates future trend direction.",
         "execution": {
           "taskSupport": "forbidden",
@@ -2313,6 +2537,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Calculate Ichimoku Cloud",
       },
       {
+        "annotations": {
+          "idempotentHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Calculate Bollinger Bands from candle data. Returns upper, middle (SMA), and lower bands plus %B (position within bands). Price near upper band suggests overbought, near lower suggests oversold.",
         "execution": {
           "taskSupport": "forbidden",
@@ -2373,6 +2601,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Calculate Bollinger Bands",
       },
       {
+        "annotations": {
+          "idempotentHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Calculate ATR from candle data. Measures market volatility by decomposing the entire range of an asset price for a period. Higher ATR indicates higher volatility. Useful for setting stop-losses and position sizing.",
         "execution": {
           "taskSupport": "forbidden",
@@ -2428,6 +2660,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Calculate ATR (Average True Range)",
       },
       {
+        "annotations": {
+          "idempotentHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Calculate Keltner Channels from candle data. Volatility-based envelope indicator similar to Bollinger Bands but uses ATR. Returns middle (EMA), upper, and lower channel values. Price below lower channel suggests oversold, above upper suggests overbought. BB squeeze inside Keltner signals volatility breakout.",
         "execution": {
           "taskSupport": "forbidden",
@@ -2497,6 +2733,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Calculate Keltner Channels",
       },
       {
+        "annotations": {
+          "idempotentHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Calculate Parabolic SAR from candle data. Trend-following indicator that provides potential entry and exit points. SAR below price indicates uptrend, SAR above price indicates downtrend. SAR flips signal trend reversals.",
         "execution": {
           "taskSupport": "forbidden",
@@ -2559,6 +2799,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Calculate Parabolic SAR",
       },
       {
+        "annotations": {
+          "idempotentHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Calculate OBV from candle data. Measures buying and selling pressure using volume flow. Rising OBV confirms uptrend, falling OBV confirms downtrend. Divergence between price and OBV can signal reversals.",
         "execution": {
           "taskSupport": "forbidden",
@@ -2609,6 +2853,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Calculate OBV (On-Balance Volume)",
       },
       {
+        "annotations": {
+          "idempotentHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Calculate VWAP from candle data. Represents the average price weighted by volume. Price above VWAP suggests bullish bias, below suggests bearish. Often used as intraday support/resistance level.",
         "execution": {
           "taskSupport": "forbidden",
@@ -2659,6 +2907,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Calculate VWAP (Volume Weighted Average Price)",
       },
       {
+        "annotations": {
+          "idempotentHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Calculate MFI (Money Flow Index) from candle data. Volume-weighted RSI that measures buying and selling pressure. Readings above 80 suggest overbought, below 20 suggest oversold. Divergences between MFI and price can signal potential reversals.",
         "execution": {
           "taskSupport": "forbidden",
@@ -2714,6 +2966,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Calculate MFI (Money Flow Index)",
       },
       {
+        "annotations": {
+          "idempotentHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Calculate Volume Profile from candle data. Divides price range into zones and shows volume distribution at each level. Returns zones with bullish/bearish volume, Point of Control (highest volume zone), and Value Area (70% of volume). Useful for identifying support/resistance levels.",
         "execution": {
           "taskSupport": "forbidden",
@@ -2769,6 +3025,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Calculate Volume Profile",
       },
       {
+        "annotations": {
+          "idempotentHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Detect candlestick patterns from candle data. Identifies 31 patterns including bullish (Hammer, Engulfing, Morning Star, Marubozu, Harami Cross, etc.), bearish (Shooting Star, Evening Star, Three Black Crows, Marubozu, Harami Cross, etc.), and neutral (Doji). Returns overall bullish/bearish bias and list of detected patterns. Useful for identifying potential reversals and continuation signals.",
         "execution": {
           "taskSupport": "forbidden",
@@ -2819,6 +3079,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Detect Candlestick Patterns",
       },
       {
+        "annotations": {
+          "idempotentHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Detect RSI divergences in price data. Identifies bullish divergences (price lower lows, RSI higher lows), bearish divergences (price higher highs, RSI lower highs), hidden bullish (price higher lows, RSI lower lows), and hidden bearish (price lower highs, RSI higher highs). Returns divergences with strength classification (weak/medium/strong).",
         "execution": {
           "taskSupport": "forbidden",
@@ -2876,6 +3140,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Detect RSI Divergence",
       },
       {
+        "annotations": {
+          "idempotentHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Detect chart patterns in price data. Identifies reversal patterns (Double Top/Bottom, Head & Shoulders) and continuation patterns (Ascending/Descending Triangles, Bull/Bear Flags). Returns patterns with direction, confidence level, and price targets.",
         "execution": {
           "taskSupport": "forbidden",
@@ -2929,6 +3197,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Detect Chart Patterns",
       },
       {
+        "annotations": {
+          "idempotentHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Detect swing highs and swing lows using Williams Fractal method. A swing high occurs when a bar's high is higher than the surrounding bars. A swing low occurs when a bar's low is lower than the surrounding bars. Useful for identifying support/resistance levels, trend direction, and Fibonacci retracement points.",
         "execution": {
           "taskSupport": "forbidden",
@@ -2985,6 +3257,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Detect Swing Points (Williams Fractals)",
       },
       {
+        "annotations": {
+          "idempotentHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Calculate Fibonacci Retracement levels from swing high/low prices. For uptrend: start=low, end=high. For downtrend: start=high, end=low. Returns key retracement levels (0%, 23.6%, 38.2%, 50%, 61.8%, 78.6%, 100%) plus extension levels (127.2%, 161.8%, 261.8%, 423.6%). Price bouncing at 38.2% or 61.8% suggests support/resistance.",
         "execution": {
           "taskSupport": "forbidden",
@@ -3012,6 +3288,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Calculate Fibonacci Retracement",
       },
       {
+        "annotations": {
+          "idempotentHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Calculate Pivot Points from previous period OHLC data. Supports Standard, Fibonacci, Woodie, Camarilla, and DeMark calculation types. Returns pivot point with support (S1-S3) and resistance (R1-R3) levels. Used to identify potential support/resistance levels for the next trading period.",
         "execution": {
           "taskSupport": "forbidden",
@@ -3059,6 +3339,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Calculate Pivot Points",
       },
       {
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Analyze technical indicators for a cryptocurrency product. This tool fetches candle data and calculates indicators server-side, returning only computed values to reduce context usage. Supports 24 indicators across 6 categories: Momentum (RSI, MACD, Stochastic, ADX, CCI, Williams %R, ROC), Trend (SMA, EMA, Ichimoku, PSAR), Volatility (Bollinger Bands, ATR, Keltner), Volume (OBV, MFI, VWAP, Volume Profile), Patterns (Candlestick, RSI Divergence, Chart Patterns, Swing Points), Support/Resistance (Pivot Points, Fibonacci). Pivot Points use daily candles (industry standard). Fibonacci uses Williams Fractal swing detection (industry standard).",
         "execution": {
           "taskSupport": "forbidden",
@@ -3135,6 +3419,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Analyze Technical Indicators",
       },
       {
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Analyze technical indicators for multiple cryptocurrency products in parallel. Use this instead of multiple single calls when analyzing several products. Returns results for each product with a summary ranking by signal score. Supports the same 24 indicators as analyze_technical_indicators.",
         "execution": {
           "taskSupport": "forbidden",
@@ -3216,6 +3504,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         "title": "Analyze Technical Indicators (Batch)",
       },
       {
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Waits for specific market conditions to be met before returning.
 Monitors real-time ticker data via WebSocket and triggers when
 conditions are satisfied or timeout is reached.
@@ -3327,6 +3619,10 @@ Logic: any (OR), all (AND)",
         "title": "Wait for Market Event",
       },
       {
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Fetch recent news articles for a trading pair and analyze their sentiment. Returns headlines with individual sentiment scores and an aggregate sentiment direction.",
         "execution": {
           "taskSupport": "forbidden",
@@ -3366,7 +3662,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
     "tools": [
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get a list of all accounts with their balances",
         "execution": {
           "taskSupport": "forbidden",
@@ -3391,7 +3690,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get details of a specific account by UUID",
         "execution": {
           "taskSupport": "forbidden",
@@ -3415,7 +3717,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get a list of all historical orders",
         "execution": {
           "taskSupport": "forbidden",
@@ -3454,7 +3759,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get details of a specific order by order ID",
         "execution": {
           "taskSupport": "forbidden",
@@ -3478,7 +3786,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "destructiveHint": true,
+          "openWorldHint": true,
+        },
         "description": "Create a new buy or sell order",
         "execution": {
           "taskSupport": "forbidden",
@@ -3750,7 +4061,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "destructiveHint": true,
+          "openWorldHint": true,
+        },
         "description": "Cancel one or more orders",
         "execution": {
           "taskSupport": "forbidden",
@@ -3777,7 +4091,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get a list of fills (executed trades) for orders",
         "execution": {
           "taskSupport": "forbidden",
@@ -3816,7 +4133,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "destructiveHint": true,
+          "openWorldHint": true,
+        },
         "description": "Edit an existing order (change price or size)",
         "execution": {
           "taskSupport": "forbidden",
@@ -3850,7 +4170,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Preview the result of editing an order before committing",
         "execution": {
           "taskSupport": "forbidden",
@@ -3884,7 +4207,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Preview the result of creating an order before committing",
         "execution": {
           "taskSupport": "forbidden",
@@ -4151,7 +4477,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "destructiveHint": true,
+          "openWorldHint": true,
+        },
         "description": "Close an open position for a product",
         "execution": {
           "taskSupport": "forbidden",
@@ -4184,7 +4513,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get a list of all tradable products",
         "execution": {
           "taskSupport": "forbidden",
@@ -4218,7 +4550,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get details of a specific product",
         "execution": {
           "taskSupport": "forbidden",
@@ -4246,7 +4581,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get the order book for a product",
         "execution": {
           "taskSupport": "forbidden",
@@ -4274,7 +4612,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get historic rates (candles) for a product. Use get_product_candles_batch for multiple products.",
         "execution": {
           "taskSupport": "forbidden",
@@ -4327,7 +4668,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get historic candle data for multiple trading pairs in a single call. More efficient than calling get_product_candles multiple times. Returns the last N candles (specified by limit) for each product.",
         "execution": {
           "taskSupport": "forbidden",
@@ -4382,7 +4726,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get recent trades for a product",
         "execution": {
           "taskSupport": "forbidden",
@@ -4411,7 +4758,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get the best bid and ask prices for one or more products",
         "execution": {
           "taskSupport": "forbidden",
@@ -4436,7 +4786,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get comprehensive market snapshot for one or more trading pairs. Returns price, bid, ask, spread, volume, and 24h change in a single call. Use this instead of separate get_best_bid_ask and get_product calls.",
         "execution": {
           "taskSupport": "forbidden",
@@ -4470,7 +4823,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get a summary of transactions with fee tiers",
         "execution": {
           "taskSupport": "forbidden",
@@ -4519,7 +4875,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get a list of all portfolios",
         "execution": {
           "taskSupport": "forbidden",
@@ -4534,7 +4893,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "destructiveHint": true,
+          "openWorldHint": true,
+        },
         "description": "Create a new portfolio",
         "execution": {
           "taskSupport": "forbidden",
@@ -4558,7 +4920,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get details of a specific portfolio",
         "execution": {
           "taskSupport": "forbidden",
@@ -4582,7 +4947,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "destructiveHint": true,
+          "openWorldHint": true,
+        },
         "description": "Move funds between portfolios",
         "execution": {
           "taskSupport": "forbidden",
@@ -4631,7 +4999,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "destructiveHint": true,
+          "openWorldHint": true,
+        },
         "description": "Edit portfolio details (name)",
         "execution": {
           "taskSupport": "forbidden",
@@ -4660,7 +5031,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "destructiveHint": true,
+          "openWorldHint": true,
+        },
         "description": "Delete a portfolio",
         "execution": {
           "taskSupport": "forbidden",
@@ -4684,7 +5058,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "destructiveHint": true,
+          "openWorldHint": true,
+        },
         "description": "Create a quote for converting one currency to another",
         "execution": {
           "taskSupport": "forbidden",
@@ -4718,7 +5095,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "destructiveHint": true,
+          "openWorldHint": true,
+        },
         "description": "Commit a currency conversion trade using a quote",
         "execution": {
           "taskSupport": "forbidden",
@@ -4752,7 +5132,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get details of a specific conversion trade",
         "execution": {
           "taskSupport": "forbidden",
@@ -4786,7 +5169,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get the current server timestamp from Coinbase",
         "execution": {
           "taskSupport": "forbidden",
@@ -4801,7 +5187,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get public product information (no auth required)",
         "execution": {
           "taskSupport": "forbidden",
@@ -4825,7 +5214,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "List all public products (no auth required)",
         "execution": {
           "taskSupport": "forbidden",
@@ -4850,7 +5242,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get public order book (no auth required)",
         "execution": {
           "taskSupport": "forbidden",
@@ -4878,7 +5273,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get public candle data (no auth required)",
         "execution": {
           "taskSupport": "forbidden",
@@ -4931,7 +5329,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get public market trades (no auth required)",
         "execution": {
           "taskSupport": "forbidden",
@@ -4960,7 +5361,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get a list of available payment methods",
         "execution": {
           "taskSupport": "forbidden",
@@ -4975,7 +5379,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get details of a specific payment method",
         "execution": {
           "taskSupport": "forbidden",
@@ -4999,7 +5406,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get all futures positions",
         "execution": {
           "taskSupport": "forbidden",
@@ -5014,7 +5424,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get a specific futures position",
         "execution": {
           "taskSupport": "forbidden",
@@ -5038,7 +5451,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get futures balance summary",
         "execution": {
           "taskSupport": "forbidden",
@@ -5053,7 +5469,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get all futures sweeps",
         "execution": {
           "taskSupport": "forbidden",
@@ -5068,7 +5487,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get all perpetuals positions",
         "execution": {
           "taskSupport": "forbidden",
@@ -5092,7 +5514,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get a specific perpetuals position",
         "execution": {
           "taskSupport": "forbidden",
@@ -5121,7 +5546,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get perpetuals portfolio summary",
         "execution": {
           "taskSupport": "forbidden",
@@ -5145,7 +5573,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get perpetuals portfolio balance",
         "execution": {
           "taskSupport": "forbidden",
@@ -5169,7 +5600,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Get permissions for the current API key",
         "execution": {
           "taskSupport": "forbidden",
@@ -5184,7 +5618,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "idempotentHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Calculate Relative Strength Index (RSI) from candle data. RSI measures momentum and identifies overbought (>70) or oversold (<30) conditions. Input candles should be in the same format as returned by get_product_candles.",
         "execution": {
           "taskSupport": "forbidden",
@@ -5241,7 +5678,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "idempotentHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Calculate Moving Average Convergence Divergence (MACD) from candle data. MACD shows trend direction and momentum. Bullish when MACD crosses above signal line, bearish when it crosses below. Histogram shows the difference between MACD and signal.",
         "execution": {
           "taskSupport": "forbidden",
@@ -5308,7 +5748,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "idempotentHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Calculate Stochastic oscillator from candle data. Returns %K (fast line) and %D (signal line) values. %K above %D is bullish, below is bearish. Values above 80 indicate overbought, below 20 indicate oversold.",
         "execution": {
           "taskSupport": "forbidden",
@@ -5370,7 +5813,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "idempotentHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Calculate ADX from candle data. Measures trend strength regardless of direction. ADX > 25 indicates strong trend, < 20 indicates weak/no trend. Returns ADX, +DI (bullish pressure), and -DI (bearish pressure).",
         "execution": {
           "taskSupport": "forbidden",
@@ -5427,7 +5873,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "idempotentHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Calculate CCI from candle data. Measures price deviation from statistical mean. Readings above +100 suggest overbought, below -100 suggest oversold. Useful for identifying cyclical trends in commodities and stocks.",
         "execution": {
           "taskSupport": "forbidden",
@@ -5484,7 +5933,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "idempotentHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Calculate Williams %R from candle data. Momentum indicator similar to Stochastic but inverted scale (-100 to 0). Readings above -20 suggest overbought, below -80 suggest oversold. Useful for identifying potential reversal points.",
         "execution": {
           "taskSupport": "forbidden",
@@ -5541,7 +5993,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "idempotentHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Calculate ROC (Rate of Change) from candle data. Momentum oscillator measuring percentage change between current price and price n periods ago. Positive values indicate upward momentum, negative values indicate downward momentum. Useful for identifying trend strength and potential reversals.",
         "execution": {
           "taskSupport": "forbidden",
@@ -5598,7 +6053,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "idempotentHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Calculate Simple Moving Average (SMA) from candle data. SMA equally weights all prices in the period, providing a smoothed trend line. Common periods: 10 (short-term), 20/50 (medium-term), 200 (long-term trend).",
         "execution": {
           "taskSupport": "forbidden",
@@ -5655,7 +6113,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "idempotentHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Calculate Exponential Moving Average (EMA) from candle data. EMA gives more weight to recent prices, making it more responsive than SMA. Common periods: 9 (short-term), 20 (medium-term), 50/200 (long-term trends).",
         "execution": {
           "taskSupport": "forbidden",
@@ -5712,7 +6173,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "idempotentHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Calculate Ichimoku Cloud (Ichimoku Kinko Hyo) from candle data. Comprehensive trend indicator with 5 components. Returns conversion line (Tenkan-sen), base line (Kijun-sen), leading span A (Senkou Span A), and leading span B (Senkou Span B). Price above cloud is bullish, below is bearish. Cloud color (green/red) indicates future trend direction.",
         "execution": {
           "taskSupport": "forbidden",
@@ -5784,7 +6248,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "idempotentHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Calculate Bollinger Bands from candle data. Returns upper, middle (SMA), and lower bands plus %B (position within bands). Price near upper band suggests overbought, near lower suggests oversold.",
         "execution": {
           "taskSupport": "forbidden",
@@ -5846,7 +6313,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "idempotentHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Calculate ATR from candle data. Measures market volatility by decomposing the entire range of an asset price for a period. Higher ATR indicates higher volatility. Useful for setting stop-losses and position sizing.",
         "execution": {
           "taskSupport": "forbidden",
@@ -5903,7 +6373,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "idempotentHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Calculate Keltner Channels from candle data. Volatility-based envelope indicator similar to Bollinger Bands but uses ATR. Returns middle (EMA), upper, and lower channel values. Price below lower channel suggests oversold, above upper suggests overbought. BB squeeze inside Keltner signals volatility breakout.",
         "execution": {
           "taskSupport": "forbidden",
@@ -5974,7 +6447,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "idempotentHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Calculate Parabolic SAR from candle data. Trend-following indicator that provides potential entry and exit points. SAR below price indicates uptrend, SAR above price indicates downtrend. SAR flips signal trend reversals.",
         "execution": {
           "taskSupport": "forbidden",
@@ -6038,7 +6514,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "idempotentHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Calculate OBV from candle data. Measures buying and selling pressure using volume flow. Rising OBV confirms uptrend, falling OBV confirms downtrend. Divergence between price and OBV can signal reversals.",
         "execution": {
           "taskSupport": "forbidden",
@@ -6090,7 +6569,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "idempotentHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Calculate VWAP from candle data. Represents the average price weighted by volume. Price above VWAP suggests bullish bias, below suggests bearish. Often used as intraday support/resistance level.",
         "execution": {
           "taskSupport": "forbidden",
@@ -6142,7 +6624,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "idempotentHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Calculate MFI (Money Flow Index) from candle data. Volume-weighted RSI that measures buying and selling pressure. Readings above 80 suggest overbought, below 20 suggest oversold. Divergences between MFI and price can signal potential reversals.",
         "execution": {
           "taskSupport": "forbidden",
@@ -6199,7 +6684,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "idempotentHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Calculate Volume Profile from candle data. Divides price range into zones and shows volume distribution at each level. Returns zones with bullish/bearish volume, Point of Control (highest volume zone), and Value Area (70% of volume). Useful for identifying support/resistance levels.",
         "execution": {
           "taskSupport": "forbidden",
@@ -6256,7 +6744,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "idempotentHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Detect candlestick patterns from candle data. Identifies 31 patterns including bullish (Hammer, Engulfing, Morning Star, Marubozu, Harami Cross, etc.), bearish (Shooting Star, Evening Star, Three Black Crows, Marubozu, Harami Cross, etc.), and neutral (Doji). Returns overall bullish/bearish bias and list of detected patterns. Useful for identifying potential reversals and continuation signals.",
         "execution": {
           "taskSupport": "forbidden",
@@ -6308,7 +6799,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "idempotentHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Detect RSI divergences in price data. Identifies bullish divergences (price lower lows, RSI higher lows), bearish divergences (price higher highs, RSI lower highs), hidden bullish (price higher lows, RSI lower lows), and hidden bearish (price lower highs, RSI higher highs). Returns divergences with strength classification (weak/medium/strong).",
         "execution": {
           "taskSupport": "forbidden",
@@ -6367,7 +6861,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "idempotentHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Detect chart patterns in price data. Identifies reversal patterns (Double Top/Bottom, Head & Shoulders) and continuation patterns (Ascending/Descending Triangles, Bull/Bear Flags). Returns patterns with direction, confidence level, and price targets.",
         "execution": {
           "taskSupport": "forbidden",
@@ -6422,7 +6919,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "idempotentHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Detect swing highs and swing lows using Williams Fractal method. A swing high occurs when a bar's high is higher than the surrounding bars. A swing low occurs when a bar's low is lower than the surrounding bars. Useful for identifying support/resistance levels, trend direction, and Fibonacci retracement points.",
         "execution": {
           "taskSupport": "forbidden",
@@ -6480,7 +6980,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "idempotentHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Calculate Fibonacci Retracement levels from swing high/low prices. For uptrend: start=low, end=high. For downtrend: start=high, end=low. Returns key retracement levels (0%, 23.6%, 38.2%, 50%, 61.8%, 78.6%, 100%) plus extension levels (127.2%, 161.8%, 261.8%, 423.6%). Price bouncing at 38.2% or 61.8% suggests support/resistance.",
         "execution": {
           "taskSupport": "forbidden",
@@ -6509,7 +7012,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "idempotentHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Calculate Pivot Points from previous period OHLC data. Supports Standard, Fibonacci, Woodie, Camarilla, and DeMark calculation types. Returns pivot point with support (S1-S3) and resistance (R1-R3) levels. Used to identify potential support/resistance levels for the next trading period.",
         "execution": {
           "taskSupport": "forbidden",
@@ -6558,7 +7064,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Analyze technical indicators for a cryptocurrency product. This tool fetches candle data and calculates indicators server-side, returning only computed values to reduce context usage. Supports 24 indicators across 6 categories: Momentum (RSI, MACD, Stochastic, ADX, CCI, Williams %R, ROC), Trend (SMA, EMA, Ichimoku, PSAR), Volatility (Bollinger Bands, ATR, Keltner), Volume (OBV, MFI, VWAP, Volume Profile), Patterns (Candlestick, RSI Divergence, Chart Patterns, Swing Points), Support/Resistance (Pivot Points, Fibonacci). Pivot Points use daily candles (industry standard). Fibonacci uses Williams Fractal swing detection (industry standard).",
         "execution": {
           "taskSupport": "forbidden",
@@ -6636,7 +7145,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Analyze technical indicators for multiple cryptocurrency products in parallel. Use this instead of multiple single calls when analyzing several products. Returns results for each product with a summary ranking by signal score. Supports the same 24 indicators as analyze_technical_indicators.",
         "execution": {
           "taskSupport": "forbidden",
@@ -6719,7 +7231,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Waits for specific market conditions to be met before returning.
 Monitors real-time ticker data via WebSocket and triggers when
 conditions are satisfied or timeout is reached.
@@ -6832,7 +7347,10 @@ Logic: any (OR), all (AND)",
       },
       {
         "_meta": undefined,
-        "annotations": undefined,
+        "annotations": {
+          "openWorldHint": true,
+          "readOnlyHint": true,
+        },
         "description": "Fetch recent news articles for a trading pair and analyze their sentiment. Returns headlines with individual sentiment scores and an aggregate sentiment direction.",
         "execution": {
           "taskSupport": "forbidden",

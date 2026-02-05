@@ -1,0 +1,20 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`PaymentToolRegistry should register tools with correct annotations 1`] = `
+[
+  {
+    "annotations": {
+      "openWorldHint": true,
+      "readOnlyHint": true,
+    },
+    "name": "list_payment_methods",
+  },
+  {
+    "annotations": {
+      "openWorldHint": true,
+      "readOnlyHint": true,
+    },
+    "name": "get_payment_method",
+  },
+]
+`;

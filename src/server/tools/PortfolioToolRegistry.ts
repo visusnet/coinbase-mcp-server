@@ -8,6 +8,7 @@ import {
   EditPortfolioRequestSchema,
   DeletePortfolioRequestSchema,
 } from '../services/PortfoliosService.request';
+import { DESTRUCTIVE_API, VIEW_API } from './annotations';
 import { ToolRegistry } from './ToolRegistry';
 
 /**
@@ -28,6 +29,7 @@ export class PortfolioToolRegistry extends ToolRegistry {
         title: 'List Portfolios',
         description: 'Get a list of all portfolios',
         inputSchema: ListPortfoliosRequestSchema.shape,
+        annotations: VIEW_API,
       },
       this.portfolios.listPortfolios.bind(this.portfolios),
     );
@@ -38,6 +40,7 @@ export class PortfolioToolRegistry extends ToolRegistry {
         title: 'Create Portfolio',
         description: 'Create a new portfolio',
         inputSchema: CreatePortfolioRequestSchema.shape,
+        annotations: DESTRUCTIVE_API,
       },
       this.portfolios.createPortfolio.bind(this.portfolios),
     );
@@ -48,6 +51,7 @@ export class PortfolioToolRegistry extends ToolRegistry {
         title: 'Get Portfolio',
         description: 'Get details of a specific portfolio',
         inputSchema: GetPortfolioRequestSchema.shape,
+        annotations: VIEW_API,
       },
       this.portfolios.getPortfolio.bind(this.portfolios),
     );
@@ -58,6 +62,7 @@ export class PortfolioToolRegistry extends ToolRegistry {
         title: 'Move Portfolio Funds',
         description: 'Move funds between portfolios',
         inputSchema: MovePortfolioFundsRequestSchema.shape,
+        annotations: DESTRUCTIVE_API,
       },
       this.portfolios.movePortfolioFunds.bind(this.portfolios),
     );
@@ -68,6 +73,7 @@ export class PortfolioToolRegistry extends ToolRegistry {
         title: 'Edit Portfolio',
         description: 'Edit portfolio details (name)',
         inputSchema: EditPortfolioRequestSchema.shape,
+        annotations: DESTRUCTIVE_API,
       },
       this.portfolios.editPortfolio.bind(this.portfolios),
     );
@@ -78,6 +84,7 @@ export class PortfolioToolRegistry extends ToolRegistry {
         title: 'Delete Portfolio',
         description: 'Delete a portfolio',
         inputSchema: DeletePortfolioRequestSchema.shape,
+        annotations: DESTRUCTIVE_API,
       },
       this.portfolios.deletePortfolio.bind(this.portfolios),
     );

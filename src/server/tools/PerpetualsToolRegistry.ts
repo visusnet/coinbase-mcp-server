@@ -6,6 +6,7 @@ import {
   GetPortfolioSummaryRequestSchema,
   GetPortfolioBalanceRequestSchema,
 } from '../services/PerpetualsService.request';
+import { VIEW_API } from './annotations';
 import { ToolRegistry } from './ToolRegistry';
 
 /**
@@ -26,6 +27,7 @@ export class PerpetualsToolRegistry extends ToolRegistry {
         title: 'List Perpetuals Positions',
         description: 'Get all perpetuals positions',
         inputSchema: ListPerpetualsPositionsRequestSchema.shape,
+        annotations: VIEW_API,
       },
       this.perpetuals.listPositions.bind(this.perpetuals),
     );
@@ -36,6 +38,7 @@ export class PerpetualsToolRegistry extends ToolRegistry {
         title: 'Get Perpetuals Position',
         description: 'Get a specific perpetuals position',
         inputSchema: GetPerpetualsPositionRequestSchema.shape,
+        annotations: VIEW_API,
       },
       this.perpetuals.getPosition.bind(this.perpetuals),
     );
@@ -46,6 +49,7 @@ export class PerpetualsToolRegistry extends ToolRegistry {
         title: 'Get Perpetuals Portfolio Summary',
         description: 'Get perpetuals portfolio summary',
         inputSchema: GetPortfolioSummaryRequestSchema.shape,
+        annotations: VIEW_API,
       },
       this.perpetuals.getPortfolioSummary.bind(this.perpetuals),
     );
@@ -56,6 +60,7 @@ export class PerpetualsToolRegistry extends ToolRegistry {
         title: 'Get Perpetuals Portfolio Balance',
         description: 'Get perpetuals portfolio balance',
         inputSchema: GetPortfolioBalanceRequestSchema.shape,
+        annotations: VIEW_API,
       },
       this.perpetuals.getPortfolioBalance.bind(this.perpetuals),
     );

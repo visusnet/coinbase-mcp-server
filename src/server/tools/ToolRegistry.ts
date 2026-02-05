@@ -1,4 +1,5 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { ToolAnnotations } from '@modelcontextprotocol/sdk/types.js';
 import { z, type ZodRawShape } from 'zod';
 
 import { logger } from '../../logger';
@@ -32,6 +33,7 @@ export abstract class ToolRegistry {
       title: string;
       description: string;
       inputSchema: S;
+      annotations?: ToolAnnotations;
     },
     fn: (input: z.output<z.ZodObject<S>>) => unknown,
   ): void {

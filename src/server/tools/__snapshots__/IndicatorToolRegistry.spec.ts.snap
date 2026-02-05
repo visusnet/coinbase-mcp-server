@@ -1,0 +1,174 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`IndicatorToolRegistry should register tools with correct annotations 1`] = `
+[
+  {
+    "annotations": {
+      "idempotentHint": true,
+      "readOnlyHint": true,
+    },
+    "name": "calculate_rsi",
+  },
+  {
+    "annotations": {
+      "idempotentHint": true,
+      "readOnlyHint": true,
+    },
+    "name": "calculate_macd",
+  },
+  {
+    "annotations": {
+      "idempotentHint": true,
+      "readOnlyHint": true,
+    },
+    "name": "calculate_stochastic",
+  },
+  {
+    "annotations": {
+      "idempotentHint": true,
+      "readOnlyHint": true,
+    },
+    "name": "calculate_adx",
+  },
+  {
+    "annotations": {
+      "idempotentHint": true,
+      "readOnlyHint": true,
+    },
+    "name": "calculate_cci",
+  },
+  {
+    "annotations": {
+      "idempotentHint": true,
+      "readOnlyHint": true,
+    },
+    "name": "calculate_williams_r",
+  },
+  {
+    "annotations": {
+      "idempotentHint": true,
+      "readOnlyHint": true,
+    },
+    "name": "calculate_roc",
+  },
+  {
+    "annotations": {
+      "idempotentHint": true,
+      "readOnlyHint": true,
+    },
+    "name": "calculate_sma",
+  },
+  {
+    "annotations": {
+      "idempotentHint": true,
+      "readOnlyHint": true,
+    },
+    "name": "calculate_ema",
+  },
+  {
+    "annotations": {
+      "idempotentHint": true,
+      "readOnlyHint": true,
+    },
+    "name": "calculate_ichimoku_cloud",
+  },
+  {
+    "annotations": {
+      "idempotentHint": true,
+      "readOnlyHint": true,
+    },
+    "name": "calculate_bollinger_bands",
+  },
+  {
+    "annotations": {
+      "idempotentHint": true,
+      "readOnlyHint": true,
+    },
+    "name": "calculate_atr",
+  },
+  {
+    "annotations": {
+      "idempotentHint": true,
+      "readOnlyHint": true,
+    },
+    "name": "calculate_keltner_channels",
+  },
+  {
+    "annotations": {
+      "idempotentHint": true,
+      "readOnlyHint": true,
+    },
+    "name": "calculate_psar",
+  },
+  {
+    "annotations": {
+      "idempotentHint": true,
+      "readOnlyHint": true,
+    },
+    "name": "calculate_obv",
+  },
+  {
+    "annotations": {
+      "idempotentHint": true,
+      "readOnlyHint": true,
+    },
+    "name": "calculate_vwap",
+  },
+  {
+    "annotations": {
+      "idempotentHint": true,
+      "readOnlyHint": true,
+    },
+    "name": "calculate_mfi",
+  },
+  {
+    "annotations": {
+      "idempotentHint": true,
+      "readOnlyHint": true,
+    },
+    "name": "calculate_volume_profile",
+  },
+  {
+    "annotations": {
+      "idempotentHint": true,
+      "readOnlyHint": true,
+    },
+    "name": "detect_candlestick_patterns",
+  },
+  {
+    "annotations": {
+      "idempotentHint": true,
+      "readOnlyHint": true,
+    },
+    "name": "detect_rsi_divergence",
+  },
+  {
+    "annotations": {
+      "idempotentHint": true,
+      "readOnlyHint": true,
+    },
+    "name": "detect_chart_patterns",
+  },
+  {
+    "annotations": {
+      "idempotentHint": true,
+      "readOnlyHint": true,
+    },
+    "name": "detect_swing_points",
+  },
+  {
+    "annotations": {
+      "idempotentHint": true,
+      "readOnlyHint": true,
+    },
+    "name": "calculate_fibonacci_retracement",
+  },
+  {
+    "annotations": {
+      "idempotentHint": true,
+      "readOnlyHint": true,
+    },
+    "name": "calculate_pivot_points",
+  },
+]
+`;

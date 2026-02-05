@@ -1,0 +1,13 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`FeeToolRegistry should register tools with correct annotations 1`] = `
+[
+  {
+    "annotations": {
+      "openWorldHint": true,
+      "readOnlyHint": true,
+    },
+    "name": "get_transaction_summary",
+  },
+]
+`;

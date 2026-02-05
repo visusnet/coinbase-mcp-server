@@ -1,0 +1,27 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ConvertToolRegistry should register tools with correct annotations 1`] = `
+[
+  {
+    "annotations": {
+      "destructiveHint": true,
+      "openWorldHint": true,
+    },
+    "name": "create_convert_quote",
+  },
+  {
+    "annotations": {
+      "destructiveHint": true,
+      "openWorldHint": true,
+    },
+    "name": "commit_convert_trade",
+  },
+  {
+    "annotations": {
+      "openWorldHint": true,
+      "readOnlyHint": true,
+    },
+    "name": "get_convert_trade",
+  },
+]
+`;
