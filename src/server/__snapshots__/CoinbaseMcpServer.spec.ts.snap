@@ -23,6 +23,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
               "description": "Pagination cursor for next page",
               "type": "string",
             },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "limit": {
               "description": "Maximum number of accounts to return",
               "type": "number",
@@ -50,6 +58,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
               "description": "The UUID of the account to retrieve",
               "type": "string",
             },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
           },
           "required": [
             "accountUuid",
@@ -74,6 +90,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
           "properties": {
             "cursor": {
               "description": "Pagination cursor for next page",
+              "type": "string",
+            },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
               "type": "string",
             },
             "limit": {
@@ -113,6 +137,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "orderId": {
               "description": "The ID of the order to retrieve",
               "type": "string",
@@ -141,6 +173,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
           "properties": {
             "clientOrderId": {
               "description": "Unique client order ID",
+              "type": "string",
+            },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
               "type": "string",
             },
             "orderConfiguration": {
@@ -413,6 +453,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "orderIds": {
               "description": "Array of order IDs to cancel",
               "items": {
@@ -444,6 +492,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
           "properties": {
             "cursor": {
               "description": "Pagination cursor for next page",
+              "type": "string",
+            },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
               "type": "string",
             },
             "limit": {
@@ -483,6 +539,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "orderId": {
               "description": "The ID of the order to edit",
               "type": "string",
@@ -519,6 +583,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "orderId": {
               "description": "The ID of the order to preview editing",
               "type": "string",
@@ -555,6 +627,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "orderConfiguration": {
               "additionalProperties": false,
               "description": "Order configuration",
@@ -828,6 +908,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
               "description": "Unique client order ID",
               "type": "string",
             },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "productId": {
               "description": "Trading pair (e.g., BTC-USD)",
               "type": "string",
@@ -863,6 +951,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
               "description": "Pagination cursor for next page",
               "type": "string",
             },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "limit": {
               "description": "Maximum number of products to return",
               "type": "number",
@@ -895,6 +991,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "getTradabilityStatus": {
               "description": "Include tradability status in response",
               "type": "boolean",
@@ -925,6 +1029,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "limit": {
               "description": "Maximum number of order book levels to return",
               "type": "number",
@@ -958,6 +1070,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
             "end": {
               "$ref": "#/properties/start",
               "description": "End time (ISO 8601 format)",
+            },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
             },
             "granularity": {
               "description": "Candle granularity (e.g., ONE_MINUTE, FIVE_MINUTE, ONE_HOUR, ONE_DAY)",
@@ -1014,6 +1134,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
               "$ref": "#/properties/start",
               "description": "End time (ISO 8601 format)",
             },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "granularity": {
               "description": "Candle granularity (e.g., ONE_MINUTE, FIVE_MINUTE, ONE_HOUR, ONE_DAY)",
               "enum": [
@@ -1067,6 +1195,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "limit": {
               "description": "Maximum number of trades to return",
               "type": "number",
@@ -1098,6 +1234,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "productIds": {
               "description": "Product IDs to get bid/ask for (optional, returns all if omitted)",
               "items": {
@@ -1125,6 +1269,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "includeOrderBook": {
               "description": "Include order book levels per asset (default: false)",
               "type": "boolean",
@@ -1170,6 +1322,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
               ],
               "type": "string",
             },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "productType": {
               "description": "Product type for fee calculation (SPOT or FUTURE)",
               "enum": [
@@ -1210,7 +1370,17 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         },
         "inputSchema": {
           "$schema": "http://json-schema.org/draft-07/schema#",
-          "properties": {},
+          "additionalProperties": false,
+          "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
+          },
           "type": "object",
         },
         "name": "list_portfolios",
@@ -1229,6 +1399,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "name": {
               "description": "Name of the portfolio",
               "type": "string",
@@ -1255,6 +1433,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "portfolioUuid": {
               "description": "The UUID of the portfolio",
               "type": "string",
@@ -1281,6 +1467,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "funds": {
               "additionalProperties": false,
               "description": "Fund movement details (amount, currency)",
@@ -1332,6 +1526,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "name": {
               "description": "New name for the portfolio",
               "type": "string",
@@ -1363,6 +1565,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "portfolioUuid": {
               "description": "The UUID of the portfolio to delete",
               "type": "string",
@@ -1392,6 +1602,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
             "amount": {
               "description": "Amount to convert",
               "type": "number",
+            },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
             },
             "fromAccount": {
               "description": "Source account UUID",
@@ -1425,6 +1643,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "fromAccount": {
               "description": "Source account UUID",
               "type": "string",
@@ -1461,6 +1687,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "fromAccount": {
               "description": "Source account UUID",
               "type": "string",
@@ -1495,7 +1729,17 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         },
         "inputSchema": {
           "$schema": "http://json-schema.org/draft-07/schema#",
-          "properties": {},
+          "additionalProperties": false,
+          "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
+          },
           "type": "object",
         },
         "name": "get_server_time",
@@ -1514,6 +1758,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "productId": {
               "description": "Trading pair (e.g., BTC-USD)",
               "type": "string",
@@ -1540,6 +1792,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "limit": {
               "description": "Maximum number of products to return",
               "type": "number",
@@ -1567,6 +1827,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "limit": {
               "description": "Maximum number of order book levels to return",
               "type": "number",
@@ -1600,6 +1868,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
             "end": {
               "$ref": "#/properties/start",
               "description": "End time (ISO 8601 format)",
+            },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
             },
             "granularity": {
               "description": "Candle granularity (e.g., ONE_MINUTE, FIVE_MINUTE, ONE_HOUR, ONE_DAY)",
@@ -1652,6 +1928,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "limit": {
               "description": "Maximum number of trades to return",
               "type": "number",
@@ -1681,7 +1965,17 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         },
         "inputSchema": {
           "$schema": "http://json-schema.org/draft-07/schema#",
-          "properties": {},
+          "additionalProperties": false,
+          "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
+          },
           "type": "object",
         },
         "name": "list_payment_methods",
@@ -1700,6 +1994,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "paymentMethodId": {
               "description": "The ID of the payment method",
               "type": "string",
@@ -1724,7 +2026,17 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         },
         "inputSchema": {
           "$schema": "http://json-schema.org/draft-07/schema#",
-          "properties": {},
+          "additionalProperties": false,
+          "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
+          },
           "type": "object",
         },
         "name": "list_futures_positions",
@@ -1743,6 +2055,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "productId": {
               "description": "Trading pair (e.g., BTC-USD)",
               "type": "string",
@@ -1767,7 +2087,17 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         },
         "inputSchema": {
           "$schema": "http://json-schema.org/draft-07/schema#",
-          "properties": {},
+          "additionalProperties": false,
+          "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
+          },
           "type": "object",
         },
         "name": "get_futures_balance_summary",
@@ -1784,7 +2114,17 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         },
         "inputSchema": {
           "$schema": "http://json-schema.org/draft-07/schema#",
-          "properties": {},
+          "additionalProperties": false,
+          "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
+          },
           "type": "object",
         },
         "name": "list_futures_sweeps",
@@ -1803,6 +2143,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "portfolioUuid": {
               "description": "Portfolio UUID",
               "type": "string",
@@ -1829,6 +2177,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "portfolioUuid": {
               "description": "Portfolio UUID",
               "type": "string",
@@ -1860,6 +2216,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "portfolioUuid": {
               "description": "Portfolio UUID",
               "type": "string",
@@ -1886,6 +2250,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "portfolioUuid": {
               "description": "Portfolio UUID",
               "type": "string",
@@ -1910,7 +2282,17 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
         },
         "inputSchema": {
           "$schema": "http://json-schema.org/draft-07/schema#",
-          "properties": {},
+          "additionalProperties": false,
+          "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
+          },
           "type": "object",
         },
         "name": "get_api_key_permissions",
@@ -1960,6 +2342,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
               },
               "minItems": 2,
               "type": "array",
+            },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
             },
             "period": {
               "description": "Number of candles to analyze (default: 14). Lower values (7-9) react faster but produce more false signals. Higher values (21-25) are slower but more reliable.",
@@ -2024,6 +2414,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
               "description": "Fast EMA period (default: 12)",
               "minimum": 2,
               "type": "integer",
+            },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
             },
             "signalPeriod": {
               "description": "Signal line period (default: 9)",
@@ -2094,6 +2492,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
               "minimum": 1,
               "type": "integer",
             },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "kPeriod": {
               "description": "Period for %K line calculation (default: 14). Number of periods to use for the raw stochastic calculation.",
               "minimum": 1,
@@ -2152,6 +2558,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
               },
               "minItems": 2,
               "type": "array",
+            },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
             },
             "period": {
               "description": "Period for ADX calculation (default: 14). Shorter periods give faster signals but more noise.",
@@ -2212,6 +2626,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
               "minItems": 2,
               "type": "array",
             },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "period": {
               "description": "Period for CCI calculation (default: 20)",
               "minimum": 1,
@@ -2270,6 +2692,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
               },
               "minItems": 2,
               "type": "array",
+            },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
             },
             "period": {
               "description": "Period for Williams %R calculation (default: 14)",
@@ -2330,6 +2760,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
               "minItems": 2,
               "type": "array",
             },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "period": {
               "description": "Period for ROC calculation (default: 12)",
               "minimum": 1,
@@ -2389,6 +2827,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
               "minItems": 1,
               "type": "array",
             },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "period": {
               "description": "Number of candles for SMA calculation (default: 20). Common values: 10, 20, 50, 100, 200.",
               "minimum": 1,
@@ -2447,6 +2893,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
               },
               "minItems": 1,
               "type": "array",
+            },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
             },
             "period": {
               "description": "Number of candles for EMA calculation (default: 20). Common values: 9, 12, 20, 26, 50, 200.",
@@ -2522,6 +2976,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
               "minimum": 1,
               "type": "integer",
             },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "spanPeriod": {
               "description": "Senkou Span B period (default: 52)",
               "minimum": 1,
@@ -2580,6 +3042,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
               },
               "minItems": 2,
               "type": "array",
+            },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
             },
             "period": {
               "description": "SMA period for middle band (default: 20)",
@@ -2645,6 +3115,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
               "minItems": 2,
               "type": "array",
             },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "period": {
               "description": "Number of periods for ATR calculation (default: 14). Shorter periods (e.g., 7) react faster to volatility changes, longer periods (e.g., 21) provide smoother readings.",
               "minimum": 1,
@@ -2708,6 +3186,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
               },
               "minItems": 20,
               "type": "array",
+            },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
             },
             "maPeriod": {
               "description": "Moving average period (default: 20)",
@@ -2777,6 +3263,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
               "minItems": 2,
               "type": "array",
             },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "max": {
               "description": "Maximum acceleration factor (default: 0.2)",
               "maximum": 1,
@@ -2843,6 +3337,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
               "minItems": 2,
               "type": "array",
             },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
           },
           "required": [
             "candles",
@@ -2897,6 +3399,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
               "minItems": 1,
               "type": "array",
             },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
           },
           "required": [
             "candles",
@@ -2950,6 +3460,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
               },
               "minItems": 2,
               "type": "array",
+            },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
             },
             "period": {
               "description": "Period for MFI calculation (default: 14)",
@@ -3010,6 +3528,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
               "minItems": 1,
               "type": "array",
             },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "noOfBars": {
               "description": "Number of price zones (default: 12)",
               "exclusiveMinimum": 0,
@@ -3069,6 +3595,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
               "minItems": 1,
               "type": "array",
             },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
           },
           "required": [
             "candles",
@@ -3121,6 +3655,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
                 "type": "object",
               },
               "type": "array",
+            },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
             },
             "lookbackPeriod": {
               "description": "Lookback period for peak/trough detection (default: 14)",
@@ -3183,6 +3725,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
               },
               "type": "array",
             },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "lookbackPeriod": {
               "description": "Lookback period for pattern detection (default: 50)",
               "type": "number",
@@ -3241,6 +3791,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
               "minItems": 5,
               "type": "array",
             },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "lookback": {
               "description": "Number of bars on each side to compare (default: 2, resulting in 5-bar pattern)",
               "maximum": 10,
@@ -3273,6 +3831,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
               "description": "End price (high for uptrend, low for downtrend)",
               "type": "number",
             },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "start": {
               "description": "Start price (low for uptrend, high for downtrend)",
               "type": "number",
@@ -3303,6 +3869,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
             "close": {
               "description": "Previous period closing price",
               "type": "number",
+            },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
             },
             "high": {
               "description": "Previous period high price",
@@ -3356,6 +3930,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
               "maximum": 300,
               "minimum": 5,
               "type": "integer",
+            },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
             },
             "granularity": {
               "description": "Candle granularity. Common choices: FIFTEEN_MINUTE (intraday), ONE_HOUR (short-term), ONE_DAY (long-term)",
@@ -3436,6 +4018,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
               "maximum": 300,
               "minimum": 5,
               "type": "integer",
+            },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
             },
             "granularity": {
               "description": "Candle granularity for all products. Common choices: FIFTEEN_MINUTE (intraday), ONE_HOUR (short-term), ONE_DAY (long-term)",
@@ -3528,6 +4118,14 @@ Logic: any (OR), all (AND)",
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "subscriptions": {
               "description": "Products and conditions to monitor",
               "items": {
@@ -3631,6 +4229,14 @@ Logic: any (OR), all (AND)",
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "limit": {
               "default": 10,
               "description": "Maximum number of articles to fetch",
@@ -3678,6 +4284,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
               "description": "Pagination cursor for next page",
               "type": "string",
             },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "limit": {
               "description": "Maximum number of accounts to return",
               "type": "number",
@@ -3706,6 +4320,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
               "description": "The UUID of the account to retrieve",
               "type": "string",
             },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
           },
           "required": [
             "accountUuid",
@@ -3731,6 +4353,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
           "properties": {
             "cursor": {
               "description": "Pagination cursor for next page",
+              "type": "string",
+            },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
               "type": "string",
             },
             "limit": {
@@ -3771,6 +4401,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "orderId": {
               "description": "The ID of the order to retrieve",
               "type": "string",
@@ -3800,6 +4438,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
           "properties": {
             "clientOrderId": {
               "description": "Unique client order ID",
+              "type": "string",
+            },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
               "type": "string",
             },
             "orderConfiguration": {
@@ -4073,6 +4719,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "orderIds": {
               "description": "Array of order IDs to cancel",
               "items": {
@@ -4105,6 +4759,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
           "properties": {
             "cursor": {
               "description": "Pagination cursor for next page",
+              "type": "string",
+            },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
               "type": "string",
             },
             "limit": {
@@ -4145,6 +4807,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "orderId": {
               "description": "The ID of the order to edit",
               "type": "string",
@@ -4182,6 +4852,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "orderId": {
               "description": "The ID of the order to preview editing",
               "type": "string",
@@ -4219,6 +4897,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "orderConfiguration": {
               "additionalProperties": false,
               "description": "Order configuration",
@@ -4493,6 +5179,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
               "description": "Unique client order ID",
               "type": "string",
             },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "productId": {
               "description": "Trading pair (e.g., BTC-USD)",
               "type": "string",
@@ -4529,6 +5223,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
               "description": "Pagination cursor for next page",
               "type": "string",
             },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "limit": {
               "description": "Maximum number of products to return",
               "type": "number",
@@ -4562,6 +5264,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "getTradabilityStatus": {
               "description": "Include tradability status in response",
               "type": "boolean",
@@ -4593,6 +5303,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "limit": {
               "description": "Maximum number of order book levels to return",
               "type": "number",
@@ -4627,6 +5345,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
             "end": {
               "$ref": "#/properties/start",
               "description": "End time (ISO 8601 format)",
+            },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
             },
             "granularity": {
               "description": "Candle granularity (e.g., ONE_MINUTE, FIVE_MINUTE, ONE_HOUR, ONE_DAY)",
@@ -4684,6 +5410,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
               "$ref": "#/properties/start",
               "description": "End time (ISO 8601 format)",
             },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "granularity": {
               "description": "Candle granularity (e.g., ONE_MINUTE, FIVE_MINUTE, ONE_HOUR, ONE_DAY)",
               "enum": [
@@ -4738,6 +5472,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "limit": {
               "description": "Maximum number of trades to return",
               "type": "number",
@@ -4770,6 +5512,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "productIds": {
               "description": "Product IDs to get bid/ask for (optional, returns all if omitted)",
               "items": {
@@ -4798,6 +5548,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "includeOrderBook": {
               "description": "Include order book levels per asset (default: false)",
               "type": "boolean",
@@ -4844,6 +5602,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
               ],
               "type": "string",
             },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "productType": {
               "description": "Product type for fee calculation (SPOT or FUTURE)",
               "enum": [
@@ -4885,7 +5651,17 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
         },
         "inputSchema": {
           "$schema": "http://json-schema.org/draft-07/schema#",
-          "properties": {},
+          "additionalProperties": false,
+          "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
+          },
           "type": "object",
         },
         "name": "list_portfolios",
@@ -4905,6 +5681,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "name": {
               "description": "Name of the portfolio",
               "type": "string",
@@ -4932,6 +5716,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "portfolioUuid": {
               "description": "The UUID of the portfolio",
               "type": "string",
@@ -4959,6 +5751,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "funds": {
               "additionalProperties": false,
               "description": "Fund movement details (amount, currency)",
@@ -5011,6 +5811,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "name": {
               "description": "New name for the portfolio",
               "type": "string",
@@ -5043,6 +5851,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "portfolioUuid": {
               "description": "The UUID of the portfolio to delete",
               "type": "string",
@@ -5073,6 +5889,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
             "amount": {
               "description": "Amount to convert",
               "type": "number",
+            },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
             },
             "fromAccount": {
               "description": "Source account UUID",
@@ -5107,6 +5931,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "fromAccount": {
               "description": "Source account UUID",
               "type": "string",
@@ -5144,6 +5976,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "fromAccount": {
               "description": "Source account UUID",
               "type": "string",
@@ -5179,7 +6019,17 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
         },
         "inputSchema": {
           "$schema": "http://json-schema.org/draft-07/schema#",
-          "properties": {},
+          "additionalProperties": false,
+          "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
+          },
           "type": "object",
         },
         "name": "get_server_time",
@@ -5199,6 +6049,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "productId": {
               "description": "Trading pair (e.g., BTC-USD)",
               "type": "string",
@@ -5226,6 +6084,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "limit": {
               "description": "Maximum number of products to return",
               "type": "number",
@@ -5254,6 +6120,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "limit": {
               "description": "Maximum number of order book levels to return",
               "type": "number",
@@ -5288,6 +6162,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
             "end": {
               "$ref": "#/properties/start",
               "description": "End time (ISO 8601 format)",
+            },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
             },
             "granularity": {
               "description": "Candle granularity (e.g., ONE_MINUTE, FIVE_MINUTE, ONE_HOUR, ONE_DAY)",
@@ -5341,6 +6223,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "limit": {
               "description": "Maximum number of trades to return",
               "type": "number",
@@ -5371,7 +6261,17 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
         },
         "inputSchema": {
           "$schema": "http://json-schema.org/draft-07/schema#",
-          "properties": {},
+          "additionalProperties": false,
+          "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
+          },
           "type": "object",
         },
         "name": "list_payment_methods",
@@ -5391,6 +6291,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "paymentMethodId": {
               "description": "The ID of the payment method",
               "type": "string",
@@ -5416,7 +6324,17 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
         },
         "inputSchema": {
           "$schema": "http://json-schema.org/draft-07/schema#",
-          "properties": {},
+          "additionalProperties": false,
+          "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
+          },
           "type": "object",
         },
         "name": "list_futures_positions",
@@ -5436,6 +6354,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "productId": {
               "description": "Trading pair (e.g., BTC-USD)",
               "type": "string",
@@ -5461,7 +6387,17 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
         },
         "inputSchema": {
           "$schema": "http://json-schema.org/draft-07/schema#",
-          "properties": {},
+          "additionalProperties": false,
+          "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
+          },
           "type": "object",
         },
         "name": "get_futures_balance_summary",
@@ -5479,7 +6415,17 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
         },
         "inputSchema": {
           "$schema": "http://json-schema.org/draft-07/schema#",
-          "properties": {},
+          "additionalProperties": false,
+          "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
+          },
           "type": "object",
         },
         "name": "list_futures_sweeps",
@@ -5499,6 +6445,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "portfolioUuid": {
               "description": "Portfolio UUID",
               "type": "string",
@@ -5526,6 +6480,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "portfolioUuid": {
               "description": "Portfolio UUID",
               "type": "string",
@@ -5558,6 +6520,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "portfolioUuid": {
               "description": "Portfolio UUID",
               "type": "string",
@@ -5585,6 +6555,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "portfolioUuid": {
               "description": "Portfolio UUID",
               "type": "string",
@@ -5610,7 +6588,17 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
         },
         "inputSchema": {
           "$schema": "http://json-schema.org/draft-07/schema#",
-          "properties": {},
+          "additionalProperties": false,
+          "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
+          },
           "type": "object",
         },
         "name": "get_api_key_permissions",
@@ -5661,6 +6649,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
               },
               "minItems": 2,
               "type": "array",
+            },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
             },
             "period": {
               "description": "Number of candles to analyze (default: 14). Lower values (7-9) react faster but produce more false signals. Higher values (21-25) are slower but more reliable.",
@@ -5726,6 +6722,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
               "description": "Fast EMA period (default: 12)",
               "minimum": 2,
               "type": "integer",
+            },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
             },
             "signalPeriod": {
               "description": "Signal line period (default: 9)",
@@ -5797,6 +6801,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
               "minimum": 1,
               "type": "integer",
             },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "kPeriod": {
               "description": "Period for %K line calculation (default: 14). Number of periods to use for the raw stochastic calculation.",
               "minimum": 1,
@@ -5856,6 +6868,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
               },
               "minItems": 2,
               "type": "array",
+            },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
             },
             "period": {
               "description": "Period for ADX calculation (default: 14). Shorter periods give faster signals but more noise.",
@@ -5917,6 +6937,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
               "minItems": 2,
               "type": "array",
             },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "period": {
               "description": "Period for CCI calculation (default: 20)",
               "minimum": 1,
@@ -5976,6 +7004,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
               },
               "minItems": 2,
               "type": "array",
+            },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
             },
             "period": {
               "description": "Period for Williams %R calculation (default: 14)",
@@ -6037,6 +7073,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
               "minItems": 2,
               "type": "array",
             },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "period": {
               "description": "Period for ROC calculation (default: 12)",
               "minimum": 1,
@@ -6097,6 +7141,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
               "minItems": 1,
               "type": "array",
             },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "period": {
               "description": "Number of candles for SMA calculation (default: 20). Common values: 10, 20, 50, 100, 200.",
               "minimum": 1,
@@ -6156,6 +7208,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
               },
               "minItems": 1,
               "type": "array",
+            },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
             },
             "period": {
               "description": "Number of candles for EMA calculation (default: 20). Common values: 9, 12, 20, 26, 50, 200.",
@@ -6232,6 +7292,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
               "minimum": 1,
               "type": "integer",
             },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "spanPeriod": {
               "description": "Senkou Span B period (default: 52)",
               "minimum": 1,
@@ -6291,6 +7359,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
               },
               "minItems": 2,
               "type": "array",
+            },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
             },
             "period": {
               "description": "SMA period for middle band (default: 20)",
@@ -6357,6 +7433,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
               "minItems": 2,
               "type": "array",
             },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "period": {
               "description": "Number of periods for ATR calculation (default: 14). Shorter periods (e.g., 7) react faster to volatility changes, longer periods (e.g., 21) provide smoother readings.",
               "minimum": 1,
@@ -6421,6 +7505,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
               },
               "minItems": 20,
               "type": "array",
+            },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
             },
             "maPeriod": {
               "description": "Moving average period (default: 20)",
@@ -6491,6 +7583,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
               "minItems": 2,
               "type": "array",
             },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "max": {
               "description": "Maximum acceleration factor (default: 0.2)",
               "maximum": 1,
@@ -6558,6 +7658,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
               "minItems": 2,
               "type": "array",
             },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
           },
           "required": [
             "candles",
@@ -6613,6 +7721,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
               "minItems": 1,
               "type": "array",
             },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
           },
           "required": [
             "candles",
@@ -6667,6 +7783,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
               },
               "minItems": 2,
               "type": "array",
+            },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
             },
             "period": {
               "description": "Period for MFI calculation (default: 14)",
@@ -6728,6 +7852,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
               "minItems": 1,
               "type": "array",
             },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "noOfBars": {
               "description": "Number of price zones (default: 12)",
               "exclusiveMinimum": 0,
@@ -6788,6 +7920,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
               "minItems": 1,
               "type": "array",
             },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
           },
           "required": [
             "candles",
@@ -6841,6 +7981,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
                 "type": "object",
               },
               "type": "array",
+            },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
             },
             "lookbackPeriod": {
               "description": "Lookback period for peak/trough detection (default: 14)",
@@ -6904,6 +8052,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
               },
               "type": "array",
             },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "lookbackPeriod": {
               "description": "Lookback period for pattern detection (default: 50)",
               "type": "number",
@@ -6963,6 +8119,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
               "minItems": 5,
               "type": "array",
             },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "lookback": {
               "description": "Number of bars on each side to compare (default: 2, resulting in 5-bar pattern)",
               "maximum": 10,
@@ -6996,6 +8160,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
               "description": "End price (high for uptrend, low for downtrend)",
               "type": "number",
             },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "start": {
               "description": "Start price (low for uptrend, high for downtrend)",
               "type": "number",
@@ -7027,6 +8199,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
             "close": {
               "description": "Previous period closing price",
               "type": "number",
+            },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
             },
             "high": {
               "description": "Previous period high price",
@@ -7081,6 +8261,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
               "maximum": 300,
               "minimum": 5,
               "type": "integer",
+            },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
             },
             "granularity": {
               "description": "Candle granularity. Common choices: FIFTEEN_MINUTE (intraday), ONE_HOUR (short-term), ONE_DAY (long-term)",
@@ -7162,6 +8350,14 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
               "maximum": 300,
               "minimum": 5,
               "type": "integer",
+            },
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
             },
             "granularity": {
               "description": "Candle granularity for all products. Common choices: FIFTEEN_MINUTE (intraday), ONE_HOUR (short-term), ONE_DAY (long-term)",
@@ -7255,6 +8451,14 @@ Logic: any (OR), all (AND)",
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "subscriptions": {
               "description": "Products and conditions to monitor",
               "items": {
@@ -7359,6 +8563,14 @@ Logic: any (OR), all (AND)",
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "format": {
+              "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
+              "enum": [
+                "json",
+                "toon",
+              ],
+              "type": "string",
+            },
             "limit": {
               "default": 10,
               "description": "Maximum number of articles to fetch",
