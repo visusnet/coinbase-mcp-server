@@ -42,6 +42,23 @@ import { AnalysisToolRegistry } from './tools/AnalysisToolRegistry';
 import { MarketEventToolRegistry } from './tools/MarketEventToolRegistry';
 import { NewsToolRegistry } from './tools/NewsToolRegistry';
 
+const SERVER_INSTRUCTIONS = `Cryptocurrency trading server for Coinbase Advanced Trade API.
+
+WHEN TO USE THIS SERVER:
+- Portfolio: "what's my balance", "show my accounts", "list portfolios"
+- Trading: "buy 0.1 BTC", "place a limit order", "cancel my orders"
+- Market Data: "BTC price", "show ETH candles", "order book for SOL"
+- Analysis: "analyze BTC with RSI and MACD", "detect chart patterns"
+- Sentiment: "news sentiment for BTC", "check ETH headlines"
+- Events: "alert me when BTC drops below 90000"
+
+NOT FOR THIS SERVER:
+- General web search or browsing websites
+- News unrelated to specific trading pairs
+- External wallet transfers (on-chain transactions)
+- Other exchanges (Binance, Kraken, etc.)
+- DeFi, NFTs, or on-chain operations`;
+
 export class CoinbaseMcpServer {
   private readonly app: Express;
   private readonly client: CoinbaseAdvTradeClient;
@@ -234,6 +251,7 @@ BEST PRACTICES:
           tools: {},
           prompts: {},
         },
+        instructions: SERVER_INSTRUCTIONS,
       },
     );
     this.registerToolsForServer(server);
