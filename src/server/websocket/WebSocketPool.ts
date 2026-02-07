@@ -1,5 +1,6 @@
 import { logger } from '../../logger';
 import {
+  isCandlesMessage,
   isErrorMessage,
   isHeartbeatsMessage,
   isSubscriptionsMessage,
@@ -13,6 +14,8 @@ import {
   RECONNECT_BASE_DELAY_MS,
 } from './WebSocketPool.constants';
 import type {
+  CandleCallback,
+  Channel,
   DisconnectCallback,
   ReconnectCallback,
   Subscription,
@@ -29,12 +32,15 @@ function generateSubscriptionId(): string {
 
 /**
  * WebSocket connection pool for Coinbase Advanced Trade WebSocket.
- * Manages authenticated connections and subscriptions to ticker data.
+ * Manages authenticated connections and subscriptions to ticker and candle data.
  */
 export class WebSocketPool {
   private connection: WebSocket | null = null;
   private connectionPromise: Promise<void> | null = null;
-  private readonly subscribedProducts: Set<string> = new Set();
+  private readonly subscribedProducts: Record<Channel, Set<string>> = {
+    ticker: new Set(),
+    candles: new Set(),
+  };
   private reconnectAttempts = 0;
   private readonly subscriptions: Map<string, Subscription> = new Map();
   private isReconnecting = false;
@@ -65,7 +71,7 @@ export class WebSocketPool {
    * @param onDisconnect - Optional callback invoked when connection permanently fails after max retries
    * @returns Promise that resolves with subscription ID when ready to receive tickers
    */
-  public async subscribe(
+  public async subscribeToTicker(
     productIds: string[],
     callback: TickerCallback,
     onReconnect?: ReconnectCallback,
@@ -74,6 +80,7 @@ export class WebSocketPool {
     const subscriptionId = generateSubscriptionId();
 
     this.subscriptions.set(subscriptionId, {
+      channel: 'ticker',
       productIds,
       callback,
       onReconnect,
@@ -81,18 +88,59 @@ export class WebSocketPool {
     });
 
     await this.ensureConnection();
-    this.updateSubscribedProducts();
+    this.updateSubscribedProducts('ticker');
+
+    return subscriptionId;
+  }
+
+  /**
+   * Subscribes to candle updates for the given product IDs.
+   * Candles are delivered as 5-minute OHLCV data.
+   *
+   * @param productIds - Array of product IDs to subscribe to (e.g., ["BTC-EUR", "ETH-EUR"])
+   * @param callback - Function called when candle updates are received
+   * @param onReconnect - Optional callback invoked when connection is re-established after disconnect
+   * @param onDisconnect - Optional callback invoked when connection permanently fails after max retries
+   * @returns Promise that resolves with subscription ID when ready to receive candles
+   */
+  public async subscribeToCandles(
+    productIds: string[],
+    callback: CandleCallback,
+    onReconnect?: ReconnectCallback,
+    onDisconnect?: DisconnectCallback,
+  ): Promise<string> {
+    const subscriptionId = generateSubscriptionId();
+
+    this.subscriptions.set(subscriptionId, {
+      channel: 'candles',
+      productIds,
+      callback,
+      onReconnect,
+      onDisconnect,
+    });
+
+    await this.ensureConnection();
+    this.updateSubscribedProducts('candles');
 
     return subscriptionId;
   }
 
   /**
    * Unsubscribes from ticker updates.
-   * @param subscriptionId - The subscription ID returned by subscribe()
+   * @param subscriptionId - The subscription ID returned by subscribeToTicker()
    */
-  public unsubscribe(subscriptionId: string): void {
+  public unsubscribeFromTicker(subscriptionId: string): void {
     this.subscriptions.delete(subscriptionId);
-    this.updateSubscribedProducts();
+    this.updateSubscribedProducts('ticker');
+  }
+
+  /**
+   * Unsubscribes from candle updates.
+   * @param subscriptionId - The subscription ID returned by subscribeToCandles()
+   */
+  public unsubscribeFromCandles(subscriptionId: string): void {
+    this.subscriptions.delete(subscriptionId);
+    this.updateSubscribedProducts('candles');
   }
 
   /**
@@ -120,12 +168,12 @@ export class WebSocketPool {
    */
   private createConnection(): Promise<void> {
     return new Promise((resolve, reject) => {
-      logger.websocket.debug(`Connecting to ${COINBASE_WS_URL}`);
+      logger.streaming.debug(`Connecting to ${COINBASE_WS_URL}`);
       this.connection = new WebSocket(COINBASE_WS_URL);
       let errorOccurred = false;
 
       this.connection.addEventListener('open', () => {
-        logger.websocket.debug('Connection opened');
+        logger.streaming.debug('Connection opened');
         this.reconnectAttempts = 0;
         this.isReconnecting = false;
         // Subscribe to heartbeats immediately (must be within 5 seconds per Coinbase docs)
@@ -140,19 +188,19 @@ export class WebSocketPool {
             JSON.parse(event.data as string),
           );
         } catch (error) {
-          logger.websocket.error({ err: error }, 'Message parse error');
-          logger.websocket.error({ data: event.data }, 'Raw message');
+          logger.streaming.error({ err: error }, 'Message parse error');
+          logger.streaming.error({ data: event.data }, 'Raw message');
           return;
         }
         try {
           this.handleMessage(message);
         } catch (error) {
-          logger.websocket.error({ err: error }, 'Message handler error');
+          logger.streaming.error({ err: error }, 'Message handler error');
         }
       });
 
       this.connection.addEventListener('close', (event) => {
-        logger.websocket.debug({ event }, 'Connection closed');
+        logger.streaming.debug({ event }, 'Connection closed');
         // Skip reconnect if the error handler already rejected the promise.
         // When called from reconnect(), the rejection triggers a retry via its catch block.
         // When called from ensureConnection(), the error propagates to the caller.
@@ -162,7 +210,7 @@ export class WebSocketPool {
       });
 
       this.connection.addEventListener('error', (event) => {
-        logger.websocket.error({ event }, 'Connection error');
+        logger.streaming.error({ event }, 'Connection error');
         errorOccurred = true;
         reject(new Error('WebSocket connection failed'));
       });
@@ -170,67 +218,73 @@ export class WebSocketPool {
   }
 
   /**
-   * Updates the set of subscribed products based on all active subscriptions.
+   * Updates the set of subscribed products for a channel based on active subscriptions.
    */
-  private updateSubscribedProducts(): void {
+  private updateSubscribedProducts(channel: Channel): void {
+    const subscribedProducts = this.subscribedProducts[channel];
     const newProducts = new Set<string>();
 
     for (const subscription of this.subscriptions.values()) {
-      for (const productId of subscription.productIds) {
-        newProducts.add(productId);
+      if (subscription.channel === channel) {
+        for (const productId of subscription.productIds) {
+          newProducts.add(productId);
+        }
       }
     }
 
     // Find products to subscribe to
     const toSubscribe: string[] = [];
     for (const productId of newProducts) {
-      if (!this.subscribedProducts.has(productId)) {
+      if (!subscribedProducts.has(productId)) {
         toSubscribe.push(productId);
-        this.subscribedProducts.add(productId);
+        subscribedProducts.add(productId);
       }
     }
 
     // Find products to unsubscribe from
     const toUnsubscribe: string[] = [];
-    for (const productId of this.subscribedProducts) {
+    for (const productId of subscribedProducts) {
       if (!newProducts.has(productId)) {
         toUnsubscribe.push(productId);
-        this.subscribedProducts.delete(productId);
+        subscribedProducts.delete(productId);
       }
     }
 
     if (toSubscribe.length > 0) {
-      this.sendSubscribe(toSubscribe);
+      this.sendChannelSubscribe(channel, toSubscribe);
     }
 
     if (toUnsubscribe.length > 0) {
-      this.sendUnsubscribe(toUnsubscribe);
+      this.sendChannelUnsubscribe(channel, toUnsubscribe);
     }
   }
 
   /**
-   * Sends a subscribe message to Coinbase WebSocket.
+   * Sends a subscribe message to Coinbase WebSocket for a specific channel.
    */
-  private sendSubscribe(productIds: string[]): void {
+  private sendChannelSubscribe(channel: Channel, productIds: string[]): void {
     if (!this.connection || this.connection.readyState !== WebSocket.OPEN) {
-      logger.websocket.warn('Cannot send subscribe - connection not open');
+      logger.streaming.warn('Cannot send subscribe - connection not open');
       return;
     }
 
     const message = {
       type: 'subscribe',
       product_ids: productIds,
-      channel: 'ticker',
+      channel,
       jwt: this.credentials.generateWebSocketJwt(),
     };
-    logger.websocket.debug({ productIds }, 'Subscribing to ticker channel');
+    logger.streaming.debug(
+      { productIds, channel },
+      `Subscribing to ${channel} channel`,
+    );
     this.connection.send(JSON.stringify(message));
   }
 
   /**
-   * Sends an unsubscribe message to Coinbase WebSocket.
+   * Sends an unsubscribe message to Coinbase WebSocket for a specific channel.
    */
-  private sendUnsubscribe(productIds: string[]): void {
+  private sendChannelUnsubscribe(channel: Channel, productIds: string[]): void {
     if (!this.connection || this.connection.readyState !== WebSocket.OPEN) {
       return;
     }
@@ -239,7 +293,7 @@ export class WebSocketPool {
       JSON.stringify({
         type: 'unsubscribe',
         product_ids: productIds,
-        channel: 'ticker',
+        channel,
         jwt: this.credentials.generateWebSocketJwt(),
       }),
     );
@@ -252,10 +306,25 @@ export class WebSocketPool {
     if (isTickerMessage(message)) {
       for (const event of message.events) {
         for (const ticker of event.tickers) {
-          // Notify all subscriptions that include this product
           for (const subscription of this.subscriptions.values()) {
-            if (subscription.productIds.includes(ticker.productId)) {
+            if (
+              subscription.channel === 'ticker' &&
+              subscription.productIds.includes(ticker.productId)
+            ) {
               subscription.callback(ticker);
+            }
+          }
+        }
+      }
+    } else if (isCandlesMessage(message)) {
+      for (const event of message.events) {
+        for (const candle of event.candles) {
+          for (const subscription of this.subscriptions.values()) {
+            if (
+              subscription.channel === 'candles' &&
+              subscription.productIds.includes(candle.productId)
+            ) {
+              subscription.callback(candle);
             }
           }
         }
@@ -263,12 +332,21 @@ export class WebSocketPool {
     } else if (isHeartbeatsMessage(message)) {
       // Heartbeats keep the connection alive - no action needed
     } else if (isSubscriptionsMessage(message)) {
-      logger.websocket.debug('Subscriptions updated');
+      logger.streaming.debug('Subscriptions updated');
     } else if (isErrorMessage(message)) {
-      logger.websocket.error(
+      logger.streaming.error(
         { message: message.message },
         'Error from Coinbase',
       );
+
+      // Authentication failures are fatal - notify subscribers and close connection
+      if (message.message.includes('authentication')) {
+        const errorMessage = `WebSocket authentication failed: ${message.message}`;
+        for (const subscription of this.subscriptions.values()) {
+          subscription.onDisconnect?.(errorMessage);
+        }
+        this.connection?.close();
+      }
     }
   }
 
@@ -285,7 +363,7 @@ export class WebSocketPool {
       type: 'subscribe',
       channel: 'heartbeats',
     };
-    logger.websocket.debug('Subscribing to heartbeats channel');
+    logger.streaming.debug('Subscribing to heartbeats channel');
     this.connection.send(JSON.stringify(message));
   }
 
@@ -308,10 +386,9 @@ export class WebSocketPool {
 
     if (this.reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
       // Max retries reached, notify subscribers and give up
+      const errorMessage = `Connection failed after ${MAX_RECONNECT_ATTEMPTS} reconnect attempts`;
       for (const subscription of this.subscriptions.values()) {
-        subscription.onDisconnect?.(
-          `Connection failed after ${MAX_RECONNECT_ATTEMPTS} reconnect attempts`,
-        );
+        subscription.onDisconnect?.(errorMessage);
       }
       return;
     }
@@ -333,11 +410,15 @@ export class WebSocketPool {
       }
 
       // Re-subscribe to all products after reconnect
-      if (this.subscribedProducts.size > 0) {
-        this.sendSubscribe([...this.subscribedProducts]);
+      for (const [channel, products] of Object.entries(
+        this.subscribedProducts,
+      )) {
+        if (products.size > 0) {
+          this.sendChannelSubscribe(channel as Channel, [...products]);
+        }
       }
     } catch (error) {
-      logger.websocket.error({ err: error }, 'Reconnect attempt failed');
+      logger.streaming.error({ err: error }, 'Reconnect attempt failed');
       this.isReconnecting = false;
       void this.reconnect();
     }
@@ -348,7 +429,9 @@ export class WebSocketPool {
    */
   private cleanup(): void {
     this.subscriptions.clear();
-    this.subscribedProducts.clear();
+    for (const products of Object.values(this.subscribedProducts)) {
+      products.clear();
+    }
 
     if (this.connection) {
       this.connection.close();

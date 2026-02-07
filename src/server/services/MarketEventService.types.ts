@@ -3,17 +3,6 @@
 // =============================================================================
 
 /**
- * Ticker fields that can be monitored for conditions.
- */
-export enum ConditionField {
-  PRICE = 'price',
-  VOLUME_24H = 'volume24h',
-  PERCENT_CHANGE_24H = 'percentChange24h',
-  HIGH_24H = 'high24h',
-  LOW_24H = 'low24h',
-}
-
-/**
  * Comparison operators for condition evaluation.
  *
  * Note: crossAbove/crossBelow require a previous ticker value to detect crossing.
@@ -34,4 +23,40 @@ export enum ConditionOperator {
 export enum ConditionLogic {
   ANY = 'any', // OR - any condition triggers
   ALL = 'all', // AND - all conditions must be met
+}
+
+/**
+ * Ticker-based condition fields.
+ */
+export enum TickerConditionField {
+  Price = 'price',
+  Volume24h = 'volume24h',
+  PercentChange24h = 'percentChange24h',
+  High24h = 'high24h',
+  Low24h = 'low24h',
+  High52w = 'high52w',
+  Low52w = 'low52w',
+  BestBid = 'bestBid',
+  BestAsk = 'bestAsk',
+  BestBidQuantity = 'bestBidQuantity',
+  BestAskQuantity = 'bestAskQuantity',
+}
+
+/**
+ * Indicator-based condition fields.
+ */
+export enum IndicatorConditionField {
+  Rsi = 'rsi',
+  Macd = 'macd',
+  MacdHistogram = 'macd.histogram',
+  MacdSignal = 'macd.signal',
+  BollingerBands = 'bollingerBands',
+  BollingerBandsUpper = 'bollingerBands.upper',
+  BollingerBandsLower = 'bollingerBands.lower',
+  BollingerBandsBandwidth = 'bollingerBands.bandwidth',
+  BollingerBandsPercentB = 'bollingerBands.percentB',
+  Sma = 'sma',
+  Ema = 'ema',
+  Stochastic = 'stochastic',
+  StochasticD = 'stochastic.d',
 }

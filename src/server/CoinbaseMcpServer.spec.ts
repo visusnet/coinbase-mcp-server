@@ -35,7 +35,11 @@ import {
   mockServices,
 } from '@test/serviceMocks';
 import { mockLogger } from '@test/loggerMock';
-import { Granularity } from '@server/services';
+import { Granularity } from './services/common.request';
+import {
+  ConditionOperator,
+  TickerConditionField,
+} from './services/MarketEventService.types';
 
 const logger = mockLogger();
 jest.mock('../logger', () => ({
@@ -2084,28 +2088,15 @@ describe('CoinbaseMcpServer Integration Tests', () => {
         const result = {
           status: 'triggered' as const,
           productId: 'BTC-EUR',
-          triggeredConditions: [
+          conditions: [
             {
-              field: 'price',
-              operator: 'gt',
+              field: TickerConditionField.Price,
+              operator: ConditionOperator.GT,
               threshold: 65000,
               actualValue: 66000,
+              triggered: true,
             },
           ],
-          ticker: {
-            price: 66000,
-            volume24h: 1000000,
-            percentChange24h: 2.5,
-            high24h: 67000,
-            low24h: 65000,
-            high52w: 100000,
-            low52w: 30000,
-            bestBid: 65900,
-            bestAsk: 66100,
-            bestBidQuantity: 1.5,
-            bestAskQuantity: 2.0,
-            timestamp: '2025-01-25T12:00:00.000Z',
-          },
           timestamp: '2025-01-25T12:00:00.000Z',
         };
         mockMarketEventService.waitForEvent.mockResolvedValueOnce(result);
@@ -2140,22 +2131,16 @@ describe('CoinbaseMcpServer Integration Tests', () => {
         };
         const result = {
           status: 'timeout' as const,
-          lastTickers: {
-            'BTC-EUR': {
-              price: 60000,
-              volume24h: 1000000,
-              percentChange24h: 2.5,
-              high24h: 62000,
-              low24h: 58000,
-              high52w: 100000,
-              low52w: 30000,
-              bestBid: 59900,
-              bestAsk: 60100,
-              bestBidQuantity: 1.5,
-              bestAskQuantity: 2.0,
-              timestamp: '2025-01-25T12:00:00.000Z',
+          productId: 'BTC-EUR',
+          conditions: [
+            {
+              field: TickerConditionField.Price,
+              operator: ConditionOperator.LT,
+              threshold: 50000,
+              actualValue: 60000,
+              triggered: false,
             },
-          },
+          ],
           duration: 30,
           timestamp: '2025-01-25T12:00:30.000Z',
         };

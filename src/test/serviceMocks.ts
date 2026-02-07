@@ -41,7 +41,7 @@ export function mockResponse<T>(data: T): {
 
 // Type helper for creating properly typed mocks
 // Uses conditional types to extract function signatures for Jest 29+
-type MockedService<T> = {
+export type MockedService<T> = {
   [K in keyof T]: T[K] extends (...args: infer _A) => infer _R
     ? jest.MockedFunction<T[K]>
     : never;

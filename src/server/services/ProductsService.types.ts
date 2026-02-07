@@ -1,20 +1,10 @@
 // Wrapper types with numbers for API convenience
 import type { Candle, L2Level } from './common.response';
+import type { Granularity } from './common.request';
 
 // =============================================================================
 // Product Candles Types
 // =============================================================================
-
-export enum Granularity {
-  ONE_MINUTE = 'ONE_MINUTE',
-  FIVE_MINUTE = 'FIVE_MINUTE',
-  FIFTEEN_MINUTE = 'FIFTEEN_MINUTE',
-  THIRTY_MINUTE = 'THIRTY_MINUTE',
-  ONE_HOUR = 'ONE_HOUR',
-  TWO_HOUR = 'TWO_HOUR',
-  SIX_HOUR = 'SIX_HOUR',
-  ONE_DAY = 'ONE_DAY',
-}
 
 // Note: GetProductCandlesBatchRequest is derived from schema in ProductsService.schema.ts
 

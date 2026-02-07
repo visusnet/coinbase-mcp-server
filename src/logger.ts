@@ -47,5 +47,5 @@ export function createLogger(scope: string): pino.Logger {
 export const logger = {
   server: createLogger('Server'),
   tools: createLogger('Tools'),
-  websocket: createLogger('WebSocket'),
+  streaming: createLogger('Streaming'),
 };

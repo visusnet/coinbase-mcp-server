@@ -9,7 +9,7 @@
 import type { ProductsService } from '.';
 import type { TechnicalIndicatorsService } from './TechnicalIndicatorsService';
 import { CandleInputArraySchema, type CandleInput } from './common.response';
-import { Granularity } from './ProductsService.types';
+import { Granularity } from './common.request';
 import { GetProductCandlesRequestSchema } from './ProductsService.request';
 import type {
   AnalyzeTechnicalIndicatorsRequest,

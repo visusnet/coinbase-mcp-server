@@ -1,59 +1,58 @@
 import { z } from 'zod';
+import {
+  ConditionOperator,
+  IndicatorConditionField,
+  TickerConditionField,
+} from './MarketEventService.types';
+
+// =============================================================================
+// Condition Result Schema
+// =============================================================================
+
+/**
+ * Result of evaluating a single condition.
+ * Contains both the configured threshold and the actual value.
+ */
+/**
+ * Schema for condition field names - union of ticker and indicator fields.
+ */
+const ConditionFieldSchema = z.union([
+  z.nativeEnum(TickerConditionField),
+  z.nativeEnum(IndicatorConditionField),
+]);
+
+const ConditionResultSchema = z
+  .object({
+    field: ConditionFieldSchema.describe('Condition field name'),
+    operator: z.nativeEnum(ConditionOperator).describe('Comparison operator'),
+    threshold: z.number().describe('Configured threshold value'),
+    actualValue: z
+      .number()
+      .nullable()
+      .describe('Actual value, null if not calculable'),
+    triggered: z.boolean().describe('Whether condition was met'),
+  })
+  .describe('Result of evaluating a single condition');
+
+export type ConditionResult = z.output<typeof ConditionResultSchema>;
 
 // =============================================================================
 // Response Schemas
 // =============================================================================
 
 /**
- * Ticker data returned in responses (without productId since it's keyed separately).
- */
-export const TickerResponseSchema = z
-  .object({
-    price: z.number().describe('Current price'),
-    volume24h: z.number().describe('24-hour volume'),
-    percentChange24h: z.number().describe('24-hour percent change'),
-    high24h: z.number().describe('24-hour high'),
-    low24h: z.number().describe('24-hour low'),
-    high52w: z.number().describe('52-week high'),
-    low52w: z.number().describe('52-week low'),
-    bestBid: z.number().describe('Best bid price'),
-    bestAsk: z.number().describe('Best ask price'),
-    bestBidQuantity: z.number().describe('Best bid quantity'),
-    bestAskQuantity: z.number().describe('Best ask quantity'),
-    timestamp: z.string().describe('Ticker timestamp'),
-  })
-  .describe('Ticker data without productId');
-
-export type TickerResponse = z.output<typeof TickerResponseSchema>;
-
-/**
- * A condition that was triggered.
- */
-export const TriggeredConditionSchema = z
-  .object({
-    field: z.string().describe('Field that triggered'),
-    operator: z.string().describe('Operator used'),
-    threshold: z.number().describe('Configured threshold'),
-    actualValue: z.number().describe('Actual value that triggered'),
-  })
-  .describe('A condition that was triggered');
-
-export type TriggeredCondition = z.output<typeof TriggeredConditionSchema>;
-
-/**
  * Response when a market event was triggered.
  */
-export const MarketEventTriggeredResponseSchema = z
+const MarketEventTriggeredResponseSchema = z
   .object({
     status: z.literal('triggered').describe('Event was triggered'),
-    productId: z.string().describe('Product that triggered'),
-    triggeredConditions: z
-      .array(TriggeredConditionSchema)
-      .describe('Conditions that were met'),
-    ticker: TickerResponseSchema.describe('Current ticker data'),
+    productId: z.string().describe('Product ID that triggered'),
+    conditions: z
+      .array(ConditionResultSchema)
+      .describe('All conditions with their results'),
     timestamp: z.string().describe('Event timestamp'),
   })
-  .describe('Response when a market event was triggered');
+  .describe('Response when market conditions are met');
 
 export type MarketEventTriggeredResponse = z.output<
   typeof MarketEventTriggeredResponseSchema
@@ -62,16 +61,13 @@ export type MarketEventTriggeredResponse = z.output<
 /**
  * Response when timeout was reached without trigger.
  */
-export const MarketEventTimeoutResponseSchema = z
+const MarketEventTimeoutResponseSchema = z
   .object({
     status: z.literal('timeout').describe('Timeout reached without trigger'),
-    lastTickers: z
-      .record(z.string(), TickerResponseSchema)
-      .describe('Last known ticker for each subscribed product'),
     duration: z.number().describe('How long we waited in seconds'),
     timestamp: z.string().describe('Timeout timestamp'),
   })
-  .describe('Response when timeout was reached without trigger');
+  .describe('Response when timeout is reached');
 
 export type MarketEventTimeoutResponse = z.output<
   typeof MarketEventTimeoutResponseSchema
@@ -80,13 +76,10 @@ export type MarketEventTimeoutResponse = z.output<
 /**
  * Response when connection permanently failed.
  */
-export const MarketEventErrorResponseSchema = z
+const MarketEventErrorResponseSchema = z
   .object({
     status: z.literal('error').describe('Connection error occurred'),
     reason: z.string().describe('Error reason'),
-    lastTickers: z
-      .record(z.string(), TickerResponseSchema)
-      .describe('Last known ticker for each subscribed product'),
     timestamp: z.string().describe('Error timestamp'),
   })
   .describe('Response when connection permanently failed');

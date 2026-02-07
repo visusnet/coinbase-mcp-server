@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { Granularity } from './ProductsService.types';
+import { GranularitySchema } from './common.request';
 import { isoToUnix } from './schema.helpers';
 
 // =============================================================================
@@ -37,11 +37,7 @@ export const GetPublicProductCandlesRequestSchema = z
     productId: z.string().describe('Trading pair (e.g., BTC-USD)'),
     start: isoToUnix.describe('Start time (ISO 8601 format)'),
     end: isoToUnix.describe('End time (ISO 8601 format)'),
-    granularity: z
-      .nativeEnum(Granularity)
-      .describe(
-        'Candle granularity (e.g., ONE_MINUTE, FIVE_MINUTE, ONE_HOUR, ONE_DAY)',
-      ),
+    granularity: GranularitySchema,
     limit: z
       .number()
       .optional()

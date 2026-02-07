@@ -3,7 +3,7 @@ import { TechnicalAnalysisService } from './TechnicalAnalysisService';
 import type { ProductsService } from '.';
 import type { TechnicalIndicatorsService } from './TechnicalIndicatorsService';
 import type { CandleInput } from './common.response';
-import { Granularity } from './ProductsService.types';
+import { Granularity } from './common.request';
 import { IndicatorType } from './TechnicalAnalysisService.types';
 import type { Candle } from './common.response';
 

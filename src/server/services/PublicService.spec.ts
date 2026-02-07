@@ -1,7 +1,7 @@
 import { describe, expect, it, jest, beforeEach } from '@jest/globals';
 import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
 import { mockResponse } from '@test/serviceMocks';
-import { Granularity } from './ProductsService.types';
+import { Granularity } from './common.request';
 import { OrderSide } from './OrdersService.types';
 import { PublicService } from './PublicService';
 

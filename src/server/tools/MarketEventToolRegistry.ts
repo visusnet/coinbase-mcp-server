@@ -4,6 +4,11 @@ import type { MarketEventService } from '../services';
 import { WaitForMarketEventRequestSchema } from '../services/MarketEventService.request';
 import { VIEW_API } from './annotations';
 import { ToolRegistry } from './ToolRegistry';
+import {
+  ConditionOperator,
+  IndicatorConditionField,
+  TickerConditionField,
+} from '@server/services/MarketEventService.types';
 
 /**
  * Registry for market event MCP tools.
@@ -32,8 +37,9 @@ event-driven trading strategies.
 Returns immediately when any subscription's conditions are met,
 or returns timeout status with last known ticker data.
 
-Fields: price, volume24h, percentChange24h, high24h, low24h
-Operators: gt, gte, lt, lte, crossAbove, crossBelow
+Ticker fields: ${Object.values(TickerConditionField).join(', ')}
+Indicator fields: ${Object.values(IndicatorConditionField).join(', ')}
+Operators: ${Object.values(ConditionOperator).join(', ')}
 Logic: any (OR), all (AND)
         `.trim(),
         inputSchema: WaitForMarketEventRequestSchema.shape,

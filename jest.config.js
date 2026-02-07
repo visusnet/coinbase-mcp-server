@@ -18,12 +18,15 @@ export default {
         },
       },
     ],
-    'node_modules/@toon-format/toon/.+\\.(m?js)$': [
+    // Transform ESM-only packages
+    'node_modules/(@toon-format/toon|p-retry|is-network-error)/.+\\.(m?js)$': [
       'babel-jest',
       { presets: [['@babel/preset-env', { targets: { node: 'current' } }]] },
     ],
   },
-  transformIgnorePatterns: ['node_modules/(?!@toon-format/toon)'],
+  transformIgnorePatterns: [
+    'node_modules/(?!(@toon-format/toon|p-retry|is-network-error)/)',
+  ],
   testMatch: ['**/*.spec.ts'],
   collectCoverageFrom: [
     'src/**/*.ts',
