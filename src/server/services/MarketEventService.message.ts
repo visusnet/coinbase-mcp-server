@@ -57,7 +57,7 @@ const TickerEventSchema = z
 const TickerChannelMessageSchema = z
   .object({
     channel: z.literal('ticker').describe('Channel name'),
-    client_id: z.string().describe('Client identifier'),
+    client_id: z.string().optional().describe('Client identifier (optional)'),
     timestamp: z.string().describe('Message timestamp'),
     sequence_num: z.number().describe('Sequence number'),
     events: z.array(TickerEventSchema).describe('Array of ticker events'),
@@ -72,11 +72,68 @@ const TickerChannelMessageSchema = z
   }))
   .describe('Ticker channel message received from Coinbase WebSocket');
 
+// =============================================================================
+// Candles Channel Schemas
+// =============================================================================
+
+/** Schema for a single candle from Coinbase WebSocket */
+const WebSocketCandleSchema = z
+  .object({
+    start: stringToNumberRequired.describe('UNIX timestamp of candle start'),
+    high: stringToNumberRequired.describe('Highest price during interval'),
+    low: stringToNumberRequired.describe('Lowest price during interval'),
+    open: stringToNumberRequired.describe('Opening price'),
+    close: stringToNumberRequired.describe('Closing price'),
+    volume: stringToNumberRequired.describe('Volume traded during interval'),
+    product_id: z.string().describe('Trading pair identifier'),
+  })
+  .strict()
+  .transform((data) => ({
+    start: data.start,
+    high: data.high,
+    low: data.low,
+    open: data.open,
+    close: data.close,
+    volume: data.volume,
+    productId: data.product_id,
+  }))
+  .describe('Single candle data from Coinbase WebSocket');
+
+export type WebSocketCandle = z.output<typeof WebSocketCandleSchema>;
+
+/** Schema for candle event containing one or more candle updates */
+const CandleEventSchema = z
+  .object({
+    type: z.enum(['snapshot', 'update']).describe('Event type'),
+    candles: z.array(WebSocketCandleSchema).describe('Array of candle data'),
+  })
+  .strict()
+  .describe('Candle event containing one or more candle updates');
+
+/** Schema for candles channel message received from Coinbase WebSocket */
+const CandlesChannelMessageSchema = z
+  .object({
+    channel: z.literal('candles').describe('Channel name'),
+    client_id: z.string().optional().describe('Client identifier (optional)'),
+    timestamp: z.string().describe('Message timestamp'),
+    sequence_num: z.number().describe('Sequence number'),
+    events: z.array(CandleEventSchema).describe('Array of candle events'),
+  })
+  .strict()
+  .transform((data) => ({
+    channel: data.channel,
+    clientId: data.client_id,
+    timestamp: data.timestamp,
+    sequenceNum: data.sequence_num,
+    events: data.events,
+  }))
+  .describe('Candles channel message received from Coinbase WebSocket');
+
 /** Schema for subscriptions channel message */
 const SubscriptionsChannelMessageSchema = z
   .object({
     channel: z.literal('subscriptions').describe('Channel name'),
-    client_id: z.string().describe('Client identifier'),
+    client_id: z.string().optional().describe('Client identifier (optional)'),
     timestamp: z.string().describe('Message timestamp'),
     sequence_num: z.number().describe('Sequence number'),
     events: z
@@ -88,6 +145,10 @@ const SubscriptionsChannelMessageSchema = z
                 .array(z.string())
                 .optional()
                 .describe('Subscribed ticker products'),
+              candles: z
+                .array(z.string())
+                .optional()
+                .describe('Subscribed candles products'),
               heartbeats: z
                 .array(z.string())
                 .optional()
@@ -112,7 +173,7 @@ const SubscriptionsChannelMessageSchema = z
 const HeartbeatsChannelMessageSchema = z
   .object({
     channel: z.literal('heartbeats').describe('Channel name'),
-    client_id: z.string().describe('Client identifier'),
+    client_id: z.string().optional().describe('Client identifier (optional)'),
     timestamp: z.string().describe('Message timestamp'),
     sequence_num: z.number().describe('Sequence number'),
     events: z
@@ -148,6 +209,7 @@ const ErrorMessageSchema = z
 // =============================================================================
 
 type TickerChannelMessage = z.output<typeof TickerChannelMessageSchema>;
+type CandlesChannelMessage = z.output<typeof CandlesChannelMessageSchema>;
 type SubscriptionsChannelMessage = z.output<
   typeof SubscriptionsChannelMessageSchema
 >;
@@ -158,6 +220,7 @@ type ErrorMessage = z.output<typeof ErrorMessageSchema>;
 export const WebSocketMessageSchema = z
   .union([
     TickerChannelMessageSchema,
+    CandlesChannelMessageSchema,
     SubscriptionsChannelMessageSchema,
     HeartbeatsChannelMessageSchema,
     ErrorMessageSchema,
@@ -175,6 +238,13 @@ export function isTickerMessage(
   message: WebSocketMessage,
 ): message is TickerChannelMessage {
   return 'channel' in message && message.channel === 'ticker';
+}
+
+/** Type guard for candles channel messages */
+export function isCandlesMessage(
+  message: WebSocketMessage,
+): message is CandlesChannelMessage {
+  return 'channel' in message && message.channel === 'candles';
 }
 
 /** Type guard for subscriptions channel messages */

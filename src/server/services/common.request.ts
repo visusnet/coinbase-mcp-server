@@ -2,6 +2,34 @@ import { z } from 'zod';
 import { numberToString } from './schema.helpers';
 
 // =============================================================================
+// Granularity (Candle timeframes)
+// =============================================================================
+
+/**
+ * Candle granularity (timeframe) for OHLCV data.
+ * Used across Products, Technical Analysis, and Market Events.
+ */
+export enum Granularity {
+  ONE_MINUTE = 'ONE_MINUTE',
+  FIVE_MINUTE = 'FIVE_MINUTE',
+  FIFTEEN_MINUTE = 'FIFTEEN_MINUTE',
+  THIRTY_MINUTE = 'THIRTY_MINUTE',
+  ONE_HOUR = 'ONE_HOUR',
+  TWO_HOUR = 'TWO_HOUR',
+  SIX_HOUR = 'SIX_HOUR',
+  ONE_DAY = 'ONE_DAY',
+}
+
+/**
+ * Zod schema for Granularity validation.
+ */
+export const GranularitySchema = z
+  .nativeEnum(Granularity)
+  .describe(
+    'Candle granularity (e.g., ONE_MINUTE, FIVE_MINUTE, ONE_HOUR, ONE_DAY)',
+  );
+
+// =============================================================================
 // Shared Request Schemas
 // =============================================================================
 

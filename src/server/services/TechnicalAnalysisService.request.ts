@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { Granularity } from './ProductsService.types';
+import { GranularitySchema } from './common.request';
 import { IndicatorType } from './TechnicalAnalysisService.types';
 
 // =============================================================================
@@ -14,12 +14,7 @@ export const AnalyzeTechnicalIndicatorsRequestSchema = z
     productId: z
       .string()
       .describe('Product ID to analyze (e.g., "BTC-USD", "ETH-USD")'),
-    granularity: z
-      .nativeEnum(Granularity)
-      .describe(
-        'Candle granularity. Common choices: ' +
-          'FIFTEEN_MINUTE (intraday), ONE_HOUR (short-term), ONE_DAY (long-term)',
-      ),
+    granularity: GranularitySchema,
     candleCount: z
       .number()
       .int()
@@ -62,12 +57,7 @@ export const AnalyzeTechnicalIndicatorsBatchRequestSchema = z
       .describe(
         'Product IDs to analyze (e.g., ["BTC-USD", "ETH-USD", "SOL-USD"]). Max 20 products.',
       ),
-    granularity: z
-      .nativeEnum(Granularity)
-      .describe(
-        'Candle granularity for all products. Common choices: ' +
-          'FIFTEEN_MINUTE (intraday), ONE_HOUR (short-term), ONE_DAY (long-term)',
-      ),
+    granularity: GranularitySchema,
     candleCount: z
       .number()
       .int()

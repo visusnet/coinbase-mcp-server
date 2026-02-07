@@ -22,8 +22,10 @@ import {
   TechnicalIndicatorsService,
   TechnicalAnalysisService,
   MarketEventService,
+  RealTimeData,
   NewsService,
 } from '@server/services';
+import { CandleBuffer } from '@server/services/CandleBuffer';
 import { WebSocketPool } from '@server/websocket/WebSocketPool';
 import { ToolRegistry } from './tools/ToolRegistry';
 import { AccountToolRegistry } from './tools/AccountToolRegistry';
@@ -95,6 +97,7 @@ export class CoinbaseMcpServer {
   private readonly marketEvent: MarketEventService;
   private readonly news: NewsService;
   private readonly webSocketPool: WebSocketPool;
+  private readonly realTimeData: RealTimeData;
 
   constructor(apiKey: string, privateKey: string) {
     const credentials = new CoinbaseCredentials(apiKey, privateKey);
@@ -118,7 +121,15 @@ export class CoinbaseMcpServer {
       this.technicalIndicators,
     );
     this.webSocketPool = new WebSocketPool(credentials);
-    this.marketEvent = new MarketEventService(this.webSocketPool);
+    this.realTimeData = new RealTimeData(
+      this.webSocketPool,
+      this.products,
+      new CandleBuffer(),
+    );
+    this.marketEvent = new MarketEventService(
+      this.realTimeData,
+      this.technicalIndicators,
+    );
     this.news = new NewsService();
 
     this.app = createMcpExpressApp();

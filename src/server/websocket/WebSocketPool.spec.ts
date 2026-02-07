@@ -17,6 +17,59 @@ import { WebSocketPool } from './WebSocketPool';
 import type { CoinbaseCredentials } from './CoinbaseCredentials';
 
 /**
+ * Creates a candles channel message in the format Coinbase sends.
+ */
+function createCandlesMessage(
+  productId: string,
+  start: string,
+  open: string,
+  high: string,
+  low: string,
+  close: string,
+  volume: string,
+): {
+  channel: 'candles';
+  client_id: string;
+  timestamp: string;
+  sequence_num: number;
+  events: {
+    type: 'update';
+    candles: {
+      start: string;
+      open: string;
+      high: string;
+      low: string;
+      close: string;
+      volume: string;
+      product_id: string;
+    }[];
+  }[];
+} {
+  return {
+    channel: 'candles',
+    client_id: '',
+    timestamp: new Date().toISOString(),
+    sequence_num: 0,
+    events: [
+      {
+        type: 'update',
+        candles: [
+          {
+            start,
+            open,
+            high,
+            low,
+            close,
+            volume,
+            product_id: productId,
+          },
+        ],
+      },
+    ],
+  };
+}
+
+/**
  * Creates a ticker channel message in the format Coinbase sends.
  */
 function createTickerMessage(
@@ -196,7 +249,7 @@ describe('WebSocketPool', () => {
       const pool = new WebSocketPool(mockCredentials);
       const callback = jest.fn();
 
-      const promise = pool.subscribe(['BTC-EUR'], callback);
+      const promise = pool.subscribeToTicker(['BTC-EUR'], callback);
       mockWebSocketInstances[0].simulateOpen();
       await promise;
 
@@ -217,7 +270,7 @@ describe('WebSocketPool', () => {
       const pool = new WebSocketPool(mockCredentials);
       const callback = jest.fn();
 
-      const promise = pool.subscribe(['BTC-EUR'], callback);
+      const promise = pool.subscribeToTicker(['BTC-EUR'], callback);
       mockWebSocketInstances[0].simulateOpen();
       await promise;
 
@@ -232,7 +285,7 @@ describe('WebSocketPool', () => {
       const pool = new WebSocketPool(mockCredentials);
       const callback = jest.fn();
 
-      const subscribePromise = pool.subscribe(['BTC-EUR'], callback);
+      const subscribePromise = pool.subscribeToTicker(['BTC-EUR'], callback);
 
       // Connection not yet open
       expect(mockWebSocketInstances).toHaveLength(1);
@@ -248,7 +301,7 @@ describe('WebSocketPool', () => {
       const pool = new WebSocketPool(mockCredentials);
       const callback = jest.fn();
 
-      const subscribePromise = pool.subscribe(['BTC-EUR'], callback);
+      const subscribePromise = pool.subscribeToTicker(['BTC-EUR'], callback);
       mockWebSocketInstances[0].simulateOpen();
       await subscribePromise;
 
@@ -256,17 +309,20 @@ describe('WebSocketPool', () => {
       expect(mockWebSocketInstances[0].url).toBe(
         'wss://advanced-trade-ws.coinbase.com',
       );
-      expect(logger.websocket.debug).toHaveBeenCalledWith(
+      expect(logger.streaming.debug).toHaveBeenCalledWith(
         'Connecting to wss://advanced-trade-ws.coinbase.com',
       );
-      expect(logger.websocket.debug).toHaveBeenCalledWith('Connection opened');
+      expect(logger.streaming.debug).toHaveBeenCalledWith('Connection opened');
     });
 
     it('should send subscribe message with JWT after connection opens', async () => {
       const pool = new WebSocketPool(mockCredentials);
       const callback = jest.fn();
 
-      const subscribePromise = pool.subscribe(['BTC-EUR', 'ETH-EUR'], callback);
+      const subscribePromise = pool.subscribeToTicker(
+        ['BTC-EUR', 'ETH-EUR'],
+        callback,
+      );
       mockWebSocketInstances[0].simulateOpen();
       await subscribePromise;
 
@@ -285,11 +341,11 @@ describe('WebSocketPool', () => {
       const callback1 = jest.fn();
       const callback2 = jest.fn();
 
-      const promise1 = pool.subscribe(['BTC-EUR'], callback1);
+      const promise1 = pool.subscribeToTicker(['BTC-EUR'], callback1);
       mockWebSocketInstances[0].simulateOpen();
       await promise1;
 
-      await pool.subscribe(['ETH-EUR'], callback2);
+      await pool.subscribeToTicker(['ETH-EUR'], callback2);
 
       expect(mockWebSocketInstances).toHaveLength(1);
     });
@@ -299,7 +355,10 @@ describe('WebSocketPool', () => {
       const callback1 = jest.fn();
       const callback2 = jest.fn();
 
-      const promise1 = pool.subscribe(['BTC-EUR', 'ETH-EUR'], callback1);
+      const promise1 = pool.subscribeToTicker(
+        ['BTC-EUR', 'ETH-EUR'],
+        callback1,
+      );
       mockWebSocketInstances[0].simulateOpen();
       await promise1;
 
@@ -307,7 +366,7 @@ describe('WebSocketPool', () => {
       mockWebSocketInstances[0].send.mockClear();
 
       // Subscribe with overlap
-      await pool.subscribe(['ETH-EUR', 'SOL-EUR'], callback2);
+      await pool.subscribeToTicker(['ETH-EUR', 'SOL-EUR'], callback2);
 
       // Should only subscribe to SOL-EUR
       expect(mockWebSocketInstances[0].send).toHaveBeenCalledWith(
@@ -325,8 +384,8 @@ describe('WebSocketPool', () => {
       const callback1 = jest.fn();
       const callback2 = jest.fn();
 
-      const promise1 = pool.subscribe(['BTC-EUR'], callback1);
-      const promise2 = pool.subscribe(['ETH-EUR'], callback2);
+      const promise1 = pool.subscribeToTicker(['BTC-EUR'], callback1);
+      const promise2 = pool.subscribeToTicker(['ETH-EUR'], callback2);
 
       // Only one WebSocket should be created
       expect(mockWebSocketInstances).toHaveLength(1);
@@ -345,11 +404,11 @@ describe('WebSocketPool', () => {
       const pool = new WebSocketPool(mockCredentials);
       const callback = jest.fn();
 
-      const promise = pool.subscribe(['BTC-EUR'], callback);
+      const promise = pool.subscribeToTicker(['BTC-EUR'], callback);
       mockWebSocketInstances[0].simulateOpen();
       const subId = await promise;
 
-      pool.unsubscribe(subId);
+      pool.unsubscribeFromTicker(subId);
 
       // Simulate ticker - should not call callback
       mockWebSocketInstances[0].simulateMessage(
@@ -371,17 +430,17 @@ describe('WebSocketPool', () => {
       const callback1 = jest.fn();
       const callback2 = jest.fn();
 
-      const promise1 = pool.subscribe(['BTC-EUR'], callback1);
+      const promise1 = pool.subscribeToTicker(['BTC-EUR'], callback1);
       mockWebSocketInstances[0].simulateOpen();
       const subId1 = await promise1;
 
-      await pool.subscribe(['ETH-EUR'], callback2);
+      await pool.subscribeToTicker(['ETH-EUR'], callback2);
 
       // Clear mock
       mockWebSocketInstances[0].send.mockClear();
 
       // Unsubscribe first
-      pool.unsubscribe(subId1);
+      pool.unsubscribeFromTicker(subId1);
 
       expect(mockWebSocketInstances[0].send).toHaveBeenCalledWith(
         JSON.stringify({
@@ -398,15 +457,18 @@ describe('WebSocketPool', () => {
       const callback1 = jest.fn();
       const callback2 = jest.fn();
 
-      const promise1 = pool.subscribe(['BTC-EUR', 'ETH-EUR'], callback1);
+      const promise1 = pool.subscribeToTicker(
+        ['BTC-EUR', 'ETH-EUR'],
+        callback1,
+      );
       mockWebSocketInstances[0].simulateOpen();
       const subId1 = await promise1;
 
-      await pool.subscribe(['BTC-EUR'], callback2);
+      await pool.subscribeToTicker(['BTC-EUR'], callback2);
 
       mockWebSocketInstances[0].send.mockClear();
 
-      pool.unsubscribe(subId1);
+      pool.unsubscribeFromTicker(subId1);
 
       // Should only unsubscribe from ETH-EUR
       expect(mockWebSocketInstances[0].send).toHaveBeenCalledWith(
@@ -425,7 +487,7 @@ describe('WebSocketPool', () => {
       const pool = new WebSocketPool(mockCredentials);
       const callback = jest.fn();
 
-      const promise = pool.subscribe(['BTC-EUR'], callback);
+      const promise = pool.subscribeToTicker(['BTC-EUR'], callback);
       mockWebSocketInstances[0].simulateOpen();
       await promise;
 
@@ -462,10 +524,10 @@ describe('WebSocketPool', () => {
       const callback1 = jest.fn();
       const callback2 = jest.fn();
 
-      const promise1 = pool.subscribe(['BTC-EUR'], callback1);
+      const promise1 = pool.subscribeToTicker(['BTC-EUR'], callback1);
       mockWebSocketInstances[0].simulateOpen();
       await promise1;
-      await pool.subscribe(['BTC-EUR'], callback2);
+      await pool.subscribeToTicker(['BTC-EUR'], callback2);
 
       mockWebSocketInstances[0].simulateMessage(
         createTickerMessage(
@@ -486,7 +548,7 @@ describe('WebSocketPool', () => {
       const pool = new WebSocketPool(mockCredentials);
       const callback = jest.fn();
 
-      const promise = pool.subscribe(['BTC-EUR'], callback);
+      const promise = pool.subscribeToTicker(['BTC-EUR'], callback);
       mockWebSocketInstances[0].simulateOpen();
       await promise;
 
@@ -502,7 +564,7 @@ describe('WebSocketPool', () => {
       const pool = new WebSocketPool(mockCredentials);
       const callback = jest.fn();
 
-      const promise = pool.subscribe(['BTC-EUR'], callback);
+      const promise = pool.subscribeToTicker(['BTC-EUR'], callback);
       mockWebSocketInstances[0].simulateOpen();
       await promise;
 
@@ -521,7 +583,7 @@ describe('WebSocketPool', () => {
       const pool = new WebSocketPool(mockCredentials);
       const callback = jest.fn();
 
-      const promise = pool.subscribe(['BTC-EUR'], callback);
+      const promise = pool.subscribeToTicker(['BTC-EUR'], callback);
       mockWebSocketInstances[0].simulateOpen();
       await promise;
 
@@ -533,13 +595,52 @@ describe('WebSocketPool', () => {
       expect(callback).not.toHaveBeenCalled();
     });
 
+    it('should call onDisconnect and close connection on authentication error', async () => {
+      const pool = new WebSocketPool(mockCredentials);
+      const callback = jest.fn();
+      const onDisconnect = jest.fn();
+
+      const tickerPromise = pool.subscribeToTicker(
+        ['BTC-EUR'],
+        callback,
+        undefined,
+        onDisconnect,
+      );
+      mockWebSocketInstances[0].simulateOpen();
+      await tickerPromise;
+
+      // Also subscribe to candles to test both subscription types
+      const candleCallback = jest.fn();
+      const candleOnDisconnect = jest.fn();
+      await pool.subscribeToCandles(
+        ['BTC-EUR'],
+        candleCallback,
+        undefined,
+        candleOnDisconnect,
+      );
+
+      mockWebSocketInstances[0].simulateMessage({
+        type: 'error',
+        message: 'authentication failure: invalid JWT',
+      });
+
+      expect(onDisconnect).toHaveBeenCalledWith(
+        'WebSocket authentication failed: authentication failure: invalid JWT',
+      );
+      expect(candleOnDisconnect).toHaveBeenCalledWith(
+        'WebSocket authentication failed: authentication failure: invalid JWT',
+      );
+      // close() changes readyState to CLOSED
+      expect(mockWebSocketInstances[0].readyState).toBe(MockWebSocket.CLOSED);
+    });
+
     it('should log handler errors separately from parse errors', async () => {
       const pool = new WebSocketPool(mockCredentials);
       const callback = jest.fn().mockImplementation(() => {
         throw new Error('callback bug');
       });
 
-      const promise = pool.subscribe(['BTC-EUR'], callback);
+      const promise = pool.subscribeToTicker(['BTC-EUR'], callback);
       mockWebSocketInstances[0].simulateOpen();
       await promise;
 
@@ -547,11 +648,11 @@ describe('WebSocketPool', () => {
         createTickerMessage('BTC-EUR', '50000', '100', '5', '51000', '49000'),
       );
 
-      expect(logger.websocket.error).toHaveBeenCalledWith(
+      expect(logger.streaming.error).toHaveBeenCalledWith(
         { err: expect.any(Error) },
         'Message handler error',
       );
-      expect(logger.websocket.error).not.toHaveBeenCalledWith(
+      expect(logger.streaming.error).not.toHaveBeenCalledWith(
         expect.anything(),
         'Message parse error',
       );
@@ -561,7 +662,7 @@ describe('WebSocketPool', () => {
       const pool = new WebSocketPool(mockCredentials);
       const callback = jest.fn();
 
-      const promise = pool.subscribe(['BTC-EUR'], callback);
+      const promise = pool.subscribeToTicker(['BTC-EUR'], callback);
       mockWebSocketInstances[0].simulateOpen();
       await promise;
 
@@ -571,11 +672,11 @@ describe('WebSocketPool', () => {
       });
 
       expect(callback).not.toHaveBeenCalled();
-      expect(logger.websocket.error).toHaveBeenCalledWith(
+      expect(logger.streaming.error).toHaveBeenCalledWith(
         { err: expect.any(SyntaxError) },
         'Message parse error',
       );
-      expect(logger.websocket.error).toHaveBeenCalledWith(
+      expect(logger.streaming.error).toHaveBeenCalledWith(
         { data: 'not valid json' },
         'Raw message',
       );
@@ -587,7 +688,7 @@ describe('WebSocketPool', () => {
       const pool = new WebSocketPool(mockCredentials);
       const callback = jest.fn();
 
-      const promise = pool.subscribe(['BTC-EUR'], callback);
+      const promise = pool.subscribeToTicker(['BTC-EUR'], callback);
       mockWebSocketInstances[0].simulateOpen();
       await promise;
 
@@ -606,13 +707,13 @@ describe('WebSocketPool', () => {
       const pool = new WebSocketPool(mockCredentials);
       const callback = jest.fn();
 
-      const promise = pool.subscribe(['BTC-EUR'], callback);
+      const promise = pool.subscribeToTicker(['BTC-EUR'], callback);
       mockWebSocketInstances[0].simulateOpen();
       const subId = await promise;
 
       expect(mockWebSocketInstances).toHaveLength(1);
 
-      pool.unsubscribe(subId);
+      pool.unsubscribeFromTicker(subId);
       mockWebSocketInstances[0].simulateClose();
 
       jest.advanceTimersByTime(1100);
@@ -626,7 +727,11 @@ describe('WebSocketPool', () => {
       const callback = jest.fn();
       const onReconnect = jest.fn();
 
-      const promise = pool.subscribe(['BTC-EUR'], callback, onReconnect);
+      const promise = pool.subscribeToTicker(
+        ['BTC-EUR'],
+        callback,
+        onReconnect,
+      );
       mockWebSocketInstances[0].simulateOpen();
       await promise;
 
@@ -649,10 +754,14 @@ describe('WebSocketPool', () => {
       const onReconnect1 = jest.fn();
       const onReconnect2 = jest.fn();
 
-      const promise1 = pool.subscribe(['BTC-EUR'], callback1, onReconnect1);
+      const promise1 = pool.subscribeToTicker(
+        ['BTC-EUR'],
+        callback1,
+        onReconnect1,
+      );
       mockWebSocketInstances[0].simulateOpen();
       await promise1;
-      await pool.subscribe(['ETH-EUR'], callback2, onReconnect2);
+      await pool.subscribeToTicker(['ETH-EUR'], callback2, onReconnect2);
 
       // Trigger reconnect
       mockWebSocketInstances[0].simulateClose();
@@ -671,7 +780,7 @@ describe('WebSocketPool', () => {
       const pool = new WebSocketPool(mockCredentials);
       const callback = jest.fn();
 
-      const promise = pool.subscribe(['BTC-EUR'], callback);
+      const promise = pool.subscribeToTicker(['BTC-EUR'], callback);
       mockWebSocketInstances[0].simulateOpen();
       await promise;
 
@@ -700,7 +809,7 @@ describe('WebSocketPool', () => {
       const pool = new WebSocketPool(mockCredentials);
       const callback = jest.fn();
 
-      const promise = pool.subscribe(['BTC-EUR', 'ETH-EUR'], callback);
+      const promise = pool.subscribeToTicker(['BTC-EUR', 'ETH-EUR'], callback);
       mockWebSocketInstances[0].simulateOpen();
       await promise;
 
@@ -725,7 +834,7 @@ describe('WebSocketPool', () => {
       const pool = new WebSocketPool(mockCredentials);
       const callback = jest.fn();
 
-      const promise = pool.subscribe(['BTC-EUR'], callback);
+      const promise = pool.subscribeToTicker(['BTC-EUR'], callback);
       mockWebSocketInstances[0].simulateOpen();
       await promise;
 
@@ -748,7 +857,7 @@ describe('WebSocketPool', () => {
       const pool = new WebSocketPool(mockCredentials);
       const callback = jest.fn();
 
-      const promise = pool.subscribe(['BTC-EUR'], callback);
+      const promise = pool.subscribeToTicker(['BTC-EUR'], callback);
       mockWebSocketInstances[0].simulateOpen();
       await promise;
 
@@ -762,7 +871,7 @@ describe('WebSocketPool', () => {
         type: 'subscribe',
         channel: 'heartbeats',
       });
-      expect(logger.websocket.debug).toHaveBeenCalledWith(
+      expect(logger.streaming.debug).toHaveBeenCalledWith(
         'Subscribing to heartbeats channel',
       );
     });
@@ -771,7 +880,7 @@ describe('WebSocketPool', () => {
       const pool = new WebSocketPool(mockCredentials);
       const callback = jest.fn();
 
-      const promise = pool.subscribe(['BTC-EUR'], callback);
+      const promise = pool.subscribeToTicker(['BTC-EUR'], callback);
 
       // Dispatch 'open' event WITHOUT setting readyState to OPEN
       // This tests the guard in subscribeToHeartbeats
@@ -789,7 +898,7 @@ describe('WebSocketPool', () => {
       const pool = new WebSocketPool(mockCredentials);
       const callback = jest.fn();
 
-      const promise = pool.subscribe(['BTC-EUR'], callback);
+      const promise = pool.subscribeToTicker(['BTC-EUR'], callback);
       mockWebSocketInstances[0].simulateOpen();
       await promise;
 
@@ -819,7 +928,7 @@ describe('WebSocketPool', () => {
       const pool = new WebSocketPool(mockCredentials);
       const callback = jest.fn();
 
-      const subscribePromise = pool.subscribe(['BTC-EUR'], callback);
+      const subscribePromise = pool.subscribeToTicker(['BTC-EUR'], callback);
 
       // Simulate error before connection opens
       mockWebSocketInstances[0].simulateError();
@@ -833,7 +942,7 @@ describe('WebSocketPool', () => {
       const pool = new WebSocketPool(mockCredentials);
       const callback = jest.fn();
 
-      const promise = pool.subscribe(['BTC-EUR'], callback);
+      const promise = pool.subscribeToTicker(['BTC-EUR'], callback);
       mockWebSocketInstances[0].simulateOpen();
       await promise;
 
@@ -867,7 +976,7 @@ describe('WebSocketPool', () => {
       const pool = new WebSocketPool(mockCredentials);
       const callback = jest.fn();
 
-      const promise = pool.subscribe(['BTC-EUR'], callback);
+      const promise = pool.subscribeToTicker(['BTC-EUR'], callback);
       mockWebSocketInstances[0].simulateOpen();
       await promise;
 
@@ -882,7 +991,7 @@ describe('WebSocketPool', () => {
       mockWebSocketInstances[1].simulateError();
       await Promise.resolve();
 
-      expect(logger.websocket.error).toHaveBeenCalledWith(
+      expect(logger.streaming.error).toHaveBeenCalledWith(
         { err: expect.any(Error) },
         'Reconnect attempt failed',
       );
@@ -892,7 +1001,7 @@ describe('WebSocketPool', () => {
       const pool = new WebSocketPool(mockCredentials);
       const callback = jest.fn();
 
-      const promise = pool.subscribe(['BTC-EUR'], callback);
+      const promise = pool.subscribeToTicker(['BTC-EUR'], callback);
       mockWebSocketInstances[0].simulateOpen();
       await promise;
 
@@ -921,7 +1030,7 @@ describe('WebSocketPool', () => {
       const pool = new WebSocketPool(mockCredentials);
       const callback = jest.fn();
 
-      const promise = pool.subscribe(['BTC-EUR'], callback);
+      const promise = pool.subscribeToTicker(['BTC-EUR'], callback);
       mockWebSocketInstances[0].simulateOpen();
       await promise;
 
@@ -943,13 +1052,13 @@ describe('WebSocketPool', () => {
       const callback = jest.fn();
 
       // Start subscription but don't wait for it
-      const subscribePromise = pool.subscribe(['BTC-EUR'], callback);
+      const subscribePromise = pool.subscribeToTicker(['BTC-EUR'], callback);
 
       // Get the subscription ID from the internal map before connection opens
       // Unsubscribe should not crash even though connection is not open
-      pool.unsubscribe('any-id');
+      pool.unsubscribeFromTicker('any-id');
 
-      expect(logger.websocket.warn).toHaveBeenCalledWith(
+      expect(logger.streaming.warn).toHaveBeenCalledWith(
         'Cannot send subscribe - connection not open',
       );
 
@@ -964,14 +1073,14 @@ describe('WebSocketPool', () => {
       const pool = new WebSocketPool(mockCredentials);
       const callback = jest.fn();
 
-      const promise = pool.subscribe(['BTC-EUR'], callback);
+      const promise = pool.subscribeToTicker(['BTC-EUR'], callback);
       mockWebSocketInstances[0].simulateOpen();
       await promise;
 
       // Manually set connection to null
       (pool as unknown as { connection: WebSocket | null }).connection = null;
 
-      pool.unsubscribe('any-id');
+      pool.unsubscribeFromTicker('any-id');
 
       expect(mockWebSocketInstances).toHaveLength(1);
     });
@@ -981,16 +1090,16 @@ describe('WebSocketPool', () => {
       const callback1 = jest.fn();
       const callback2 = jest.fn();
 
-      const promise1 = pool.subscribe(['BTC-EUR'], callback1);
+      const promise1 = pool.subscribeToTicker(['BTC-EUR'], callback1);
       mockWebSocketInstances[0].simulateOpen();
       const subId1 = await promise1;
-      await pool.subscribe(['ETH-EUR'], callback2);
+      await pool.subscribeToTicker(['ETH-EUR'], callback2);
 
       // Close connection without triggering reconnect
       mockWebSocketInstances[0].readyState = MockWebSocket.CLOSED;
       mockWebSocketInstances[0].send.mockClear();
 
-      pool.unsubscribe(subId1);
+      pool.unsubscribeFromTicker(subId1);
 
       // sendUnsubscribe should have returned early
       expect(mockWebSocketInstances[0].send).not.toHaveBeenCalled();
@@ -1001,7 +1110,7 @@ describe('WebSocketPool', () => {
       const callback = jest.fn();
 
       // Subscribe without onReconnect
-      const promise = pool.subscribe(['BTC-EUR'], callback);
+      const promise = pool.subscribeToTicker(['BTC-EUR'], callback);
       mockWebSocketInstances[0].simulateOpen();
       await promise;
 
@@ -1022,7 +1131,7 @@ describe('WebSocketPool', () => {
       const callback = jest.fn();
 
       // Subscribe without onDisconnect
-      const promise = pool.subscribe(['BTC-EUR'], callback);
+      const promise = pool.subscribeToTicker(['BTC-EUR'], callback);
       mockWebSocketInstances[0].simulateOpen();
       await promise;
 
@@ -1044,7 +1153,7 @@ describe('WebSocketPool', () => {
       const onReconnect = jest.fn();
       const onDisconnect = jest.fn();
 
-      const promise = pool.subscribe(
+      const promise = pool.subscribeToTicker(
         ['BTC-EUR'],
         callback,
         onReconnect,
@@ -1074,7 +1183,7 @@ describe('WebSocketPool', () => {
       const onDisconnect1 = jest.fn();
       const onDisconnect2 = jest.fn();
 
-      const promise1 = pool.subscribe(
+      const promise1 = pool.subscribeToTicker(
         ['BTC-EUR'],
         callback1,
         undefined,
@@ -1083,7 +1192,12 @@ describe('WebSocketPool', () => {
       mockWebSocketInstances[0].simulateOpen();
       await promise1;
 
-      await pool.subscribe(['ETH-EUR'], callback2, undefined, onDisconnect2);
+      await pool.subscribeToTicker(
+        ['ETH-EUR'],
+        callback2,
+        undefined,
+        onDisconnect2,
+      );
 
       // Set reconnect attempts to max
       (pool as unknown as { reconnectAttempts: number }).reconnectAttempts = 5;
@@ -1095,6 +1209,288 @@ describe('WebSocketPool', () => {
 
       expect(onDisconnect1).toHaveBeenCalledTimes(1);
       expect(onDisconnect2).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('subscribeToCandles', () => {
+    it('should return a subscription ID after connection opens', async () => {
+      const pool = new WebSocketPool(mockCredentials);
+      const callback = jest.fn();
+
+      const subscribePromise = pool.subscribeToCandles(['BTC-EUR'], callback);
+      mockWebSocketInstances[0].simulateOpen();
+
+      const subId = await subscribePromise;
+      expect(subId).toMatch(/^sub-\d+-[a-z0-9]+$/);
+    });
+
+    it('should send subscribe message for candles channel', async () => {
+      const pool = new WebSocketPool(mockCredentials);
+      const callback = jest.fn();
+
+      const subscribePromise = pool.subscribeToCandles(
+        ['BTC-EUR', 'ETH-EUR'],
+        callback,
+      );
+      mockWebSocketInstances[0].simulateOpen();
+      await subscribePromise;
+
+      expect(mockWebSocketInstances[0].send).toHaveBeenCalledWith(
+        JSON.stringify({
+          type: 'subscribe',
+          product_ids: ['BTC-EUR', 'ETH-EUR'],
+          channel: 'candles',
+          jwt: 'mock-jwt-token',
+        }),
+      );
+    });
+
+    it('should deliver candle messages to callback', async () => {
+      const pool = new WebSocketPool(mockCredentials);
+      const callback = jest.fn();
+
+      const subscribePromise = pool.subscribeToCandles(['BTC-EUR'], callback);
+      mockWebSocketInstances[0].simulateOpen();
+      await subscribePromise;
+
+      mockWebSocketInstances[0].simulateMessage(
+        createCandlesMessage(
+          'BTC-EUR',
+          '1000',
+          '100',
+          '110',
+          '90',
+          '105',
+          '500',
+        ),
+      );
+
+      expect(callback).toHaveBeenCalledTimes(1);
+      expect(callback).toHaveBeenCalledWith(
+        expect.objectContaining({
+          productId: 'BTC-EUR',
+          start: 1000,
+          open: 100,
+          high: 110,
+          low: 90,
+          close: 105,
+          volume: 500,
+        }),
+      );
+    });
+
+    it('should only deliver candles for subscribed products', async () => {
+      const pool = new WebSocketPool(mockCredentials);
+      const callback = jest.fn();
+
+      const subscribePromise = pool.subscribeToCandles(['BTC-EUR'], callback);
+      mockWebSocketInstances[0].simulateOpen();
+      await subscribePromise;
+
+      // Send candle for non-subscribed product
+      mockWebSocketInstances[0].simulateMessage(
+        createCandlesMessage(
+          'ETH-EUR',
+          '1000',
+          '100',
+          '110',
+          '90',
+          '105',
+          '500',
+        ),
+      );
+
+      expect(callback).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('unsubscribeFromCandles', () => {
+    it('should send unsubscribe message for candles channel', async () => {
+      const pool = new WebSocketPool(mockCredentials);
+      const callback = jest.fn();
+
+      const subscribePromise = pool.subscribeToCandles(['BTC-EUR'], callback);
+      mockWebSocketInstances[0].simulateOpen();
+      const subId = await subscribePromise;
+
+      mockWebSocketInstances[0].send.mockClear();
+      pool.unsubscribeFromCandles(subId);
+
+      expect(mockWebSocketInstances[0].send).toHaveBeenCalledWith(
+        JSON.stringify({
+          type: 'unsubscribe',
+          product_ids: ['BTC-EUR'],
+          channel: 'candles',
+          jwt: 'mock-jwt-token',
+        }),
+      );
+    });
+
+    it('should stop delivering candles after unsubscribe', async () => {
+      const pool = new WebSocketPool(mockCredentials);
+      const callback = jest.fn();
+
+      const subscribePromise = pool.subscribeToCandles(['BTC-EUR'], callback);
+      mockWebSocketInstances[0].simulateOpen();
+      const subId = await subscribePromise;
+
+      pool.unsubscribeFromCandles(subId);
+
+      mockWebSocketInstances[0].simulateMessage(
+        createCandlesMessage(
+          'BTC-EUR',
+          '1000',
+          '100',
+          '110',
+          '90',
+          '105',
+          '500',
+        ),
+      );
+
+      expect(callback).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('candles and ticker combined', () => {
+    it('should handle both ticker and candle subscriptions on same connection', async () => {
+      const pool = new WebSocketPool(mockCredentials);
+      const tickerCallback = jest.fn();
+      const candleCallback = jest.fn();
+
+      const tickerPromise = pool.subscribeToTicker(['BTC-EUR'], tickerCallback);
+      mockWebSocketInstances[0].simulateOpen();
+      await tickerPromise;
+
+      await pool.subscribeToCandles(['BTC-EUR'], candleCallback);
+
+      // Send ticker
+      mockWebSocketInstances[0].simulateMessage(
+        createTickerMessage(
+          'BTC-EUR',
+          '60000',
+          '1000',
+          '2.5',
+          '62000',
+          '58000',
+        ),
+      );
+
+      // Send candle
+      mockWebSocketInstances[0].simulateMessage(
+        createCandlesMessage(
+          'BTC-EUR',
+          '1000',
+          '100',
+          '110',
+          '90',
+          '105',
+          '500',
+        ),
+      );
+
+      expect(tickerCallback).toHaveBeenCalledTimes(1);
+      expect(candleCallback).toHaveBeenCalledTimes(1);
+    });
+
+    it('should re-subscribe to both channels after reconnect', async () => {
+      const pool = new WebSocketPool(mockCredentials);
+      const tickerCallback = jest.fn();
+      const candleCallback = jest.fn();
+      const tickerOnReconnect = jest.fn();
+      const candleOnReconnect = jest.fn();
+
+      const tickerPromise = pool.subscribeToTicker(
+        ['BTC-EUR'],
+        tickerCallback,
+        tickerOnReconnect,
+      );
+      mockWebSocketInstances[0].simulateOpen();
+      await tickerPromise;
+
+      await pool.subscribeToCandles(
+        ['ETH-EUR'],
+        candleCallback,
+        candleOnReconnect,
+      );
+
+      // Trigger reconnect
+      mockWebSocketInstances[0].simulateClose();
+      jest.advanceTimersByTime(1100);
+      await Promise.resolve();
+
+      // New connection opens
+      mockWebSocketInstances[1].simulateOpen();
+      await Promise.resolve();
+
+      // Both onReconnect callbacks should be called
+      expect(tickerOnReconnect).toHaveBeenCalledTimes(1);
+      expect(candleOnReconnect).toHaveBeenCalledTimes(1);
+
+      // Should have sent subscribe for both channels
+      const sendCalls = mockWebSocketInstances[1].send.mock.calls.map(
+        (call) => JSON.parse(call[0]) as { channel: string },
+      );
+      const channels = sendCalls.filter((c) => c.channel).map((c) => c.channel);
+      expect(channels).toContain('ticker');
+      expect(channels).toContain('candles');
+    });
+
+    it('should call onDisconnect for both ticker and candle subscriptions when max attempts reached', async () => {
+      const pool = new WebSocketPool(mockCredentials);
+      const tickerCallback = jest.fn();
+      const candleCallback = jest.fn();
+      const tickerOnDisconnect = jest.fn();
+      const candleOnDisconnect = jest.fn();
+
+      const tickerPromise = pool.subscribeToTicker(
+        ['BTC-EUR'],
+        tickerCallback,
+        undefined,
+        tickerOnDisconnect,
+      );
+      mockWebSocketInstances[0].simulateOpen();
+      await tickerPromise;
+
+      await pool.subscribeToCandles(
+        ['ETH-EUR'],
+        candleCallback,
+        undefined,
+        candleOnDisconnect,
+      );
+
+      // Set reconnect attempts to max
+      (pool as unknown as { reconnectAttempts: number }).reconnectAttempts = 5;
+
+      // Trigger reconnect
+      mockWebSocketInstances[0].simulateClose();
+      jest.advanceTimersByTime(1000);
+      await Promise.resolve();
+
+      expect(tickerOnDisconnect).toHaveBeenCalledTimes(1);
+      expect(candleOnDisconnect).toHaveBeenCalledTimes(1);
+    });
+
+    it('should not reconnect when no subscriptions exist', async () => {
+      const pool = new WebSocketPool(mockCredentials);
+      const tickerCallback = jest.fn();
+
+      const promise = pool.subscribeToTicker(['BTC-EUR'], tickerCallback);
+      mockWebSocketInstances[0].simulateOpen();
+      const subId = await promise;
+
+      // Unsubscribe
+      pool.unsubscribeFromTicker(subId);
+
+      const countBefore = mockWebSocketInstances.length;
+
+      // Trigger close
+      mockWebSocketInstances[0].simulateClose();
+      jest.advanceTimersByTime(1100);
+      await Promise.resolve();
+
+      // No new connection should be created
+      expect(mockWebSocketInstances.length).toBe(countBefore);
     });
   });
 });

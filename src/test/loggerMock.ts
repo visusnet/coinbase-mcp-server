@@ -9,12 +9,14 @@ export interface LoggerScope {
   error: jest.Mock;
   warn: jest.Mock;
   debug: jest.Mock;
+  trace: jest.Mock;
+  isLevelEnabled: jest.Mock;
 }
 
 export interface MockedLogger {
   server: LoggerScope;
   tools: LoggerScope;
-  websocket: LoggerScope;
+  streaming: LoggerScope;
 }
 
 function createLoggerScope(): LoggerScope {
@@ -23,6 +25,8 @@ function createLoggerScope(): LoggerScope {
     error: jest.fn(),
     warn: jest.fn(),
     debug: jest.fn(),
+    trace: jest.fn(),
+    isLevelEnabled: jest.fn().mockReturnValue(false),
   };
 }
 
@@ -47,22 +51,23 @@ export function mockLogger(): MockedLogger {
   const logger: MockedLogger = {
     server: createLoggerScope(),
     tools: createLoggerScope(),
-    websocket: createLoggerScope(),
+    streaming: createLoggerScope(),
   };
 
   beforeEach(() => {
-    logger.server.info.mockClear();
-    logger.server.error.mockClear();
-    logger.server.warn.mockClear();
-    logger.server.debug.mockClear();
-    logger.tools.info.mockClear();
-    logger.tools.error.mockClear();
-    logger.tools.warn.mockClear();
-    logger.tools.debug.mockClear();
-    logger.websocket.info.mockClear();
-    logger.websocket.error.mockClear();
-    logger.websocket.warn.mockClear();
-    logger.websocket.debug.mockClear();
+    const scopes: LoggerScope[] = [
+      logger.server,
+      logger.tools,
+      logger.streaming,
+    ];
+    for (const scope of scopes) {
+      scope.info.mockClear();
+      scope.error.mockClear();
+      scope.warn.mockClear();
+      scope.debug.mockClear();
+      scope.trace.mockClear();
+      scope.isLevelEnabled.mockClear();
+    }
   });
 
   return logger;

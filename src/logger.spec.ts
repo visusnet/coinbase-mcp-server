@@ -25,7 +25,7 @@ describe('logger', () => {
 
     expect(logger.server).toBeDefined();
     expect(logger.tools).toBeDefined();
-    expect(logger.websocket).toBeDefined();
+    expect(logger.streaming).toBeDefined();
 
     const customLogger = createLogger('CustomScope');
     expect(customLogger).toBeDefined();
@@ -78,7 +78,7 @@ describe('logger', () => {
     expect(() => {
       logger.server.info('test message');
       logger.tools.error('test error');
-      logger.websocket.warn('test warning');
+      logger.streaming.warn('test warning');
     }).not.toThrow();
   });
 });

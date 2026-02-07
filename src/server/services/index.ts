@@ -13,10 +13,8 @@ export { PublicService } from './PublicService';
 export { TechnicalIndicatorsService } from './TechnicalIndicatorsService';
 export { TechnicalAnalysisService } from './TechnicalAnalysisService';
 export { MarketEventService } from './MarketEventService';
+export { RealTimeData } from './RealTimeData';
 export { NewsService } from './NewsService';
-
-// Re-export Granularity enum (needs explicit export since it's a value, not just a type)
-export { Granularity } from './ProductsService.types';
 
 // Re-export types from schema files
 export type * from './OrdersService.request';
