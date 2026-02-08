@@ -14,6 +14,7 @@ Single Source of Truth for `.claude/trading-state.json` structure.
     "id": "2026-01-12T13:15:00Z",
     "startTime": "2026-01-12T13:15:00Z",
     "lastUpdated": "2026-01-13T14:32:00Z",
+    "cycleCount": 0,
     "budget": {
       "initial": 9.50,
       "remaining": 0.11,
@@ -172,6 +173,7 @@ Single Source of Truth for `.claude/trading-state.json` structure.
 | `session.id` | string | Unique session identifier (= startTime) |
 | `session.startTime` | string | ISO 8601 timestamp |
 | `session.lastUpdated` | string | ISO 8601, last state change |
+| `session.cycleCount` | number | Cycle counter for re-anchor protocol (starts at 0, incremented each cycle) |
 | `session.budget.initial` | number | Starting budget in EUR (converted if needed) |
 | `session.budget.remaining` | number | Available budget in EUR |
 | `session.budget.currency` | string | Always "EUR" (accounting currency) |
@@ -475,6 +477,7 @@ ELSE:
   session.budget.currency = "EUR"
   session.budget.source = "EUR"
 
+session.cycleCount = 0
 session.stats.* = all 0
 session.config.strategy = "aggressive" (default)
 session.config.interval = parsed or "15m"
