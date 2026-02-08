@@ -96,35 +96,36 @@ const TriggerBracketGtdSchema = z
   })
   .describe('Trigger bracket order with good-till-date execution');
 
+// =============================================================================
+// Attached Order Configuration Sub-Schemas (TP/SL created when parent fills)
+// =============================================================================
+
+const AttachedTriggerBracketGtcSchema = z
+  .object({
+    limitPrice: numberToString.describe('Take-profit limit price'),
+    stopTriggerPrice: numberToString.describe('Stop-loss trigger price'),
+  })
+  .describe('Attached trigger bracket with good-till-cancelled execution');
+
+const AttachedOrderConfigurationSchema = z
+  .object({
+    triggerBracketGtc: AttachedTriggerBracketGtcSchema.optional(),
+  })
+  .describe(
+    'Attached TP/SL configuration for BUY orders. When the parent order fills, Coinbase creates a SELL order with take-profit (limitPrice) and stop-loss (stopTriggerPrice). Size is inherited from the parent order.',
+  );
+
 const OrderConfigurationSchema = z
   .object({
-    marketMarketIoc: MarketMarketIocSchema.optional().describe(
-      'Market order with immediate-or-cancel execution',
-    ),
-    limitLimitGtc: LimitLimitGtcSchema.optional().describe(
-      'Limit order with good-till-cancelled execution',
-    ),
-    limitLimitGtd: LimitLimitGtdSchema.optional().describe(
-      'Limit order with good-till-date execution',
-    ),
-    limitLimitFok: LimitLimitFokSchema.optional().describe(
-      'Limit order with fill-or-kill execution',
-    ),
-    sorLimitIoc: SorLimitIocSchema.optional().describe(
-      'Smart order routing limit order with immediate-or-cancel execution',
-    ),
-    stopLimitStopLimitGtc: StopLimitStopLimitGtcSchema.optional().describe(
-      'Stop-limit order with good-till-cancelled execution',
-    ),
-    stopLimitStopLimitGtd: StopLimitStopLimitGtdSchema.optional().describe(
-      'Stop-limit order with good-till-date execution',
-    ),
-    triggerBracketGtc: TriggerBracketGtcSchema.optional().describe(
-      'Trigger bracket order with good-till-cancelled execution',
-    ),
-    triggerBracketGtd: TriggerBracketGtdSchema.optional().describe(
-      'Trigger bracket order with good-till-date execution',
-    ),
+    marketMarketIoc: MarketMarketIocSchema.optional(),
+    limitLimitGtc: LimitLimitGtcSchema.optional(),
+    limitLimitGtd: LimitLimitGtdSchema.optional(),
+    limitLimitFok: LimitLimitFokSchema.optional(),
+    sorLimitIoc: SorLimitIocSchema.optional(),
+    stopLimitStopLimitGtc: StopLimitStopLimitGtcSchema.optional(),
+    stopLimitStopLimitGtd: StopLimitStopLimitGtdSchema.optional(),
+    triggerBracketGtc: TriggerBracketGtcSchema.optional(),
+    triggerBracketGtd: TriggerBracketGtdSchema.optional(),
   })
   .describe('Order configuration (specify one order type)');
 
@@ -158,9 +159,8 @@ export const CreateOrderRequestSchema = z
     clientOrderId: z.string().describe('Unique client order ID'),
     productId: z.string().describe('Trading pair (e.g., BTC-USD)'),
     side: z.nativeEnum(OrderSide).describe('Order side (BUY or SELL)'),
-    orderConfiguration: OrderConfigurationSchema.describe(
-      'Order configuration',
-    ),
+    orderConfiguration: OrderConfigurationSchema,
+    attachedOrderConfiguration: AttachedOrderConfigurationSchema.optional(),
   })
   .describe('Request to create a new order');
 
@@ -205,9 +205,8 @@ export const PreviewOrderRequestSchema = z
   .object({
     productId: z.string().describe('Trading pair (e.g., BTC-USD)'),
     side: z.nativeEnum(OrderSide).describe('Order side (BUY or SELL)'),
-    orderConfiguration: OrderConfigurationSchema.describe(
-      'Order configuration',
-    ),
+    orderConfiguration: OrderConfigurationSchema,
+    attachedOrderConfiguration: AttachedOrderConfigurationSchema.optional(),
   })
   .describe('Request to preview a new order');
 

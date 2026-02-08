@@ -171,6 +171,32 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "attachedOrderConfiguration": {
+              "additionalProperties": false,
+              "description": "Attached TP/SL configuration for BUY orders. When the parent order fills, Coinbase creates a SELL order with take-profit (limitPrice) and stop-loss (stopTriggerPrice). Size is inherited from the parent order.",
+              "properties": {
+                "triggerBracketGtc": {
+                  "additionalProperties": false,
+                  "description": "Attached trigger bracket with good-till-cancelled execution",
+                  "properties": {
+                    "limitPrice": {
+                      "$ref": "#/properties/orderConfiguration/properties/limitLimitGtc/properties/baseSize",
+                      "description": "Take-profit limit price",
+                    },
+                    "stopTriggerPrice": {
+                      "$ref": "#/properties/orderConfiguration/properties/limitLimitGtc/properties/baseSize",
+                      "description": "Stop-loss trigger price",
+                    },
+                  },
+                  "required": [
+                    "limitPrice",
+                    "stopTriggerPrice",
+                  ],
+                  "type": "object",
+                },
+              },
+              "type": "object",
+            },
             "clientOrderId": {
               "description": "Unique client order ID",
               "type": "string",
@@ -185,7 +211,7 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
             },
             "orderConfiguration": {
               "additionalProperties": false,
-              "description": "Order configuration",
+              "description": "Order configuration (specify one order type)",
               "properties": {
                 "limitLimitFok": {
                   "additionalProperties": false,
@@ -627,6 +653,32 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "attachedOrderConfiguration": {
+              "additionalProperties": false,
+              "description": "Attached TP/SL configuration for BUY orders. When the parent order fills, Coinbase creates a SELL order with take-profit (limitPrice) and stop-loss (stopTriggerPrice). Size is inherited from the parent order.",
+              "properties": {
+                "triggerBracketGtc": {
+                  "additionalProperties": false,
+                  "description": "Attached trigger bracket with good-till-cancelled execution",
+                  "properties": {
+                    "limitPrice": {
+                      "$ref": "#/properties/orderConfiguration/properties/limitLimitGtc/properties/baseSize",
+                      "description": "Take-profit limit price",
+                    },
+                    "stopTriggerPrice": {
+                      "$ref": "#/properties/orderConfiguration/properties/limitLimitGtc/properties/baseSize",
+                      "description": "Stop-loss trigger price",
+                    },
+                  },
+                  "required": [
+                    "limitPrice",
+                    "stopTriggerPrice",
+                  ],
+                  "type": "object",
+                },
+              },
+              "type": "object",
+            },
             "format": {
               "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
               "enum": [
@@ -637,7 +689,7 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
             },
             "orderConfiguration": {
               "additionalProperties": false,
-              "description": "Order configuration",
+              "description": "Order configuration (specify one order type)",
               "properties": {
                 "limitLimitFok": {
                   "additionalProperties": false,
@@ -5117,6 +5169,32 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "attachedOrderConfiguration": {
+              "additionalProperties": false,
+              "description": "Attached TP/SL configuration for BUY orders. When the parent order fills, Coinbase creates a SELL order with take-profit (limitPrice) and stop-loss (stopTriggerPrice). Size is inherited from the parent order.",
+              "properties": {
+                "triggerBracketGtc": {
+                  "additionalProperties": false,
+                  "description": "Attached trigger bracket with good-till-cancelled execution",
+                  "properties": {
+                    "limitPrice": {
+                      "$ref": "#/properties/orderConfiguration/properties/limitLimitGtc/properties/baseSize",
+                      "description": "Take-profit limit price",
+                    },
+                    "stopTriggerPrice": {
+                      "$ref": "#/properties/orderConfiguration/properties/limitLimitGtc/properties/baseSize",
+                      "description": "Stop-loss trigger price",
+                    },
+                  },
+                  "required": [
+                    "limitPrice",
+                    "stopTriggerPrice",
+                  ],
+                  "type": "object",
+                },
+              },
+              "type": "object",
+            },
             "clientOrderId": {
               "description": "Unique client order ID",
               "type": "string",
@@ -5131,7 +5209,7 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
             },
             "orderConfiguration": {
               "additionalProperties": false,
-              "description": "Order configuration",
+              "description": "Order configuration (specify one order type)",
               "properties": {
                 "limitLimitFok": {
                   "additionalProperties": false,
@@ -5578,6 +5656,32 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "attachedOrderConfiguration": {
+              "additionalProperties": false,
+              "description": "Attached TP/SL configuration for BUY orders. When the parent order fills, Coinbase creates a SELL order with take-profit (limitPrice) and stop-loss (stopTriggerPrice). Size is inherited from the parent order.",
+              "properties": {
+                "triggerBracketGtc": {
+                  "additionalProperties": false,
+                  "description": "Attached trigger bracket with good-till-cancelled execution",
+                  "properties": {
+                    "limitPrice": {
+                      "$ref": "#/properties/orderConfiguration/properties/limitLimitGtc/properties/baseSize",
+                      "description": "Take-profit limit price",
+                    },
+                    "stopTriggerPrice": {
+                      "$ref": "#/properties/orderConfiguration/properties/limitLimitGtc/properties/baseSize",
+                      "description": "Stop-loss trigger price",
+                    },
+                  },
+                  "required": [
+                    "limitPrice",
+                    "stopTriggerPrice",
+                  ],
+                  "type": "object",
+                },
+              },
+              "type": "object",
+            },
             "format": {
               "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
               "enum": [
@@ -5588,7 +5692,7 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
             },
             "orderConfiguration": {
               "additionalProperties": false,
-              "description": "Order configuration",
+              "description": "Order configuration (specify one order type)",
               "properties": {
                 "limitLimitFok": {
                   "additionalProperties": false,

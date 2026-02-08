@@ -39,7 +39,12 @@ The project does NOT need to be built. Just call the tools.
     - If analysis shows buying X is better than holding BTC → trade BTC for X
     - Prefer direct pairs (BTC→X) over BTC→EUR→X to save fees
     - If holding BTC is better than any available trade → HOLD, do not sell
+  - The EUR equivalent is locked at the conversion rate when the session starts.
+    <reasoning>
+    If BTC was 100,000 EUR at session start, the budget is 0.0001 BTC — even if BTC later drops to 50,000 EUR. The budget must not become a moving target.
+    </reasoning>
   - Track remaining budget in state file, do NOT exceed it across all cycles
+  - **SACRED RULE**: The budget is the ONLY capital the bot may use. All other holdings are OFF LIMITS. If the user holds 50 EUR in BTC and sets a budget of "10 EUR from BTC", the remaining 40 EUR in BTC and ALL other assets MUST stay untouched. Never sell, trade, or reallocate assets outside the budget — they belong to the user, not the bot.
 - **Interval**: From command arguments (e.g., "interval=5m" for 5 minutes, default: 15m)
 - **Strategy**: Aggressive
 - **Take-Profit / Stop-Loss**: ATR-based (see "Dynamic Stop-Loss / Take-Profit")
@@ -77,6 +82,23 @@ result = analyze_technical_indicators(
 - `signal`: Aggregated score (-100 to +100), direction (BUY/SELL/HOLD), confidence (HIGH/MEDIUM/LOW)
 
 This reduces context by ~90-95% compared to calling individual tools.
+
+### Batch Analysis (Multi-Pair Scanning)
+
+For scanning multiple pairs simultaneously, use `analyze_technical_indicators_batch`:
+
+```
+result = analyze_technical_indicators_batch(
+  requests=[
+    { productId: "BTC-EUR", granularity: "FIFTEEN_MINUTE", candleCount: 100,
+      indicators: ["rsi", "macd", "bollinger_bands", "adx", "vwap", "stochastic"] },
+    { productId: "DOGE-EUR", granularity: "FIFTEEN_MINUTE", candleCount: 100,
+      indicators: ["rsi", "macd", "bollinger_bands", "adx", "vwap", "stochastic"] }
+  ]
+)
+```
+
+Returns results for all pairs in a single call. Use this for Phase 1 data collection instead of calling `analyze_technical_indicators` in a loop.
 
 ### Available Indicator Tools
 
@@ -186,19 +208,86 @@ wait_for_market_event({
 ```
 
 **Available Condition Fields:**
+
+Ticker fields (real-time via WebSocket):
 - `price` - Current price
 - `volume24h` - 24-hour volume
 - `percentChange24h` - 24-hour percent change
-- `high24h` - 24-hour high
-- `low24h` - 24-hour low
+- `high24h` / `low24h` - 24-hour high/low
+- `high52w` / `low52w` - 52-week high/low
+- `bestBid` / `bestAsk` - Current best bid/ask
+- `bestBidQuantity` / `bestAskQuantity` - Order book depth
 
-**Available Condition Operators:**
-- `gt` - Greater than
-- `gte` - Greater than or equal
-- `lt` - Less than
-- `lte` - Less than or equal
+Indicator fields (computed from candles, updated per candle interval):
+- `rsi` - RSI value (optional: `period`, `granularity`)
+- `macd` - MACD line (optional: `fastPeriod`, `slowPeriod`, `signalPeriod`, `granularity`)
+- `macd.histogram` - MACD histogram
+- `macd.signal` - MACD signal line
+- `bollingerBands` / `.upper` / `.lower` / `.bandwidth` / `.percentB` (optional: `period`, `stdDev`, `granularity`)
+- `sma` - SMA value (required: `period`, optional: `granularity`)
+- `ema` - EMA value (required: `period`, optional: `granularity`)
+- `stochastic` - Stochastic %K (optional: `kPeriod`, `dPeriod`, `granularity`)
+- `stochastic.d` - Stochastic %D signal line
+
+**Available Operators** (all fields):
+- `gt`, `gte`, `lt`, `lte` - Standard comparisons
 - `crossAbove` - Crosses threshold upward (requires previous value below)
 - `crossBelow` - Crosses threshold downward (requires previous value above)
+
+**Indicator Condition Examples:**
+
+```
+// Wait for RSI oversold recovery on 15m candles
+{ field: "rsi", operator: "crossAbove", value: 30, granularity: "FIFTEEN_MINUTE" }
+
+// Wait for MACD bullish crossover (histogram turns positive) on 1H
+{ field: "macd.histogram", operator: "crossAbove", value: 0, granularity: "ONE_HOUR" }
+
+// Wait for price to break above EMA(50) on 15m
+{ field: "ema", period: 50, operator: "crossAbove", value: 59000, granularity: "FIFTEEN_MINUTE" }
+
+// Combined: SL price OR RSI oversold recovery
+conditions: [
+  { field: "price", operator: "lte", value: 57500 },
+  { field: "rsi", operator: "crossAbove", value: 30, granularity: "FIFTEEN_MINUTE" }
+],
+logic: "any"
+```
+
+Indicator conditions default to `FIVE_MINUTE` granularity if not specified.
+
+**Best Practices:**
+
+1. **Minimum condition distance**: Price conditions must be > 1% from current price (or > 0.5× ATR).
+
+<reasoning>
+Tighter conditions trigger on normal volatility noise, flooding the bot with false positives. During the BTC crash session, VWAP-based conditions with ~50 EUR thresholds caused the observer to trigger on every tiny oscillation.
+</reasoning>
+
+2. **Timeout tiers**:
+   - **55s** — Active SL/TP monitoring (open positions, need fast reaction)
+   - **120s** — Passive entry monitoring (waiting for a breakout or dip)
+   - **240s** — Low-activity periods (no positions, no strong signals, just watching)
+
+<reasoning>
+Shorter timeouts mean more frequent analysis cycles (more API calls, more context usage). Longer timeouts risk slower reaction to price moves. Match the timeout to urgency: positions at risk need 55s, speculative waiting can afford 240s.
+
+A `status: "timeout"` response does NOT guarantee that conditions are false. It means the tool did not receive matching data from Coinbase within the timeout window — but WebSocket packets can be lost and REST API calls can temporarily fail. If you urgently wait for something (e.g., SL/TP), verify the current state yourself after a timeout by calling `get_best_bid_ask` or the relevant indicator tool.
+
+For very low-activity periods you may want to wait longer than 240s, but that's the technical maximum. Simply restart with the same conditions.
+</reasoning>
+
+3. **Prefer `crossAbove`/`crossBelow` for entry signals**: Use `crossAbove`/`crossBelow` instead of `gt`/`lt` when monitoring for entries or indicator transitions.
+
+<reasoning>
+`gt`/`lt` fire on every tick while the condition holds — if RSI is above 70, `gt` triggers repeatedly every time the ticker updates. `crossAbove`/`crossBelow` fire once when the value transitions through the threshold, which is what you actually want for signals like RSI oversold recovery or MACD crossover. Use `gt`/`lt` only for hard boundaries (SL/TP price levels) where you care about the current state, not the transition.
+</reasoning>
+
+4. **Keep conditions simple**: Max 5 conditions per subscription, max 10 subscriptions per call.
+
+<reasoning>
+More conditions means more potential triggers and harder-to-debug behavior. If the bot needs complex multi-indicator logic (e.g., "RSI > 30 AND MACD positive AND price above EMA50"), do that in the analysis cycle where you can log and reason about each factor. Use `wait_for_market_event` for simple trip-wires, not for replicating the full analysis pipeline.
+</reasoning>
 
 **Response Handling:**
 
@@ -341,32 +430,176 @@ State is persisted in `.claude/trading-state.json`.
 
 Use `/portfolio` for a compact status overview without verbose explanation.
 
+## Session Start
+
+Before entering the workflow, determine whether to start fresh or resume an existing session.
+
+### Decision Logic
+
+```
+ON /trade invocation:
+
+IF "reset" argument provided:
+  → Backup trading-state.json to trading-state.backup-{YYYY-MM-DD}.json
+  → FRESH START
+
+ELSE IF trading-state.json exists:
+
+  IF budget argument provided:
+    → ASK USER:
+      (A) "Resume session, keep current budget"
+      (B) "Resume session, update budget to [new amount]"
+      (C) "New session with [new amount]"
+          → Reset session.stats, session.compound, openPositions
+          → Set new budget
+          → KEEP tradeHistory (cumulative across sessions)
+
+  ELSE (no budget argument):
+    → RESUME SESSION
+
+ELSE (no state file):
+
+  IF budget argument provided:
+    → FRESH START with given budget
+
+  ELSE (no budget argument):
+    → Call list_accounts to show current holdings
+    → ASK USER: "How much budget should I use?"
+      - All of [asset]?
+      - A specific amount? (e.g., "10 EUR from BTC")
+      - Which assets? (show available balances)
+    → FRESH START with user's answer
+```
+
+<reasoning>
+Budget argument + existing state is ambiguous. "/trade 10 EUR from BTC" could mean "start fresh" or "I'm re-typing my original command to continue". Asking removes the ambiguity. "New session" resets session stats but keeps tradeHistory — like turning a new page in the same notebook, not throwing it away. The "reset" argument is the only path that creates a backup because it's the only one that actually deletes data.
+</reasoning>
+
+### Fresh Start
+
+See [state-schema.md](state-schema.md) → "Initialize Session" for the complete fresh start procedure (budget parsing, EUR conversion, field initialization).
+
+### Resume Session
+
+When resuming, reconcile state with reality before trading:
+
+**Step 1: Load State**
+
+Read `trading-state.json`, parse and validate structure.
+
+**Step 2: Reconcile Positions with Reality**
+
+<reasoning>
+The bot uses budget-based ownership: it only "owns" what the state file says + anything matching recent orders. Everything else in list_accounts belongs to the user. This respects the sacred budget rule — the bot never touches assets outside its scope. If state is empty, the bot assumes it has no positions, even if the account holds assets.
+</reasoning>
+
+```
+Call list_accounts → get actual balances
+Call list_orders(status="OPEN") → get pending orders (stop-limits, unfilled limits)
+
+FOR EACH position in state.openPositions:
+  asset = position.pair.split("-")[0]  // e.g., "BTC" from "BTC-EUR"
+  actual_balance = accounts[asset].available_balance
+
+  IF actual_balance >= position.size:
+    → Position CONFIRMED
+
+  ELSE IF actual_balance > 0 BUT < position.size:
+    → Position PARTIAL — update size to actual_balance
+    → Log: "Position {pair} reduced: state={old_size}, actual={actual_balance}"
+
+  ELSE (balance is 0):
+    → Position GONE — likely sold while offline (manual or filled SL)
+    → Check list_orders for matching fills since session.lastUpdated
+    → Move to tradeHistory with trigger="unknown_offline_exit"
+    → Log: "Position {pair} no longer held — moved to history"
+
+FOR EACH open order NOT tracked in state:
+  → Log: "Untracked open order found: {orderId} {side} {pair}"
+  → Add to state if it matches bot's session context
+  → Otherwise ignore (user's manual order)
+```
+
+**Step 3: Check Missed SL/TP** (for each confirmed position)
+
+<reasoning>
+SL breach while offline + still underwater = close immediately. The position failed and hasn't recovered — continuing to hold is wishful thinking. SL breach while offline + price recovered = recalculate SL/TP with fresh ATR and keep. Closing a profitable position because of a historical dip wastes real money. The breach is still logged as important risk context. Missed TP is always a "keep and re-optimize" — the money is still there, just set new targets.
+</reasoning>
+
+```
+Get current price via get_best_bid_ask(pair)
+Fetch candles since session.lastUpdated (to see price range while offline)
+offline_low = min(candle lows since lastUpdated)
+offline_high = max(candle highs since lastUpdated)
+
+IF offline_low < position.riskManagement.dynamicSL:
+  → SL was BREACHED while offline
+  → Log: "⚠ SL breach for {pair}: SL={dynamicSL}, offline low={offline_low}"
+
+  IF current_price < position.entry.price:
+    → Still underwater — execute exit NOW (market order)
+  ELSE:
+    → Price recovered — recalculate SL/TP with fresh ATR
+    → KEEP position with updated risk levels
+
+ELSE IF offline_high > position.riskManagement.dynamicTP:
+  → TP was BREACHED while offline (missed profit)
+  → Recalculate SL/TP with fresh ATR
+  → KEEP position
+
+IF position held > 24h:
+  → Recalculate SL/TP with current ATR regardless of breach
+```
+
+<reasoning>
+ATR changes over time. A position entered during high volatility may have a 10% SL, but if volatility has normalized, that SL is too loose. Recalculating after 24h keeps risk management aligned with current market conditions.
+</reasoning>
+
+**Step 4: Clear Stale Cache**
+
+Delete `indicatorCache` entries older than 1 hour.
+
+<reasoning>
+Indicator values from hours ago are misleading. Stale RSI or MACD values could cause the bot to skip a good entry or hold a bad position. Fresh data costs one API call — cheap insurance.
+</reasoning>
+
+**Step 5: Update and Continue**
+
+```
+session.lastUpdated = now()
+Log resume summary: "{N} positions confirmed, {M} gone, {K} SL/TP breaches"
+→ Continue to Phase 1
+```
+
+---
+
 ## Workflow
 
 ```text
 ┌─────────────────────────────────────────────────────────────┐
 │ PHASE 1: DATA COLLECTION                                    │
 │   1. Check Portfolio Status                                 │
-│   2. Collect Market Data                                    │
-│   3. Technical Analysis                                     │
-│   4. Sentiment Analysis                                     │
+│   2. Pair Screening                                         │
+│   3. Collect Market Data (for selected pairs)               │
+│   4. Technical Analysis                                     │
+│   5. Sentiment Analysis                                     │
 ├─────────────────────────────────────────────────────────────┤
 │ PHASE 2: MANAGE EXISTING POSITIONS (frees up capital)       │
-│   5. Check SL/TP/Trailing                                   │
-│   6. Rebalancing Check                                      │
-│   7. Apply Compound (after exits)                           │
-│  7a. Budget Exhaustion Check                                │
+│   6. Check SL/TP/Trailing                                   │
+│   7. Rebalancing Check                                      │
+│   8. Apply Compound (after exits)                           │
+│   9. Budget Exhaustion Check                                │
 ├─────────────────────────────────────────────────────────────┤
 │ PHASE 3: NEW ENTRIES (uses freed capital)                   │
-│   8. Signal Aggregation                                     │
-│  8a. Apply Volatility-Based Position Sizing                 │
-│   9. Check Fees & Profit Threshold                          │
-│  10. Pre-Trade Liquidity Check                              │
-│  11. Execute Order                                          │
+│  10. Signal Aggregation                                     │
+│  11. Apply Volatility-Based Position Sizing                 │
+│  12. Check Fees & Profit Threshold                          │
+│  13. Pre-Trade Liquidity Check                              │
+│  14. Execute Order                                          │
 ├─────────────────────────────────────────────────────────────┤
 │ PHASE 4: REPORT                                             │
-│  12. Output Report                                          │
-│  13. Sleep → Repeat                                         │
+│  15. Output Report                                          │
+│      → Repeat (see Autonomous Loop Mode)                    │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -380,9 +613,55 @@ Call `list_accounts` and determine:
 - Available BTC balance (if budget is from BTC)
 - Current open positions
 
-### 2. Collect Market Data
+### 2. Pair Screening
 
-For the relevant currency pairs:
+Systematically select which pairs to analyze instead of picking manually.
+
+**Stage 1 — Batch Screen (all EUR pairs):**
+
+```
+pairs = list_products(type="SPOT") → filter EUR quote currency
+results = analyze_technical_indicators_batch(
+  requests: pairs.map(p => ({
+    productId: p.product_id,
+    granularity: "FIFTEEN_MINUTE",
+    candleCount: 100,
+    indicators: ["rsi", "macd", "adx", "vwap", "bollinger_bands", "stochastic"]
+  })),
+  format: "toon"
+)
+```
+
+**Stage 2 — Select Watch List:**
+
+```
+watch_list = []
+
+// Top 5-8 BUY candidates by signal score
+candidates = results.sort_by(signal.score, descending).take(8)
+watch_list.add(candidates)
+
+// ALWAYS include pairs with open positions (for SL/TP management)
+FOR EACH position in openPositions:
+  IF position.pair NOT IN watch_list:
+    watch_list.add(position.pair)
+
+Log: "Watch list ({N} pairs): {pair1}, {pair2}, ..."
+```
+
+The watch list is rebuilt every cycle from fresh batch data. Pairs that scored well last cycle but dropped in signal strength are removed. New pairs that became interesting since the last cycle are added. Only open positions are guaranteed a spot regardless of score.
+
+<reasoning>
+Scanning all 50+ EUR pairs costs one batch API call — cheap for the MCP server, compact output for Claude. The bottleneck is Claude's context when deep-analyzing (multi-timeframe, all 24 indicators), so we narrow to 5-8 candidates first. Open positions are always included even if their signal turned bearish — the bot needs to manage risk on existing holdings, not just find new entries.
+</reasoning>
+
+Steps 3-5 below operate only on the watch list pairs.
+
+---
+
+### 3. Collect Market Data
+
+For the watch list pairs:
 
 **Multi-Timeframe Data Collection**:
 
@@ -410,7 +689,7 @@ current_price = get_best_bid_ask(pair)
 | 6 hour | 60 | Medium-term trend confirmation |
 | Daily | 30 | Long-term trend confirmation |
 
-### 3. Technical Analysis
+### 4. Technical Analysis
 
 For each pair, call MCP indicator tools and interpret the results:
 
@@ -589,14 +868,13 @@ BTC-EUR Trend Analysis:
   Daily: NEUTRAL (MACD near zero, sideways)
 ```
 
-### 4. Sentiment Analysis
+### 5. Sentiment Analysis
 
-Perform a web search:
+Check sentiment **every cycle** (not just the first). Results feed into Step 10 as signal modifiers.
 
-- Search for "crypto fear greed index today"
-- Search for "[COIN] price prediction today" for top candidates
+**Source 1 — Fear & Greed Index (global macro)**:
 
-**Fear & Greed Interpretation**:
+Search for "crypto fear greed index today" via web search.
 
 - 0-10 (Extreme Fear): Contrarian BUY signal (+2 modifier)
 - 10-25 (Fear): BUY bias (+1 modifier)
@@ -606,7 +884,32 @@ Perform a web search:
 - 75-90 (Greed): SELL bias (-1 modifier)
 - 90-100 (Extreme Greed): Contrarian SELL (-2 modifier)
 
-### 5. Check Stop-Loss / Take-Profit
+**Source 2 — News Sentiment (per-pair context)**:
+
+Call `get_news_sentiment` for the top BUY candidates from Step 2. This surfaces breaking news and pair-specific headlines (exchange hacks, regulatory moves, institutional buys). Read the sentiment scores and headline summaries:
+
+- Strongly positive news on a BUY candidate: reinforces the signal
+- Strongly negative news on a BUY candidate: reduces confidence (apply as negative modifier)
+- Use the news context to distinguish crash types (systemic risk vs. temporary liquidation)
+
+**Overall sentiment classification** for Step 10:
+
+| Fear & Greed | News Sentiment | → Classification |
+|-------------|----------------|------------------|
+| Fear/Extreme Fear | Positive or neutral | **Bullish** |
+| Neutral | Positive | **Bullish** |
+| Neutral | Neutral | **Neutral** |
+| Neutral | Negative | **Bearish** |
+| Greed/Extreme Greed | Negative or neutral | **Bearish** |
+| Conflicting (Fear + negative news) | — | **Neutral** (signals cancel out) |
+
+### 6. Check Stop-Loss / Take-Profit
+
+**Positions with attached bracket orders** (market/limit BUY entries with `attachedOrderConfiguration`):
+Coinbase handles the basic SL/TP automatically — the attached bracket is the primary protection. The bot's SL/TP check below serves as a **secondary layer** for:
+- **Trailing stop** management (attached brackets don't trail)
+- **SL/TP recalculation** after 24h (cancel old bracket via `cancel_orders`, new bracket is set on the next entry or manually)
+- **Positions without brackets** (stop-limit fills, manual trades, or pre-existing positions from earlier sessions)
 
 For all open positions, use dynamic ATR-based thresholds:
 
@@ -705,7 +1008,7 @@ Position: SOL-EUR
   Status: TRAILING (stop rising with price)
 ```
 
-### 6. Rebalancing Check
+### 7. Rebalancing Check
 
 For positions held > 12h with < 3% movement:
 
@@ -770,7 +1073,7 @@ Last Rebalance: 4h ago (cooldown OK)
 ═══════════════════════════════════════════════════════════════
 ```
 
-### 7. Apply Compound
+### 8. Apply Compound
 
 After any profitable exit (SL/TP/Trailing/Rebalance):
 
@@ -838,7 +1141,7 @@ IF net_pnl > 0:
 - Reduce rate to 25% after 3 consecutive wins (risk control)
 - Never compound losses
 
-### 7a. Budget Exhaustion Check
+### 9. Budget Exhaustion Check
 
 Before seeking new entries, verify sufficient budget for trading:
 
@@ -852,9 +1155,9 @@ IF session.budget.remaining < min_order_size_eur:
 
   // Step 3: Check if rebalancing is possible
   IF hasOpenPositions AND anyPositionEligibleForRebalancing:
-    // Continue to rebalancing logic (Step 6)
+    // Continue to rebalancing logic (Step 7)
     // Rebalancing can free up capital for new trades
-    SKIP to Step 8 (Signal Aggregation) after rebalancing
+    SKIP to Step 10 (Signal Aggregation) after rebalancing
   ELSE:
     // No positions to rebalance, insufficient budget for new entry
     Log: "Budget exhausted: {remaining}€ < minimum {min}€, no positions to rebalance"
@@ -869,7 +1172,7 @@ IF session.budget.remaining < min_order_size_eur:
 - Only exits if BOTH: insufficient budget AND no rebalanceable positions
 - This prevents deadlock while allowing capital reallocation
 
-### 8. Signal Aggregation
+### 10. Signal Aggregation
 
 Combine all signals into a decision:
 
@@ -968,12 +1271,12 @@ IF signal_15m < -40:  // SELL signal detected
 
 See [strategies.md](strategies.md) for strategy configurations.
 
-### 8a. Apply Volatility-Based Position Sizing
+### 11. Apply Volatility-Based Position Sizing
 
 After determining base position size from signal strength, adjust for volatility:
 
 ```
-// Step 1: Calculate base position size from signal strength (from Step 8)
+// Step 1: Calculate base position size from signal strength (from Step 10)
 IF signal_strength > 60:
   base_position_pct = 100  // Full position
 ELSE IF signal_strength >= 40:
@@ -1035,7 +1338,7 @@ Log: "Position: {base_position_pct}% (signal) × {volatility_multiplier} (ATR {a
 - Medium signal (50%), normal volatility (1.5× ATR): 75% × 0.90 = 67.5%
 - Strong signal (70%), high volatility (2.5× ATR): 100% × 0.50 = 50%
 
-### 9. Check Fees & Profit Threshold
+### 12. Check Fees & Profit Threshold
 
 Call `get_transaction_summary` and calculate:
 
@@ -1101,7 +1404,7 @@ Fees:
   Expected Move: [V]% [✓/✗]
 ```
 
-### 10. Pre-Trade Liquidity Check
+### 13. Pre-Trade Liquidity Check
 
 For altcoin market order entries only (skip for BTC-EUR, ETH-EUR, limit orders, exits):
 
@@ -1131,17 +1434,108 @@ IF spread > 10.0:
    - Spread < 0.2% → Full position allowed
 2. Store `entrySpread` and `liquidityStatus` in position
 
-### 11. Execute Order
+### 14. Execute Order
 
-When a signal is present and expected profit exceeds MIN_PROFIT threshold (computed in Step 9):
+When a signal is present and expected profit exceeds MIN_PROFIT threshold (computed in Step 12):
 
 **Order Type Selection**:
 
-| Signal Strength | Order Type | Reason |
-|-----------------|------------|--------|
-| > 70% (Strong) | Market (IOC) | Speed is priority |
-| 40-70% (Normal) | Limit (GTC) | Lower fees |
-| < 40% (Weak) | No Trade | - |
+| Condition | Order Type | Attached TP/SL | Reason |
+|-----------|------------|----------------|--------|
+| Signal > 70% (Strong) | Market (IOC) | Yes | Speed is priority, confirmation already strong |
+| Signal 40-70%, price already past key level | Limit (GTD, 120s) | Yes | Lower fees, auto-expires if unfilled |
+| Signal 40-70%, price consolidating near key level | Stop-Limit (GTD, 2 cycles) | No (not supported) | Only enter if breakout confirms, auto-expires |
+| Signal < 40% | No Trade | - | - |
+| SL/TP execution | Market (IOC) | - | Must exit immediately |
+
+**Attached TP/SL (Market and Limit BUY entries)**:
+
+All Market and Limit BUY entries must include `attachedOrderConfiguration` with `triggerBracketGtc`. This creates a crash-proof TP/SL bracket on Coinbase's side — if the bot loses context or crashes, positions are still protected.
+
+```
+// Attached TP/SL on any Market or Limit BUY entry
+attachedOrderConfiguration: {
+  triggerBracketGtc: {
+    limitPrice: take_profit_price,       // TP from ATR calculation
+    stopTriggerPrice: stop_loss_price    // SL from ATR calculation
+  }
+}
+
+// Size is inherited from the parent order — do NOT specify size
+// When the parent BUY fills, Coinbase creates a SELL order with TP + SL
+// OCO: when either TP or SL triggers, the other cancels automatically
+```
+
+The bot still monitors positions with `wait_for_market_event` for trailing stops, SL/TP recalculation (after 24h), and rebalancing. The attached bracket is the safety floor — `wait_for_market_event` is the active management layer on top.
+
+Stop-limit entries do NOT support attached TP/SL (Coinbase limitation). For stop-limit fills, the bot manages SL/TP itself via `wait_for_market_event` as before.
+
+**Stop-Limit Entry (Breakout Confirmation)**:
+
+Use stop-limit orders when the signal is moderate but the price hasn't proven itself yet. The order only fills if the price actually reaches the trigger level — protecting against false breakouts.
+
+**When to use stop-limit (ALL must be true):**
+- Signal score 40-70% (moderate — not strong enough for immediate entry)
+- Price consolidating near a key level (resistance, VWAP, EMA, pivot point)
+- ADX < 25 (no strong trend yet — waiting for one to form)
+
+**When NOT to use stop-limit (use market/limit instead):**
+- Signal > 70% — confirmation already exists in the indicators, enter now
+- Price already broke the key level — a stop-limit behind current price is pointless
+- ADX > 25 with trend aligned — the trend is already established, ride it
+
+<reasoning>
+The key insight is that stop-limits are for uncertain situations where you want the market to prove itself before committing capital. If you're already confident (strong signal, strong trend, price past the level), a stop-limit just adds delay for no benefit.
+</reasoning>
+
+**How to set stop and limit prices:**
+
+```
+// Identify the key level (resistance, VWAP, EMA, pivot)
+key_level = nearest resistance or consolidation ceiling
+
+// Stop price: just above the key level
+stop_price = key_level × 1.002  // 0.2% above level
+
+// Limit price: add slippage buffer above stop
+limit_price = stop_price × 1.003  // 0.3% buffer
+
+// Example: Price consolidating below 59,000
+// GTD auto-expires after 2 cycles (e.g., 30min for 15m interval)
+create_order({
+  side: "BUY",
+  productId: "BTC-EUR",
+  orderConfiguration: {
+    stopLimitStopLimitGtd: {
+      baseSize: "0.0002",
+      stopPrice: "59118",      // 59,000 × 1.002
+      limitPrice: "59295",     // 59,118 × 1.003
+      stopDirection: "STOP_DIRECTION_STOP_UP",
+      endTime: "2026-02-08T01:00:00Z"  // now + 2 × interval
+    }
+  }
+  // No attachedOrderConfiguration — not supported for stop-limit
+  // Bot manages SL/TP via wait_for_market_event after fill
+})
+```
+
+**Managing stop-limit orders (GTD auto-expires):**
+
+```
+// GTD endTime = now + 2 × interval (e.g., 30min for 15min interval)
+// The order auto-expires if the breakout doesn't happen — no manual cancel needed
+
+IF stop-limit EXPIRED (status == "EXPIRED"):
+  → Re-evaluate: is the setup still valid?
+  → IF key level changed (new resistance) → re-place at new level with new GTD
+  → IF signal dropped below 40% → skip trade
+  → IF price moved away from level (>2% below) → setup invalidated
+
+IF stop-limit FILLED:
+  → Treat as normal position entry
+  → Set SL/TP based on the fill price (not the original signal price)
+  → No attached bracket — manage SL/TP via wait_for_market_event
+```
 
 **Route Selection**:
 
@@ -1159,18 +1553,18 @@ When a signal is present and expected profit exceeds MIN_PROFIT threshold (compu
 
 1. Call get_best_bid_ask for current price
 2. Calculate limit_price = best_ask × 1.0005 (slightly above)
-3. Call preview_order with limitLimitGtc, postOnly=true
+3. Call preview_order with limitLimitGtd, endTime=now+120s, postOnly=true, attachedOrderConfiguration
 4. If preview OK → execute create_order
 5. Wait 120 seconds
 6. Call get_order to check status
-7. Check fill status and handle partial fills:
+7. Check fill status and handle partial/unfilled:
 
 ```
 
    order_status = get_order(order_id)
 
    IF order_status == "FILLED":
-     → Continue (fully filled, no action needed)
+     → Continue (fully filled, attached TP/SL bracket now active on Coinbase)
 
    ELSE IF order_status == "PARTIALLY_FILLED":
      filled_size = order.filled_size
@@ -1180,7 +1574,7 @@ When a signal is present and expected profit exceeds MIN_PROFIT threshold (compu
        // Stage 2: Re-check profitability with Market Order fees
        IF expected_move >= MIN_PROFIT_FALLBACK:
          → Cancel original limit order
-         → Place Market Order for remaining_size ONLY
+         → Place Market Order for remaining_size ONLY (with attachedOrderConfiguration)
          → Log: "Partial fill {filled_size}, fallback for {remaining_size}"
        ELSE:
          → Cancel order, accept partial fill only
@@ -1189,14 +1583,14 @@ When a signal is present and expected profit exceeds MIN_PROFIT threshold (compu
        → Accept partial fill, cancel order
        → Log: "Partial fill accepted: {filled_size} (remaining below minimum)"
 
-   ELSE IF order_status == "OPEN":
+   ELSE IF order_status == "EXPIRED":
+     // GTD auto-expired — no cancel needed
      // Stage 2: Re-check profitability with Market Order fees
      IF expected_move >= MIN_PROFIT_FALLBACK:
-       → Cancel order
-       → Place Market Order for full intended_size
-       → Log: "Limit order timeout, fallback to market"
+       → Place Market Order for full intended_size (with attachedOrderConfiguration)
+       → Log: "Limit order expired, fallback to market"
      ELSE:
-       → Cancel order, SKIP fallback
+       → SKIP fallback
        → Log: "Fallback skipped: unprofitable with market fees ({expected_move}% < {MIN_PROFIT_FALLBACK}%)"
 
 ```
@@ -1209,10 +1603,11 @@ When a signal is present and expected profit exceeds MIN_PROFIT threshold (compu
 
 ```
 
-1. Call preview_order (Market Order, BUY)
+1. Call preview_order (Market Order, BUY, with attachedOrderConfiguration)
 2. If preview OK → execute create_order
 3. Record position (coin, amount, entry price)
-4. Save state to trading-state.json
+4. Attached TP/SL bracket is now active on Coinbase
+5. Save state to trading-state.json
 
 ```
 
@@ -1224,11 +1619,11 @@ When a signal is present and expected profit exceeds MIN_PROFIT threshold (compu
 2. For Stop-Loss: Use Market Order (immediate execution)
 3. Call preview_order → execute create_order
 4. Calculate and log profit/loss (gross and net after fees)
-5. Update state file (compound is applied in step 7)
+5. Update state file (compound is applied in step 8)
 
 ```
 
-### 12. Output Report
+### 15. Output Report
 
 Output a structured, compact report. See [output-format.md](output-format.md) for the complete specification including:
 
@@ -1254,13 +1649,54 @@ If the argument contains "dry-run":
 - But DO NOT execute real orders
 - Only show what you WOULD do
 
+## Post-Crash Opportunity Playbook
+
+Crashes create dislocated prices and high-conviction entry opportunities. When a major crash is detected, adapt the approach to capitalize on the recovery.
+
+**Crash Detection:**
+- `percentChange24h` < -15% on BTC or ETH → activate crash playbook
+- Multiple assets down > 10% simultaneously → market-wide crash
+- Check via `get_best_bid_ask` or `wait_for_market_event` with `percentChange24h` condition
+
+**Adaptation Rules:**
+
+1. **Anchor to 1H timeframe** — During extreme volatility, 15m indicators produce noise. Use 1H as the primary signal timeframe; 15m only for entry timing.
+
+2. **Look for oversold bounces** — Crashes push RSI, MFI, and Stochastic into deep oversold territory. Use `wait_for_market_event` with indicator conditions to detect recoveries:
+   ```
+   conditions: [
+     { field: "rsi", operator: "crossAbove", value: 30, granularity: "ONE_HOUR" },
+     { field: "macd.histogram", operator: "crossAbove", value: 0, granularity: "ONE_HOUR" }
+   ],
+   logic: "any"
+   ```
+
+3. **Confirm the bounce** — Don't buy the first green candle. Wait for:
+   - Price reclaims VWAP (bullish bias confirmed)
+   - 1H MACD histogram turns positive
+   - Volume increases on the bounce (not just low-volume relief)
+
+4. **Use stop-limit entries** — Set stop-limit buy orders above consolidation resistance. Let the market prove the breakout before entering.
+
+5. **Reduce position sizes** — Use 50% of normal sizing. ATR will be elevated, so ATR-based sizing already adjusts, but add an extra reduction because post-crash reversals are common.
+
+6. **Tighten stops** — Use 1× ATR instead of 1.5× ATR for stop-loss. Post-crash environments are unpredictable; cut losses faster.
+
+7. **Take partial profits early** — Consider taking 50% at 1.5× ATR and letting the rest ride with a trailing stop. Post-crash bounces can be sharp but short-lived.
+
+**What NOT to do:**
+- Don't try to catch the exact bottom — wait for confirmation
+- Don't use 100% of budget on first entry — scale in
+- Don't ignore higher timeframe trend — if daily is still bearish, the bounce may fail
+
 ## Autonomous Loop Mode
 
 After each trading cycle:
 
 1. **Output report** (as described above)
 2. **Wait for next event**:
-   - **With open positions**: Use `wait_for_market_event` with SL/TP conditions
+   - **With open positions (attached bracket)**: Use `wait_for_market_event` for trailing stop and rebalancing signals — basic SL/TP is handled by the attached bracket on Coinbase
+   - **With open positions (no bracket)**: Use `wait_for_market_event` with SL/TP conditions (stop-limit fills, legacy positions)
    - **Without positions, with entry signal**: Use `wait_for_market_event` with entry conditions
    - **Without positions, no signal**: Use `sleep` for next analysis cycle
 3. **Handle response**:
@@ -1268,10 +1704,33 @@ After each trading cycle:
    - `status: "timeout"` → Perform normal analysis
 4. **Start over**: Begin again at step 1 (check portfolio status)
 
-**Example: Event-Driven SL/TP Monitoring**
+**Example: Event-Driven Monitoring (position with attached bracket)**
 
 ```
-// After analysis, with BTC position open
+// After analysis, with BTC position open (has attached TP/SL bracket on Coinbase)
+// Entry @ 95,000€, SL @ 91,200€ (on Coinbase), TP @ 98,800€ (on Coinbase)
+// Monitor for trailing stop activation + rebalancing signals
+
+response = wait_for_market_event({
+  subscriptions: [{
+    productId: "BTC-EUR",
+    conditions: [
+      { field: "price", operator: "gte", value: 97850 }   // Trailing stop activation (3% profit)
+    ]
+  }],
+  timeout: 55
+})
+
+IF response.status == "triggered":
+  → Activate trailing stop logic (attached bracket handles basic SL/TP)
+ELSE:
+  → Perform normal analysis cycle (check rebalancing, recalc SL/TP if >24h)
+```
+
+**Example: Event-Driven SL/TP Monitoring (position without bracket)**
+
+```
+// Stop-limit fill or legacy position — no attached bracket, bot manages SL/TP
 // Entry @ 95,000€, SL @ 91,200€, TP @ 98,800€
 
 response = wait_for_market_event({

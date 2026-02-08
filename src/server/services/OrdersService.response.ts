@@ -1,10 +1,18 @@
 import { z } from 'zod';
+import { ProductType } from './common.request';
 import {
   OrderSide,
   StopPriceDirection,
   OrderExecutionStatus,
   TimeInForceType,
   OrderType,
+  TriggerStatus,
+  OrderPlacementSource,
+  MarginType,
+  CostBasisMethod,
+  DisplayedOrderConfig,
+  EquityTradingSession,
+  RejectReason,
   CancelOrderFailureReason,
   LiquidityIndicator,
   EditOrderFailureReason,
@@ -115,45 +123,93 @@ const TriggerBracketGtdSchema = z
   })
   .describe('Trigger bracket order with good-till-date execution');
 
-const OrderConfigurationSchema = z
+// =============================================================================
+// Attached Order Configuration Sub-Schemas (TP/SL created when parent fills)
+// =============================================================================
+
+const AttachedTriggerBracketGtcSchema = z
   .object({
-    marketMarketIoc: MarketMarketIocSchema.optional().describe(
-      'Market order with immediate-or-cancel execution',
+    limitPrice: stringToNumber.describe('Take-profit limit price'),
+    stopTriggerPrice: stringToNumber.describe('Stop-loss trigger price'),
+  })
+  .describe(
+    'Attached trigger bracket order with good-till-cancelled execution',
+  );
+
+const AttachedOrderConfigurationSchema = z
+  .object({
+    triggerBracketGtc: AttachedTriggerBracketGtcSchema.optional(),
+  })
+  .describe(
+    'Attached TP/SL configuration for BUY orders. When the parent order fills, Coinbase creates a SELL order with take-profit (limitPrice) and stop-loss (stopTriggerPrice). Size is inherited from the parent order.',
+  );
+
+// =============================================================================
+// Preview Response Sub-Schemas
+// =============================================================================
+
+const TriggerBracketPnlSchema = z
+  .object({
+    takeProfitPnl: stringToNumber.describe(
+      'PnL if an attached order fills at the take-profit price',
     ),
-    limitLimitGtc: LimitLimitGtcSchema.optional().describe(
-      'Limit order with good-till-cancelled execution',
-    ),
-    limitLimitGtd: LimitLimitGtdSchema.optional().describe(
-      'Limit order with good-till-date execution',
-    ),
-    limitLimitFok: LimitLimitFokSchema.optional().describe(
-      'Limit order with fill-or-kill execution',
-    ),
-    sorLimitIoc: SorLimitIocSchema.optional().describe(
-      'Smart order routing limit order with immediate-or-cancel',
-    ),
-    stopLimitStopLimitGtc: StopLimitStopLimitGtcSchema.optional().describe(
-      'Stop-limit order with good-till-cancelled execution',
-    ),
-    stopLimitStopLimitGtd: StopLimitStopLimitGtdSchema.optional().describe(
-      'Stop-limit order with good-till-date execution',
-    ),
-    triggerBracketGtc: TriggerBracketGtcSchema.optional().describe(
-      'Trigger bracket order with good-till-cancelled execution',
-    ),
-    triggerBracketGtd: TriggerBracketGtdSchema.optional().describe(
-      'Trigger bracket order with good-till-date execution',
+    stopLossPnl: stringToNumber.describe(
+      'PnL if an attached order fills at the stop-loss price',
     ),
   })
-  .describe('Order configuration (one order type present)');
+  .describe('PnL projections for attached trigger bracket TP/SL');
+
+const PnlConfigurationSchema = z
+  .object({
+    triggerBracketPnl: TriggerBracketPnlSchema.optional(),
+  })
+  .describe(
+    'Expected PnL of an order. Estimate that does not account for fees and slippage.',
+  );
+
+const CommissionDetailTotalSchema = z
+  .object({
+    totalCommission: stringToNumber.describe('Total commission'),
+    gstCommission: stringToNumber.describe('GST commission'),
+    withholdingCommission: stringToNumber.describe('Withholding commission'),
+    clientCommission: stringToNumber.describe('Client commission'),
+    venueCommission: stringToNumber.describe('Venue commission'),
+    regulatoryCommission: stringToNumber.describe('Regulatory commission'),
+    clearingCommission: stringToNumber.describe('Clearing commission'),
+  })
+  .describe('Breakdown of commission charges for the order');
+
+const MarginRatioDataSchema = z
+  .object({
+    currentMarginRatio: stringToNumber.describe('Current margin ratio'),
+    projectedMarginRatio: stringToNumber.describe('Projected margin ratio'),
+  })
+  .describe(
+    'Margin ratio fields replacing current_liquidation_buffer and projected_liquidation_buffer',
+  );
+
+// =============================================================================
+// Order Configuration Schema
+// =============================================================================
+
+const OrderConfigurationSchema = z
+  .object({
+    marketMarketIoc: MarketMarketIocSchema.optional(),
+    limitLimitGtc: LimitLimitGtcSchema.optional(),
+    limitLimitGtd: LimitLimitGtdSchema.optional(),
+    limitLimitFok: LimitLimitFokSchema.optional(),
+    sorLimitIoc: SorLimitIocSchema.optional(),
+    stopLimitStopLimitGtc: StopLimitStopLimitGtcSchema.optional(),
+    stopLimitStopLimitGtd: StopLimitStopLimitGtdSchema.optional(),
+    triggerBracketGtc: TriggerBracketGtcSchema.optional(),
+    triggerBracketGtd: TriggerBracketGtdSchema.optional(),
+  })
+  .describe('The configuration of the order (e.g. the order type, size, etc).');
 
 // =============================================================================
 // Sub-Schemas for Response Objects
 // =============================================================================
 
-/**
- * Schema for SDK Edit type - parses string numbers from API.
- */
 const EditSchema = z
   .object({
     price: stringToNumber.describe('The updated price of the order'),
@@ -163,15 +219,32 @@ const EditSchema = z
       .optional()
       .describe('Timestamp when the edit was accepted'),
   })
-  .describe('Edit history entry');
+  .describe('Price/size of an order edit');
+
+const EquityDetailsSchema = z
+  .object({
+    baseCbrn: z.string().optional().describe('Base Coinbase Reference Number'),
+    ticker: z.string().optional().describe('Stock ticker symbol'),
+    quoteId: z.string().optional().describe('Quote currency identifier'),
+  })
+  .describe('Equity order product details');
+
+const ProductDetailsSchema = z
+  .object({
+    equityDetails: EquityDetailsSchema.optional(),
+  })
+  .describe(
+    'Product-specific details, the oneof corresponds to the ProductType',
+  );
 
 const OrderSchema = z
   .object({
     orderId: z.string().describe('Order ID'),
     productId: z.string().describe('Product ID'),
     userId: z.string().describe('User ID'),
-    orderConfiguration: OrderConfigurationSchema.describe(
-      'Order configuration',
+    orderConfiguration: OrderConfigurationSchema,
+    attachedOrderConfiguration: nullToUndefined(
+      AttachedOrderConfigurationSchema,
     ),
     side: z.nativeEnum(OrderSide).describe('Order side (BUY or SELL)'),
     clientOrderId: z.string().describe('Client order ID'),
@@ -198,15 +271,21 @@ const OrderSchema = z
     totalValueAfterFees: stringToNumberRequired.describe(
       'Total value after fees',
     ),
-    triggerStatus: z.string().optional().describe('Trigger status'),
+    triggerStatus: z
+      .nativeEnum(TriggerStatus)
+      .optional()
+      .describe('Trigger status'),
     orderType: z.nativeEnum(OrderType).optional().describe('Order type'),
-    rejectReason: z.string().optional().describe('Rejection reason'),
+    rejectReason: z
+      .nativeEnum(RejectReason)
+      .optional()
+      .describe('Rejection reason'),
     settled: z.boolean().optional().describe('Whether order is settled'),
-    productType: z.string().optional().describe('Product type'),
+    productType: z.nativeEnum(ProductType).optional().describe('Product type'),
     rejectMessage: z.string().optional().describe('Rejection message'),
     cancelMessage: z.string().optional().describe('Cancellation message'),
     orderPlacementSource: z
-      .string()
+      .nativeEnum(OrderPlacementSource)
       .optional()
       .describe('Order placement source'),
     outstandingHoldAmount: stringToNumber.describe('Outstanding hold amount'),
@@ -215,16 +294,45 @@ const OrderSchema = z
       .optional()
       .describe('Whether this is a liquidation'),
     lastFillTime: nullToUndefined(z.string()).describe('Last fill timestamp'),
-    editHistory: z.array(EditSchema).optional().describe('Edit history'),
+    editHistory: z
+      .array(EditSchema)
+      .optional()
+      .describe('An array of the latest 5 edits per order'),
     leverage: stringToNumber.describe('Leverage'),
-    marginType: z.string().optional().describe('Margin type'),
+    marginType: z.nativeEnum(MarginType).optional().describe('Margin type'),
     retailPortfolioId: z.string().optional().describe('Retail portfolio ID'),
+    originatingOrderId: z
+      .string()
+      .optional()
+      .describe('Parent order ID (set on child TP/SL orders)'),
+    attachedOrderId: z
+      .string()
+      .optional()
+      .describe('Child order ID (set on parent orders with attached TP/SL)'),
+    commissionDetailTotal: nullToUndefined(CommissionDetailTotalSchema),
+    workableSize: stringToNumber.describe('Workable size'),
+    workableSizeCompletionPct: stringToNumber.describe(
+      'Workable size completion percentage',
+    ),
+    costBasisMethod: z
+      .nativeEnum(CostBasisMethod)
+      .optional()
+      .describe('Cost basis method'),
+    displayedOrderConfig: z
+      .nativeEnum(DisplayedOrderConfig)
+      .optional()
+      .describe('Displayed order configuration type'),
+    equityTradingSession: z
+      .nativeEnum(EquityTradingSession)
+      .optional()
+      .describe('Equity trading session'),
+    predictionSide: z.string().optional().describe('Prediction side'),
+    lastUpdateTime: z.string().optional().describe('Last update timestamp'),
+    currentPendingReplace: nullToUndefined(EditSchema),
+    productDetails: nullToUndefined(ProductDetailsSchema),
   })
   .describe('Order details');
 
-/**
- * Schema for NewOrderSuccessResponse - successful order creation.
- */
 const NewOrderSuccessSchema = z
   .object({
     orderId: z.string().describe('The ID of the created order'),
@@ -237,9 +345,6 @@ const NewOrderSuccessSchema = z
   })
   .describe('Successful order creation response');
 
-/**
- * Schema for NewOrderErrorResponse - failed order creation.
- */
 const NewOrderErrorSchema = z
   .object({
     error: z
@@ -259,9 +364,6 @@ const NewOrderErrorSchema = z
   })
   .describe('Failed order creation response');
 
-/**
- * Schema for individual cancel order result.
- */
 const CancelOrderResultSchema = z
   .object({
     success: z.boolean().describe('Whether the cancel request was successful'),
@@ -272,9 +374,6 @@ const CancelOrderResultSchema = z
   })
   .describe('Cancel order result');
 
-/**
- * Schema for Fill - individual trade fill.
- */
 const FillSchema = z
   .object({
     entryId: z.string().optional().describe('Unique fill identifier'),
@@ -325,7 +424,7 @@ export const ListOrdersResponseSchema = z
 
 export const GetOrderResponseSchema = z
   .object({
-    order: OrderSchema.describe('Order details'),
+    order: OrderSchema,
   })
   .transform((data) => data.order)
   .describe('Response from getting a specific order');
@@ -333,14 +432,11 @@ export const GetOrderResponseSchema = z
 export const CreateOrderResponseSchema = z
   .object({
     success: z.boolean().describe('Whether the order was created successfully'),
-    successResponse: NewOrderSuccessSchema.optional().describe(
-      'Success response details',
-    ),
-    errorResponse: NewOrderErrorSchema.optional().describe(
-      'Error response details',
-    ),
-    orderConfiguration: OrderConfigurationSchema.optional().describe(
-      'The order configuration',
+    successResponse: NewOrderSuccessSchema.optional(),
+    errorResponse: NewOrderErrorSchema.optional(),
+    orderConfiguration: OrderConfigurationSchema.optional(),
+    attachedOrderConfiguration: nullToUndefined(
+      AttachedOrderConfigurationSchema,
     ),
   })
   .describe('Response from creating an order');
@@ -388,15 +484,9 @@ export const PreviewEditOrderResponseSchema = z
 export const ClosePositionResponseSchema = z
   .object({
     success: z.boolean().describe('Whether the close was successful'),
-    successResponse: NewOrderSuccessSchema.optional().describe(
-      'Success response details',
-    ),
-    errorResponse: NewOrderErrorSchema.optional().describe(
-      'Error response details',
-    ),
-    orderConfiguration: OrderConfigurationSchema.optional().describe(
-      'The order configuration',
-    ),
+    successResponse: NewOrderSuccessSchema.optional(),
+    errorResponse: NewOrderErrorSchema.optional(),
+    orderConfiguration: OrderConfigurationSchema.optional(),
   })
   .describe('Response from closing a position');
 
@@ -428,6 +518,19 @@ export const PreviewOrderResponseSchema = z
       'Projected liquidation buffer',
     ),
     maxLeverage: stringToNumber.describe('Maximum leverage'),
+    pnlConfiguration: nullToUndefined(PnlConfigurationSchema),
+    commissionDetailTotal: nullToUndefined(CommissionDetailTotalSchema),
+    marginRatioData: nullToUndefined(MarginRatioDataSchema),
+    estAverageFilledPrice: stringToNumber.describe(
+      'Estimated fill price for order',
+    ),
+    predictedLiquidationPrice: stringToNumber.describe(
+      'Predicted liquidation price',
+    ),
+    positionNotionalLimit: stringToNumber.describe('Position notional limit'),
+    maxNotionalAtRequestedLeverage: stringToNumber.describe(
+      'Max notional at requested leverage',
+    ),
   })
   .describe('Response from previewing an order');
 

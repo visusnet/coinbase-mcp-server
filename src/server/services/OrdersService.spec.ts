@@ -329,6 +329,92 @@ describe('OrdersService', () => {
         },
       });
     });
+
+    it('should pass attachedOrderConfiguration with market order', async () => {
+      mockClient.request.mockResolvedValue(mockResponse({ success: true }));
+
+      await service.createOrder({
+        clientOrderId: 'test-attached-market',
+        productId: 'BTC-EUR',
+        side: OrderSide.Buy,
+        orderConfiguration: {
+          marketMarketIoc: { quoteSize: '50' },
+        },
+        attachedOrderConfiguration: {
+          triggerBracketGtc: {
+            limitPrice: '98000',
+            stopTriggerPrice: '91000',
+          },
+        },
+      });
+
+      expect(mockClient.request).toHaveBeenCalledWith({
+        url: 'orders',
+        method: Method.POST,
+        bodyParams: {
+          clientOrderId: 'test-attached-market',
+          productId: 'BTC-EUR',
+          side: OrderSide.Buy,
+          orderConfiguration: {
+            marketMarketIoc: { quoteSize: '50' },
+          },
+          attachedOrderConfiguration: {
+            triggerBracketGtc: {
+              limitPrice: '98000',
+              stopTriggerPrice: '91000',
+            },
+          },
+        },
+      });
+    });
+
+    it('should pass attachedOrderConfiguration with limit GTD order', async () => {
+      mockClient.request.mockResolvedValue(mockResponse({ success: true }));
+
+      await service.createOrder({
+        clientOrderId: 'test-attached-limit',
+        productId: 'BTC-EUR',
+        side: OrderSide.Buy,
+        orderConfiguration: {
+          limitLimitGtd: {
+            baseSize: '0.001',
+            limitPrice: '95000',
+            endTime: '2026-02-08T01:00:00Z',
+            postOnly: true,
+          },
+        },
+        attachedOrderConfiguration: {
+          triggerBracketGtc: {
+            limitPrice: '98000',
+            stopTriggerPrice: '91000',
+          },
+        },
+      });
+
+      expect(mockClient.request).toHaveBeenCalledWith({
+        url: 'orders',
+        method: Method.POST,
+        bodyParams: {
+          clientOrderId: 'test-attached-limit',
+          productId: 'BTC-EUR',
+          side: OrderSide.Buy,
+          orderConfiguration: {
+            limitLimitGtd: {
+              baseSize: '0.001',
+              limitPrice: '95000',
+              endTime: '2026-02-08T01:00:00Z',
+              postOnly: true,
+            },
+          },
+          attachedOrderConfiguration: {
+            triggerBracketGtc: {
+              limitPrice: '98000',
+              stopTriggerPrice: '91000',
+            },
+          },
+        },
+      });
+    });
   });
 
   describe('editOrder', () => {
@@ -461,6 +547,68 @@ describe('OrdersService', () => {
               limitPrice: '50000',
             },
           },
+        },
+      });
+    });
+
+    it('should pass attachedOrderConfiguration in preview', async () => {
+      mockClient.request.mockResolvedValue(
+        mockResponse({
+          orderTotal: '50000',
+          commissionTotal: '50',
+          errs: [],
+          warning: [],
+          quoteSize: '50000',
+          baseSize: '0.01',
+          bestBid: '49990',
+          bestAsk: '50010',
+          isMax: false,
+          slippage: '0.01',
+          pnlConfiguration: {
+            triggerBracketPnl: {
+              takeProfitPnl: '3000',
+              stopLossPnl: '-4000',
+            },
+          },
+        }),
+      );
+
+      const result = await service.createOrderPreview({
+        productId: 'BTC-EUR',
+        side: OrderSide.Buy,
+        orderConfiguration: {
+          marketMarketIoc: { quoteSize: '50' },
+        },
+        attachedOrderConfiguration: {
+          triggerBracketGtc: {
+            limitPrice: '98000',
+            stopTriggerPrice: '91000',
+          },
+        },
+      });
+
+      expect(mockClient.request).toHaveBeenCalledWith({
+        url: 'orders/preview',
+        method: Method.POST,
+        bodyParams: {
+          productId: 'BTC-EUR',
+          side: OrderSide.Buy,
+          orderConfiguration: {
+            marketMarketIoc: { quoteSize: '50' },
+          },
+          attachedOrderConfiguration: {
+            triggerBracketGtc: {
+              limitPrice: '98000',
+              stopTriggerPrice: '91000',
+            },
+          },
+        },
+      });
+      // Verify pnlConfiguration is converted from strings to numbers
+      expect(result.pnlConfiguration).toEqual({
+        triggerBracketPnl: {
+          takeProfitPnl: 3000,
+          stopLossPnl: -4000,
         },
       });
     });

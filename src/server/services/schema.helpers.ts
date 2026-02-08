@@ -22,10 +22,11 @@ import { z } from 'zod';
  * // Use: nullToUndefined(FeeTierSchema)
  */
 export function nullToUndefined<T extends z.ZodTypeAny>(schema: T) {
-  return z.preprocess(
+  const result = z.preprocess(
     (val) => (val === null ? undefined : val),
     schema.optional(),
   );
+  return schema.description ? result.describe(schema.description) : result;
 }
 
 // =============================================================================

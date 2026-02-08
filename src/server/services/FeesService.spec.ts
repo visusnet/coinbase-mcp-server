@@ -2,11 +2,8 @@ import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
 import { mockResponse } from '@test/serviceMocks';
 import { FeesService } from './FeesService';
-import {
-  ContractExpiryType,
-  ProductType,
-  ProductVenue,
-} from './FeesService.request';
+import { ProductType } from './common.request';
+import { ContractExpiryType, ProductVenue } from './FeesService.request';
 
 describe('FeesService', () => {
   let service: FeesService;

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ProductType } from './FeesService.request';
+import { ProductType } from './common.request';
 import { GranularitySchema } from './common.request';
 import { isoToUnix } from './schema.helpers';
 

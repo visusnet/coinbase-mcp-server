@@ -1,15 +1,9 @@
 import { z } from 'zod';
+import { ProductType } from './common.request';
 
 // =============================================================================
 // Enums
 // =============================================================================
-
-/** Product type for filtering and fee calculation */
-export enum ProductType {
-  UnknownProductType = 'UNKNOWN_PRODUCT_TYPE',
-  Spot = 'SPOT',
-  Future = 'FUTURE',
-}
 
 /** Contract expiry type for futures */
 export enum ContractExpiryType {
