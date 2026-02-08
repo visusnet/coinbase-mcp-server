@@ -8,7 +8,7 @@ import type {
 } from './ProductsService.response';
 import type { Product } from './common.response';
 import { ProductsService } from './ProductsService';
-import { ProductType } from './FeesService.request';
+import { ProductType } from './common.request';
 
 describe('ProductsService', () => {
   let service: ProductsService;

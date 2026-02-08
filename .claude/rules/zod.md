@@ -19,6 +19,8 @@ paths:
 9. **Use request schemas in tool definitions** using `{ApiMethodName}RequestSchema.shape` to automatically generate MCP tool documentation
 10. **Use `z.nativeEnum()` for enum fields** to ensure only valid values are accepted and define TypeScript enums for them (do not import enums from the SDK, copy them instead)
 11. Follow the rules defined in this document for request schemas, response schemas, naming conventions, API integration, data flow, and testing
+12. No shadowed descriptions on schema usages. A sub-schema's description should NOT be overridden by a parent schema. See section `Shadowing Descriptions` below for more details.
+13. Use the Coinbase API documentation's descriptions for each schema directly. See section `Use API Documentation Descriptions` below for more details.
 
 **THESE RULES ARE SACRED AND MUST BE FOLLOWED WITHOUT EXCEPTION.**
 If you find a case where these rules do not make sense, discuss it with the user before making any changes. Present options.
@@ -214,3 +216,40 @@ expect(result).toEqual({
   valueInDollars: 110.5, // Tests transformation from string to number
 });
 ```
+
+## Shadowing Descriptions
+
+- Every schema must have a description, e.g.
+```typescript
+export const GetSpecialRequestSchema = z.object({
+  specialField: stringToNumber.describe('A special numeric field that needs to be converted from string'),
+}).describe('Request schema for GetSpecial API method');
+```
+- A schema that is using another schema as a sub-field should NOT override the sub-schema's description. For example:
+```typescript
+const SubSchema = z.object({
+  subField: stringToNumber.describe('Description for subField'),
+}).describe('SubSchema description');
+
+const MainSchema = z.object({
+  mainField: SubSchema.optional(), // Do NOT override the description of subField here
+}).describe('MainSchema description');
+```
+
+Exceptions:
+- If the parent schema needs to provide additional context for the sub-schema, it may override the description, but it should still include the original description from the sub-schema. This should remain an exception and should have good reasons. For example:
+```typescript
+const SubSchema = z.object({
+  subField: stringToNumber.describe('Description for subField'),
+}).describe('SubSchema description');
+
+const MainSchema = z.object({
+  mainField: SubSchema.optional().describe(`${SubSchema.shape.subField.description} with special context`),
+}).describe('MainSchema description');
+```
+
+## Use API Documentation Descriptions
+
+Most schemas correspond to specific fields in the Coinbase API documentation. For these, use the exact descriptions from the API docs for both the field and the overall schema. This ensures that our documentation is accurate and consistent with the source of truth.
+
+See `docs/OPERATIONS.md` for links to the API documentation for each method.

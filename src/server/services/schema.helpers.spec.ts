@@ -22,6 +22,17 @@ describe('schema.helpers', () => {
     it('should pass through undefined', () => {
       expect(schema.parse(undefined)).toBeUndefined();
     });
+
+    it('should preserve the inner schema description', () => {
+      const described = nullToUndefined(
+        z.string().describe('A described field'),
+      );
+      expect(described.description).toBe('A described field');
+    });
+
+    it('should not add a description when the inner schema has none', () => {
+      expect(schema.description).toBeUndefined();
+    });
   });
 
   describe('stringToNumber', () => {

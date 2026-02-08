@@ -6,13 +6,16 @@ import request from 'supertest';
 import {
   CancelOrderFailureReason,
   OrderExecutionStatus,
+  OrderPlacementSource,
   OrderSide,
   OrderType,
+  RejectReason,
   TimeInForceType,
+  TriggerStatus,
 } from './services/OrdersService.types';
+import { ProductType } from './services/common.request';
 import {
   ContractExpiryType,
-  ProductType,
   ProductVenue,
 } from './services/FeesService.request';
 import { PortfolioType } from './services/common.response';
@@ -179,14 +182,14 @@ describe('CoinbaseMcpServer Integration Tests', () => {
           totalFees: 0,
           sizeInclusiveOfFees: false,
           totalValueAfterFees: 0,
-          triggerStatus: 'INVALID_ORDER_TYPE',
+          triggerStatus: TriggerStatus.InvalidOrderType,
           orderType: OrderType.Limit,
-          rejectReason: 'REJECT_REASON_UNSPECIFIED',
+          rejectReason: RejectReason.Unspecified,
           settled: false,
-          productType: 'SPOT',
+          productType: ProductType.Spot,
           rejectMessage: '',
           cancelMessage: '',
-          orderPlacementSource: 'RETAIL_ADVANCED',
+          orderPlacementSource: OrderPlacementSource.RetailAdvanced,
           outstandingHoldAmount: 0,
         };
         mockOrdersService.getOrder.mockResolvedValueOnce(result);

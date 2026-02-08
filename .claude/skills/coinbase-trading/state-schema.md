@@ -34,7 +34,8 @@ Single Source of Truth for `.claude/trading-state.json` structure.
     "config": {
       "strategy": "aggressive",
       "interval": "15m",
-      "dryRun": false
+      "dryRun": false,
+      "marketRegime": "trending"
     },
     "compound": {
       "enabled": true,
@@ -187,6 +188,7 @@ Single Source of Truth for `.claude/trading-state.json` structure.
 | `session.config.strategy` | string | "aggressive" / "conservative" |
 | `session.config.interval` | string | "5m" / "15m" / "1h" |
 | `session.config.dryRun` | boolean | Dry-run mode active |
+| `session.config.marketRegime` | enum | Current market conditions: `"trending"` / `"volatile"` / `"crash-recovery"`. Updated each cycle based on ATR, percentChange24h, and trend alignment. Guides strategy adaptation (e.g., crash-recovery → use Post-Crash Playbook from SKILL.md). |
 | `session.compound.enabled` | boolean | Is compound mode active (default: true) |
 | `session.compound.rate` | number | Reinvestment rate (0.0-1.0, default: 0.50) |
 | `session.compound.maxBudget` | number | Budget cap (default: 2× initial) |

@@ -17,6 +17,7 @@ export { RealTimeData } from './RealTimeData';
 export { NewsService } from './NewsService';
 
 // Re-export types from schema files
+export type * from './common.request';
 export type * from './OrdersService.request';
 export type * from './OrdersService.response';
 export type * from './OrdersService.types';

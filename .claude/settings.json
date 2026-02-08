@@ -1,4 +1,16 @@
 {
+  "hooks": {
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/pre-compact-trading.sh"
+          }
+        ]
+      }
+    ]
+  },
   "mcpServers": {
     "coinbase": {
       "url": "http://localhost:3005/mcp"

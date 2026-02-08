@@ -8,7 +8,7 @@ export enum OrderSide {
   Sell = 'SELL',
 }
 
-/** Stop price direction for stop-limit orders */
+/** Direction for stop-limit order triggers */
 export enum StopPriceDirection {
   Up = 'STOP_DIRECTION_STOP_UP',
   Down = 'STOP_DIRECTION_STOP_DOWN',
@@ -18,7 +18,6 @@ export enum StopPriceDirection {
 // Response Enums
 // =============================================================================
 
-/** Order execution status */
 export enum OrderExecutionStatus {
   Pending = 'PENDING',
   Open = 'OPEN',
@@ -31,7 +30,6 @@ export enum OrderExecutionStatus {
   CancelQueued = 'CANCEL_QUEUED',
 }
 
-/** Time in force type */
 export enum TimeInForceType {
   UnknownTimeInForce = 'UNKNOWN_TIME_IN_FORCE',
   GoodUntilDateTime = 'GOOD_UNTIL_DATE_TIME',
@@ -40,7 +38,6 @@ export enum TimeInForceType {
   FillOrKill = 'FILL_OR_KILL',
 }
 
-/** Order type */
 export enum OrderType {
   UnknownOrderType = 'UNKNOWN_ORDER_TYPE',
   Market = 'MARKET',
@@ -48,9 +45,63 @@ export enum OrderType {
   Stop = 'STOP',
   StopLimit = 'STOP_LIMIT',
   Bracket = 'BRACKET',
+  TakeProfitStopLoss = 'TAKE_PROFIT_STOP_LOSS',
+  Twap = 'TWAP',
+  RollOpen = 'ROLL_OPEN',
+  RollClose = 'ROLL_CLOSE',
+  Liquidation = 'LIQUIDATION',
+  Scaled = 'SCALED',
 }
 
-/** Cancel order failure reason */
+export enum TriggerStatus {
+  UnknownTriggerStatus = 'UNKNOWN_TRIGGER_STATUS',
+  InvalidOrderType = 'INVALID_ORDER_TYPE',
+  StopPending = 'STOP_PENDING',
+  StopTriggered = 'STOP_TRIGGERED',
+}
+
+export enum OrderPlacementSource {
+  UnknownPlacementSource = 'UNKNOWN_PLACEMENT_SOURCE',
+  RetailSimple = 'RETAIL_SIMPLE',
+  RetailAdvanced = 'RETAIL_ADVANCED',
+}
+
+export enum MarginType {
+  UnknownMarginType = 'UNKNOWN_MARGIN_TYPE',
+  Cross = 'CROSS',
+  Isolated = 'ISOLATED',
+}
+
+export enum CostBasisMethod {
+  Unspecified = 'COST_BASIS_METHOD_UNSPECIFIED',
+  Hifo = 'COST_BASIS_METHOD_HIFO',
+  Lifo = 'COST_BASIS_METHOD_LIFO',
+  Fifo = 'COST_BASIS_METHOD_FIFO',
+}
+
+export enum DisplayedOrderConfig {
+  Unknown = 'UNKNOWN_DISPLAYED_ORDER_CONFIG',
+  InstantGfd = 'INSTANT_GFD',
+  LimitGfd = 'LIMIT_GFD',
+}
+
+export enum EquityTradingSession {
+  Unknown = 'UNKNOWN_EQUITY_TRADING_SESSION',
+  Normal = 'EQUITY_TRADING_SESSION_NORMAL',
+  AfterHours = 'EQUITY_TRADING_SESSION_AFTER_HOURS',
+  MultiSession = 'EQUITY_TRADING_SESSION_MULTI_SESSION',
+  Overnight = 'EQUITY_TRADING_SESSION_OVERNIGHT',
+  PreMarket = 'EQUITY_TRADING_SESSION_PRE_MARKET',
+}
+
+export enum RejectReason {
+  Unspecified = 'REJECT_REASON_UNSPECIFIED',
+  HoldFailure = 'HOLD_FAILURE',
+  TooManyOpenOrders = 'TOO_MANY_OPEN_ORDERS',
+  InsufficientFunds = 'REJECT_REASON_INSUFFICIENT_FUNDS',
+  RateLimitExceeded = 'RATE_LIMIT_EXCEEDED',
+}
+
 export enum CancelOrderFailureReason {
   UnknownCancelFailureReason = 'UNKNOWN_CANCEL_FAILURE_REASON',
   InvalidCancelRequest = 'INVALID_CANCEL_REQUEST',
@@ -64,14 +115,13 @@ export enum CancelOrderFailureReason {
   OrderIsBeingReplaced = 'ORDER_IS_BEING_REPLACED',
 }
 
-/** Liquidity indicator for fills */
+/** Maker/taker classification for fills */
 export enum LiquidityIndicator {
   UnknownLiquidityIndicator = 'UNKNOWN_LIQUIDITY_INDICATOR',
   Maker = 'MAKER',
   Taker = 'TAKER',
 }
 
-/** Edit order failure reason */
 export enum EditOrderFailureReason {
   UnknownEditOrderFailureReason = 'UNKNOWN_EDIT_ORDER_FAILURE_REASON',
   CommanderRejectedEditOrder = 'COMMANDER_REJECTED_EDIT_ORDER',
@@ -89,7 +139,6 @@ export enum EditOrderFailureReason {
   OrderIsAlreadyBeingReplaced = 'ORDER_IS_ALREADY_BEING_REPLACED',
 }
 
-/** New order failure reason */
 export enum NewOrderFailureReason {
   UnknownFailureReason = 'UNKNOWN_FAILURE_REASON',
   UnsupportedOrderConfiguration = 'UNSUPPORTED_ORDER_CONFIGURATION',
@@ -115,7 +164,6 @@ export enum NewOrderFailureReason {
   GeofencingRestriction = 'GEOFENCING_RESTRICTION',
 }
 
-/** Preview failure reason */
 export enum PreviewFailureReason {
   UnknownPreviewFailureReason = 'UNKNOWN_PREVIEW_FAILURE_REASON',
   PreviewMissingCommissionRate = 'PREVIEW_MISSING_COMMISSION_RATE',
@@ -125,9 +173,10 @@ export enum PreviewFailureReason {
   PreviewInvalidSizePrecision = 'PREVIEW_INVALID_SIZE_PRECISION',
   PreviewInvalidPricePrecision = 'PREVIEW_INVALID_PRICE_PRECISION',
   PreviewInsufficientFund = 'PREVIEW_INSUFFICIENT_FUND',
+  PreviewInvalidOrderTypeForAttached = 'PREVIEW_INVALID_ORDER_TYPE_FOR_ATTACHED',
+  PreviewInvalidOrderSideForAttachedTpsl = 'PREVIEW_INVALID_ORDER_SIDE_FOR_ATTACHED_TPSL',
 }
 
-/** Preview warning message */
 export enum PreviewWarningMsg {
   Unknown = 'UNKNOWN',
   BigOrder = 'BIG_ORDER',

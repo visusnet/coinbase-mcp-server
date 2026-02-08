@@ -236,6 +236,21 @@ Orderbook for SOL-EUR:
 7. **Sentiment Extreme**: Unless contrarian strategy active
 8. **Major News Pending**: Earnings, FOMC, etc.
 
+### False Breakout Prevention
+
+Before entering on a breakout (price crossing key level), require confirmation:
+
+1. **Time confirmation**: Price must hold above/below the level for at least 15 minutes (one 15m candle close beyond the level)
+2. **RSI confirmation**: RSI must be > 40 for bullish breakouts (not deeply oversold momentum pushing price temporarily) or < 60 for bearish breakdowns
+3. **Volume confirmation**: Volume on the breakout candle should be above the 20-period average
+4. **Prefer stop-limit entries**: Instead of chasing with a market order, set a stop-limit buy above the breakout level. If the breakout is real, it fills. If it's fake, it doesn't.
+
+**Signs of a false breakout:**
+- Price spikes above resistance but immediately reverses within the same candle (long upper wick)
+- Breakout occurs on declining volume
+- RSI is already overbought (>70) at the breakout level
+- Higher timeframe trend conflicts with breakout direction
+
 ### Conditions that STRENGTHEN signals
 
 1. **Volume Confirmation**: Above average volume
