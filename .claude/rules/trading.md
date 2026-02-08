@@ -2,6 +2,10 @@
 paths:
   - ".claude/commands/trade*"
   - ".claude/skills/coinbase-trading/**"
+  - ".claude/skills/trading-analysis/**"
+  - ".claude/skills/trading-positions/**"
+  - ".claude/skills/trading-execution/**"
+  - ".claude/skills/trading-report/**"
 ---
 # Trading Rules
 
@@ -50,11 +54,16 @@ paths:
 
 After context compaction (auto or manual), you MUST re-read these files before continuing to trade:
 
-1. `.claude/skills/coinbase-trading/SKILL.md` — Your complete workflow (4 phases), order types, risk management, crash playbook
-2. `.claude/skills/coinbase-trading/strategies.md` — Signal scoring, strategy configs, false breakout rules
-3. `.claude/trading-state.json` — Current positions, budget, trade history
+1. `.claude/skills/coinbase-trading/SKILL.md` — Orchestrator: session management, workflow phases, sub-skill invocation
+2. `.claude/trading-state.json` — Current positions, budget, trade history
 
-Do NOT rely on memory after compaction. Re-read the files. Context drift causes rule violations.
+Then invoke the sub-skills as usual via `Skill()`. Each sub-skill call freshly reads its SKILL.md:
+- `Skill("trading-analysis")` — Phase 1: Data collection & analysis
+- `Skill("trading-positions")` — Phase 2: Position management
+- `Skill("trading-execution")` — Phase 3: Signal aggregation & orders
+- `Skill("trading-report")` — Phase 4: Report output
+
+Do NOT rely on memory after compaction. Re-read the orchestrator and state file, then let sub-skills handle the rest.
 
 ## Dry-Run Mode
 

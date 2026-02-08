@@ -95,6 +95,10 @@
       "WebFetch",
       "WebSearch",
       "Skill(coinbase-trading)",
+      "Skill(trading-analysis)",
+      "Skill(trading-positions)",
+      "Skill(trading-execution)",
+      "Skill(trading-report)",
       "Read(.claude/trading-state.json)",
       "Update(.claude/trading-state.json)"
     ],
