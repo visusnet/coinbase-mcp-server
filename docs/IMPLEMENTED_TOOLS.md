@@ -6,6 +6,8 @@ This server now uses the official `@coinbase-sample/advanced-trade-sdk-ts` SDK d
 
 **Total Tools: 74**
 
+All tools accept an optional `format` parameter: `"json"` (default) for standard JSON output, or `"toon"` for compact output (~35% fewer tokens, ideal for list operations).
+
 ## Accounts (2)
 
 - ✅ `list_accounts` - Get all accounts and their balances
@@ -15,8 +17,8 @@ This server now uses the official `@coinbase-sample/advanced-trade-sdk-ts` SDK d
 
 - ✅ `list_orders` - List all orders with optional filters
 - ✅ `get_order` - Get details of a specific order
-- ✅ `create_order` - Create a new buy or sell order
-- ✅ `preview_order` - Preview order creation before committing
+- ✅ `create_order` - Create a new buy or sell order. Supports attached bracket orders (TP/SL) via attachedOrderConfiguration for crash-proof protection
+- ✅ `preview_order` - Preview order creation before committing. Supports attached bracket orders
 - ✅ `cancel_orders` - Cancel one or more orders
 - ✅ `list_fills` - Get executed trades for orders
 - ✅ `edit_order` - Edit an existing order (price/size)
@@ -115,11 +117,11 @@ This server now uses the official `@coinbase-sample/advanced-trade-sdk-ts` SDK d
 ## Analysis Tools (2)
 
 - ✅ `analyze_technical_indicators` - Calculate multiple indicators server-side, reducing context usage by ~90-95%. Fetches candles and returns computed values, aggregated signals, price summary, and risk metrics. The response includes an optional `risk` field containing: `volatilityDaily` (daily standard deviation of log returns), `volatilityAnnualized` (annualized volatility), `var95` (Value at Risk at 95% confidence - expected max daily loss %), `maxDrawdown` (maximum peak-to-trough decline as percentage), `sharpeRatio` (risk-adjusted return metric, null if zero volatility), and `riskLevel` (one of: low, moderate, high, extreme)
-- ✅ `analyze_technical_indicators_batch` - Analyze multiple products in parallel. Returns results for each product with a summary ranking by signal score
+- ✅ `analyze_technical_indicators_batch` - Analyze multiple products in parallel. Returns results for each product (including risk metrics) with a summary ranking by signal score
 
 ## Market Events (1)
 
-- ✅ `wait_for_market_event` - Wait for specific market conditions via real-time WebSocket. Monitors ticker data and triggers when conditions are met or timeout reached. Supports operators: gt, gte, lt, lte, crossAbove, crossBelow. Fields: price, volume24h, percentChange24h, high24h, low24h. Use instead of polling for efficient event-driven monitoring
+- ✅ `wait_for_market_event` - Wait for specific market conditions via real-time WebSocket. Monitors ticker and indicator data, triggers when conditions are met or timeout reached. Supports operators: gt, gte, lt, lte, crossAbove, crossBelow. Ticker fields: price, volume24h, percentChange24h, high24h, low24h. Indicator fields: rsi, macd, macd.histogram, macd.signal, bollingerBands, sma, ema, stochastic, stochastic.d (with configurable granularity and parameters). Use instead of polling for efficient event-driven monitoring
 
 ## Market Intelligence (1)
 

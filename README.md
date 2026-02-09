@@ -154,6 +154,7 @@ Full access to the Coinbase Advanced Trading API **plus a fully autonomous tradi
 - **Futures & Perpetuals**: Position management
 - **Public Data**: No-auth endpoints for market data
 - **Autonomous Trading Agent (Skill)**: Automates technical/sentiment analysis and trading decisions via `/trade` command in Claude
+- **TOON Output Format**: All tools support optional compact format (~35% fewer tokens for list operations)
 
 For a complete list of all trading skill features, see **[SKILL_FEATURES.md](docs/SKILL_FEATURES.md)**.
 
@@ -187,9 +188,12 @@ A built-in Claude command that runs an autonomous trading bot:
 - Sentiment analysis (Fear & Greed Index with 7 regions, news search)
 - Automatic order execution with preview
 - Dynamic ATR-based stop-loss/take-profit
+- Attached bracket orders (crash-proof TP/SL via Coinbase API)
 - Trailing stop (locks in profits)
 - Liquidity check before altcoin entries (spread >0.5%: skip, 0.2-0.5%: reduce to 50%)
-- Compound mode (reinvest profits)
+- HODL Safe portfolio isolation (protects user holdings via separate portfolio)
+- Profit protection (configurable % of gains auto-moved to HODL Safe)
+- Event-driven market monitoring (price, volume & indicator conditions)
 - Opportunity rebalancing (exit stagnant positions)
 - Continuous loop until you stop it
 
@@ -204,7 +208,7 @@ For a complete list of all trading features, see **[SKILL_FEATURES.md](docs/SKIL
 | Stop-Loss      | ATR-based (3-15%)                                                                                | Via ATR                                                        |
 | Trailing Stop  | 1.5% trail after +3%, min lock-in 1.0%                                                           | No                                                             |
 | Check Interval | 15 minutes                                                                                       | Yes (`interval=5m`)                                            |
-| Compound       | 50% of profits (min €0.10, max 2× initial, pauses after 2 losses, resumes after 2 wins)         | Yes (`compound=75`, `compound-cap=15`, `no-compound`)          |
+| Profit Protection | 50% of profits moved to HODL Safe                                                            | Yes (choose at session start: 0%, 50%, 100%, or custom)       |
 | Rebalancing    | After 12h if <3% move, delta >40, max loss -2%, cooldown 4h, max 3/day                          | Yes (`no-rebalance`, `rebalance-delta=50`, `rebalance-max=2`) |
 | Pairs          | All EUR pairs                                                                                    | No                                                             |
 
@@ -231,7 +235,7 @@ Just ask Claude:
 # Dry run (no real trades)
 /trade 10 EUR from BTC dry-run
 
-# Real trading with 10 EUR budget from your BTC
+# Real trading with 10 EUR from your BTC
 /trade 10 EUR from BTC
 
 # Trade with EUR balance directly
@@ -258,7 +262,7 @@ coinbase-mcp-server/
 ├── src/
 │   ├── index.ts                 # HTTP server entry point
 │   └── server/
-│       └── CoinbaseMcpServer.ts # MCP server with 73 tools
+│       └── CoinbaseMcpServer.ts # MCP server with 74 tools
 ├── .claude/
 │   ├── settings.json            # MCP server config (auto-loaded)
 │   └── commands/

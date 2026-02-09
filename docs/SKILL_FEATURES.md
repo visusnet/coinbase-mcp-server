@@ -42,6 +42,11 @@ BTC @ €95,000, ATR = €1,900 (2%)
 → SL: 95,000 × 0.96 = €91,200 (-4%)
 ```
 
+**Two-Layer Protection**:
+
+- **Primary**: Attached bracket orders via Coinbase API — TP/SL execute automatically even if the bot is offline
+- **Secondary**: Bot monitoring — handles trailing stops and recalculates SL/TP after 24h (cancels old bracket, switches to bot management)
+
 ---
 
 ### 2. Trailing Stop-Loss
@@ -67,20 +72,22 @@ Price drops to €110 → SELL @ ~€110 (+10% instead of fixed +5%)
 
 | Signal            | Position Size |
 |-------------------|---------------|
-| Strong (>60%)     | 100% Budget   |
-| Medium (40-60%)   | 75% Budget    |
-| Weak (20-40%)     | 50% Budget    |
+| Strong (>60%)     | 100% Capital  |
+| Medium (40-60%)   | 75% Capital   |
+| Weak (20-40%)     | 50% Capital   |
 | Very Weak (<20%)  | No Trade      |
 
 ---
 
 ### 4. Position Sizing by Volatility
 
-| ATR vs Average | Position Size |
-|----------------|---------------|
-| < 1×           | 100%          |
-| 1-2×           | 75%           |
-| > 2×           | 50% or Skip   |
+| ATR vs Average | Multiplier | Example (75% base) |
+|----------------|------------|---------------------|
+| < 1×           | ×1.10      | 82.5%               |
+| 1-2×           | ×0.90      | 67.5%               |
+| > 2×           | ×0.50      | 37.5%               |
+
+Final position size = min(100%, base × multiplier)
 
 ---
 
@@ -90,7 +97,7 @@ Price drops to €110 → SELL @ ~€110 (+10% instead of fixed +5%)
 |----------------------------|--------------|
 | Max Risk per Trade         | 2% Portfolio |
 | Max Simultaneous Positions | 3            |
-| Max Exposure per Asset     | 33% Budget   |
+| Max Exposure per Asset     | 33% Capital  |
 
 ---
 
@@ -176,9 +183,9 @@ Signal aggregation determines trade execution:
 
 | Signal Range  | Classification | Action                          | Position Size   |
 |---------------|----------------|---------------------------------|-----------------|
-| > +60%        | Strong BUY     | Execute                         | 100% of budget  |
-| +40% to +60%  | BUY            | Execute                         | 75% of budget   |
-| +20% to +40%  | Weak BUY       | Execute if sentiment bullish    | 50% of budget   |
+| > +60%        | Strong BUY     | Execute                         | 100% of capital |
+| +40% to +60%  | BUY            | Execute                         | 75% of capital  |
+| +20% to +40%  | Weak BUY       | Execute if sentiment bullish    | 50% of capital  |
 | -20% to +20%  | Neutral        | HOLD                            | -               |
 | -40% to -20%  | Weak SELL      | Execute if sentiment bearish    | 50% position    |
 | -60% to -40%  | SELL           | Execute                         | 75% position    |
@@ -363,7 +370,7 @@ Use `wait_for_market_event` for efficient, event-driven position monitoring inst
 | Max Conditions | 5 per product  | Conditions per subscription           |
 | Logic Modes   | any / all       | OR (any condition) / AND (all)        |
 
-**Available Fields:**
+**Ticker Fields:**
 
 | Field            | Description             |
 |------------------|-------------------------|
@@ -372,6 +379,20 @@ Use `wait_for_market_event` for efficient, event-driven position monitoring inst
 | percentChange24h | 24-hour percent change  |
 | high24h          | 24-hour high            |
 | low24h           | 24-hour low             |
+
+**Indicator Fields** (with configurable granularity and parameters):
+
+| Field              | Description                     |
+|--------------------|---------------------------------|
+| rsi                | Relative Strength Index         |
+| macd               | MACD line value                 |
+| macd.histogram     | MACD histogram                  |
+| macd.signal        | MACD signal line                |
+| bollingerBands     | Bollinger Bands position        |
+| sma                | Simple Moving Average           |
+| ema                | Exponential Moving Average      |
+| stochastic         | Stochastic %K                   |
+| stochastic.d       | Stochastic %D                   |
 
 **Available Operators:**
 
@@ -394,6 +415,7 @@ Use `wait_for_market_event` for efficient, event-driven position monitoring inst
 | Buy the Dip               | `price crossBelow {targetPrice}`                 |
 | Breakout Entry            | `price crossAbove {resistanceLevel}`             |
 | Volatility Alert          | `percentChange24h lt -5` OR `gt 5`               |
+| RSI Oversold Recovery     | `rsi crossAbove 30` (granularity: FIFTEEN_MINUTE) |
 
 **Example: SL/TP Monitoring**
 
@@ -404,6 +426,22 @@ wait_for_market_event({
     conditions: [
       { field: "price", operator: "lte", value: 91200 },  // SL
       { field: "price", operator: "gte", value: 98800 }   // TP
+    ],
+    logic: "any"
+  }],
+  timeout: 55
+})
+```
+
+**Example: Indicator Condition**
+
+```
+wait_for_market_event({
+  subscriptions: [{
+    productId: "BTC-EUR",
+    conditions: [
+      { field: "rsi", operator: "crossAbove", value: 30,
+        granularity: "FIFTEEN_MINUTE", parameters: { period: 14 } }
     ],
     logic: "any"
   }],
@@ -440,40 +478,49 @@ After each analysis cycle:
 
 ## 💹 Capital Management
 
-### 1. Budget Tracking
+### 1. HODL Safe Portfolio Isolation
 
-- Budget defined per session (e.g., "5 EUR from BTC")
-- Remaining budget persisted in state
-- Never exceeds budget across all cycles
+Trading capital is isolated at the API level using Coinbase portfolios.
+
+| Component | Purpose |
+|-----------|---------|
+| **Default Portfolio** | Trading capital — the bot trades exclusively here |
+| **HODL Safe Portfolio** | Protected user holdings — the bot never touches this |
+
+**How it works**:
+
+- On fresh start (`/trade 10 EUR from BTC`): bot creates HODL Safe, moves all assets except the allocated budget into it
+- On warm start: bot verifies HODL Safe exists, trades with whatever is in Default
+- The Default portfolio balance IS the trading capital — no separate budget tracking needed
+
+**Sacred Rule**: The skill must NEVER move funds from the HODL Safe to the Default portfolio.
 
 ---
 
-### 2. Compound Mode
+### 2. Profit Protection
 
-Automatic reinvestment of profits for exponential growth.
+Automatically moves a configurable percentage of realized gains to HODL Safe after each profitable exit.
 
-| Parameter  | Default     | Description             |
-|------------|-------------|-------------------------|
-| Enabled    | true        | Active by default       |
-| Rate       | 50%         | Portion of profits      |
-| Min Amount | €0.10       | Minimum for compounding |
-| Max Budget | 2× initial  | Budget cap              |
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| Protection Rate | 50% | Portion of profits moved to HODL Safe |
 
-**Risk Controls**:
+**Options** (chosen at session start):
 
-- Pauses after 2 consecutive losses
-- Rate reduces to 25% after 3 consecutive wins
-- Only compounds positive PnL
-- Manual exits preserve compound state (streaks unchanged)
+- 0% — keep all profits for trading
+- 50% — balanced protection and reinvestment (recommended)
+- 100% — all profits leave trading capital
+- Custom — user-specified percentage
 
-**CLI Arguments**:
+**Example**:
 
 ```
-/trade 5 EUR from BTC                 → Compound active (default)
-/trade 5 EUR from BTC no-compound     → Compound disabled
-/trade 5 EUR from BTC compound=75     → 75% rate
-/trade 5 EUR from BTC compound-cap=15 → Max €15 budget
+Exit SOL-EUR with +5.00€ net profit, protection rate 50%
+→ Move 2.50€ to HODL Safe
+→ 2.50€ stays in Default for trading
 ```
+
+Rebalance exits skip profit protection — rebalancing is capital reallocation, not realized gains leaving the system.
 
 ---
 
@@ -499,7 +546,6 @@ Automatically exit stagnant positions for better opportunities.
 |------------------------------------------------|--------------------|
 | `delta > 40` AND `stagnant` AND `pnl > -2%`   | REBALANCE          |
 | `delta > 60` AND `pnl > -2%`                   | REBALANCE (urgent) |
-| `delta > 30` AND `stagnant` AND `pnl > 0`     | REBALANCE          |
 | Otherwise                                      | HOLD               |
 
 **Edge Cases**:
@@ -530,32 +576,27 @@ Delta: 78 - 25 = 53 (> 40 ✓)
 
 ---
 
-### 4. Budget Exhaustion Check
+### 4. Capital Exhaustion Check
 
-Prevents deadlock when budget runs low.
+Prevents deadlock when trading capital runs low.
 
-**Logic**:
+Before seeking new entries, check if Default portfolio balance < minimum order size (typically €2.00):
 
-Before seeking new entries, check if `remaining < minimum order size` (typically €2.00):
-
-- **Insufficient budget BUT positions eligible for rebalancing** → Continue (sell X to buy Y)
-- **Insufficient budget AND no rebalanceable positions** → Exit session gracefully
+- **Insufficient capital BUT positions eligible for rebalancing** → Continue (sell X to buy Y)
+- **Insufficient capital AND no rebalanceable positions** → Exit session gracefully
 - Escapes deadlock by allowing capital reallocation even with €0 remaining
 
 **Example**:
 
 ```
-Budget: €0.15 remaining, 3 positions open
+Default balance: €0.15, 3 positions open
 - BTC: Stagnant 15h, PnL -0.50€
 - ETH: Strong +5.00€, not stagnant → Keep
 - SOL: Stagnant 13h, PnL +1.20€, alternative delta +55
 
 → Rebalance SOL to AVAX frees 3.15€ capital
-→ New budget: 0.15€ + 3.15€ - 0.04€ fees = 3.26€
 → Session continues
 ```
-
-**Impact**: Maximizes capital efficiency through position rotation, prevents premature session termination.
 
 ---
 
@@ -565,21 +606,24 @@ Budget: €0.15 remaining, 3 positions open
 
 Stored in `.claude/trading-state.json`
 
+**Portfolio Data**:
+
+- Portfolio UUIDs (Default, HODL Safe)
+- Fund allocation status
+- Profit protection rate
+
 **Session Data**:
 
-- Budget (initial, remaining)
 - Stats (wins, losses, PnL, fees)
 - Config (strategy, interval, dryRun)
-- Compound (enabled, rate, events)
 - Rebalancing (enabled, history, cooldown)
 
 **Position Data**:
 
-- Entry (price, time, orderType, fee, route)
+- Entry (price, time, orderType, fee)
 - Analysis (signalStrength, reason, confidence)
-- Risk Management (dynamicSL, dynamicTP, trailingStop)
+- Risk Management (dynamicSL, dynamicTP, trailingStop, bracketOrderId, hasBracket)
 - Performance (currentPrice, unrealizedPnL, peakPnL)
-- Rebalancing (eligible, stagnantSince, bestAlternative)
 
 **Trade History**:
 
@@ -645,24 +689,26 @@ Stored in `.claude/trading-state.json`
 ┌─────────────────────────────────────────────────────────────┐
 │ PHASE 1: DATA COLLECTION                                    │
 │   1. Check Portfolio Status                                 │
-│   2. Collect Market Data                                    │
-│   3. Technical Analysis                                     │
-│   4. Sentiment Analysis                                     │
+│   2. Pair Screening                                         │
+│   3. Collect Market Data (for selected pairs)               │
+│   4. Technical Analysis                                     │
+│   5. Sentiment Analysis                                     │
 ├─────────────────────────────────────────────────────────────┤
 │ PHASE 2: MANAGE EXISTING POSITIONS (frees up capital)       │
-│   5. Check SL/TP/Trailing                                   │
-│   6. Rebalancing Check                                      │
-│   7. Apply Compound (after exits)                           │
+│   6. Check SL/TP/Trailing                                   │
+│   7. Rebalancing Check                                      │
+│   8. Capital Exhaustion Check                               │
 ├─────────────────────────────────────────────────────────────┤
 │ PHASE 3: NEW ENTRIES (uses freed capital)                   │
-│   8. Signal Aggregation                                     │
-│   9. Check Fees & Profit Threshold                          │
-│  10. Pre-Trade Liquidity Check                              │
-│  11. Execute Order                                          │
+│  10. Signal Aggregation                                     │
+│  11. Apply Volatility-Based Position Sizing                 │
+│  12. Check Fees & Profit Threshold                          │
+│  13. Pre-Trade Liquidity Check                              │
+│  14. Execute Order                                          │
 ├─────────────────────────────────────────────────────────────┤
 │ PHASE 4: REPORT                                             │
-│  12. Output Report                                          │
-│  13. Sleep → Repeat                                         │
+│  15. Output Report                                          │
+│  16. Sleep → Repeat                                         │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -672,29 +718,7 @@ Stored in `.claude/trading-state.json`
 
 Real-world examples demonstrating feature interactions:
 
-### Scenario 1: Compound + Rebalancing Interaction
-
-**Initial State**:
-
-- Budget: 10.00€, BTC position +5.00€ profit (unrealized)
-- Compound: 50% rate, enabled
-- Rebalancing: Enabled, BTC stagnant for 14h
-
-**Sequence**:
-
-1. Rebalancing detects better opportunity in ETH (delta +45)
-2. Exit BTC: Sell @ +5.00€ gross
-3. Fees: Entry 0.04€ + Exit 0.04€ = 0.08€
-4. Net PnL: 5.00€ - 0.08€ = 4.92€
-5. **Compound**: 50% × 4.92€ = 2.46€ added to budget
-6. New budget: 10.00€ + 4.92€ + 2.46€ = 17.38€
-7. Enter ETH: Use budget from freed capital + compounded amount
-
-**Result**: Budget grows to 17.38€, ETH position opened with freed capital
-
----
-
-### Scenario 2: Trailing Stop Priority vs Rebalancing
+### Scenario 1: Trailing Stop Priority vs Rebalancing
 
 **Initial State**:
 
@@ -716,18 +740,17 @@ Real-world examples demonstrating feature interactions:
 1. Trailing stop: 110€ < 110.32€ → **TRIGGER**
 2. Exit SOL @ 110€ (+10% profit)
 3. Rebalancing: Position already closed → Skip
-4. Compound: Add 50% of profit to budget
-5. Seek new entry (ETH still best opportunity → Enter ETH)
+4. Seek new entry (ETH still best opportunity → Enter ETH)
 
 **Result**: Trailing stop takes priority, rebalancing only runs if position still open
 
 ---
 
-### Scenario 3: Budget Exhaustion with Multiple Positions
+### Scenario 2: Capital Exhaustion with Multiple Positions
 
 **Initial State**:
 
-- Budget: 10.00€ initial, 0.15€ remaining
+- Default balance: 0.15€
 - Position 1: BTC-EUR, 3.50€ invested
 - Position 2: ETH-EUR, 3.20€ invested
 - Position 3: SOL-EUR, 3.15€ invested
@@ -735,82 +758,25 @@ Real-world examples demonstrating feature interactions:
 
 **Cycle Check**:
 
-1. Budget check: 0.15€ < 2.00€ minimum → Insufficient for new entry
+1. Capital check: 0.15€ < 2.00€ minimum → Insufficient for new entry
 2. Rebalancing check:
    - BTC: Stagnant 15h, PnL -0.50€
    - ETH: Strong +5.00€, not stagnant → Keep
    - SOL: Moderate +1.20€, stagnant 13h, alternative with delta +55 exists
 3. **Rebalancing**: Exit SOL (-0.04€ fee) → 3.15€ freed
-4. New budget: 0.15€ + 3.15€ - 0.04€ = 3.26€
+4. Available capital: 0.15€ + 3.15€ - 0.04€ = 3.26€
 5. Enter AVAX with better signal
 6. Continue trading
 
-**Result**: Rebalancing prevents budget deadlock, session continues
+**Result**: Rebalancing prevents capital deadlock, session continues
 
 ---
 
-### Scenario 4: Partial Fill with Compound
+### Scenario 3: Multi-Position Capital Allocation
 
 **Initial State**:
 
-- Budget: 20.00€
-- Strong BUY signal for BTC (75%), target size 15.00€
-
-**Sequence**:
-
-1. Place limit order: 15.00€ @ 95,000€
-2. Wait 120 seconds
-3. Partial fill: Only 10.00€ filled (66% filled)
-4. Check order status: `status=FILLED`, `filled_value=10.00€`
-5. **No fallback** (order shows FILLED for partial)
-6. Position opened: 10.00€ invested
-7. Budget remaining: 20.00€ - 10.00€ - 0.04€ fee = 9.96€
-
-**Later - Position Closed at Profit**:
-8. Exit @ +3.00€ gross profit
-9. Net profit: 3.00€ - 0.08€ fees = 2.92€
-10. **Compound**: 50% × 2.92€ = 1.46€
-11. Budget: 9.96€ + 10.00€ + 2.92€ + 1.46€ = 24.34€
-
-**Result**: Partial fill handled correctly, no over-buying, compound applied to realized profit
-
----
-
-### Scenario 5: Consecutive Losses with Rebalancing
-
-**Initial State**:
-
-- Budget: 10.00€, Compound enabled (50% rate)
-- Position history: Win (+2€) → Loss (-1€) → Loss (-1€)
-- Compound state: Paused after 2 consecutive losses
-
-**Current Cycle**:
-
-1. ETH position: Held 14h, stagnant (+0.80€)
-2. AVAX shows strong signal (delta +55)
-3. **Rebalancing triggered**:
-   - Exit ETH: +0.80€ gross - 0.08€ fees = +0.72€ net
-   - This is a WIN → Consecutive losses reset to 0
-   - Consecutive wins: 1
-4. **Compound still paused** (needs 2 consecutive wins to resume)
-5. Budget: 10.00€ + 0.72€ = 10.72€ (no compound added)
-6. Enter AVAX: 10.72€ invested
-
-**Next Trade (WIN)**:
-7. AVAX exits at +1.50€ net profit
-8. Consecutive wins: 2 → **Compound resumes**
-9. Compound: 50% × 1.50€ = 0.75€
-10. Budget: 10.72€ + 1.50€ + 0.75€ = 12.97€
-
-**Result**: Rebalancing can contribute to win streak recovery, compound resumes after 2 consecutive wins
-
----
-
-### Scenario 6: Multi-Position Budget Allocation
-
-**Initial State**:
-
-- Budget: 30.00€
+- Available capital: 30.00€
 - Strong signals for BTC (70%), ETH (65%), SOL (60%)
 - Max 3 positions, max 33% per asset
 
@@ -838,7 +804,7 @@ Real-world examples demonstrating feature interactions:
 
 ---
 
-### Scenario 7: Session Resume with Stagnant Position
+### Scenario 4: Session Resume with Stagnant Position
 
 **Previous Session**:
 
@@ -869,7 +835,7 @@ Real-world examples demonstrating feature interactions:
 
 ---
 
-### Scenario 8: Fee Structure Impact on Profit Check
+### Scenario 5: Fee Structure Impact on Profit Check
 
 **Two-Stage Profit Verification**:
 
@@ -899,7 +865,7 @@ Real-world examples demonstrating feature interactions:
 
 ---
 
-### Scenario 9: Multi-Timeframe Conflicts
+### Scenario 6: Multi-Timeframe Conflicts
 
 **Initial State**:
 
@@ -922,7 +888,7 @@ Real-world examples demonstrating feature interactions:
 
 ---
 
-### Scenario 10: Force Exit via Stagnation Score
+### Scenario 7: Force Exit via Stagnation Score
 
 **Initial State**:
 
@@ -949,39 +915,14 @@ Real-world examples demonstrating feature interactions:
 
 ---
 
-### Scenario 11: Manual Exit Preserving Compound State
-
-**Initial State**:
-
-- Session Compound State:
-  - consecutiveWins: 3
-  - consecutiveLosses: 0
-  - paused: false
-  - rate: 0.25 (reduced from 0.50 after 3 consecutive wins)
-- SOL-EUR Position: 119.34 EUR → 125.00 EUR (+4.74%)
-
-**User Action**:
-
-1. User: "Exit SOL position now, take profit manually"
-2. System: Market Order SELL SOL-EUR @ 125.00 EUR
-3. Net PnL: +5.66 EUR (after fees)
-4. Exit Trigger: "manual"
-
-**Compound State After Manual Exit**:
-
-- consecutiveWins: 3 (UNCHANGED)
-- consecutiveLosses: 0 (UNCHANGED)
-- paused: false (UNCHANGED)
-- rate: 0.25 (UNCHANGED)
-- Log: "Manual exit: Compound state preserved (streaks: 3W/0L)"
-
-**Result**: Manual interventions do NOT reset compound streaks. User can take manual profits when needed without disrupting automated compound strategy. Streaks remain intact for next automated exit.
-
----
-
 ## � References
 
-- [SKILL.md](../.claude/skills/coinbase-trading/SKILL.md) - Main documentation
-- [state-schema.md](../.claude/skills/coinbase-trading/state-schema.md) - State structure
-- [strategies.md](../.claude/skills/coinbase-trading/strategies.md) - Strategies
-- [indicators.md](../.claude/skills/coinbase-trading/indicators.md) - Indicator formulas
+- [SKILL.md](../.claude/skills/coinbase-trading/SKILL.md) - Orchestrator and configuration
+- [session-start.md](../.claude/skills/coinbase-trading/phases/session-start.md) - HODL Safe setup and session flows
+- [phase-enter.md](../.claude/skills/coinbase-trading/phases/phase-enter.md) - Signal aggregation, position sizing, order execution
+- [phase-manage.md](../.claude/skills/coinbase-trading/phases/phase-manage.md) - SL/TP, trailing stops, rebalancing
+- [state-schema.md](../.claude/skills/coinbase-trading/reference/state-schema.md) - State structure
+- [strategies.md](../.claude/skills/coinbase-trading/reference/strategies.md) - Signal scoring and strategies
+- [indicators.md](../.claude/skills/coinbase-trading/reference/indicators.md) - Indicator MCP tools
+- [output-format.md](../.claude/skills/coinbase-trading/reference/output-format.md) - Report format
+- [market-event-guide.md](../.claude/skills/coinbase-trading/reference/market-event-guide.md) - Event monitoring guide
