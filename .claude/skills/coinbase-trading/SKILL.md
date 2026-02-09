@@ -33,23 +33,14 @@ The project does NOT need to be built. Just call the tools.
 
 ### General
 
-- **Budget**: From command arguments (e.g., "10 EUR from BTC" or "5 EUR")
-  - This is the **TOTAL budget for the entire /trade session**, NOT per cycle
-  - "5 EUR from BTC" = BTC is the funding source, but ONLY sell BTC when a trade justifies it
-    - Do NOT sell BTC upfront just to have EUR
-    - If analysis shows buying X is better than holding BTC → trade BTC for X
-    - Prefer direct pairs (BTC→X) over BTC→EUR→X to save fees
-    - If holding BTC is better than any available trade → HOLD, do not sell
-  - The EUR equivalent is locked at the conversion rate when the session starts.
-    <reasoning>
-    If BTC was 100,000 EUR at session start, the budget is 0.0001 BTC — even if BTC later drops to 50,000 EUR. The budget must not become a moving target.
-    </reasoning>
-  - Track remaining budget in state file, do NOT exceed it across all cycles
-  - **SACRED RULE**: The budget is the ONLY capital the bot may use. All other holdings are OFF LIMITS. If the user holds 50 EUR in BTC and sets a budget of "10 EUR from BTC", the remaining 40 EUR in BTC and ALL other assets MUST stay untouched. Never sell, trade, or reallocate assets outside the budget — they belong to the user, not the bot.
+- **HODL Safe**: Trading capital is isolated in the Default portfolio. User holdings are protected in the HODL Safe portfolio.
+  - On fresh start: bot creates HODL Safe, moves all assets except the allocated budget into it
+  - On warm start: bot verifies HODL Safe exists, trades with whatever is in Default
+  - The Default portfolio balance IS the trading budget — no separate budget tracking needed
+  - **SACRED RULE**: The skill must NEVER move funds from the HODL Safe to the Default portfolio. NEVER.
 - **Interval**: From command arguments (e.g., "interval=5m" for 5 minutes, default: 15m)
 - **Strategy**: Aggressive
 - **Take-Profit / Stop-Loss**: ATR-based (see summary below)
-- **Allowed Pairs**: All EUR trading pairs
 
 ### SL/TP Summary
 
@@ -190,8 +181,7 @@ On first cycle only, determine whether to start fresh or resume.
 │ PHASE 2: MANAGE EXISTING POSITIONS (frees up capital)       │
 │   6. Check SL/TP/Trailing                                   │
 │   7. Rebalancing Check                                      │
-│   8. Apply Compound (after exits)                           │
-│   9. Budget Exhaustion Check                                │
+│   8. Capital Exhaustion Check                               │
 ├─────────────────────────────────────────────────────────────┤
 │ PHASE 3: NEW ENTRIES (uses freed capital)                   │
 │  10. Signal Aggregation                                     │
@@ -212,10 +202,9 @@ On first cycle only, determine whether to start fresh or resume.
 
 ### 1. Check Portfolio Status
 
-Call `list_accounts` and determine:
+Call `get_portfolio(portfolios.defaultUuid)` and determine:
 
-- Available EUR balance
-- Available BTC balance (if budget is from BTC)
+- Total Default portfolio value (available trading capital)
 - Current open positions
 
 ### 2. Pair Screening
@@ -414,41 +403,36 @@ Call `get_news_sentiment` for the top BUY candidates from Step 2. This surfaces 
 ```
 IF openPositions.length > 0:
   → Read("phases/phase-manage.md")
-  → Execute: SL/TP check, 24h recalc, trailing stop, rebalancing, compound
+  → Execute: SL/TP check (with inline profit protection), 24h recalc, trailing stop, rebalancing
   → Write results to state file
 ELSE:
   → Skip Phase 2
 ```
 
-## Step 9: Budget Exhaustion Check
+## Step 8: Capital Exhaustion Check
 
-Before seeking new entries, verify sufficient budget for trading:
+Before seeking new entries, verify sufficient capital for trading:
 
 ```
-// Step 1: Get minimum order sizes for potential trades
-min_order_size_eur = 2.00  // Typical Coinbase minimum in EUR
-min_order_size_btc = 0.00001  // Example BTC minimum
+1. Query Default portfolio balance via list_accounts or get_portfolio
+2. Calculate total available capital (sum of all asset values in EUR)
 
-// Step 2: Check if budget allows ANY trade
-IF session.budget.remaining < min_order_size_eur:
+IF available_capital < min_order_size_eur (typically 2.00€):
 
-  // Step 3: Check if rebalancing is possible
   IF hasOpenPositions AND anyPositionEligibleForRebalancing:
-    // Continue to rebalancing logic (Step 7)
-    // Rebalancing can free up capital for new trades
-    SKIP to Step 10 (Signal Aggregation) after rebalancing
+    → Continue to rebalancing logic
+    → Rebalancing frees capital by selling one position for another
   ELSE:
-    // No positions to rebalance, insufficient budget for new entry
-    Log: "Budget exhausted: {remaining}€ < minimum {min}€, no positions to rebalance"
-    EXIT session with status "Budget Exhausted"
-    STOP
+    → Log: "Capital exhausted: {available}€ < minimum {min}€"
+    → Report to user: "Trading capital exhausted. No funds available in Default portfolio."
+    → STOP trading loop, wait for user
 ```
 
 **Key Points**:
 
 - Minimum order size is asset-specific (check via `get_product`)
 - Rebalancing (selling position X to buy position Y) bypasses this check
-- Only exits if BOTH: insufficient budget AND no rebalanceable positions
+- Only exits if BOTH: insufficient capital AND no rebalanceable positions
 - This prevents deadlock while allowing capital reallocation
 
 ## Phase 3: New Entries (Steps 10-14) — CONDITIONAL
@@ -456,6 +440,7 @@ IF session.budget.remaining < min_order_size_eur:
 ```
 IF any pair scored above entry threshold (+40 aggressive):
   → Read("phases/phase-enter.md")
+  → Read("reference/strategies.md")
   → Execute: signal aggregation, MTF alignment, ADX filter, sizing, execution
   → Write results to state file
 ELSE:
@@ -473,7 +458,7 @@ Output a structured, compact report. See [output-format.md](reference/output-for
 
 ## Important Rules
 
-1. **NEVER use more than the budget**
+1. **NEVER move funds from the HODL Safe to the Default portfolio**
 2. **ALWAYS call preview_order before create_order**
 3. **Fees MUST be considered**
 4. **When uncertain: DO NOT trade**
@@ -613,5 +598,6 @@ After re-reading, verify:
 - Am I updating state after every action?
 - Am I using the correct ATR formulas? (TP = max(2.5%, ATR% × 2.5), SL = clamp(ATR% × 1.5, 2.5%, 10%))
 - Am I checking ADX > 20 before entries?
-- Am I respecting the budget?
+- Does the HODL Safe still exist? (via get_portfolio(portfolios.hodlSafeUuid) — if error, halt trading, trigger Flow E)
+- Am I NEVER moving funds from the HODL Safe?
 - Am I using wait_for_market_event between cycles (not sleep when positions exist)?

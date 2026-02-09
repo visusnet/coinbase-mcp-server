@@ -48,7 +48,7 @@ Structured, compact report format for trading cycle output.
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 ┏━ **SESSION** ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃  Budget: €{BUDGET} │ PnL: {PNL}% │ W/L: {W}/{L} │ Next: {T}  ┃
+┃  Capital: €{CAPITAL} │ PnL: {PNL}€ │ W/L: {W}/{L} │ Next: {T} ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 ```
 
@@ -59,7 +59,7 @@ Structured, compact report format for trading cycle output.
 3. **SPOTLIGHT**: Detailed breakdown of the best opportunity (or current position if held)
 4. **RATIONALE**: 2-5 sentence prose explaining reasoning (why HOLD, why not BUY, etc.)
 5. **ACTION**: What was executed this cycle (or "None")
-6. **SESSION**: Budget remaining, session PnL, win/loss record, time until next cycle
+6. **SESSION**: Available capital (Default portfolio), session PnL, win/loss record, time until next cycle
 
 ## Example Output
 
@@ -93,7 +93,7 @@ Structured, compact report format for trading cycle output.
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 ┏━ **SESSION** ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃  Budget: €9.24 │ PnL: -7.60% │ W/L: 1/3 │ Next: 10 min       ┃
+┃  Capital: €9.24 │ PnL: -0.76€ │ W/L: 1/3 │ Next: 10 min       ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 ## Formatting Notes

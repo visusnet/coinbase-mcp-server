@@ -1,30 +1,9 @@
 # Phase 2: Manage Existing Positions
 
 This file is read by the orchestrator when `openPositions.length > 0`.
-It covers: SL/TP management, trailing stops, rebalancing, and compounding.
+It covers: SL/TP management, trailing stops, rebalancing, and profit protection.
 
 ---
-
-## Compound Mode Configuration
-
-Automatically reinvest a portion of profits to enable exponential growth:
-
-- **Compound Enabled**: true (disable with "no-compound" argument)
-- **Compound Rate**: 50% of net profits
-- **Min Compound Amount**: 0.10€
-- **Max Budget**: 2× initial budget (optional cap)
-
-**Risk Controls**:
-
-- Compound pauses after 2 consecutive losses
-- Rate reduces to 25% after 3 consecutive wins
-- Never compounds losses (only positive PnL)
-
-**Arguments**:
-
-- `no-compound` → Disable compounding
-- `compound=75` → Custom rate: 75%
-- `compound-cap=15` → Max budget: 15€
 
 ## Opportunity Rebalancing Configuration
 
@@ -56,11 +35,11 @@ Automatically exit stagnant positions for better opportunities:
 
 ## Step 6: Check Stop-Loss / Take-Profit
 
-**Positions with attached bracket orders** (market/limit BUY entries with `attachedOrderConfiguration`):
+**Positions with attached bracket orders** (`riskManagement.hasBracket == true`):
 Coinbase handles the basic SL/TP automatically — the attached bracket is the primary protection. The bot's SL/TP check below serves as a **secondary layer** for:
 - **Trailing stop** management (attached brackets don't trail)
-- **SL/TP recalculation** after 24h (cancel old bracket via `cancel_orders`, new bracket is set on the next entry or manually)
-- **Positions without brackets** (stop-limit fills, manual trades, or pre-existing positions from earlier sessions)
+- **SL/TP recalculation** after 24h: cancel old bracket via `cancel_orders([riskManagement.bracketOrderId])`, set `riskManagement.hasBracket = false`, then manage SL/TP via the bot's own monitoring
+- **Positions without brackets** (`riskManagement.hasBracket == false`): stop-limit fills, manual trades, or pre-existing positions from earlier sessions
 
 For all open positions, use dynamic ATR-based thresholds:
 
@@ -170,7 +149,7 @@ For positions held > 12h with < 3% movement:
 stagnation_score = (holdingTimeHours / 12) × (1 - abs(unrealizedPnLPercent / 2.0))
 
 IF stagnation_score > 2.0:
-  → FORCE CLOSE (market order)
+  → FORCE CLOSE (market order, exit.trigger = "rebalance")
   → Reason: "Maximum stagnation threshold exceeded"
   → Log: "Force closed {PAIR} after {hours}h: stagnation_score={score}, PnL={pnl}%"
   → SKIP to next cycle (no rebalancing, position is closed)
@@ -192,12 +171,12 @@ is_stagnant = holdingTimeHours > 12 AND abs(unrealizedPnLPercent) < 3
 
 // Rebalancing decision
 IF opportunity_delta > 40 AND is_stagnant AND unrealizedPnLPercent > -2:
-  → SELL current position (market order)
+  → SELL current position (market order, exit.trigger = "rebalance")
   → BUY best alternative (limit order preferred)
   → Log: "Rebalanced {FROM}→{TO}: stagnant {X}h, delta +{Y}"
 
 IF opportunity_delta > 60 AND unrealizedPnLPercent > -2:
-  → REBALANCE (even if not stagnant, urgent opportunity)
+  → REBALANCE (even if not stagnant, urgent opportunity, exit.trigger = "rebalance")
 ```
 
 **Safeguards**:
@@ -228,70 +207,3 @@ Last Rebalance: 4h ago (cooldown OK)
 
 ---
 
-## Step 8: Apply Compound
-
-After any profitable exit (SL/TP/Trailing/Rebalance):
-
-```
-IF netPnL > 0 AND session.compound.enabled:
-  compoundAmount = netPnL × session.compound.rate
-
-  IF compoundAmount >= 0.10€:
-    IF session.budget.remaining + compoundAmount <= session.compound.maxBudget:
-      session.budget.remaining += compoundAmount
-    ELSE:
-      compoundAmount = maxBudget - session.budget.remaining  // Cap at max
-      session.budget.remaining = maxBudget
-
-    Log compound event to session.compound.compoundEvents[]
-    session.compound.totalCompounded += compoundAmount
-    Report: "Compounded +{X}€ → Budget now {Y}€"
-```
-
-**Risk Controls**:
-
-```
-// Track win/loss streak
-IF trade_result == "WIN":
-  session.compound.consecutiveWins++
-  session.compound.consecutiveLosses = 0
-
-  // Un-pause after 2 consecutive wins
-  IF session.compound.paused AND session.compound.consecutiveWins >= 2:
-    session.compound.paused = false
-    session.compound.consecutiveLosses = 0
-    Log: "Compound re-enabled after {wins} consecutive wins"
-
-ELSE IF trade_result == "LOSS":
-  session.compound.consecutiveLosses++
-  session.compound.consecutiveWins = 0
-
-  // Pause after 2 consecutive losses
-  IF session.compound.consecutiveLosses >= 2:
-    session.compound.paused = true
-    Log: "Compound paused after {losses} consecutive losses"
-
-// Apply compound only if not paused
-IF session.compound.paused:
-  Log: "Compound skipped (paused due to losses)"
-  SKIP compound
-
-// Determine effective compound rate
-IF session.compound.consecutiveWins >= 3:
-  effective_rate = session.compound.rate × 0.5  // 50% → 25%
-  Log: "Compound rate reduced to {effective_rate}% after {wins} consecutive wins (risk control)"
-ELSE:
-  effective_rate = session.compound.rate
-
-// Calculate compound amount with effective rate
-IF net_pnl > 0:
-  compound_amount = net_pnl × effective_rate
-  IF compound_amount >= MIN_COMPOUND_AMOUNT:  // e.g., 0.10 EUR
-    session.budget.remaining += compound_amount
-    session.compound.totalCompounded += compound_amount
-    Log: "Compounded {compound_amount}€ at {effective_rate}% rate"
-```
-
-- Pause after 2 consecutive losses, resume after 2 consecutive wins
-- Reduce rate to 25% after 3 consecutive wins (risk control)
-- Never compound losses

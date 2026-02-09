@@ -9,43 +9,131 @@ ON /trade invocation:
 
 IF "reset" argument provided:
   → Backup trading-state.json to trading-state.backup-{YYYY-MM-DD}.json
-  → FRESH START
+  → FRESH START (Flow A)
 
 ELSE IF trading-state.json exists:
 
-  IF budget argument provided:
-    → ASK USER:
-      (A) "Resume session, keep current budget"
-      (B) "Resume session, update budget to [new amount]"
-      (C) "New session with [new amount]"
-          → Reset session.stats, session.compound, openPositions
-          → Set new budget
-          → KEEP tradeHistory (cumulative across sessions)
+  IF trading-state.json has portfolios.hodlSafeUuid:
+    → Check if HODL Safe still exists via list_portfolios
+    → IF not found: SAFE DELETED (Flow E)
+    → IF found AND portfolios.fundsAllocated == false: RESUME SETUP (Flow F)
+    → IF found AND portfolios.fundsAllocated == true: WARM START (Flow B)
 
-  ELSE (no budget argument):
-    → RESUME SESSION
+  ELSE IF trading-state.json has session.budget (legacy):
+    → MIGRATION (Flow C)
+
+  ELSE:
+    → SAFE MISSING (Flow D)
 
 ELSE (no state file):
 
   IF budget argument provided:
-    → FRESH START with given budget
+    → FRESH START (Flow A)
 
   ELSE (no budget argument):
-    → Call list_accounts to show current holdings
-    → ASK USER: "How much budget should I use?"
-      - All of [asset]?
-      - A specific amount? (e.g., "10 EUR from BTC")
-      - Which assets? (show available balances)
-    → FRESH START with user's answer
+    → SAFE MISSING (Flow D)
 ```
 
-<reasoning>
-Budget argument + existing state is ambiguous. "/trade 10 EUR from BTC" could mean "start fresh" or "I'm re-typing my original command to continue". Asking removes the ambiguity. "New session" resets session stats but keeps tradeHistory — like turning a new page in the same notebook, not throwing it away. The "reset" argument is the only path that creates a backup because it's the only one that actually deletes data.
-</reasoning>
+## Flow A: Fresh Start
 
-## Fresh Start
+User runs `/trade 10 EUR from BTC`:
 
-See [state-schema.md](../reference/state-schema.md) → "Initialize Session" for the complete fresh start procedure (budget parsing, EUR conversion, field initialization).
+1. Parse budget argument (amount, source currency)
+2. list_portfolios → discover Default UUID
+   IF a portfolio named "HODL Safe" already exists:
+     → Ask user: "A portfolio named 'HODL Safe' already exists.
+       (A) Use it as your HODL Safe
+       (B) Create a new portfolio with a different name"
+     → If (A): use its UUID as hodlSafeUuid, skip step 5
+     → If (B): ask for name, use that name in step 5
+3. list_accounts → get all current holdings
+4. If source != EUR: get_product("{SOURCE}-EUR") → get current price, calculate EUR equivalent
+5. create_portfolio("HODL Safe") → get UUID (skip if adopted existing in step 2)
+6. Save to state IMMEDIATELY: portfolios.defaultUuid, portfolios.hodlSafeUuid, portfolios.fundsAllocated = false
+7. Ask profit protection question:
+   - Keep all profits for trading (profitProtectionRate: 0)
+   - Move 50% of profits to HODL Safe (recommended) (profitProtectionRate: 50)
+   - Move all profits to HODL Safe — trading capital will only shrink over time since profits leave but losses stay (profitProtectionRate: 100)
+   - Custom percentage (profitProtectionRate: user-specified)
+8. Save portfolios.profitProtectionRate to state
+9. For each asset with non-zero available_balance in Default:
+   - If asset is the budget source: calculate amount to keep (budget EUR equivalent / current price), round using base_increment from get_product, move the rest to Safe
+   - If asset is anything else: move entire balance to Safe
+10. Set portfolios.fundsAllocated = true, save state
+11. Initialize session fields (see state-schema.md → Initialize Session)
+12. Begin trading
+
+## Flow B: Warm Start
+
+1. Load state file, verify portfolios.hodlSafeUuid
+2. list_portfolios → find Safe by UUID
+3. If Safe found: continue
+4. If budget parameter provided: ignore it, inform user:
+   "HODL Safe is active. Your trading capital is whatever's in the Default portfolio (currently X EUR). To adjust, move funds between portfolios via the Coinbase website."
+5. Reconcile positions with reality (same as current Step 2-5 in resume)
+6. Resume trading
+
+## Flow C: Migration (Legacy State)
+
+Legacy state file has session.budget but no portfolios:
+
+1. list_portfolios → discover Default UUID, check for existing "HODL Safe" (same name-conflict handling as Flow A step 2)
+2. Inform user: "Migrating to HODL Safe portfolio isolation."
+3. create_portfolio("HODL Safe") → get UUID (skip if adopted existing in step 1)
+4. Save to state IMMEDIATELY: portfolios.defaultUuid, portfolios.hodlSafeUuid, portfolios.fundsAllocated = false
+5. Ask profit protection question (same 4 options as Flow A)
+6. Save portfolios.profitProtectionRate to state
+7. list_accounts → get all current holdings (use available_balance, not total)
+8. Identify assets that should remain in Default portfolio:
+   - For each open position: keep_in_default[asset] += position.size
+   - EUR to keep: min(session.budget.remaining, actual_EUR_available_balance)
+   - For each asset: move_amount = available_balance - keep_in_default[asset]
+   - Round move amounts using base_increment from get_product
+9. Show user a migration plan table:
+   | Asset | Available | Stays in Default | Moves to Safe |
+   User confirms, adjusts, or cancels before any moves execute
+10. Execute per-currency move_portfolio_funds calls (one per asset)
+11. Set portfolios.fundsAllocated = true
+12. Migrate state file:
+    - Remove session.budget
+    - Remove session.compound
+    - Drop realizedPnLPercent
+13. Resume trading
+
+## Flow D: Safe Missing (No Legacy Budget)
+
+No HODL Safe found, no legacy budget configuration:
+
+1. Inform user: "No HODL Safe found and no budget configuration."
+2. list_accounts → show current holdings
+3. Ask user:
+   (A) Create HODL Safe — choose which funds to protect and which to trade with
+       → User specifies budget (e.g., "10 EUR from BTC")
+       → Execute Flow A steps 2-12
+   (B) Create HODL Safe — keep all funds in Default for trading
+       → create_portfolio("HODL Safe") with empty contents (apply same name-conflict handling as Flow A step 2)
+       → Ask profit protection question
+       → Save portfolios.* to state (fundsAllocated = true, no moves needed)
+       → Begin trading
+
+## Flow E: Safe Deleted Externally
+
+State file has portfolios.hodlSafeUuid but list_portfolios doesn't find it:
+
+1. Warn user: "HODL Safe portfolio was deleted externally (UUID: {uuid})."
+2. Clear portfolios from state file
+3. Follow Flow D resolution
+
+## Flow F: Resume Interrupted Setup
+
+State file has portfolios.hodlSafeUuid and portfolios.fundsAllocated == false:
+
+1. Inform user: "Previous HODL Safe setup was interrupted. HODL Safe exists but fund allocation is incomplete."
+2. list_accounts → show current holdings in Default
+3. Ask user: "How much capital do you want to trade with? The rest will be moved to HODL Safe."
+   - User specifies budget (e.g., "10 EUR from BTC") — same as Flow A
+4. Execute Flow A steps 3-10 (list holdings, calculate moves, execute moves, set fundsAllocated = true)
+5. Resume trading (Flow B)
 
 ## Resume Session
 
@@ -58,7 +146,12 @@ Read `trading-state.json`, parse and validate structure.
 **Step 2: Reconcile Positions with Reality**
 
 <reasoning>
-The bot uses budget-based ownership: it only "owns" what the state file says + anything matching recent orders. Everything else in list_accounts belongs to the user. This respects the sacred budget rule — the bot never touches assets outside its scope. If state is empty, the bot assumes it has no positions, even if the account holds assets.
+With HODL Safe isolation, everything in the Default portfolio belongs to the bot.
+Position reconciliation verifies that state file positions match actual balances.
+Untracked assets in Default should be adopted as managed positions:
+  - Look up entry price via list_fills or list_orders
+  - If no fill history found, use current market price as entry
+  - Apply standard SL/TP/trailing based on current analysis
 </reasoning>
 
 ```
@@ -84,8 +177,8 @@ FOR EACH position in state.openPositions:
 
 FOR EACH open order NOT tracked in state:
   → Log: "Untracked open order found: {orderId} {side} {pair}"
-  → Add to state if it matches bot's session context
-  → Otherwise ignore (user's manual order)
+  → Adopt as managed position (everything in Default belongs to the bot)
+  → Look up entry price via list_fills or list_orders, fallback to current price
 ```
 
 **Step 3: Check Missed SL/TP** (for each confirmed position)

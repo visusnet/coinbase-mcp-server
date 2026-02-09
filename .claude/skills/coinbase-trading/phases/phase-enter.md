@@ -163,12 +163,12 @@ ELSE:
   volatility_multiplier = 0.50  // -50%
 
 // Step 4: Calculate final position size
-final_position_pct = base_position_pct × volatility_multiplier
+final_position_pct = min(100, base_position_pct × volatility_multiplier)
 
 // Step 5: Apply exposure limits (from strategies.md Risk Per Trade section)
 // Check ALL limits before finalizing position size:
 //
-// 1. Max exposure per asset: 33% of budget
+// 1. Max exposure per asset: 33% of available capital
 //    - Sum existing positions in same asset + new position
 //    - If total > 33%: reduce new position or SKIP
 //
@@ -176,20 +176,21 @@ final_position_pct = base_position_pct × volatility_multiplier
 //    - Count open positions
 //    - If already at 3: SKIP trade (or force rebalancing first)
 //
-// 3. Max risk per trade: 2% of total portfolio
+// 3. Max risk per trade: 2% of Default portfolio value
 //    - Calculate: position_size × (SL_distance / entry_price)
-//    - If risk > 2% of initial budget: reduce position size
+//    - If risk > 2% of available capital: reduce position size
 //
 // See strategies.md lines 145-149 for complete exposure limit definitions
 
-final_position_size_eur = session.budget.remaining × (final_position_pct / 100)
+available_capital = Default portfolio balance (from list_accounts or get_portfolio)
+final_position_size_eur = available_capital × (final_position_pct / 100)
 
 Log: "Position: {base_position_pct}% (signal) × {volatility_multiplier} (ATR {atr_ratio:.2f}×) = {final_position_pct}% ({final_position_size_eur}€)"
 ```
 
 **Example Calculations**:
 
-- Strong signal (70%), low volatility (0.8× ATR): 100% × 1.10 = 110% (capped at budget)
+- Strong signal (70%), low volatility (0.8× ATR): 100% × 1.10 = 110% (capped at available capital)
 - Medium signal (50%), normal volatility (1.5× ATR): 75% × 0.90 = 67.5%
 - Strong signal (70%), high volatility (2.5× ATR): 100% × 0.50 = 50%
 
@@ -480,6 +481,6 @@ IF stop-limit FILLED:
 2. For Stop-Loss: Use Market Order (immediate execution)
 3. Call preview_order → execute create_order
 4. Calculate and log profit/loss (gross and net after fees)
-5. Update state file (compound is applied in step 8)
+5. Update state file (profit protection is applied after profitable close)
 
 ```

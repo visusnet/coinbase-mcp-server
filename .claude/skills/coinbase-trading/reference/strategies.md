@@ -137,9 +137,9 @@ Search for recent news and categorize:
 
 | Signal Strength | Position Size |
 |-----------------|---------------|
-| Strong (>60%) | 100% of budget |
-| Medium (40-60%) | 75% of budget |
-| Weak (20-40%) | 50% of budget |
+| Strong (>60%) | 100% of available capital |
+| Medium (40-60%) | 75% of available capital |
+| Weak (20-40%) | 50% of available capital |
 | Very Weak (<20%) | No trade |
 
 ### Based on Volatility (ATR)
@@ -150,9 +150,9 @@ Search for recent news and categorize:
 
 ### Risk Per Trade
 
-- Max risk per trade: 2% of total portfolio
+- Max risk per trade: 2% of Default portfolio value
 - Max simultaneous positions: 3
-- Max exposure per asset: 33% of budget
+- Max exposure per asset: 33% of available capital
 
 ### Fee-Adjusted Profitability
 

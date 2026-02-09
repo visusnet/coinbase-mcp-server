@@ -10,43 +10,29 @@ Single Source of Truth for `.claude/trading-state.json` structure.
 
 ```json
 {
+  "portfolios": {
+    "defaultUuid": "abc-123-def-456",
+    "hodlSafeUuid": "ghi-789-jkl-012",
+    "profitProtectionRate": 50,
+    "fundsAllocated": true
+  },
   "session": {
     "id": "2026-01-12T13:15:00Z",
     "startTime": "2026-01-12T13:15:00Z",
     "lastUpdated": "2026-01-13T14:32:00Z",
     "cycleCount": 0,
-    "budget": {
-      "initial": 9.50,
-      "remaining": 0.11,
-      "currency": "EUR",
-      "source": "BTC",
-      "sourceAmount": 0.0001,
-      "sourcePrice": 95000
-    },
     "stats": {
       "tradesOpened": 2,
       "tradesClosed": 1,
       "wins": 1,
       "losses": 0,
       "totalFeesPaid": 0.08,
-      "realizedPnL": 0.25,
-      "realizedPnLPercent": 5.0
+      "realizedPnL": 0.25
     },
     "config": {
       "strategy": "aggressive",
       "interval": "15m",
       "dryRun": false,
-      "marketRegime": "trending"
-    },
-    "compound": {
-      "enabled": true,
-      "rate": 0.50,
-      "maxBudget": 10.00,
-      "paused": false,
-      "consecutiveWins": 0,
-      "consecutiveLosses": 0,
-      "totalCompounded": 0.00,
-      "compoundEvents": []
     },
     "rebalancing": {
       "enabled": true,
@@ -58,7 +44,6 @@ Single Source of Truth for `.claude/trading-state.json` structure.
       "cooldownHours": 4,
       "maxPerDay": 3,
       "totalRebalances": 0,
-      "rebalancesToday": 0,
       "lastRebalance": null,
       "recentlyExited": [],
       "rebalanceHistory": []
@@ -174,31 +159,15 @@ Single Source of Truth for `.claude/trading-state.json` structure.
 | `session.startTime` | string | ISO 8601 timestamp |
 | `session.lastUpdated` | string | ISO 8601, last state change |
 | `session.cycleCount` | number | Cycle counter for re-anchor protocol (starts at 0, incremented each cycle) |
-| `session.budget.initial` | number | Starting budget in EUR (converted if needed) |
-| `session.budget.remaining` | number | Available budget in EUR |
-| `session.budget.currency` | string | Always "EUR" (accounting currency) |
-| `session.budget.source` | string | Funding source ("EUR", "BTC", etc.) |
-| `session.budget.sourceAmount` | number? | Original amount if non-EUR source (e.g., 0.0001 BTC) |
-| `session.budget.sourcePrice` | number? | Conversion rate if non-EUR source (e.g., 95000 EUR/BTC) |
 | `session.stats.tradesOpened` | number | Total entries |
 | `session.stats.tradesClosed` | number | Total exits |
 | `session.stats.wins` | number | Profitable closes |
 | `session.stats.losses` | number | Losing closes |
 | `session.stats.totalFeesPaid` | number | Cumulative fees (EUR) |
 | `session.stats.realizedPnL` | number | Realized P/L (EUR) |
-| `session.stats.realizedPnLPercent` | number | Realized P/L (%) |
 | `session.config.strategy` | string | "aggressive" / "conservative" |
 | `session.config.interval` | string | "5m" / "15m" / "1h" |
 | `session.config.dryRun` | boolean | Dry-run mode active |
-| `session.config.marketRegime` | enum | Current market conditions: `"trending"` / `"volatile"` / `"crash-recovery"`. Updated each cycle based on ATR, percentChange24h, and trend alignment. Guides strategy adaptation (e.g., crash-recovery → use Post-Crash Playbook from SKILL.md). |
-| `session.compound.enabled` | boolean | Is compound mode active (default: true) |
-| `session.compound.rate` | number | Reinvestment rate (0.0-1.0, default: 0.50) |
-| `session.compound.maxBudget` | number | Budget cap (default: 2× initial) |
-| `session.compound.paused` | boolean | Is compound paused due to losses (default: false) |
-| `session.compound.consecutiveWins` | number | Current consecutive win streak |
-| `session.compound.consecutiveLosses` | number | Current consecutive loss streak |
-| `session.compound.totalCompounded` | number | Total amount reinvested (EUR) |
-| `session.compound.compoundEvents` | array | History of compound actions |
 | `session.rebalancing.enabled` | boolean | Is rebalancing active (default: true) |
 | `session.rebalancing.stagnationHours` | number | Hours to consider position stagnant (default: 12) |
 | `session.rebalancing.stagnationThreshold` | number | Max % move to be stagnant (default: 3.0) |
@@ -208,7 +177,6 @@ Single Source of Truth for `.claude/trading-state.json` structure.
 | `session.rebalancing.cooldownHours` | number | Hours between rebalances (default: 4) |
 | `session.rebalancing.maxPerDay` | number | Max daily rebalances (default: 3) |
 | `session.rebalancing.totalRebalances` | number | Total rebalances this session |
-| `session.rebalancing.rebalancesToday` | number | Rebalances today |
 | `session.rebalancing.lastRebalance` | string | ISO 8601, last rebalance time |
 | `session.rebalancing.recentlyExited` | array | Pairs exited in last 24h (no flip-back) |
 | `session.rebalancing.rebalanceHistory` | array | History of rebalance events |
@@ -218,6 +186,26 @@ Single Source of Truth for `.claude/trading-state.json` structure.
 | `session.indicatorCache[pair][timeframe].macd` | object | MACD indicator result |
 | `session.indicatorCache[pair][timeframe].adx` | object | ADX indicator result |
 | `session.indicatorCache[pair][timeframe].scores` | object | Category scores (momentum, trend, etc.) |
+
+## Portfolios Object Fields
+
+| Field | Type | Purpose |
+|-------|------|---------|
+| `portfolios.defaultUuid` | string | UUID of the Default portfolio |
+| `portfolios.hodlSafeUuid` | string | UUID of the HODL Safe portfolio |
+| `portfolios.profitProtectionRate` | number | Percentage of profits moved to HODL Safe (0-100) |
+| `portfolios.fundsAllocated` | boolean | Whether initial fund allocation between Default and HODL Safe is complete |
+
+## Default Portfolio Balance
+
+Wherever "Default portfolio balance" or "available capital" is referenced:
+
+1. Call `get_portfolio(portfolios.defaultUuid)` (one API call per cycle)
+2. **Primary**: `breakdown.portfolioBalances.totalCashEquivalentBalance` = available EUR cash
+3. **Fallback**: `spotPositions[isCash==true].availableToTradeFiat` if primary is undefined
+4. "Available capital" = EUR cash only (crypto in open positions is already committed)
+
+Discover Default UUID via `list_portfolios(portfolio_type=DEFAULT)` at session start, store as `portfolios.defaultUuid`.
 
 ## Open Position Object Fields
 
@@ -245,6 +233,8 @@ Single Source of Truth for `.claude/trading-state.json` structure.
 | `riskManagement.trailingStop.active` | boolean | Is trailing active? |
 | `riskManagement.trailingStop.currentStopPrice` | number | Current trail |
 | `riskManagement.trailingStop.highestPrice` | number | Peak price |
+| `riskManagement.bracketOrderId` | string \| null | Parent bracket order ID (from attachedOrderConfiguration) |
+| `riskManagement.hasBracket` | boolean | Whether an attached bracket (TP/SL) is active on Coinbase |
 | `performance.currentPrice` | number | Latest price |
 | `performance.unrealizedPnL` | number | Current P/L (EUR) |
 | `performance.unrealizedPnLPercent` | number | Current P/L (%) |
@@ -362,11 +352,6 @@ VALIDATE on session resume (not fresh start):
   IF session.rebalancing.lastRebalance != null:
     hours_since_rebalance = (current_time - session.rebalancing.lastRebalance) / 3600
 
-    IF hours_since_rebalance > 24:
-      // More than 1 day passed, reset cooldown and daily counter
-      session.rebalancing.rebalancesToday = 0
-      Log: "Session resume: Rebalancing cooldown reset (24h+ elapsed)"
-
     IF hours_since_rebalance > session.rebalancing.cooldownHours:
       Log: "Session resume: Cooldown period expired ({hours_since_rebalance}h elapsed)"
 
@@ -380,46 +365,7 @@ VALIDATE on session resume (not fresh start):
         // Stagnation counter preserved, will be handled by rebalancing logic
 ```
 
-### Compound State on Manual Actions
 
-```
-RULE: Manual exits do NOT reset compound streaks
-
-ON position closed with trigger = "manual":
-  // Preserve compound state
-  session.compound.consecutiveWins = unchanged
-  session.compound.consecutiveLosses = unchanged
-  session.compound.paused = unchanged
-
-  Log: "Manual exit: Compound state preserved (streaks: {wins}W/{losses}L)"
-  REASON: Manual interventions bypass strategy, should not affect automated compound logic
-
-EXCEPTION: Manual session termination
-ON session manually stopped:
-  // Reset compound state for next session
-  session.compound.consecutiveWins = 0
-  session.compound.consecutiveLosses = 0
-  session.compound.paused = false
-  Log: "Session terminated: Compound state reset for next session"
-```
-
-### Budget Consistency Validation
-
-```
-VALIDATE after every trade:
-  calculated_remaining = session.budget.initial
-                       + session.stats.realizedPnL
-                       - session.stats.totalFeesPaid
-                       - SUM(openPositions[].entry.price × openPositions[].size + openPositions[].entry.fee)
-
-  difference = ABS(calculated_remaining - session.budget.remaining)
-
-  IF difference > 0.01:  // Tolerance for rounding
-    Log error: "Budget inconsistency detected: {difference}€ mismatch"
-    Log detail: "Expected: {calculated_remaining}€, Actual: {session.budget.remaining}€"
-    // DO NOT auto-correct, flag for investigation
-    ALERT: Manual review required
-```
 
 ### Division by Zero Protection
 
@@ -451,32 +397,6 @@ IF entry_price <= 0:
 session.id = current timestamp
 session.startTime = current timestamp
 session.lastUpdated = current timestamp
-
-// Budget initialization with non-EUR source handling
-budget_amount = parsed from arguments (e.g., "10 EUR" or "0.0001 BTC")
-source_currency = parsed from arguments (e.g., "EUR", "BTC")
-
-IF source_currency != "EUR":
-  // Convert non-EUR funding source to EUR at session start
-  source_balance = budget_amount  // e.g., 0.0001 BTC
-  current_price = get current EUR price for source (e.g., BTC-EUR = 95000)
-  eur_equivalent = source_balance × current_price  // 0.0001 × 95000 = 9.50 EUR
-
-  session.budget.initial = eur_equivalent
-  session.budget.remaining = eur_equivalent
-  session.budget.currency = "EUR"  // All accounting in EUR
-  session.budget.source = source_currency  // Track original source
-  session.budget.sourceAmount = source_balance  // Track original amount
-  session.budget.sourcePrice = current_price  // Track conversion rate
-
-  Log: "Budget: {eur_equivalent}€ (from {source_balance} {source_currency} @ {current_price}€)"
-ELSE:
-  // EUR source: direct assignment
-  session.budget.initial = budget_amount
-  session.budget.remaining = budget_amount
-  session.budget.currency = "EUR"
-  session.budget.source = "EUR"
-
 session.cycleCount = 0
 session.stats.* = all 0
 session.config.strategy = "aggressive" (default)
@@ -484,10 +404,13 @@ session.config.interval = parsed or "15m"
 session.config.dryRun = true if "dry-run" in arguments
 openPositions = []
 tradeHistory = [] (or keep existing)
+
+// HODL Safe initialization is handled in session-start.md
+// portfolios.* fields (defaultUuid, hodlSafeUuid, profitProtectionRate, fundsAllocated)
+// are set during the Safe creation flow in session-start.md
 ```
 
-**Note**: All budget tracking is in EUR regardless of source. Non-EUR sources are
-converted to EUR at session start and tracked in sourceAmount/sourcePrice fields.
+**Important**: `/trade reset` preserves `portfolios.*` — only `session.*`, `openPositions`, and `tradeHistory` are reset. The HODL Safe survives a reset.
 
 ### Open Position
 
@@ -517,11 +440,12 @@ riskManagement.dynamicTP = calculated TP price (ATR-based)
 riskManagement.trailingStop.active = false
 riskManagement.trailingStop.currentStopPrice = null
 riskManagement.trailingStop.highestPrice = entry price
+riskManagement.bracketOrderId = order ID if attachedOrderConfiguration was used, else null
+riskManagement.hasBracket = true if attachedOrderConfiguration was used, else false
 
 performance.* = null (updated each cycle)
 
 session.stats.tradesOpened += 1
-session.budget.remaining -= (size × price + fee)
 session.lastUpdated = current timestamp
 ```
 
@@ -549,6 +473,11 @@ session.lastUpdated = current timestamp
 ### Close Position
 
 ```
+// Cancel attached bracket if exit is NOT triggered by the bracket itself
+IF riskManagement.hasBracket AND exit.trigger NOT IN ("stopLoss", "takeProfit"):
+  cancel_orders([riskManagement.bracketOrderId])
+  Log: "Cancelled bracket order {bracketOrderId} before {exit.trigger} exit"
+
 historyEntry = {
   id: position.id.replace("pos_", "trade_"),
   pair, side, size, entry, analysis: from position,
@@ -557,7 +486,7 @@ historyEntry = {
     time: current timestamp,
     orderType: "limit" or "market",
     fee: fee from response,
-    trigger: "stopLoss" | "takeProfit" | "trailingStop" | "manual",
+    trigger: "stopLoss" | "takeProfit" | "trailingStop" | "rebalance" | "manual",
     reason: "Dynamic TP hit at +X%"
   },
   result: {
@@ -576,10 +505,25 @@ ELSE: session.stats.losses += 1
 session.stats.tradesClosed += 1
 session.stats.totalFeesPaid += result.totalFees
 session.stats.realizedPnL += result.netPnL
-session.stats.realizedPnLPercent = realizedPnL / budget.initial × 100
-session.budget.remaining += (exit.price × size - exit.fee)
 
 tradeHistory.push(historyEntry)
 openPositions.remove(position)
 session.lastUpdated = current timestamp
+
+// Profit Protection (inline after each profitable close)
+// Skip rebalance exits — rebalancing is capital reallocation, not realized gains leaving the system
+quoteCurrency = position.pair.split("-")[1]
+IF result.netPnL > 0 AND exit.trigger != "rebalance" AND portfolios.profitProtectionRate > 0:
+  protectAmount = result.netPnL × (portfolios.profitProtectionRate / 100)
+  IF protectAmount > 0:
+    move_portfolio_funds({
+      funds: { value: protectAmount, currency: quoteCurrency },
+      sourcePortfolioUuid: portfolios.defaultUuid,
+      targetPortfolioUuid: portfolios.hodlSafeUuid
+    })
+    Log: "Protected {protectAmount} {quoteCurrency} ({portfolios.profitProtectionRate}%) → HODL Safe"
+  Error handling: if move fails and error indicates Safe no longer exists, trigger Flow E.
+  For all other errors: log error, continue trading. Profit stays in Default.
 ```
+
+**Legacy state files**: If `realizedPnLPercent` exists in the state file, drop it on next write.

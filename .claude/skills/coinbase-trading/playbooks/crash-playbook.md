@@ -35,5 +35,5 @@ Crashes create dislocated prices and high-conviction entry opportunities. When a
 
 **What NOT to do:**
 - Don't try to catch the exact bottom — wait for confirmation
-- Don't use 100% of budget on first entry — scale in
+- Don't use 100% of available capital on first entry — scale in
 - Don't ignore higher timeframe trend — if daily is still bearish, the bounce may fail
