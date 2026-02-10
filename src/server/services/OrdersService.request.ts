@@ -1,5 +1,9 @@
 import { z } from 'zod';
-import { OrderSide, StopPriceDirection } from './OrdersService.types';
+import {
+  OrderExecutionStatus,
+  OrderSide,
+  StopPriceDirection,
+} from './OrdersService.types';
 import { numberToString, numberToStringOptional } from './schema.helpers';
 
 // =============================================================================
@@ -140,9 +144,11 @@ export const ListOrdersRequestSchema = z
       .optional()
       .describe('Optional product IDs to filter by'),
     orderStatus: z
-      .array(z.string())
+      .array(z.nativeEnum(OrderExecutionStatus))
       .optional()
-      .describe('Optional order statuses to filter by'),
+      .describe(
+        'Order statuses to filter. OPEN must be used alone, not combined with other statuses',
+      ),
     limit: z.number().optional().describe('Maximum number of orders to return'),
     cursor: z.string().optional().describe('Pagination cursor for next page'),
   })

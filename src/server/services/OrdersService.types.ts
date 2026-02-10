@@ -28,6 +28,7 @@ export enum OrderExecutionStatus {
   UnknownOrderStatus = 'UNKNOWN_ORDER_STATUS',
   Queued = 'QUEUED',
   CancelQueued = 'CANCEL_QUEUED',
+  EditQueued = 'EDIT_QUEUED',
 }
 
 export enum TimeInForceType {

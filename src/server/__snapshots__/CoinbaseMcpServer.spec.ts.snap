@@ -105,8 +105,20 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
               "type": "number",
             },
             "orderStatus": {
-              "description": "Optional order statuses to filter by",
+              "description": "Order statuses to filter. OPEN must be used alone, not combined with other statuses",
               "items": {
+                "enum": [
+                  "PENDING",
+                  "OPEN",
+                  "FILLED",
+                  "CANCELLED",
+                  "EXPIRED",
+                  "FAILED",
+                  "UNKNOWN_ORDER_STATUS",
+                  "QUEUED",
+                  "CANCEL_QUEUED",
+                  "EDIT_QUEUED",
+                ],
                 "type": "string",
               },
               "type": "array",
@@ -5169,8 +5181,20 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
               "type": "number",
             },
             "orderStatus": {
-              "description": "Optional order statuses to filter by",
+              "description": "Order statuses to filter. OPEN must be used alone, not combined with other statuses",
               "items": {
+                "enum": [
+                  "PENDING",
+                  "OPEN",
+                  "FILLED",
+                  "CANCELLED",
+                  "EXPIRED",
+                  "FAILED",
+                  "UNKNOWN_ORDER_STATUS",
+                  "QUEUED",
+                  "CANCEL_QUEUED",
+                  "EDIT_QUEUED",
+                ],
                 "type": "string",
               },
               "type": "array",
