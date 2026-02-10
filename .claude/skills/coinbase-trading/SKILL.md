@@ -476,7 +476,7 @@ Output a structured, compact report. See [output-format.md](reference/output-for
 - Emoji legend
 - Report template with 6 sections (Header, Rankings, Spotlight, Rationale, Action, Session)
 - Example output
-- Formatting notes (box width, bold headlines, emoji alignment)
+- Formatting notes (markdown tables, indicator separators)
 
 ## Important Rules
 
