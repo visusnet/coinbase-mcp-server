@@ -170,15 +170,64 @@ FOR EACH position in state.openPositions:
     → Log: "Position {pair} reduced: state={old_size}, actual={actual_balance}"
 
   ELSE (balance is 0):
-    → Position GONE — likely sold while offline (manual or filled SL)
-    → Check list_orders for matching fills since session.lastUpdated
-    → Move to tradeHistory with trigger="unknown_offline_exit"
-    → Log: "Position {pair} no longer held — moved to history"
+    IF position.riskManagement.bracketOrderId:
+      → Defer to Step 2.5 — bracket may have fired, need order status to classify
+      → Log: "Position {pair} balance=0, deferring to bracket reconciliation"
+    ELSE:
+      → Position GONE — likely sold while offline (manual or filled SL)
+      → Check list_orders for matching fills since session.lastUpdated
+      → Move to tradeHistory with trigger="unknown_offline_exit"
+      → Log: "Position {pair} no longer held — moved to history"
 
 FOR EACH open order NOT tracked in state:
   → Log: "Untracked open order found: {orderId} {side} {pair}"
   → Adopt as managed position (everything in Default belongs to the bot)
   → Look up entry price via list_fills or list_orders, fallback to current price
+```
+
+**Step 2.5: Bracket Reconciliation**
+
+For each confirmed position, verify the bracket order is still active:
+
+```
+FOR EACH position in state.openPositions (confirmed in Step 2):
+  IF position.riskManagement.bracketOrderId:
+    order = get_order(position.riskManagement.bracketOrderId)
+
+    IF order.status == "FILLED":
+      // Bracket fired while offline — position was closed by Coinbase
+      // Determine if SL or TP fired based on fill price
+      fill_price = order.average_filled_price
+      IF fill_price <= position.riskManagement.bracketSL * 1.01:
+        trigger = "bracketSL"
+        reason = "Bracket SL fired while offline at {fill_price}"
+      ELSE:
+        trigger = "bracketTP"
+        reason = "Bracket TP fired while offline at {fill_price}"
+      → Move position to tradeHistory with exit.trigger = trigger
+      → Log: "{reason}"
+
+    ELSE IF order.status == "CANCELLED":
+      // Bracket was cancelled (crash during update? manual cancellation?)
+      → Log: "⚠ Bracket cancelled for {pair} — re-placing immediately"
+      // Recalculate and place new bracket
+      ATR_PERCENT = ATR(14) / position.entry.price * 100
+      bracket_sl_pct = clamp(ATR_PERCENT * 3, 8.0, 12.0)
+      // ... (use position.strategy for TP calculation)
+      → Place new bracket via create_order (SELL triggerBracketGtc)
+      → Update position.riskManagement.bracketOrderId
+
+    ELSE IF order.status == "OPEN":
+      // Bracket intact — verify prices match state
+      IF order prices differ from state:
+        → Log: "Bracket price mismatch — updating state to match Coinbase"
+        → Update position.riskManagement.bracketSL/TP to match order
+
+  ELSE IF position.riskManagement.hasBracket == false:
+    // Position has no bracket — place one immediately
+    → Log: "⚠ No bracket for {pair} — placing bracket"
+    → Calculate and place bracket
+    → Update state
 ```
 
 **Step 3: Check Missed SL/TP** (for each confirmed position)

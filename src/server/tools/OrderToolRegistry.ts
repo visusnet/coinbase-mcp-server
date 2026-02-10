@@ -85,7 +85,8 @@ export class OrderToolRegistry extends ToolRegistry {
       'edit_order',
       {
         title: 'Edit Order',
-        description: 'Edit an existing order (change price or size)',
+        description:
+          'Edit an existing order (change price, size, attached TP/SL configuration, or stop price)',
         inputSchema: EditOrderRequestSchema.shape,
         annotations: DESTRUCTIVE_API,
       },
@@ -96,7 +97,8 @@ export class OrderToolRegistry extends ToolRegistry {
       'preview_edit_order',
       {
         title: 'Preview Edit Order',
-        description: 'Preview the result of editing an order before committing',
+        description:
+          'Preview the result of editing an order (price, size, attached TP/SL, or stop price) before committing',
         inputSchema: PreviewEditOrderRequestSchema.shape,
         annotations: VIEW_API,
       },

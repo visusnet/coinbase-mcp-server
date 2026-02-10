@@ -28,24 +28,24 @@ Automatically adjusts SL/TP based on current volatility.
 | Parameter     | Value      | Description               |
 |---------------|------------|---------------------------|
 | ATR Period    | 14 Candles | Calculation period        |
-| TP Multiplier | 1.5× ATR   | Take-Profit distance      |
-| SL Multiplier | 2.0× ATR   | Stop-Loss distance        |
-| Min TP        | 2.0%       | Minimum TP (covers fees)  |
-| Max SL        | 15.0%      | Maximum loss              |
-| Min SL        | 3.0%       | Prevents noise triggers   |
+| TP Multiplier | 2.5× ATR   | Take-Profit distance      |
+| SL Multiplier | 1.5× ATR   | Stop-Loss distance        |
+| Min TP        | 2.5%       | Minimum TP (covers fees)  |
+| Max SL        | 10.0%      | Capital protection        |
+| Min SL        | 2.5%       | Prevents noise triggers   |
 
-**Example**:
+**Example** (ATR% ≈ 2.7%):
 
 ```
-BTC @ €95,000, ATR = €1,900 (2%)
-→ TP: 95,000 × 1.04 = €98,800 (+4%)
-→ SL: 95,000 × 0.96 = €91,200 (-4%)
+BTC @ €95,000, ATR ≈ 2.7%
+→ Soft TP: max(2.5%, 2.7% × 2.5) = 6.75% → €101,400
+→ Soft SL: clamp(2.7% × 1.5, 2.5%, 10%) = 4.05% → €91,150
 ```
 
-**Two-Layer Protection**:
+**Dual-Layer Protection**:
 
-- **Primary**: Attached bracket orders via Coinbase API — TP/SL execute automatically even if the bot is offline
-- **Secondary**: Bot monitoring — handles trailing stops and recalculates SL/TP after 24h (cancels old bracket, switches to bot management)
+- **Inner Layer (Primary)**: Bot-managed soft SL/TP — tighter thresholds checked each cycle via `wait_for_market_event`, plus trailing stop management and 24h recalculation
+- **Outer Layer (Fallback)**: Attached bracket orders on Coinbase — wide catastrophic stop (`clamp(ATR% × 3, 8%, 12%)`) that only fires if the bot is offline
 
 ---
 
@@ -409,8 +409,8 @@ Use `wait_for_market_event` for efficient, event-driven position monitoring inst
 
 | Scenario                  | Configuration                                    |
 |---------------------------|--------------------------------------------------|
-| Stop-Loss Monitoring      | `price lte {stopLossPrice}`                      |
-| Take-Profit Monitoring    | `price gte {takeProfitPrice}`                    |
+| Soft Stop-Loss Monitoring | `price lte {softStopLossPrice}`                  |
+| Soft Take-Profit Monitoring | `price gte {softTakeProfitPrice}`              |
 | Trailing Stop             | `price lte {trailingStopPrice}`                  |
 | Buy the Dip               | `price crossBelow {targetPrice}`                 |
 | Breakout Entry            | `price crossAbove {resistanceLevel}`             |
@@ -621,14 +621,15 @@ Stored in `.claude/trading-state.json`
 **Position Data**:
 
 - Entry (price, time, orderType, fee)
+- Strategy (aggressive / conservative / scalping — per-position)
 - Analysis (signalStrength, reason, confidence)
-- Risk Management (dynamicSL, dynamicTP, trailingStop, bracketOrderId, hasBracket)
+- Risk Management (dynamicSL, dynamicTP, bracketSL, bracketTP, trailingStop, bracketOrderId, hasBracket)
 - Performance (currentPrice, unrealizedPnL, peakPnL)
 
 **Trade History**:
 
 - Complete documentation of all closed trades
-- Exit trigger (SL, TP, Trailing, Rebalance, Manual)
+- Exit trigger (SL, TP, Trailing, bracketSL, bracketTP, Rebalance, Manual)
 - Net PnL after fees
 
 ---
@@ -649,8 +650,8 @@ Stored in `.claude/trading-state.json`
 
 | Parameter     | Value                                 |
 |---------------|---------------------------------------|
-| Take-Profit   | 1.5× ATR (dynamic, typically 3-5%)    |
-| Stop-Loss     | 2.0× ATR (dynamic, typically 4-10%)   |
+| Take-Profit   | max(2.5%, ATR% × 2.5) — dynamic, typically 2.5-10% |
+| Stop-Loss     | clamp(ATR% × 1.5, 2.5%, 10%) — dynamic             |
 | Min Signal    | > +40%                                |
 | ADX Threshold | > 20                                  |
 
@@ -695,6 +696,7 @@ Stored in `.claude/trading-state.json`
 │   5. Sentiment Analysis                                     │
 ├─────────────────────────────────────────────────────────────┤
 │ PHASE 2: MANAGE EXISTING POSITIONS (frees up capital)       │
+│   5.5 Strategy Re-evaluation                                │
 │   6. Check SL/TP/Trailing                                   │
 │   7. Rebalancing Check                                      │
 │   8. Capital Exhaustion Check                               │

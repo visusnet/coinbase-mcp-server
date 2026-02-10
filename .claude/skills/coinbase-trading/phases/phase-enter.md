@@ -39,7 +39,25 @@ Different strategies require different signal strengths:
 | Conservative | +60%          | -60%           | 3+                        | > 25          |
 | Scalping     | +40%          | -40%           | 2+ (momentum focus)       | > 20          |
 
-Apply the threshold for the active strategy (session.config.strategy) when evaluating signals.
+**Per-Pair Strategy Selection:**
+
+Before applying signal thresholds, determine the strategy for this pair based on current conditions:
+
+```
+IF ADX > 25 AND ADX rising AND MACD histogram expanding
+   AND htf_bullish_count >= 2 AND OBV > SMA(OBV,10) AND 40 <= RSI <= 70:
+  pair_strategy = "aggressive"
+ELSE IF ADX < 25 AND ADX declining AND BB_width < SMA(BB_width,20)
+   AND price < BB_lower + 0.2 * BB_width
+   AND (stochastic_K < 20 OR RSI < 30) AND volume < SMA(volume,20):
+  pair_strategy = "scalping"
+ELSE IF ADX >= 20:
+  pair_strategy = "conservative"
+ELSE:
+  pair_strategy = session.config.strategy  // fallback to session default
+```
+
+Apply the threshold for `pair_strategy` when evaluating signals.
 
 **Calculate Final Technical Score** (normalize to -100% to +100%):
 
@@ -310,16 +328,35 @@ When a signal is present and expected profit exceeds MIN_PROFIT threshold (compu
 | Signal < 40% | No Trade | - | - |
 | SL/TP execution | Market (IOC) | - | Must exit immediately |
 
-**Attached TP/SL (Market and Limit BUY entries)**:
+**Attached TP/SL (Dual-Layer — Market and Limit BUY entries)**:
 
-All Market and Limit BUY entries must include `attachedOrderConfiguration` with `triggerBracketGtc`. This creates a crash-proof TP/SL bracket on Coinbase's side — if the bot loses context or crashes, positions are still protected.
+All Market and Limit BUY entries include `attachedOrderConfiguration` with **wide bracket** values (catastrophic stop). The bot manages tighter soft SL/TP via `wait_for_market_event`.
 
 ```
-// Attached TP/SL on any Market or Limit BUY entry
+// Step 1: Calculate bracket SL (all strategies — wide catastrophic stop)
+ATR_PERCENT = ATR(14) / entry_price * 100
+bracket_sl_pct = clamp(ATR_PERCENT * 3, 8.0, 12.0)
+bracket_sl_price = entry_price * (1 - bracket_sl_pct / 100)
+
+// Step 2: Calculate bracket TP (strategy-dependent)
+IF pair_strategy == "scalping":
+  fees = get_transaction_summary()
+  round_trip_fees = fees.taker_fee_rate * 2 + 0.003  // + slippage
+  bracket_tp_pct = round_trip_fees * 2
+ELSE IF pair_strategy == "aggressive":
+  bracket_tp_pct = max(10.0, ATR_PERCENT * 5)
+ELSE:  // conservative
+  bracket_tp_pct = 3.0
+bracket_tp_price = entry_price * (1 + bracket_tp_pct / 100)
+
+// Step 3: Calculate soft SL/TP (unchanged — per strategies.md)
+// These are monitored by the bot via wait_for_market_event
+
+// Step 4: Place order with wide bracket
 attachedOrderConfiguration: {
   triggerBracketGtc: {
-    limitPrice: take_profit_price,       // TP from ATR calculation
-    stopTriggerPrice: stop_loss_price    // SL from ATR calculation
+    limitPrice: bracket_tp_price,       // Wide bracket TP
+    stopTriggerPrice: bracket_sl_price  // Wide bracket SL (8-12%)
   }
 }
 
@@ -328,7 +365,16 @@ attachedOrderConfiguration: {
 // OCO: when either TP or SL triggers, the other cancels automatically
 ```
 
-The bot still monitors positions with `wait_for_market_event` for trailing stops, SL/TP recalculation (after 24h), and rebalancing. The attached bracket is the safety floor — `wait_for_market_event` is the active management layer on top.
+After fill, read `parent.attachedOrderId` to get the child bracket order ID. Store as `riskManagement.bracketOrderId`.
+
+Save to state:
+- `position.strategy = pair_strategy`
+- `position.riskManagement.bracketSL = bracket_sl_price`
+- `position.riskManagement.bracketTP = bracket_tp_price`
+- `position.riskManagement.dynamicSL = soft_sl_price`
+- `position.riskManagement.dynamicTP = soft_tp_price`
+
+The bot monitors soft SL/TP with `wait_for_market_event` for trailing stops, SL/TP recalculation (after 24h), strategy re-evaluation, and rebalancing. The bracket is the catastrophic fallback — it only fires if the bot is offline.
 
 Stop-limit entries do NOT support attached TP/SL (Coinbase limitation). For stop-limit fills, the bot manages SL/TP itself via `wait_for_market_event` as before.
 

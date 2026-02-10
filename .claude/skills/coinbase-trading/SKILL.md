@@ -42,12 +42,18 @@ The project does NOT need to be built. Just call the tools.
 - **Strategy**: Aggressive
 - **Take-Profit / Stop-Loss**: ATR-based (see summary below)
 
-### SL/TP Summary
+### Soft SL/TP Summary (Bot-Managed, Inner Layer)
 
 - **Aggressive**: TP = max(2.5%, ATR% × 2.5), SL = clamp(ATR% × 1.5, 2.5%, 10%)
 - **Conservative**: TP = 3.0% fixed, SL = 5.0% fixed
 - **Scalping**: TP = 1.5% fixed, SL = 2.0% fixed
 - Full formulas and validation guards → phases/phase-manage.md
+
+### Bracket SL/TP Summary (Coinbase, Outer Layer — Catastrophic Stop)
+
+- **Bracket SL** (all strategies): `clamp(ATR% × 3, 8%, 12%)`
+- **Bracket TP**: Aggressive = `max(10%, ATR% × 5)`, Conservative = `3.0%`, Scalping = `round_trip_fees × 2` (~3%)
+- Full formulas → reference/strategies.md
 
 ### Trailing Stop Summary
 
@@ -226,14 +232,27 @@ results = analyze_technical_indicators_batch(
 )
 ```
 
-**Stage 2 — Select Watch List:**
+**Stage 2 — Select Watch List (Dual-Pass):**
 
 ```
-watch_list = []
+// Lens 1: Trend-following (aggressive / conservative candidates)
+trend_candidates = results
+  .sort_by(signal.score, descending)
+  .take(5)
 
-// Top 5-8 BUY candidates by signal score
-candidates = results.sort_by(signal.score, descending).take(8)
-watch_list.add(candidates)
+// Lens 2: Mean-reversion (scalping candidates)
+median_bandwidth = median(results.map(r => r.indicators.bollinger_bands.bandwidth))
+scalp_candidates = results
+  .filter(r =>
+    r.indicators.adx.value < 25 AND
+    r.indicators.bollinger_bands.bandwidth < median_bandwidth AND
+    (r.indicators.rsi.value < 35 OR r.indicators.stochastic.k < 25)
+  )
+  .sort_by(r.indicators.rsi.value, ascending)
+  .take(3)
+
+// Union + open positions
+watch_list = deduplicate(trend_candidates + scalp_candidates)
 
 // ALWAYS include pairs with open positions (for SL/TP management)
 FOR EACH position in openPositions:
@@ -241,12 +260,13 @@ FOR EACH position in openPositions:
     watch_list.add(position.pair)
 
 Log: "Watch list ({N} pairs): {pair1}, {pair2}, ..."
+Log: "  Trend: {trend_pairs} | Scalp: {scalp_pairs}"
 ```
 
-The watch list is rebuilt every cycle from fresh batch data. Pairs that scored well last cycle but dropped in signal strength are removed. New pairs that became interesting since the last cycle are added. Only open positions are guaranteed a spot regardless of score.
+Two lenses on the same batch result ensure both trending and range-bound setups reach deep analysis. The watch list is rebuilt every cycle from fresh batch data. Only open positions are guaranteed a spot regardless of score.
 
 <reasoning>
-Scanning all 50+ EUR pairs costs one batch API call — cheap for the MCP server, compact output for Claude. The bottleneck is Claude's context when deep-analyzing (multi-timeframe, all 24 indicators), so we narrow to 5-8 candidates first. Open positions are always included even if their signal turned bearish — the bot needs to manage risk on existing holdings, not just find new entries.
+Scanning all 50+ EUR pairs costs one batch API call — cheap for the MCP server, compact output for Claude. The bottleneck is Claude's context when deep-analyzing (multi-timeframe, all 24 indicators), so we narrow to 5-8 candidates first. The dual-pass approach avoids bias toward trend-following signals (aggregate score) by adding a second mean-reversion lens for scalping setups. Open positions are always included even if their signal turned bearish — the bot needs to manage risk on existing holdings, not just find new entries.
 </reasoning>
 
 Steps 3-5 below operate only on the watch list pairs.
@@ -403,7 +423,7 @@ Call `get_news_sentiment` for the top BUY candidates from Step 2. This surfaces 
 ```
 IF openPositions.length > 0:
   → Read("phases/phase-manage.md")
-  → Execute: SL/TP check (with inline profit protection), 24h recalc, trailing stop, rebalancing
+  → Execute: Strategy re-evaluation, bracket update, SL/TP check (with inline profit protection), 24h recalc, trailing stop, rebalancing
   → Write results to state file
 ELSE:
   → Skip Phase 2
@@ -484,7 +504,7 @@ After each trading cycle:
 
 1. **Output report** (as described above)
 2. **Wait for next event**:
-   - **With open positions (attached bracket)**: Use `wait_for_market_event` for trailing stop and rebalancing signals — basic SL/TP is handled by the attached bracket on Coinbase
+   - **With open positions (attached bracket)**: Use `wait_for_market_event` for soft SL/TP + trailing stop — bracket (wide catastrophic stop) is on Coinbase as fallback
    - **With open positions (no bracket)**: Use `wait_for_market_event` with SL/TP conditions (stop-limit fills, legacy positions)
    - **Without positions, with entry signal**: Use `wait_for_market_event` with entry conditions
    - **Without positions, no signal**: Use `sleep` for next analysis cycle
@@ -497,23 +517,29 @@ After each trading cycle:
 
 ```
 // After analysis, with BTC position open (has attached TP/SL bracket on Coinbase)
-// Entry @ 95,000€, SL @ 91,200€ (on Coinbase), TP @ 98,800€ (on Coinbase)
-// Monitor for trailing stop activation + rebalancing signals
+// Entry @ 95,000€, ATR(14) ≈ 2.7%
+// Bracket: SL @ 87,300€ (8% wide, on Coinbase), TP @ 107,800€ (13.5% wide, on Coinbase)
+// Soft: SL @ 91,150€ (4.05% = ATR% × 1.5), TP @ 101,400€ (6.75% = ATR% × 2.5)
+// Monitor for soft SL/TP + trailing stop activation
 
 response = wait_for_market_event({
   subscriptions: [{
     productId: "BTC-EUR",
     conditions: [
-      { field: "price", operator: "gte", value: 97850 }   // Trailing stop activation (3% profit)
+      { field: "price", operator: "lte", value: 91150 },   // Soft SL (4.05% = ATR% × 1.5)
+      { field: "price", operator: "gte", value: 97850 }    // Trailing stop activation (3% profit)
     ]
   }],
   timeout: 55
 })
 
 IF response.status == "triggered":
-  → Activate trailing stop logic (attached bracket handles basic SL/TP)
+  IF price <= 91150:
+    → Execute soft stop-loss (market order)
+  ELSE:
+    → Activate trailing stop logic
 ELSE:
-  → Perform normal analysis cycle (check rebalancing, recalc SL/TP if >24h)
+  → Perform normal analysis cycle (strategy re-eval, recalc SL/TP if >24h)
 ```
 
 **Example: Event-Driven SL/TP Monitoring (position without bracket)**
@@ -601,3 +627,7 @@ After re-reading, verify:
 - Does the HODL Safe still exist? (via get_portfolio(portfolios.hodlSafeUuid) — if error, halt trading, trigger Flow E)
 - Am I NEVER moving funds from the HODL Safe?
 - Am I using wait_for_market_event between cycles (not sleep when positions exist)?
+- Am I using the DUAL-LAYER SL? (bracket = wide catastrophic, soft = tight bot-managed)
+- Am I re-evaluating strategy per position each cycle?
+- Am I using the correct BRACKET formulas? (SL = clamp(ATR% × 3, 8%, 12%), TP = strategy-dependent)
+- Am I using dual-pass screening? (trend lens + mean-reversion lens)

@@ -4,20 +4,24 @@ Examples, condition fields, operators, and best practices for `wait_for_market_e
 
 ---
 
-**Stop-Loss / Take-Profit Monitoring:**
+**Soft Stop-Loss / Take-Profit Monitoring (Dual-Layer):**
 
 ```
+// Monitor the soft (inner) layer — bracket (outer) is on Coinbase
+// Soft SL is tighter than bracket SL — bot exits first under normal operation
 wait_for_market_event({
   subscriptions: [{
     productId: "BTC-EUR",
     conditions: [
-      { field: "price", operator: "lte", value: stopLossPrice },
-      { field: "price", operator: "gte", value: takeProfitPrice }
+      { field: "price", operator: "lte", value: softStopLossPrice },   // Soft SL (bot-managed)
+      { field: "price", operator: "gte", value: softTakeProfitPrice }  // Soft TP (bot-managed)
     ],
     logic: "any"
   }],
   timeout: 55
 })
+// Note: bracket SL/TP is wider and handled by Coinbase independently
+// The bracket only fires if the bot doesn't act on the soft SL/TP first
 ```
 
 **Trailing Stop Monitoring:**

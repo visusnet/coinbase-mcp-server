@@ -71,6 +71,7 @@ Single Source of Truth for `.claude/trading-state.json` structure.
       "id": "pos_20260112_131758_SOL",
       "pair": "SOL-EUR",
       "side": "long",
+      "strategy": "aggressive",
       "size": "0.04",
       "entry": {
         "price": 119.34,
@@ -92,6 +93,8 @@ Single Source of Truth for `.claude/trading-state.json` structure.
         "entryATR": 9.55,
         "dynamicSL": 107.41,
         "dynamicTP": 143.21,
+        "bracketSL": 101.00,
+        "bracketTP": 148.00,
         "trailingStop": {
           "active": false,
           "currentStopPrice": null,
@@ -165,7 +168,7 @@ Single Source of Truth for `.claude/trading-state.json` structure.
 | `session.stats.losses` | number | Losing closes |
 | `session.stats.totalFeesPaid` | number | Cumulative fees (EUR) |
 | `session.stats.realizedPnL` | number | Realized P/L (EUR) |
-| `session.config.strategy` | string | "aggressive" / "conservative" |
+| `session.config.strategy` | string | Default/fallback strategy: "aggressive" / "conservative" / "scalping". Per-position strategy overrides this. |
 | `session.config.interval` | string | "5m" / "15m" / "1h" |
 | `session.config.dryRun` | boolean | Dry-run mode active |
 | `session.rebalancing.enabled` | boolean | Is rebalancing active (default: true) |
@@ -215,6 +218,7 @@ Discover Default UUID via `list_portfolios(portfolio_type=DEFAULT)` at session s
 | `pair` | string | Trading pair, e.g. "SOL-EUR" |
 | `side` | enum | "long" (future: "short") |
 | `size` | string | Position size |
+| `strategy` | enum | Per-position strategy: "aggressive" / "conservative" / "scalping" |
 | `entry.price` | number | Entry price (EUR) |
 | `entry.time` | string | ISO 8601 timestamp |
 | `entry.orderType` | enum | "limit" / "market" |
@@ -230,10 +234,12 @@ Discover Default UUID via `list_portfolios(portfolio_type=DEFAULT)` at session s
 | `riskManagement.entryATR` | number | ATR at entry |
 | `riskManagement.dynamicSL` | number | ATR-based stop-loss price (EUR) |
 | `riskManagement.dynamicTP` | number | ATR-based take-profit price (EUR) |
+| `riskManagement.bracketSL` | number | Wide bracket SL price (catastrophic stop on Coinbase) |
+| `riskManagement.bracketTP` | number | Wide bracket TP price (strategy-dependent, on Coinbase) |
 | `riskManagement.trailingStop.active` | boolean | Is trailing active? |
 | `riskManagement.trailingStop.currentStopPrice` | number | Current trail |
 | `riskManagement.trailingStop.highestPrice` | number | Peak price |
-| `riskManagement.bracketOrderId` | string \| null | Parent bracket order ID (from attachedOrderConfiguration) |
+| `riskManagement.bracketOrderId` | string \| null | Child bracket order ID (from parent.attachedOrderId after fill) |
 | `riskManagement.hasBracket` | boolean | Whether an attached bracket (TP/SL) is active on Coinbase |
 | `performance.currentPrice` | number | Latest price |
 | `performance.unrealizedPnL` | number | Current P/L (EUR) |
@@ -258,7 +264,7 @@ Discover Default UUID via `list_portfolios(portfolio_type=DEFAULT)` at session s
 | `exit.time` | string | ISO 8601 timestamp |
 | `exit.orderType` | enum | "limit" / "market" |
 | `exit.fee` | number | Exit fee (EUR) |
-| `exit.trigger` | enum | "stopLoss" / "takeProfit" / "trailingStop" / "manual" |
+| `exit.trigger` | enum | "stopLoss" / "takeProfit" / "trailingStop" / "bracketSL" / "bracketTP" / "rebalance" / "manual" |
 | `exit.reason` | string | Human-readable reason |
 | `analysis.*` | object | Same as openPositions |
 | `result.grossPnL` | number | P/L before fees (EUR) |
@@ -319,7 +325,7 @@ Each entry in `session.rebalancing.rebalanceHistory[]` has the following structu
 - `entry.liquidityStatus`: "good" | "moderate" | "skipped"
 - `analysis.confidence`: "high" | "medium" | "low"
 - `analysis.sentiment`: "bullish" | "neutral" | "bearish"
-- `exit.trigger`: "stopLoss" | "takeProfit" | "trailingStop" | "rebalance" | "manual"
+- `exit.trigger`: "stopLoss" | "takeProfit" | "trailingStop" | "rebalance" | "bracketSL" | "bracketTP" | "manual"
 - `rebalancingHistory[].reason`: "stagnant" | "urgent_delta" | "profitable_delta"
   - `stagnant`: Position stagnant >12h with <3% movement, alternative delta >40
   - `urgent_delta`: Alternative delta >60, regardless of stagnation
@@ -418,6 +424,7 @@ tradeHistory = [] (or keep existing)
 id = "pos_{YYYYMMDD}_{HHMMSS}_{COIN}"
 pair = trading pair
 side = "long"
+strategy = determined by per-pair strategy selection (aggressive/conservative/scalping)
 size = calculated position size
 
 entry.price = execution price
@@ -435,12 +442,14 @@ analysis.reason = "MACD Golden Cross + RSI < 30"
 analysis.confidence = "high" (>70) / "medium" (40-70) / "low" (<40)
 
 riskManagement.entryATR = ATR(14) at entry
-riskManagement.dynamicSL = calculated SL price (ATR-based)
-riskManagement.dynamicTP = calculated TP price (ATR-based)
+riskManagement.dynamicSL = calculated soft SL price (bot-managed, ATR-based)
+riskManagement.dynamicTP = calculated soft TP price (bot-managed, ATR-based)
+riskManagement.bracketSL = calculated bracket SL price (wide catastrophic stop on Coinbase)
+riskManagement.bracketTP = calculated bracket TP price (strategy-dependent, on Coinbase)
 riskManagement.trailingStop.active = false
 riskManagement.trailingStop.currentStopPrice = null
 riskManagement.trailingStop.highestPrice = entry price
-riskManagement.bracketOrderId = order ID if attachedOrderConfiguration was used, else null
+riskManagement.bracketOrderId = child bracket order ID (from parent.attachedOrderId after fill), else null
 riskManagement.hasBracket = true if attachedOrderConfiguration was used, else false
 
 performance.* = null (updated each cycle)
@@ -474,7 +483,7 @@ session.lastUpdated = current timestamp
 
 ```
 // Cancel attached bracket if exit is NOT triggered by the bracket itself
-IF riskManagement.hasBracket AND exit.trigger NOT IN ("stopLoss", "takeProfit"):
+IF riskManagement.hasBracket AND exit.trigger NOT IN ("stopLoss", "takeProfit", "bracketSL", "bracketTP"):
   cancel_orders([riskManagement.bracketOrderId])
   Log: "Cancelled bracket order {bracketOrderId} before {exit.trigger} exit"
 
@@ -486,7 +495,7 @@ historyEntry = {
     time: current timestamp,
     orderType: "limit" or "market",
     fee: fee from response,
-    trigger: "stopLoss" | "takeProfit" | "trailingStop" | "rebalance" | "manual",
+    trigger: "stopLoss" | "takeProfit" | "trailingStop" | "rebalance" | "bracketSL" | "bracketTP" | "manual",
     reason: "Dynamic TP hit at +X%"
   },
   result: {

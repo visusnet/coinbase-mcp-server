@@ -557,7 +557,7 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
           "destructiveHint": true,
           "openWorldHint": true,
         },
-        "description": "Edit an existing order (change price or size)",
+        "description": "Edit an existing order (change price, size, attached TP/SL configuration, or stop price)",
         "execution": {
           "taskSupport": "forbidden",
         },
@@ -565,6 +565,36 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "attachedOrderConfiguration": {
+              "additionalProperties": false,
+              "description": "Attached TP/SL configuration for BUY orders. When the parent order fills, Coinbase creates a SELL order with take-profit (limitPrice) and stop-loss (stopTriggerPrice). Size is inherited from the parent order.",
+              "properties": {
+                "triggerBracketGtc": {
+                  "additionalProperties": false,
+                  "description": "Attached trigger bracket with good-till-cancelled execution",
+                  "properties": {
+                    "limitPrice": {
+                      "$ref": "#/properties/price",
+                      "description": "Take-profit limit price",
+                    },
+                    "stopTriggerPrice": {
+                      "$ref": "#/properties/price",
+                      "description": "Stop-loss trigger price",
+                    },
+                  },
+                  "required": [
+                    "limitPrice",
+                    "stopTriggerPrice",
+                  ],
+                  "type": "object",
+                },
+              },
+              "type": "object",
+            },
+            "cancelAttachedOrder": {
+              "description": "Drops both legs of TP/SL, order becomes a simple limit order",
+              "type": "boolean",
+            },
             "format": {
               "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
               "enum": [
@@ -585,6 +615,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
               "$ref": "#/properties/price",
               "description": "New size",
             },
+            "stopPrice": {
+              "description": "Updated stop price. Only applicable for editing TP/SL or SL orders.",
+              "type": "number",
+            },
           },
           "required": [
             "orderId",
@@ -601,7 +635,7 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
           "openWorldHint": true,
           "readOnlyHint": true,
         },
-        "description": "Preview the result of editing an order before committing",
+        "description": "Preview the result of editing an order (price, size, attached TP/SL, or stop price) before committing",
         "execution": {
           "taskSupport": "forbidden",
         },
@@ -609,6 +643,36 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "attachedOrderConfiguration": {
+              "additionalProperties": false,
+              "description": "Attached TP/SL configuration for BUY orders. When the parent order fills, Coinbase creates a SELL order with take-profit (limitPrice) and stop-loss (stopTriggerPrice). Size is inherited from the parent order.",
+              "properties": {
+                "triggerBracketGtc": {
+                  "additionalProperties": false,
+                  "description": "Attached trigger bracket with good-till-cancelled execution",
+                  "properties": {
+                    "limitPrice": {
+                      "$ref": "#/properties/price",
+                      "description": "Take-profit limit price",
+                    },
+                    "stopTriggerPrice": {
+                      "$ref": "#/properties/price",
+                      "description": "Stop-loss trigger price",
+                    },
+                  },
+                  "required": [
+                    "limitPrice",
+                    "stopTriggerPrice",
+                  ],
+                  "type": "object",
+                },
+              },
+              "type": "object",
+            },
+            "cancelAttachedOrder": {
+              "description": "Drops both legs of TP/SL, order becomes a simple limit order",
+              "type": "boolean",
+            },
             "format": {
               "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
               "enum": [
@@ -628,6 +692,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
             "size": {
               "$ref": "#/properties/price",
               "description": "New size",
+            },
+            "stopPrice": {
+              "description": "Updated stop price. Only applicable for editing TP/SL or SL orders.",
+              "type": "number",
             },
           },
           "required": [
@@ -5558,7 +5626,7 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
           "destructiveHint": true,
           "openWorldHint": true,
         },
-        "description": "Edit an existing order (change price or size)",
+        "description": "Edit an existing order (change price, size, attached TP/SL configuration, or stop price)",
         "execution": {
           "taskSupport": "forbidden",
         },
@@ -5566,6 +5634,36 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "attachedOrderConfiguration": {
+              "additionalProperties": false,
+              "description": "Attached TP/SL configuration for BUY orders. When the parent order fills, Coinbase creates a SELL order with take-profit (limitPrice) and stop-loss (stopTriggerPrice). Size is inherited from the parent order.",
+              "properties": {
+                "triggerBracketGtc": {
+                  "additionalProperties": false,
+                  "description": "Attached trigger bracket with good-till-cancelled execution",
+                  "properties": {
+                    "limitPrice": {
+                      "$ref": "#/properties/price",
+                      "description": "Take-profit limit price",
+                    },
+                    "stopTriggerPrice": {
+                      "$ref": "#/properties/price",
+                      "description": "Stop-loss trigger price",
+                    },
+                  },
+                  "required": [
+                    "limitPrice",
+                    "stopTriggerPrice",
+                  ],
+                  "type": "object",
+                },
+              },
+              "type": "object",
+            },
+            "cancelAttachedOrder": {
+              "description": "Drops both legs of TP/SL, order becomes a simple limit order",
+              "type": "boolean",
+            },
             "format": {
               "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
               "enum": [
@@ -5586,6 +5684,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
               "$ref": "#/properties/price",
               "description": "New size",
             },
+            "stopPrice": {
+              "description": "Updated stop price. Only applicable for editing TP/SL or SL orders.",
+              "type": "number",
+            },
           },
           "required": [
             "orderId",
@@ -5603,7 +5705,7 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
           "openWorldHint": true,
           "readOnlyHint": true,
         },
-        "description": "Preview the result of editing an order before committing",
+        "description": "Preview the result of editing an order (price, size, attached TP/SL, or stop price) before committing",
         "execution": {
           "taskSupport": "forbidden",
         },
@@ -5611,6 +5713,36 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
           "$schema": "http://json-schema.org/draft-07/schema#",
           "additionalProperties": false,
           "properties": {
+            "attachedOrderConfiguration": {
+              "additionalProperties": false,
+              "description": "Attached TP/SL configuration for BUY orders. When the parent order fills, Coinbase creates a SELL order with take-profit (limitPrice) and stop-loss (stopTriggerPrice). Size is inherited from the parent order.",
+              "properties": {
+                "triggerBracketGtc": {
+                  "additionalProperties": false,
+                  "description": "Attached trigger bracket with good-till-cancelled execution",
+                  "properties": {
+                    "limitPrice": {
+                      "$ref": "#/properties/price",
+                      "description": "Take-profit limit price",
+                    },
+                    "stopTriggerPrice": {
+                      "$ref": "#/properties/price",
+                      "description": "Stop-loss trigger price",
+                    },
+                  },
+                  "required": [
+                    "limitPrice",
+                    "stopTriggerPrice",
+                  ],
+                  "type": "object",
+                },
+              },
+              "type": "object",
+            },
+            "cancelAttachedOrder": {
+              "description": "Drops both legs of TP/SL, order becomes a simple limit order",
+              "type": "boolean",
+            },
             "format": {
               "description": "Output format: json (default) or toon (compact, ~35% fewer tokens for lists)",
               "enum": [
@@ -5630,6 +5762,10 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
             "size": {
               "$ref": "#/properties/price",
               "description": "New size",
+            },
+            "stopPrice": {
+              "description": "Updated stop price. Only applicable for editing TP/SL or SL orders.",
+              "type": "number",
             },
           },
           "required": [

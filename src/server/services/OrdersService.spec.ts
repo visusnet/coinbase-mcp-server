@@ -438,6 +438,82 @@ describe('OrdersService', () => {
         },
       });
     });
+
+    it('should pass attached order configuration for bracket editing', async () => {
+      mockClient.request.mockResolvedValue(mockResponse({ success: true }));
+
+      await service.editOrder({
+        orderId: 'order-123',
+        price: '50000.5',
+        size: '0.05',
+        attachedOrderConfiguration: {
+          triggerBracketGtc: {
+            limitPrice: '65000',
+            stopTriggerPrice: '57000',
+          },
+        },
+      });
+
+      expect(mockClient.request).toHaveBeenCalledWith({
+        url: 'orders/edit',
+        method: Method.POST,
+        bodyParams: {
+          orderId: 'order-123',
+          price: '50000.5',
+          size: '0.05',
+          attachedOrderConfiguration: {
+            triggerBracketGtc: {
+              limitPrice: '65000',
+              stopTriggerPrice: '57000',
+            },
+          },
+        },
+      });
+    });
+
+    it('should pass cancelAttachedOrder flag', async () => {
+      mockClient.request.mockResolvedValue(mockResponse({ success: true }));
+
+      await service.editOrder({
+        orderId: 'order-123',
+        price: '50000.5',
+        size: '0.05',
+        cancelAttachedOrder: true,
+      });
+
+      expect(mockClient.request).toHaveBeenCalledWith({
+        url: 'orders/edit',
+        method: Method.POST,
+        bodyParams: {
+          orderId: 'order-123',
+          price: '50000.5',
+          size: '0.05',
+          cancelAttachedOrder: true,
+        },
+      });
+    });
+
+    it('should pass stopPrice for TP/SL order editing', async () => {
+      mockClient.request.mockResolvedValue(mockResponse({ success: true }));
+
+      await service.editOrder({
+        orderId: 'order-123',
+        price: '50000.5',
+        size: '0.05',
+        stopPrice: '58000',
+      });
+
+      expect(mockClient.request).toHaveBeenCalledWith({
+        url: 'orders/edit',
+        method: Method.POST,
+        bodyParams: {
+          orderId: 'order-123',
+          price: '50000.5',
+          size: '0.05',
+          stopPrice: '58000',
+        },
+      });
+    });
   });
 
   describe('editOrderPreview', () => {
@@ -462,6 +538,43 @@ describe('OrdersService', () => {
           orderId: 'order-456',
           price: '45000',
           size: '0.1',
+        },
+      });
+    });
+
+    it('should pass attached order configuration for bracket editing', async () => {
+      mockClient.request.mockResolvedValue(
+        mockResponse({
+          errors: [],
+          slippage: '0.01',
+        }),
+      );
+
+      await service.editOrderPreview({
+        orderId: 'order-456',
+        price: '45000',
+        size: '0.1',
+        attachedOrderConfiguration: {
+          triggerBracketGtc: {
+            limitPrice: '65000',
+            stopTriggerPrice: '57000',
+          },
+        },
+      });
+
+      expect(mockClient.request).toHaveBeenCalledWith({
+        url: 'orders/edit_preview',
+        method: Method.POST,
+        bodyParams: {
+          orderId: 'order-456',
+          price: '45000',
+          size: '0.1',
+          attachedOrderConfiguration: {
+            triggerBracketGtc: {
+              limitPrice: '65000',
+              stopTriggerPrice: '57000',
+            },
+          },
         },
       });
     });

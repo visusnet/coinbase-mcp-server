@@ -190,6 +190,14 @@ export const EditOrderRequestSchema = z
     orderId: z.string().describe('The ID of the order to edit'),
     price: numberToString.describe('New limit price'),
     size: numberToString.describe('New size'),
+    attachedOrderConfiguration: AttachedOrderConfigurationSchema.optional(),
+    cancelAttachedOrder: z
+      .boolean()
+      .optional()
+      .describe('Drops both legs of TP/SL, order becomes a simple limit order'),
+    stopPrice: numberToStringOptional.describe(
+      'Updated stop price. Only applicable for editing TP/SL or SL orders.',
+    ),
   })
   .describe('Request to edit an order');
 
@@ -198,6 +206,14 @@ export const PreviewEditOrderRequestSchema = z
     orderId: z.string().describe('The ID of the order to preview editing'),
     price: numberToString.describe('New limit price'),
     size: numberToString.describe('New size'),
+    attachedOrderConfiguration: AttachedOrderConfigurationSchema.optional(),
+    cancelAttachedOrder: z
+      .boolean()
+      .optional()
+      .describe('Drops both legs of TP/SL, order becomes a simple limit order'),
+    stopPrice: numberToStringOptional.describe(
+      'Updated stop price. Only applicable for editing TP/SL or SL orders.',
+    ),
   })
   .describe('Request to preview editing an order');
 

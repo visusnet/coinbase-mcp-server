@@ -356,6 +356,40 @@ stop_loss_price = entry_price × (1 - SL_PERCENT / 100)
 
 ---
 
+## Bracket TP/SL (Catastrophic Stop — Outer Layer)
+
+The attached bracket on Coinbase is a wide safety net. It only fires if the bot is offline. The bot's soft SL/TP (above) handles normal exits.
+
+### Bracket SL (all strategies)
+
+```
+bracket_sl_pct = clamp(ATR_PERCENT * 3, 8.0, 12.0)
+bracket_sl_price = entry_price * (1 - bracket_sl_pct / 100)
+```
+
+- Floor 8%: survives 92.8% of daily drawdowns (validated across 10 EUR pairs, 90 days)
+- Ceiling 12%: caps catastrophic single-trade loss
+- ATR-adaptive: volatile assets get wider brackets
+
+### Bracket TP (strategy-dependent)
+
+| Strategy | Bracket TP | Reasoning |
+|----------|-----------|-----------|
+| **Aggressive** | `max(10%, ATR% × 5)` | Wide ceiling — trailing stop manages real exit |
+| **Conservative** | `3.0%` fixed | Predictable, moderate target |
+| **Scalping** | `round_trip_fees × 2` (~3% at current tier) | Guarantees net profit after fees |
+
+### Relationship: Bracket vs Soft
+
+| Layer | SL | TP | Managed by |
+|-------|----|----|------------|
+| **Soft (inner)** | ATR-based (2.5-10%) | ATR/fixed (1.5-10%+) | Bot via `wait_for_market_event` |
+| **Bracket (outer)** | `clamp(ATR% × 3, 8%, 12%)` | Strategy-dependent | Coinbase (attached bracket) |
+
+The soft layer is always tighter. The bracket is the fallback.
+
+---
+
 ## Multi-Timeframe Analysis
 
 | Timeframe | Purpose |
