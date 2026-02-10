@@ -166,8 +166,8 @@ Single Source of Truth for `.claude/trading-state.json` structure.
 | `session.stats.tradesClosed` | number | Total exits |
 | `session.stats.wins` | number | Profitable closes |
 | `session.stats.losses` | number | Losing closes |
-| `session.stats.totalFeesPaid` | number | Cumulative fees (EUR) |
-| `session.stats.realizedPnL` | number | Realized P/L (EUR) |
+| `session.stats.totalFeesPaid` | number | Cumulative fees (sum in native quote currencies) |
+| `session.stats.realizedPnL` | number | Realized P/L (portfolio value delta since session start) |
 | `session.config.strategy` | string | Default/fallback strategy: "aggressive" / "conservative" / "scalping". Per-position strategy overrides this. |
 | `session.config.interval` | string | "5m" / "15m" / "1h" |
 | `session.config.dryRun` | boolean | Dry-run mode active |
@@ -204,9 +204,9 @@ Single Source of Truth for `.claude/trading-state.json` structure.
 Wherever "Default portfolio balance" or "available capital" is referenced:
 
 1. Call `get_portfolio(portfolios.defaultUuid)` (one API call per cycle)
-2. **Primary**: `breakdown.portfolioBalances.totalCashEquivalentBalance` = available EUR cash
+2. **Primary**: `breakdown.portfolioBalances.totalCashEquivalentBalance` = available cash
 3. **Fallback**: `spotPositions[isCash==true].availableToTradeFiat` if primary is undefined
-4. "Available capital" = EUR cash only (crypto in open positions is already committed)
+4. "Available capital" = cash only (crypto in open positions is already committed)
 
 Discover Default UUID via `list_portfolios(portfolio_type=DEFAULT)` at session start, store as `portfolios.defaultUuid`.
 
@@ -219,11 +219,11 @@ Discover Default UUID via `list_portfolios(portfolio_type=DEFAULT)` at session s
 | `side` | enum | "long" (future: "short") |
 | `size` | string | Position size |
 | `strategy` | enum | Per-position strategy: "aggressive" / "conservative" / "scalping" |
-| `entry.price` | number | Entry price (EUR) |
+| `entry.price` | number | Entry price (in quote currency) |
 | `entry.time` | string | ISO 8601 timestamp |
 | `entry.orderType` | enum | "limit" / "market" |
-| `entry.fee` | number | Entry fee (EUR) |
-| `entry.route` | enum | "direct" / "indirect" |
+| `entry.fee` | number | Entry fee (in quote currency) |
+| `entry.route` | enum | "direct" / "indirect" / "cross-currency" |
 | `entry.spread` | number | Spread at entry (%) |
 | `entry.liquidityStatus` | enum | "good" / "moderate" |
 | `analysis.signalStrength` | number | Final score (0-100) |
@@ -232,8 +232,8 @@ Discover Default UUID via `list_portfolios(portfolio_type=DEFAULT)` at session s
 | `analysis.reason` | string | Top indicators |
 | `analysis.confidence` | enum | "high" / "medium" / "low" |
 | `riskManagement.entryATR` | number | ATR at entry |
-| `riskManagement.dynamicSL` | number | ATR-based stop-loss price (EUR) |
-| `riskManagement.dynamicTP` | number | ATR-based take-profit price (EUR) |
+| `riskManagement.dynamicSL` | number | ATR-based stop-loss price (in quote currency) |
+| `riskManagement.dynamicTP` | number | ATR-based take-profit price (in quote currency) |
 | `riskManagement.bracketSL` | number | Wide bracket SL price (catastrophic stop on Coinbase) |
 | `riskManagement.bracketTP` | number | Wide bracket TP price (strategy-dependent, on Coinbase) |
 | `riskManagement.trailingStop.active` | boolean | Is trailing active? |
@@ -242,7 +242,7 @@ Discover Default UUID via `list_portfolios(portfolio_type=DEFAULT)` at session s
 | `riskManagement.bracketOrderId` | string \| null | Child bracket order ID (from parent.attachedOrderId after fill) |
 | `riskManagement.hasBracket` | boolean | Whether an attached bracket (TP/SL) is active on Coinbase |
 | `performance.currentPrice` | number | Latest price |
-| `performance.unrealizedPnL` | number | Current P/L (EUR) |
+| `performance.unrealizedPnL` | number | Current P/L (in quote currency) |
 | `performance.unrealizedPnLPercent` | number | Current P/L (%) |
 | `performance.peakPnLPercent` | number | Best P/L achieved |
 | `performance.holdingTimeHours` | number | Hours since entry |
@@ -260,15 +260,15 @@ Discover Default UUID via `list_portfolios(portfolio_type=DEFAULT)` at session s
 | `side` | enum | "long" |
 | `size` | string | Position size |
 | `entry.*` | object | Same as openPositions |
-| `exit.price` | number | Exit price (EUR) |
+| `exit.price` | number | Exit price (in quote currency) |
 | `exit.time` | string | ISO 8601 timestamp |
 | `exit.orderType` | enum | "limit" / "market" |
-| `exit.fee` | number | Exit fee (EUR) |
+| `exit.fee` | number | Exit fee (in quote currency) |
 | `exit.trigger` | enum | "stopLoss" / "takeProfit" / "trailingStop" / "bracketSL" / "bracketTP" / "rebalance" / "manual" |
 | `exit.reason` | string | Human-readable reason |
 | `analysis.*` | object | Same as openPositions |
-| `result.grossPnL` | number | P/L before fees (EUR) |
-| `result.netPnL` | number | P/L after fees (EUR) |
+| `result.grossPnL` | number | P/L before fees (in quote currency) |
+| `result.netPnL` | number | P/L after fees (in quote currency) |
 | `result.netPnLPercent` | number | Net P/L (%) |
 | `result.peakPnLPercent` | number | Best P/L before exit |
 | `result.totalFees` | number | Entry + exit fees |
@@ -284,13 +284,13 @@ Each entry in `session.rebalancing.rebalanceHistory[]` has the following structu
 | `from` | string | Source trading pair (e.g., "BTC-EUR") |
 | `to` | string | Destination trading pair (e.g., "ETH-EUR") |
 | `reason` | enum | Trigger reason (see Rebalancing Reason Enum below) |
-| `exitPrice` | number | Exit price for source position (EUR) |
-| `entryPrice` | number | Entry price for destination position (EUR) |
+| `exitPrice` | number | Exit price for source position (in quote currency) |
+| `entryPrice` | number | Entry price for destination position (in quote currency) |
 | `holdingTimeHours` | number | How long source position was held |
-| `grossPnL` | number | P/L before fees (EUR) |
-| `exitFee` | number | Fee for exiting source position (EUR) |
-| `entryFee` | number | Fee for entering destination position (EUR) |
-| `netPnL` | number | P/L after all fees (EUR) |
+| `grossPnL` | number | P/L before fees (in quote currency) |
+| `exitFee` | number | Fee for exiting source position (in quote currency) |
+| `entryFee` | number | Fee for entering destination position (in quote currency) |
+| `netPnL` | number | P/L after all fees (in quote currency) |
 | `signalDelta` | number | Score difference (destination - source) |
 | `sourceScore` | number | Signal score of exited position (0-100) |
 | `destinationScore` | number | Signal score of new position (0-100) |

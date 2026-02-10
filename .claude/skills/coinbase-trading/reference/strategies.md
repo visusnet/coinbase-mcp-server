@@ -193,7 +193,7 @@ As trading volume increases, Coinbase fee tiers drop and thresholds automaticall
 | Scenario | Check Required? |
 |----------|----------------|
 | Altcoin entries (SOL, AVAX, MATIC, etc.) | ✅ Yes |
-| Major pairs (BTC-EUR, ETH-EUR) | ❌ No - always liquid |
+| Major pairs (BTC, ETH) in any quote currency | ❌ No - always liquid |
 | Limit orders | ❌ No - you control the price |
 | Exit orders (SL/TP/Trailing) | ❌ No - must exit regardless |
 
@@ -366,7 +366,7 @@ bracket_sl_pct = clamp(ATR_PERCENT * 3, 8.0, 12.0)
 bracket_sl_price = entry_price * (1 - bracket_sl_pct / 100)
 ```
 
-- Floor 8%: survives 92.8% of daily drawdowns (validated across 10 EUR pairs, 90 days)
+- Floor 8%: survives 92.8% of daily drawdowns (validated across 10 major pairs, 90 days)
 - Ceiling 12%: caps catastrophic single-trade loss
 - ATR-adaptive: volatile assets get wider brackets
 

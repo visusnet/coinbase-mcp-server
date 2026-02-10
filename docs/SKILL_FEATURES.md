@@ -156,10 +156,11 @@ Selects order type based on signal strength to minimize fees.
 
 Prefers direct pairs to save fees.
 
-| Route                  | Fees                             | Min Profit Required |
-|------------------------|----------------------------------|---------------------|
-| BTC→SOL (direct)       | ~1.0% (maker 0.4% + taker 0.6%)  | 2.0%                |
-| BTC→EUR→SOL (indirect) | ~2.0% (2× trades)                | 3.2%                |
+| Route                         | Fees                             | Min Profit Required |
+|-------------------------------|----------------------------------|---------------------|
+| BTC→SOL (direct)              | ~1.0% (maker 0.4% + taker 0.6%)  | 2.0%                |
+| BTC→USD→SOL (indirect)        | ~2.0% (2× trades)                | 3.2%                |
+| EUR→USD→ATOM (cross-currency) | ~2.0% (2× trades)                | 3.2%                |
 
 ---
 
@@ -352,7 +353,7 @@ Checks orderbook before altcoin entries.
 | 0.2% - 0.5%  | Reduce        | 50%           |
 | < 0.2%       | Full Position | 100%          |
 
-**Bypassed for**: BTC-EUR, ETH-EUR, Limit Orders, Exits
+**Bypassed for**: Major pairs (BTC-USD, BTC-EUR, ETH-USD, ETH-EUR), Limit Orders, Exits
 
 ---
 
@@ -514,9 +515,9 @@ Automatically moves a configurable percentage of realized gains to HODL Safe aft
 **Example**:
 
 ```
-Exit SOL-EUR with +5.00€ net profit, protection rate 50%
-→ Move 2.50€ to HODL Safe
-→ 2.50€ stays in Default for trading
+Exit SOL-EUR with +5.00 EUR net profit, protection rate 50%
+→ Move 2.50 EUR to HODL Safe
+→ 2.50 EUR stays in Default for trading
 ```
 
 Rebalance exits skip profit protection — rebalancing is capital reallocation, not realized gains leaving the system.
@@ -556,12 +557,12 @@ Automatically exit stagnant positions for better opportunities.
 **Example**:
 
 ```
-SOL-EUR: Held 18h, +1.2% (stagnant)
-ETH-EUR: Signal 78% (alternative)
+SOL-USD: Held 18h, +1.2% (stagnant)
+ETH-USD: Signal 78% (alternative)
 Delta: 78 - 25 = 53 (> 40 ✓)
 
-→ SELL SOL → BUY ETH
-→ Log: "Rebalanced SOL→ETH: stagnant 18h, delta +53"
+→ SELL SOL-USD → BUY ETH-USD
+→ Log: "Rebalanced SOL-USD→ETH-USD: stagnant 18h, delta +53"
 ```
 
 **CLI Arguments**:
@@ -579,21 +580,21 @@ Delta: 78 - 25 = 53 (> 40 ✓)
 
 Prevents deadlock when trading capital runs low.
 
-Before seeking new entries, check if Default portfolio balance < minimum order size (typically €2.00):
+Before seeking new entries, check if Default portfolio balance < minimum order size (typically $2.00):
 
 - **Insufficient capital BUT positions eligible for rebalancing** → Continue (sell X to buy Y)
 - **Insufficient capital AND no rebalanceable positions** → Exit session gracefully
-- Escapes deadlock by allowing capital reallocation even with €0 remaining
+- Escapes deadlock by allowing capital reallocation even with $0 remaining
 
 **Example**:
 
 ```
-Default balance: €0.15, 3 positions open
-- BTC: Stagnant 15h, PnL -0.50€
-- ETH: Strong +5.00€, not stagnant → Keep
-- SOL: Stagnant 13h, PnL +1.20€, alternative delta +55
+Default balance: $0.15, 3 positions open
+- BTC-USD: Stagnant 15h, PnL -$0.50
+- ETH-USD: Strong +$5.00, not stagnant → Keep
+- SOL-USD: Stagnant 13h, PnL +$1.20, alternative delta +55
 
-→ Rebalance SOL to AVAX frees 3.15€ capital
+→ Rebalance SOL-USD to AVAX-USD frees $3.15 capital
 → Session continues
 ```
 
@@ -723,25 +724,25 @@ Real-world examples demonstrating feature interactions:
 
 **Initial State**:
 
-- SOL position: Entry 100€, Current 112€ (+12%)
-- Trailing stop: Active @ 110.32€ (1.5% trail)
-- Rebalancing: Eligible, ETH shows better opportunity (delta +50)
+- SOL-USD position: Entry $100, Current $112 (+12%)
+- Trailing stop: Active @ $110.32 (1.5% trail)
+- Rebalancing: Eligible, ETH-USD shows better opportunity (delta +50)
 
 **Decision Order**:
 
 1. **Trailing stop checked FIRST** (every cycle)
-2. Current price 112€ > Trail 110.32€ → No trigger
-3. Update trail: 112€ × 0.985 = 110.32€
+2. Current price $112 > Trail $110.32 → No trigger
+3. Update trail: $112 × 0.985 = $110.32
 4. **Then rebalancing** (if position still open)
 5. SOL not stagnant (strong move +12%) → Skip rebalancing
 6. HOLD SOL position
 
-**Alternative**: If price drops to 110€:
+**Alternative**: If price drops to $110:
 
-1. Trailing stop: 110€ < 110.32€ → **TRIGGER**
-2. Exit SOL @ 110€ (+10% profit)
+1. Trailing stop: $110 < $110.32 → **TRIGGER**
+2. Exit SOL @ $110 (+10% profit)
 3. Rebalancing: Position already closed → Skip
-4. Seek new entry (ETH still best opportunity → Enter ETH)
+4. Seek new entry (ETH-USD still best opportunity → Enter ETH-USD)
 
 **Result**: Trailing stop takes priority, rebalancing only runs if position still open
 
@@ -751,22 +752,22 @@ Real-world examples demonstrating feature interactions:
 
 **Initial State**:
 
-- Default balance: 0.15€
-- Position 1: BTC-EUR, 3.50€ invested
-- Position 2: ETH-EUR, 3.20€ invested
-- Position 3: SOL-EUR, 3.15€ invested
-- Total invested: 9.85€
+- Default balance: $0.15
+- Position 1: BTC-USD, $3.50 invested
+- Position 2: ETH-USD, $3.20 invested
+- Position 3: SOL-USD, $3.15 invested
+- Total invested: $9.85
 
 **Cycle Check**:
 
-1. Capital check: 0.15€ < 2.00€ minimum → Insufficient for new entry
+1. Capital check: $0.15 < $2.00 minimum → Insufficient for new entry
 2. Rebalancing check:
-   - BTC: Stagnant 15h, PnL -0.50€
-   - ETH: Strong +5.00€, not stagnant → Keep
-   - SOL: Moderate +1.20€, stagnant 13h, alternative with delta +55 exists
-3. **Rebalancing**: Exit SOL (-0.04€ fee) → 3.15€ freed
-4. Available capital: 0.15€ + 3.15€ - 0.04€ = 3.26€
-5. Enter AVAX with better signal
+   - BTC: Stagnant 15h, PnL -$0.50
+   - ETH: Strong +$5.00, not stagnant → Keep
+   - SOL: Moderate +$1.20, stagnant 13h, alternative with delta +55 exists
+3. **Rebalancing**: Exit SOL (-$0.04 fee) → $3.15 freed
+4. Available capital: $0.15 + $3.15 - $0.04 = $3.26
+5. Enter AVAX-USD with better signal
 6. Continue trading
 
 **Result**: Rebalancing prevents capital deadlock, session continues
@@ -777,30 +778,30 @@ Real-world examples demonstrating feature interactions:
 
 **Initial State**:
 
-- Available capital: 30.00€
-- Strong signals for BTC (70%), ETH (65%), SOL (60%)
+- Available capital: $30.00
+- Strong signals for BTC-USD (70%), ETH-USD (65%), SOL-USD (60%)
 - Max 33% exposure per asset
 
 **Decision Process**:
 
-1. **BTC**: Signal 70% → 100% allocation = 30.00€
-   - Check exposure: 30.00€ / 30.00€ = 100% > 33% → **REDUCE**
-   - Max investment: 30.00€ × 0.33 = 10.00€
-   - Enter BTC: 10.00€
-   - Remaining: 20.00€
+1. **BTC-USD**: Signal 70% → 100% allocation = $30.00
+   - Check exposure: $30.00 / $30.00 = 100% > 33% → **REDUCE**
+   - Max investment: $30.00 × 0.33 = $10.00
+   - Enter BTC-USD: $10.00
+   - Remaining: $20.00
 
-2. **ETH**: Signal 65% → 75% allocation = 15.00€
-   - Check exposure: 15.00€ / 30.00€ = 50% > 33% → **REDUCE**
-   - Max investment: 30.00€ × 0.33 = 10.00€
-   - Enter ETH: 10.00€
-   - Remaining: 10.00€
+2. **ETH-USD**: Signal 65% → 75% allocation = $15.00
+   - Check exposure: $15.00 / $30.00 = 50% > 33% → **REDUCE**
+   - Max investment: $30.00 × 0.33 = $10.00
+   - Enter ETH-USD: $10.00
+   - Remaining: $10.00
 
-3. **SOL**: Signal 60% → 75% allocation = 7.50€
-   - Check exposure: 7.50€ / 30.00€ = 25% < 33% → ✓
-   - Enter SOL: 7.50€
-   - Remaining: 2.50€
+3. **SOL-USD**: Signal 60% → 75% allocation = $7.50
+   - Check exposure: $7.50 / $30.00 = 25% < 33% → ✓
+   - Enter SOL-USD: $7.50
+   - Remaining: $2.50
 
-**Result**: 3 positions opened (BTC 10€, ETH 10€, SOL 7.50€), 2.50€ remaining. Exposure limits enforced per-asset.
+**Result**: 3 positions opened (BTC-USD $10, ETH-USD $10, SOL-USD $7.50), $2.50 remaining. Exposure limits enforced per-asset.
 
 ---
 
@@ -808,9 +809,9 @@ Real-world examples demonstrating feature interactions:
 
 **Previous Session**:
 
-- BTC position opened: 2026-01-10T10:00:00Z
+- BTC-EUR position opened: 2026-01-10T10:00:00Z
 - Last update: 2026-01-10T14:00:00Z (4h holding)
-- Price: Entry 95,000€, Current 95,800€ (+0.84%)
+- Price: Entry 95,000, Current 95,800 (+0.84%)
 - Stagnant since: 2026-01-10T12:00:00Z (2h ago)
 
 **Session Resume** (2026-01-11T09:00:00Z, 19h later):
@@ -819,16 +820,16 @@ Real-world examples demonstrating feature interactions:
    - Hours since last update: 19h
    - Stagnant duration: 21h total (2h + 19h)
 2. Update position:
-   - Current price: 96,200€ (+1.26% total move)
+   - Current price: 96,200 (+1.26% total move)
    - Still < 3% → **Still stagnant**
 3. Check rebalancing:
    - Stagnant 21h > 12h threshold → Eligible
    - Alternative: ETH signal 75% vs BTC 30% → Delta +45
    - PnL +1.26% > -2% → ✓
 4. **Rebalancing triggered**:
-   - Exit BTC @ 96,200€
+   - Exit BTC-EUR @ 96,200
    - Net profit: 1.26% - 0.8% fees = +0.46%
-   - Enter ETH
+   - Enter ETH-EUR
 5. Cooldown reset: lastRebalance = 2026-01-11T09:00:00Z
 
 **Result**: Session resume correctly preserves stagnation tracking, rebalancing executes after resume
@@ -869,7 +870,7 @@ Real-world examples demonstrating feature interactions:
 
 **Initial State**:
 
-- BTC-EUR Analysis
+- BTC-USD Analysis
 - 15m: Strong BUY Signal (65%)
 - 1h: BULLISH (aligned)
 - 6h: BEARISH (conflict detected)
@@ -892,9 +893,9 @@ Real-world examples demonstrating feature interactions:
 
 **Initial State**:
 
-- SOL-EUR Position
-- Entry: 119.34 EUR @ 2026-01-12 13:17:00
-- Current: 119.58 EUR (+0.20%)
+- SOL-USD Position
+- Entry: $119.34 @ 2026-01-12 13:17:00
+- Current: $119.58 (+0.20%)
 - Holding Time: 30 hours
 
 **Stagnation Score Calculation**:
@@ -907,9 +908,9 @@ Real-world examples demonstrating feature interactions:
 
 **Exit Execution**:
 
-- Action: Market Order SELL SOL-EUR
+- Action: Market Order SELL SOL-USD
 - Reason: "Maximum stagnation threshold exceeded"
-- Log: "Force closed SOL-EUR after 30h: stagnation_score=2.25, PnL=+0.20%"
+- Log: "Force closed SOL-USD after 30h: stagnation_score=2.25, PnL=+0.20%"
 
 **Result**: Force Exit prevents indefinite capital lockup. Position with minimal profit and extended holding time is automatically closed to free capital for better opportunities.
 

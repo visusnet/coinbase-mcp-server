@@ -36,7 +36,9 @@ ELSE (no state file):
 
 ## Flow A: Fresh Start
 
-User runs `/trade 10 EUR from BTC`:
+User runs `/trade 10 EUR from BTC` (also valid: `/trade 100 USD from BTC`, `/trade 50 USDT`):
+
+> **Note**: EUR, USD, and USDT are all valid quote currencies for the budget. The quote currency determines the initial cash currency and which pairs are direct routes.
 
 1. Parse budget argument (amount, source currency)
 2. list_portfolios → discover Default UUID
@@ -47,7 +49,7 @@ User runs `/trade 10 EUR from BTC`:
      → If (A): use its UUID as hodlSafeUuid, skip step 5
      → If (B): ask for name, use that name in step 5
 3. list_accounts → get all current holdings
-4. If source != EUR: get_product("{SOURCE}-EUR") → get current price, calculate EUR equivalent
+4. If source != quote currency: get_product("{SOURCE}-{QUOTE}") → get current price, calculate equivalent in quote currency
 5. create_portfolio("HODL Safe") → get UUID (skip if adopted existing in step 2)
 6. Save to state IMMEDIATELY: portfolios.defaultUuid, portfolios.hodlSafeUuid, portfolios.fundsAllocated = false
 7. Ask profit protection question:
@@ -57,7 +59,7 @@ User runs `/trade 10 EUR from BTC`:
    - Custom percentage (profitProtectionRate: user-specified)
 8. Save portfolios.profitProtectionRate to state
 9. For each asset with non-zero available_balance in Default:
-   - If asset is the budget source: calculate amount to keep (budget EUR equivalent / current price), round using base_increment from get_product, move the rest to Safe
+   - If asset is the budget source: calculate amount to keep (budget equivalent in quote currency / current price), round using base_increment from get_product, move the rest to Safe
    - If asset is anything else: move entire balance to Safe
 10. Set portfolios.fundsAllocated = true, save state
 11. Initialize session fields (see state-schema.md → Initialize Session)
@@ -69,7 +71,7 @@ User runs `/trade 10 EUR from BTC`:
 2. list_portfolios → find Safe by UUID
 3. If Safe found: continue
 4. If budget parameter provided: ignore it, inform user:
-   "HODL Safe is active. Your trading capital is whatever's in the Default portfolio (currently X EUR). To adjust, move funds between portfolios via the Coinbase website."
+   "HODL Safe is active. Your trading capital is whatever's in the Default portfolio. To adjust, move funds between portfolios via the Coinbase website."
 5. Reconcile positions with reality (same as current Step 2-5 in resume)
 6. Resume trading
 
@@ -86,7 +88,7 @@ Legacy state file has session.budget but no portfolios:
 7. list_accounts → get all current holdings (use available_balance, not total)
 8. Identify assets that should remain in Default portfolio:
    - For each open position: keep_in_default[asset] += position.size
-   - EUR to keep: min(session.budget.remaining, actual_EUR_available_balance)
+   - Cash to keep: min(session.budget.remaining, actual available balance in quote currency)
    - For each asset: move_amount = available_balance - keep_in_default[asset]
    - Round move amounts using base_increment from get_product
 9. Show user a migration plan table:

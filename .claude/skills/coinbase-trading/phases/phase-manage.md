@@ -154,7 +154,7 @@ ELSE IF ATR(14) < 0.001:
 ELSE:
   ATR_PERCENT = ATR(14) / entry_price × 100
 
-// Calculate TP/SL based on per-position strategy (set at entry, updated by Step 5.5)
+// Calculate TP/SL based on per-position strategy (set at entry, updated by Step 6)
 IF position.strategy == "aggressive":
   TP_PERCENT = max(2.5, ATR_PERCENT × 2.5)  // 2.5× ATR, floor at 2.5%
   SL_PERCENT = clamp(ATR_PERCENT × 1.5, 2.5, 10.0)  // 1.5× ATR, 2.5-10%

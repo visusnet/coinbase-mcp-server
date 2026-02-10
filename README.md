@@ -210,7 +210,7 @@ For a complete list of all trading features, see **[SKILL_FEATURES.md](docs/SKIL
 | Check Interval | 15 minutes                                                                                       | Yes (`interval=5m`)                                            |
 | Profit Protection | 50% of profits moved to HODL Safe                                                            | Yes (choose at session start: 0%, 50%, 100%, or custom)       |
 | Rebalancing    | After 12h if <3% move, delta >40, max loss -2%, cooldown 4h, max 3/day                          | Yes (`no-rebalance`, `rebalance-delta=50`, `rebalance-max=2`) |
-| Pairs          | All EUR pairs                                                                                    | No                                                             |
+| Pairs          | All SPOT pairs (USD, EUR, USDT)                                                                  | No                                                             |
 
 **Stop the agent**: Press `Ctrl+C`
 

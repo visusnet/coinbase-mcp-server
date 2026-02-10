@@ -12,7 +12,7 @@ It covers: signal aggregation, position sizing, fee checks, liquidity checks, an
 - **Min Profit (Direct)**: `(entry_fee + exit_fee + slippage) × 2` — computed per trade
 - **Min Profit (Indirect)**: `(entry_fee + exit_fee + slippage) × 4` — computed per trade
 - **Limit Order Timeout**: 120 seconds
-- **Prefer Direct Pairs**: Yes (BTC→X instead of BTC→EUR→X when available)
+- **Prefer Direct Pairs**: Yes (BTC→X instead of BTC→cash→X when available)
 
 ## Liquidity Requirements
 
@@ -21,7 +21,7 @@ Check orderbook before altcoin entries:
 - **Max Spread**: 0.5% (skip trade if higher)
 - **Reduced Position Spread**: 0.2% - 0.5% (use 50% size)
 - **Full Position Spread**: < 0.2%
-- **Bypass Check**: BTC-EUR, ETH-EUR, all limit orders, all exits
+- **Bypass Check**: BTC-USD, BTC-EUR, ETH-USD, ETH-EUR, all limit orders, all exits
 
 ---
 
@@ -197,9 +197,9 @@ final_position_pct = min(100, base_position_pct × volatility_multiplier)
 // See strategies.md lines 145-149 for complete exposure limit definitions
 
 available_capital = Default portfolio balance (from list_accounts or get_portfolio)
-final_position_size_eur = available_capital × (final_position_pct / 100)
+final_position_size = available_capital × (final_position_pct / 100)
 
-Log: "Position: {base_position_pct}% (signal) × {volatility_multiplier} (ATR {atr_ratio:.2f}×) = {final_position_pct}% ({final_position_size_eur}€)"
+Log: "Position: {base_position_pct}% (signal) × {volatility_multiplier} (ATR {atr_ratio:.2f}×) = {final_position_pct}% ({final_position_size} {quote_currency})"
 ```
 
 **Example Calculations**:
@@ -280,7 +280,7 @@ Fees:
 
 ## Step 13: Pre-Trade Liquidity Check
 
-For altcoin market order entries only (skip for BTC-EUR, ETH-EUR, limit orders, exits):
+For altcoin market order entries only (skip for major pairs like BTC-USD, BTC-EUR, ETH-USD, ETH-EUR, limit orders, exits):
 
 1. Call `get_product_book` for target pair
 2. Calculate spread with validation:
@@ -457,13 +457,28 @@ IF stop-limit FILLED:
 
 **Route Selection**:
 
+```
+cash_currency = dominant currency in Default portfolio (from list_accounts)
+target_quote = pair's quote currency (e.g., "USD" from "ATOM-USD")
+
+IF cash_currency == target_quote:
+  → Direct route, MIN_PROFIT = MIN_PROFIT_DIRECT
+ELSE IF convert pair exists (e.g., EUR-USD):
+  → Cross-currency route, MIN_PROFIT = MIN_PROFIT_INDIRECT
+  → Convert cash → target quote first, then buy target pair
+ELSE:
+  → Skip (no conversion path)
+```
+
 1. Call `list_products` to check if direct pair exists (e.g., BTC-SOL)
 2. IF direct pair exists with sufficient liquidity:
    → Use direct pair, MIN_PROFIT = MIN_PROFIT_DIRECT
-3. ELSE (no direct pair or illiquid):
-   → Use indirect route (BTC → EUR → SOL)
-   → MIN_PROFIT = MIN_PROFIT_INDIRECT
+3. ELSE IF cross-currency conversion available (cash != target quote but convert pair exists):
+   → Convert cash to target quote currency first, then buy target pair
+   → MIN_PROFIT = MIN_PROFIT_INDIRECT (4x fees+slippage for two trades)
    → Only trade if expected_profit > MIN_PROFIT_INDIRECT
+4. ELSE (no direct pair, no conversion path):
+   → Skip trade
 
 **For BUY (Limit Order)**:
 

@@ -68,7 +68,7 @@ For efficiency, use `analyze_technical_indicators` to fetch candles and compute 
 
 ```
 result = analyze_technical_indicators(
-  productId="BTC-EUR",
+  productId="BTC-USD",
   granularity="ONE_HOUR",
   candleCount=100,
   indicators=[
@@ -102,9 +102,9 @@ For scanning multiple pairs simultaneously, use `analyze_technical_indicators_ba
 ```
 result = analyze_technical_indicators_batch(
   requests=[
-    { productId: "BTC-EUR", granularity: "FIFTEEN_MINUTE", candleCount: 100,
+    { productId: "BTC-USD", granularity: "FIFTEEN_MINUTE", candleCount: 100,
       indicators: ["rsi", "macd", "bollinger_bands", "adx", "vwap", "stochastic"] },
-    { productId: "DOGE-EUR", granularity: "FIFTEEN_MINUTE", candleCount: 100,
+    { productId: "SOL-EUR", granularity: "FIFTEEN_MINUTE", candleCount: 100,
       indicators: ["rsi", "macd", "bollinger_bands", "adx", "vwap", "stochastic"] }
   ]
 )
@@ -209,19 +209,20 @@ On first cycle only, determine whether to start fresh or resume.
 
 ### 1. Check Portfolio Status
 
-Call `get_portfolio(portfolios.defaultUuid)` and determine:
+Call `get_portfolio(portfolios.defaultUuid)` and `list_accounts` to determine:
 
 - Total Default portfolio value (available trading capital)
 - Current open positions
+- Cash currency balances (USD, EUR, USDT) for routing decisions in later steps
 
 ### 2. Pair Screening
 
 Systematically select which pairs to analyze instead of picking manually.
 
-**Stage 1 — Batch Screen (all EUR pairs):**
+**Stage 1 — Batch Screen (all SPOT pairs):**
 
 ```
-pairs = list_products(type="SPOT") → filter EUR quote currency
+pairs = list_products(type="SPOT") → filter by quote currencies: USD, EUR, USDT
 results = analyze_technical_indicators_batch(
   requests: pairs.map(p => ({
     productId: p.product_id,
@@ -267,7 +268,7 @@ Log: "  Trend: {trend_pairs} | Scalp: {scalp_pairs}"
 Two lenses on the same batch result ensure both trending and range-bound setups reach deep analysis. The watch list is rebuilt every cycle from fresh batch data. Only open positions are guaranteed a spot regardless of score.
 
 <reasoning>
-Scanning all 50+ EUR pairs costs one batch API call — cheap for the MCP server, compact output for Claude. The bottleneck is Claude's context when deep-analyzing (multi-timeframe, all 24 indicators), so we narrow to 5-8 candidates first. The dual-pass approach avoids bias toward trend-following signals (aggregate score) by adding a second mean-reversion lens for scalping setups. Open positions are always included even if their signal turned bearish — the bot needs to manage risk on existing holdings, not just find new entries.
+Scanning all ~250 SPOT pairs (USD, EUR, USDT) costs one batch API call — cheap for the MCP server, compact output for Claude. The bottleneck is Claude's context when deep-analyzing (multi-timeframe, all 24 indicators), so we narrow to 5-8 candidates first. The dual-pass approach avoids bias toward trend-following signals (aggregate score) by adding a second mean-reversion lens for scalping setups. Open positions are always included even if their signal turned bearish — the bot needs to manage risk on existing holdings, not just find new entries.
 </reasoning>
 
 Steps 3-5 below operate only on the watch list pairs.
@@ -436,15 +437,15 @@ Before seeking new entries, verify sufficient capital for trading:
 
 ```
 1. Query Default portfolio balance via list_accounts or get_portfolio
-2. Calculate total available capital (sum of all asset values in EUR)
+2. Calculate total available capital (sum of all cash balances in Default portfolio)
 
-IF available_capital < min_order_size_eur (typically 2.00€):
+IF available_capital < min_order_size (typically $2.00):
 
   IF hasOpenPositions AND anyPositionEligibleForRebalancing:
     → Continue to rebalancing logic
     → Rebalancing frees capital by selling one position for another
   ELSE:
-    → Log: "Capital exhausted: {available}€ < minimum {min}€"
+    → Log: "Capital exhausted: {available} < minimum {min}"
     → Report to user: "Trading capital exhausted. No funds available in Default portfolio."
     → STOP trading loop, wait for user
 ```

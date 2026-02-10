@@ -33,7 +33,7 @@ Structured, compact report format for trading cycle output.
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 ┏━ **SPOTLIGHT: {PAIR}** ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃  Price: €{PRICE} ({CHANGE}% 24h)                             ┃
+┃  Price: {PRICE} ({CHANGE}% 24h)                              ┃
 ┃  Momentum    {RSI} • {MFI} • {STOCH}                         ┃
 ┃  Trend       {MACD} • {EMA_STATUS} • {ADX}                   ┃
 ┃  Patterns    {DETECTED_PATTERNS}                             ┃
@@ -48,7 +48,7 @@ Structured, compact report format for trading cycle output.
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 ┏━ **SESSION** ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃  Capital: €{CAPITAL} │ PnL: {PNL}€ │ W/L: {W}/{L} │ Next: {T} ┃
+┃  Capital: {CAPITAL} │ PnL: {PNL} │ W/L: {W}/{L} │ Next: {T}   ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 ```
 
@@ -93,7 +93,7 @@ Structured, compact report format for trading cycle output.
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 ┏━ **SESSION** ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-┃  Capital: €9.24 │ PnL: -0.76€ │ W/L: 1/3 │ Next: 10 min       ┃
+┃  Capital: $9.24 │ PnL: -$0.76 │ W/L: 1/3 │ Next: 10 min       ┃
 ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
 
 ## Formatting Notes
