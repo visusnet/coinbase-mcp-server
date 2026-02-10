@@ -151,7 +151,6 @@ Search for recent news and categorize:
 ### Risk Per Trade
 
 - Max risk per trade: 2% of Default portfolio value
-- Max simultaneous positions: 3
 - Max exposure per asset: 33% of available capital
 
 ### Fee-Adjusted Profitability

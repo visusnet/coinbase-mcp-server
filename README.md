@@ -204,8 +204,8 @@ For a complete list of all trading features, see **[SKILL_FEATURES.md](docs/SKIL
 | Setting        | Default                                                                                          | Customizable                                                   |
 |----------------|--------------------------------------------------------------------------------------------------|----------------------------------------------------------------|
 | Strategy       | Aggressive                                                                                       | No                                                             |
-| Take-Profit    | ATR-based (min 2%)                                                                               | Via ATR                                                        |
-| Stop-Loss      | ATR-based (3-15%)                                                                                | Via ATR                                                        |
+| Take-Profit    | ATR-based (min 2.5%)                                                                             | Via ATR                                                        |
+| Stop-Loss      | ATR-based (2.5-10%)                                                                              | Via ATR                                                        |
 | Trailing Stop  | 1.5% trail after +3%, min lock-in 1.0%                                                           | No                                                             |
 | Check Interval | 15 minutes                                                                                       | Yes (`interval=5m`)                                            |
 | Profit Protection | 50% of profits moved to HODL Safe                                                            | Yes (choose at session start: 0%, 50%, 100%, or custom)       |

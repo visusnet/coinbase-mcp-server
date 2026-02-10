@@ -190,11 +190,7 @@ final_position_pct = min(100, base_position_pct × volatility_multiplier)
 //    - Sum existing positions in same asset + new position
 //    - If total > 33%: reduce new position or SKIP
 //
-// 2. Max simultaneous positions: 3
-//    - Count open positions
-//    - If already at 3: SKIP trade (or force rebalancing first)
-//
-// 3. Max risk per trade: 2% of Default portfolio value
+// 2. Max risk per trade: 2% of Default portfolio value
 //    - Calculate: position_size × (SL_distance / entry_price)
 //    - If risk > 2% of available capital: reduce position size
 //
@@ -324,7 +320,7 @@ When a signal is present and expected profit exceeds MIN_PROFIT threshold (compu
 |-----------|------------|----------------|--------|
 | Signal > 70% (Strong) | Market (IOC) | Yes | Speed is priority, confirmation already strong |
 | Signal 40-70%, price already past key level | Limit (GTD, 120s) | Yes | Lower fees, auto-expires if unfilled |
-| Signal 40-70%, price consolidating near key level | Stop-Limit (GTD, 2 cycles) | No (not supported) | Only enter if breakout confirms, auto-expires |
+| Signal 40-70%, price consolidating near key level | Stop-Limit (GTD, 2 cycles) | Standalone after fill | Only enter if breakout confirms, auto-expires |
 | Signal < 40% | No Trade | - | - |
 | SL/TP execution | Market (IOC) | - | Must exit immediately |
 
@@ -376,7 +372,7 @@ Save to state:
 
 The bot monitors soft SL/TP with `wait_for_market_event` for trailing stops, SL/TP recalculation (after 24h), strategy re-evaluation, and rebalancing. The bracket is the catastrophic fallback — it only fires if the bot is offline.
 
-Stop-limit entries do NOT support attached TP/SL (Coinbase limitation). For stop-limit fills, the bot manages SL/TP itself via `wait_for_market_event` as before.
+Stop-limit entries do NOT support `attachedOrderConfiguration` (Coinbase limitation). After a stop-limit fills, the bot immediately places a **standalone sell bracket** to give the position the same Coinbase-level protection as market/limit entries.
 
 **Stop-Limit Entry (Breakout Confirmation)**:
 
@@ -442,7 +438,21 @@ IF stop-limit EXPIRED (status == "EXPIRED"):
 IF stop-limit FILLED:
   → Treat as normal position entry
   → Set SL/TP based on the fill price (not the original signal price)
-  → No attached bracket — manage SL/TP via wait_for_market_event
+  → Place standalone sell bracket immediately:
+    ATR_PERCENT = ATR(14) / fill_price * 100
+    bracket_sl_pct = clamp(ATR_PERCENT * 3, 8.0, 12.0)
+    bracket_sl_price = fill_price * (1 - bracket_sl_pct / 100)
+    // bracket TP uses same strategy-dependent formula as attached brackets
+    bracket_tp_price = (see "Bracket TP" in strategies.md)
+    create_order({
+      side: "SELL", productId: pair,
+      orderConfiguration: { triggerBracketGtc: {
+        baseSize: filled_size,
+        limitPrice: bracket_tp_price,
+        stopTriggerPrice: bracket_sl_price
+      }}
+    })
+  → Store bracketOrderId, set hasBracket = true
 ```
 
 **Route Selection**:

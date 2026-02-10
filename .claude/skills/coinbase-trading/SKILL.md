@@ -185,9 +185,10 @@ On first cycle only, determine whether to start fresh or resume.
 │   5. Sentiment Analysis                                     │
 ├─────────────────────────────────────────────────────────────┤
 │ PHASE 2: MANAGE EXISTING POSITIONS (frees up capital)       │
-│   6. Check SL/TP/Trailing                                   │
-│   7. Rebalancing Check                                      │
-│   8. Capital Exhaustion Check                               │
+│   6. Strategy Re-evaluation                                 │
+│   7. Check SL/TP/Trailing                                   │
+│   8. Rebalancing Check                                      │
+│   9. Capital Exhaustion Check                               │
 ├─────────────────────────────────────────────────────────────┤
 │ PHASE 3: NEW ENTRIES (uses freed capital)                   │
 │  10. Signal Aggregation                                     │
@@ -418,7 +419,7 @@ Call `get_news_sentiment` for the top BUY candidates from Step 2. This surfaces 
 
 ---
 
-## Phase 2: Manage Existing Positions (Steps 6-8) — CONDITIONAL
+## Phase 2: Manage Existing Positions (Steps 6-9) — CONDITIONAL
 
 ```
 IF openPositions.length > 0:
@@ -429,7 +430,7 @@ ELSE:
   → Skip Phase 2
 ```
 
-## Step 8: Capital Exhaustion Check
+## Step 9: Capital Exhaustion Check
 
 Before seeking new entries, verify sufficient capital for trading:
 

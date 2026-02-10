@@ -33,7 +33,7 @@ Automatically exit stagnant positions for better opportunities:
 
 ---
 
-## Step 5.5: Strategy Re-evaluation
+## Step 6: Strategy Re-evaluation
 
 For each open position, re-evaluate the strategy based on current market conditions:
 
@@ -54,13 +54,14 @@ FOR EACH position in openPositions:
   stoch_k = Stochastic %K
   volume = current volume
   volume_sma = SMA(volume, 20)
+  current_price = get_best_bid_ask(pair).price
 
   // Priority chain — first match wins
   IF adx > 25 AND adx > adx_prev AND macd_hist > macd_hist_prev
      AND htf_bullish_count >= 2 AND obv > obv_sma AND 40 <= rsi <= 70:
     new_strategy = "aggressive"
   ELSE IF adx < 25 AND adx <= adx_prev AND bb_width < bb_width_sma
-     AND price < bb_lower + 0.2 * bb_width
+     AND current_price < bb_lower + 0.2 * bb_width
      AND (stoch_k < 20 OR rsi < 30) AND volume < volume_sma:
     new_strategy = "scalping"
   ELSE IF adx >= 20:
@@ -104,6 +105,12 @@ FOR EACH position in openPositions:
     ELSE:  // scalping
       soft_tp_pct = 1.5; soft_sl_pct = 2.0
 
+    // Save old values before overwriting
+    old_bracket_sl = position.riskManagement.bracketSL
+    old_bracket_tp = position.riskManagement.bracketTP
+    old_soft_sl = position.riskManagement.dynamicSL
+    old_soft_tp = position.riskManagement.dynamicTP
+
     // Update state
     position.strategy = new_strategy
     position.riskManagement.bracketSL = bracket_sl_price
@@ -118,7 +125,7 @@ FOR EACH position in openPositions:
 
 ---
 
-## Step 6: Check Stop-Loss / Take-Profit
+## Step 7: Check Stop-Loss / Take-Profit
 
 **Positions with attached bracket orders** (`riskManagement.hasBracket == true`):
 The bot manages soft SL/TP as the **primary** exit mechanism (inner layer). The attached bracket on Coinbase is a **wide catastrophic stop** (outer layer) that only fires if the bot is offline. The bot's SL/TP check below handles:
@@ -221,7 +228,7 @@ Position: SOL-EUR
 
 ---
 
-## Step 7: Rebalancing Check
+## Step 8: Rebalancing Check
 
 For positions held > 12h with < 3% movement:
 
@@ -250,16 +257,22 @@ opportunity_delta = best_alternative.score - current_signal
 // Stagnation check
 is_stagnant = holdingTimeHours > 12 AND abs(unrealizedPnLPercent) < 3
 
-// Rebalancing decision
-IF opportunity_delta > 40 AND is_stagnant AND unrealizedPnLPercent > -2:
+// Rebalancing decision (first match wins)
+IF opportunity_delta > 60 AND unrealizedPnLPercent > -2:
+  → reason = "urgent_delta"
+
+ELSE IF opportunity_delta > 40 AND is_stagnant AND unrealizedPnLPercent > -2:
+  → reason = "stagnant"
+
+ELSE IF opportunity_delta > 30 AND is_stagnant AND unrealizedPnLPercent > 0:
+  → reason = "profitable_delta"
+
+IF reason:
   → SELL current position (market order, exit.trigger = "rebalance")
   → Bracket cancelled automatically by the Close Position operation
   →   (see state-schema.md: cancel bracket when exit.trigger NOT IN stopLoss/takeProfit/bracketSL/bracketTP)
   → BUY best alternative (limit order preferred)
-  → Log: "Rebalanced {FROM}→{TO}: stagnant {X}h, delta +{Y}"
-
-IF opportunity_delta > 60 AND unrealizedPnLPercent > -2:
-  → REBALANCE (even if not stagnant, urgent opportunity, exit.trigger = "rebalance")
+  → Log: "Rebalanced {FROM}→{TO}: {reason}, {X}h held, delta +{Y}"
 ```
 
 **Safeguards**:

@@ -96,7 +96,6 @@ Final position size = min(100%, base × multiplier)
 | Limit                      | Value        |
 |----------------------------|--------------|
 | Max Risk per Trade         | 2% Portfolio |
-| Max Simultaneous Positions | 3            |
 | Max Exposure per Asset     | 33% Capital  |
 
 ---
@@ -201,7 +200,7 @@ Signal aggregation determines trade execution:
 **Position Sizing Adjustments:**
 
 - Volatility: Low (<1× ATR) +10%, Moderate (1-2×) -10%, High (>2×) -50%
-- Exposure limits: Max 33% per asset, max 3 positions, max 2% risk per trade
+- Exposure limits: Max 33% per asset, max 2% risk per trade
 
 ---
 
@@ -696,10 +695,10 @@ Stored in `.claude/trading-state.json`
 │   5. Sentiment Analysis                                     │
 ├─────────────────────────────────────────────────────────────┤
 │ PHASE 2: MANAGE EXISTING POSITIONS (frees up capital)       │
-│   5.5 Strategy Re-evaluation                                │
-│   6. Check SL/TP/Trailing                                   │
-│   7. Rebalancing Check                                      │
-│   8. Capital Exhaustion Check                               │
+│   6. Strategy Re-evaluation                                 │
+│   7. Check SL/TP/Trailing                                   │
+│   8. Rebalancing Check                                      │
+│   9. Capital Exhaustion Check                               │
 ├─────────────────────────────────────────────────────────────┤
 │ PHASE 3: NEW ENTRIES (uses freed capital)                   │
 │  10. Signal Aggregation                                     │
@@ -710,7 +709,7 @@ Stored in `.claude/trading-state.json`
 ├─────────────────────────────────────────────────────────────┤
 │ PHASE 4: REPORT                                             │
 │  15. Output Report                                          │
-│  16. Sleep → Repeat                                         │
+│      → Sleep → Repeat                                       │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -780,7 +779,7 @@ Real-world examples demonstrating feature interactions:
 
 - Available capital: 30.00€
 - Strong signals for BTC (70%), ETH (65%), SOL (60%)
-- Max 3 positions, max 33% per asset
+- Max 33% exposure per asset
 
 **Decision Process**:
 
@@ -798,11 +797,10 @@ Real-world examples demonstrating feature interactions:
 
 3. **SOL**: Signal 60% → 75% allocation = 7.50€
    - Check exposure: 7.50€ / 30.00€ = 25% < 33% → ✓
-   - Check position limit: 3 positions total → At max
-   - **Skip** (max positions reached)
-   - Remaining: 10.00€
+   - Enter SOL: 7.50€
+   - Remaining: 2.50€
 
-**Result**: 3 positions opened (BTC 10€, ETH 10€, remaining 10€), exposure limits enforced
+**Result**: 3 positions opened (BTC 10€, ETH 10€, SOL 7.50€), 2.50€ remaining. Exposure limits enforced per-asset.
 
 ---
 
@@ -874,16 +872,16 @@ Real-world examples demonstrating feature interactions:
 - BTC-EUR Analysis
 - 15m: Strong BUY Signal (65%)
 - 1h: BULLISH (aligned)
-- 4h: BEARISH (conflict detected)
+- 6h: BEARISH (conflict detected)
 - Daily: BEARISH (conflict detected)
 
 **Multi-Timeframe Filter Applied**:
 
 1. Original Signal: 65% BUY
-2. Conflict Detection: 4h and daily show BEARISH
+2. Conflict Detection: 6h and daily show BEARISH
 3. Log: "BUY signal rejected: conflicts with higher timeframe trend"
-4. Log: "  Daily: bearish, 4h: bearish, 1h: bullish"
-5. Signal Reduction: 65% × 0.3 = 19.5% (70% reduction for 4h/daily conflict)
+4. Log: "  Daily: bearish, 6h: bearish, 1h: bullish"
+5. Adjusted Signal: 65% × 0.3 = 19.5% (70% reduction for 6h/daily conflict)
 6. Threshold Check: 19.5% < 40% (minimum for trade execution)
 
 **Result**: Trade SKIPPED due to higher timeframe trend conflict. Multi-Timeframe Alignment prevents counter-trend entries, avoiding trades against major market direction.
@@ -917,7 +915,7 @@ Real-world examples demonstrating feature interactions:
 
 ---
 
-## � References
+## 📚 References
 
 - [SKILL.md](../.claude/skills/coinbase-trading/SKILL.md) - Orchestrator and configuration
 - [session-start.md](../.claude/skills/coinbase-trading/phases/session-start.md) - HODL Safe setup and session flows
