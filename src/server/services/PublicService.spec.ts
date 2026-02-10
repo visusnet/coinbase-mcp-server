@@ -1,5 +1,5 @@
 import { describe, expect, it, jest, beforeEach } from '@jest/globals';
-import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
+import type { CoinbaseClient } from '@client/CoinbaseClient';
 import { mockResponse } from '@test/serviceMocks';
 import { Granularity } from './common.request';
 import { OrderSide } from './OrdersService.types';
@@ -7,18 +7,12 @@ import { PublicService } from './PublicService';
 
 describe('PublicService', () => {
   let service: PublicService;
-  let mockClient: {
-    request: jest.MockedFunction<CoinbaseAdvTradeClient['request']>;
-  };
+  let mockClient: { request: jest.Mock<CoinbaseClient['request']> };
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockClient = {
-      request: jest.fn<CoinbaseAdvTradeClient['request']>(),
-    };
-    service = new PublicService(
-      mockClient as unknown as CoinbaseAdvTradeClient,
-    );
+    mockClient = { request: jest.fn<CoinbaseClient['request']>() };
+    service = new PublicService(mockClient as unknown as CoinbaseClient);
   });
 
   describe('getServerTime', () => {

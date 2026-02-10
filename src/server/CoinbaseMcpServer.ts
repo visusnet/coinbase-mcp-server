@@ -5,8 +5,8 @@ import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import type { Express, Request, Response } from 'express';
 import { logger } from '../logger';
-import { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
-import { CoinbaseCredentials } from '@server/websocket/CoinbaseCredentials';
+import { CoinbaseClient } from '@client/CoinbaseClient';
+import { CoinbaseCredentials } from '@client/CoinbaseCredentials';
 import {
   AccountsService,
   OrdersService,
@@ -80,7 +80,7 @@ Read TOON by matching values to the field names in {brackets}.`;
 
 export class CoinbaseMcpServer {
   private readonly app: Express;
-  private readonly client: CoinbaseAdvTradeClient;
+  private readonly client: CoinbaseClient;
   private readonly accounts: AccountsService;
   private readonly orders: OrdersService;
   private readonly products: ProductsService;
@@ -101,7 +101,7 @@ export class CoinbaseMcpServer {
 
   constructor(apiKey: string, privateKey: string) {
     const credentials = new CoinbaseCredentials(apiKey, privateKey);
-    this.client = new CoinbaseAdvTradeClient(credentials);
+    this.client = new CoinbaseClient(credentials);
 
     // Initialize all services with the client
     this.accounts = new AccountsService(this.client);

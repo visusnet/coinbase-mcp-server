@@ -1,4 +1,4 @@
-import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
+import type { CoinbaseClient } from '@client/CoinbaseClient';
 import type {
   GetMarketSnapshotResponse,
   GetProductCandlesBatchResponse,
@@ -40,7 +40,7 @@ import type {
  * Delegates to SDK service and handles timestamp conversion.
  */
 export class ProductsService {
-  constructor(private readonly client: CoinbaseAdvTradeClient) {}
+  constructor(private readonly client: CoinbaseClient) {}
 
   public async listProducts(
     request?: ListProductsRequest,

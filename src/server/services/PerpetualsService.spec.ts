@@ -1,6 +1,6 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import { PerpetualsService } from './PerpetualsService';
-import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
+import type { CoinbaseClient } from '@client/CoinbaseClient';
 import type { z } from 'zod';
 import { mockResponse } from '@test/serviceMocks';
 import {
@@ -13,18 +13,12 @@ import {
 
 describe('PerpetualsService', () => {
   let service: PerpetualsService;
-  let mockClient: {
-    request: jest.MockedFunction<CoinbaseAdvTradeClient['request']>;
-  };
+  let mockClient: { request: jest.Mock<CoinbaseClient['request']> };
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockClient = {
-      request: jest.fn<CoinbaseAdvTradeClient['request']>(),
-    };
-    service = new PerpetualsService(
-      mockClient as unknown as CoinbaseAdvTradeClient,
-    );
+    mockClient = { request: jest.fn<CoinbaseClient['request']>() };
+    service = new PerpetualsService(mockClient as unknown as CoinbaseClient);
   });
 
   describe('listPositions', () => {

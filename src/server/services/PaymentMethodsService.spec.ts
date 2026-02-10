@@ -1,21 +1,17 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
-import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
+import type { CoinbaseClient } from '@client/CoinbaseClient';
 import { mockResponse } from '@test/serviceMocks';
 import { PaymentMethodsService } from './PaymentMethodsService';
 
 describe('PaymentMethodsService', () => {
   let service: PaymentMethodsService;
-  let mockClient: {
-    request: jest.MockedFunction<CoinbaseAdvTradeClient['request']>;
-  };
+  let mockClient: { request: jest.Mock<CoinbaseClient['request']> };
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockClient = {
-      request: jest.fn<CoinbaseAdvTradeClient['request']>(),
-    };
+    mockClient = { request: jest.fn<CoinbaseClient['request']>() };
     service = new PaymentMethodsService(
-      mockClient as unknown as CoinbaseAdvTradeClient,
+      mockClient as unknown as CoinbaseClient,
     );
   });
 

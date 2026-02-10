@@ -21,7 +21,7 @@ import type {
   Subscription,
   TickerCallback,
 } from './WebSocketPool.types';
-import type { CoinbaseCredentials } from './CoinbaseCredentials';
+import type { CoinbaseCredentials } from '@client/CoinbaseCredentials';
 
 /**
  * Generates a unique subscription ID.

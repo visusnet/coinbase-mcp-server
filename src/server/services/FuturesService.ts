@@ -1,4 +1,4 @@
-import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
+import type { CoinbaseClient } from '@client/CoinbaseClient';
 import type { GetFuturesPositionRequest } from './FuturesService.request';
 import {
   ListFuturesPositionsResponseSchema,
@@ -16,7 +16,7 @@ import {
  * Converts SDK responses with string numbers to our types with numeric values.
  */
 export class FuturesService {
-  constructor(private readonly client: CoinbaseAdvTradeClient) {}
+  constructor(private readonly client: CoinbaseClient) {}
 
   public async listPositions(): Promise<ListFuturesPositionsResponse> {
     const response = await this.client.request({

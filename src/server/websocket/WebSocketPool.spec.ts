@@ -14,7 +14,7 @@ jest.mock('../../logger', () => ({
 }));
 
 import { WebSocketPool } from './WebSocketPool';
-import type { CoinbaseCredentials } from './CoinbaseCredentials';
+import type { CoinbaseCredentials } from '@client/CoinbaseCredentials';
 
 /**
  * Creates a candles channel message in the format Coinbase sends.

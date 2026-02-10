@@ -185,9 +185,17 @@ const mockNewsService = {
 } as MockedService<NewsService>;
 
 export function mockServices(): void {
-  jest.mock('@coinbase-sample/advanced-trade-sdk-ts/dist/index.js', () => {
+  jest.mock('@client/CoinbaseClient', () => {
     return {
-      CoinbaseAdvTradeClient: jest.fn().mockImplementation(() => ({})),
+      CoinbaseClient: jest.fn().mockImplementation(() => ({
+        request: jest.fn(),
+      })),
+      HttpMethod: {
+        GET: 'GET',
+        POST: 'POST',
+        PUT: 'PUT',
+        DELETE: 'DELETE',
+      },
     };
   });
 
@@ -234,7 +242,7 @@ export function mockServices(): void {
     };
   });
 
-  jest.mock('@server/websocket/CoinbaseCredentials', () => {
+  jest.mock('@client/CoinbaseCredentials', () => {
     return {
       CoinbaseCredentials: jest.fn().mockImplementation(() => ({
         generateAuthHeaders: jest.fn().mockReturnValue({}),

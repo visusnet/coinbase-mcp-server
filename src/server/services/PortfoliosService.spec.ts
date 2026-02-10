@@ -1,24 +1,17 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
-import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
-import { Method } from '@coinbase-sample/core-ts';
+import { type CoinbaseClient, HttpMethod } from '@client/CoinbaseClient';
 import { mockResponse } from '@test/serviceMocks';
 import { PortfoliosService } from './PortfoliosService';
 import { FuturesPositionSide } from './PortfoliosService.response';
 
 describe('PortfoliosService', () => {
   let service: PortfoliosService;
-  let mockClient: {
-    request: jest.MockedFunction<CoinbaseAdvTradeClient['request']>;
-  };
+  let mockClient: { request: jest.Mock<CoinbaseClient['request']> };
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockClient = {
-      request: jest.fn<CoinbaseAdvTradeClient['request']>(),
-    };
-    service = new PortfoliosService(
-      mockClient as unknown as CoinbaseAdvTradeClient,
-    );
+    mockClient = { request: jest.fn<CoinbaseClient['request']>() };
+    service = new PortfoliosService(mockClient as unknown as CoinbaseClient);
   });
 
   describe('listPortfolios', () => {
@@ -67,7 +60,7 @@ describe('PortfoliosService', () => {
 
       expect(mockClient.request).toHaveBeenCalledWith({
         url: 'portfolios',
-        method: Method.POST,
+        method: HttpMethod.POST,
         bodyParams: { name: 'My Portfolio' },
       });
       expect(result.portfolio?.uuid).toBe('new-uuid');
@@ -270,7 +263,7 @@ describe('PortfoliosService', () => {
 
       expect(mockClient.request).toHaveBeenCalledWith({
         url: 'portfolios/uuid-123',
-        method: Method.PUT,
+        method: HttpMethod.PUT,
         bodyParams: { portfolioUuid: undefined, name: 'New Name' },
       });
       expect(result.portfolio?.uuid).toBe('uuid-123');
@@ -302,7 +295,7 @@ describe('PortfoliosService', () => {
 
       expect(mockClient.request).toHaveBeenCalledWith({
         url: 'portfolios/uuid-123',
-        method: Method.DELETE,
+        method: HttpMethod.DELETE,
       });
       expect(result).toEqual(responseData);
     });
@@ -328,7 +321,7 @@ describe('PortfoliosService', () => {
 
       expect(mockClient.request).toHaveBeenCalledWith({
         url: 'portfolios/move_funds',
-        method: Method.POST,
+        method: HttpMethod.POST,
         bodyParams: {
           funds: {
             value: '100.5',
@@ -355,7 +348,7 @@ describe('PortfoliosService', () => {
 
       expect(mockClient.request).toHaveBeenCalledWith({
         url: 'portfolios/move_funds',
-        method: Method.POST,
+        method: HttpMethod.POST,
         bodyParams: {
           funds: {
             value: '1000',
@@ -381,7 +374,7 @@ describe('PortfoliosService', () => {
 
       expect(mockClient.request).toHaveBeenCalledWith({
         url: 'portfolios/move_funds',
-        method: Method.POST,
+        method: HttpMethod.POST,
         bodyParams: {
           funds: {
             value: '0.00000001',

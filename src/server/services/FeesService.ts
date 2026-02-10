@@ -1,4 +1,4 @@
-import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
+import type { CoinbaseClient } from '@client/CoinbaseClient';
 import type { GetTransactionsSummaryRequest } from './FeesService.request';
 import {
   GetTransactionsSummaryResponseSchema,
@@ -10,7 +10,7 @@ import {
  * Converts SDK response types to our types with number fields.
  */
 export class FeesService {
-  constructor(private readonly client: CoinbaseAdvTradeClient) {}
+  constructor(private readonly client: CoinbaseClient) {}
 
   public async getTransactionSummary(
     request: GetTransactionsSummaryRequest,

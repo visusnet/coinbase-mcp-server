@@ -4,6 +4,7 @@ export default {
   extensionsToTreatAsEsm: ['.ts'],
   moduleNameMapper: {
     '^(\\.{1,2}/.*)\\.js$': '$1',
+    '^@client/(.*)$': '<rootDir>/src/client/$1',
     '^@server/(.*)$': '<rootDir>/src/server/$1',
     '^@test/(.*)$': '<rootDir>/src/test/$1',
   },

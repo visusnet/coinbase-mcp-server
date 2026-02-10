@@ -1,4 +1,4 @@
-import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
+import type { CoinbaseClient } from '@client/CoinbaseClient';
 import type {
   ListPerpetualsPositionsRequest,
   GetPerpetualsPositionRequest,
@@ -23,7 +23,7 @@ import {
  * Converts SDK responses with string numbers to our types with numeric values.
  */
 export class PerpetualsService {
-  constructor(private readonly client: CoinbaseAdvTradeClient) {}
+  constructor(private readonly client: CoinbaseClient) {}
 
   public async listPositions(
     request: ListPerpetualsPositionsRequest,

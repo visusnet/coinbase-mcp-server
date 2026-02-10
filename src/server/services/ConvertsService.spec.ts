@@ -1,24 +1,17 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
-import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
-import { Method } from '@coinbase-sample/core-ts';
+import { type CoinbaseClient, HttpMethod } from '@client/CoinbaseClient';
 import { mockResponse } from '@test/serviceMocks';
 import { ConvertsService } from './ConvertsService';
 import { TradeStatus } from './ConvertsService.types';
 
 describe('ConvertsService', () => {
   let service: ConvertsService;
-  let mockClient: {
-    request: jest.MockedFunction<CoinbaseAdvTradeClient['request']>;
-  };
+  let mockClient: { request: jest.Mock<CoinbaseClient['request']> };
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockClient = {
-      request: jest.fn<CoinbaseAdvTradeClient['request']>(),
-    };
-    service = new ConvertsService(
-      mockClient as unknown as CoinbaseAdvTradeClient,
-    );
+    mockClient = { request: jest.fn<CoinbaseClient['request']>() };
+    service = new ConvertsService(mockClient as unknown as CoinbaseClient);
   });
 
   describe('createConvertQuote', () => {
@@ -42,7 +35,7 @@ describe('ConvertsService', () => {
 
       expect(mockClient.request).toHaveBeenCalledWith({
         url: 'convert/quote',
-        method: Method.POST,
+        method: HttpMethod.POST,
         bodyParams: {
           fromAccount: 'account-1',
           toAccount: 'account-2',
@@ -80,7 +73,7 @@ describe('ConvertsService', () => {
 
       expect(mockClient.request).toHaveBeenCalledWith({
         url: 'convert/trade/trade-123',
-        method: Method.POST,
+        method: HttpMethod.POST,
         bodyParams: {
           tradeId: 'trade-123',
           fromAccount: 'account-1',

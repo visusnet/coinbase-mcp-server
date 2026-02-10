@@ -1,5 +1,4 @@
-import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
-import { Method } from '@coinbase-sample/core-ts';
+import { type CoinbaseClient, HttpMethod } from '@client/CoinbaseClient';
 import type {
   CreateOrderRequest,
   ListOrdersRequest,
@@ -40,7 +39,7 @@ import {
  * Converts SDK response strings to numbers.
  */
 export class OrdersService {
-  constructor(private readonly client: CoinbaseAdvTradeClient) {}
+  constructor(private readonly client: CoinbaseClient) {}
 
   public async listOrders(
     request?: ListOrdersRequest,
@@ -64,7 +63,7 @@ export class OrdersService {
   ): Promise<CreateOrderResponse> {
     const response = await this.client.request({
       url: 'orders',
-      method: Method.POST,
+      method: HttpMethod.POST,
       bodyParams: request,
     });
     return CreateOrderResponseSchema.parse(response.data);
@@ -75,7 +74,7 @@ export class OrdersService {
   ): Promise<CancelOrdersResponse> {
     const response = await this.client.request({
       url: 'orders/batch_cancel',
-      method: Method.POST,
+      method: HttpMethod.POST,
       bodyParams: request,
     });
     return CancelOrdersResponseSchema.parse(response.data);
@@ -96,7 +95,7 @@ export class OrdersService {
   ): Promise<EditOrderResponse> {
     const response = await this.client.request({
       url: 'orders/edit',
-      method: Method.POST,
+      method: HttpMethod.POST,
       bodyParams: request,
     });
     return EditOrderResponseSchema.parse(response.data);
@@ -107,7 +106,7 @@ export class OrdersService {
   ): Promise<PreviewEditOrderResponse> {
     const response = await this.client.request({
       url: 'orders/edit_preview',
-      method: Method.POST,
+      method: HttpMethod.POST,
       bodyParams: request,
     });
     return PreviewEditOrderResponseSchema.parse(response.data);
@@ -118,7 +117,7 @@ export class OrdersService {
   ): Promise<PreviewOrderResponse> {
     const response = await this.client.request({
       url: 'orders/preview',
-      method: Method.POST,
+      method: HttpMethod.POST,
       bodyParams: request,
     });
     return PreviewOrderResponseSchema.parse(response.data);
@@ -129,7 +128,7 @@ export class OrdersService {
   ): Promise<ClosePositionResponse> {
     const response = await this.client.request({
       url: 'orders/close_position',
-      method: Method.POST,
+      method: HttpMethod.POST,
       bodyParams: request,
     });
     return ClosePositionResponseSchema.parse(response.data);

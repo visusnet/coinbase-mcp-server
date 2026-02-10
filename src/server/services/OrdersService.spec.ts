@@ -1,24 +1,17 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
-import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
-import { Method } from '@coinbase-sample/core-ts';
+import { type CoinbaseClient, HttpMethod } from '@client/CoinbaseClient';
 import { mockResponse } from '@test/serviceMocks';
 import { OrdersService } from './OrdersService';
 import { OrderSide } from './OrdersService.types';
 
 describe('OrdersService', () => {
   let service: OrdersService;
-  let mockClient: {
-    request: jest.MockedFunction<CoinbaseAdvTradeClient['request']>;
-  };
+  let mockClient: { request: jest.Mock<CoinbaseClient['request']> };
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockClient = {
-      request: jest.fn<CoinbaseAdvTradeClient['request']>(),
-    };
-    service = new OrdersService(
-      mockClient as unknown as CoinbaseAdvTradeClient,
-    );
+    mockClient = { request: jest.fn<CoinbaseClient['request']>() };
+    service = new OrdersService(mockClient as unknown as CoinbaseClient);
   });
 
   describe('createOrder', () => {
@@ -41,7 +34,7 @@ describe('OrdersService', () => {
 
       expect(mockClient.request).toHaveBeenCalledWith({
         url: 'orders',
-        method: Method.POST,
+        method: HttpMethod.POST,
         bodyParams: {
           clientOrderId: 'test-123',
           productId: 'BTC-USD',
@@ -74,7 +67,7 @@ describe('OrdersService', () => {
 
       expect(mockClient.request).toHaveBeenCalledWith({
         url: 'orders',
-        method: Method.POST,
+        method: HttpMethod.POST,
         bodyParams: {
           clientOrderId: 'test-456',
           productId: 'ETH-USD',
@@ -108,7 +101,7 @@ describe('OrdersService', () => {
 
       expect(mockClient.request).toHaveBeenCalledWith({
         url: 'orders',
-        method: Method.POST,
+        method: HttpMethod.POST,
         bodyParams: {
           clientOrderId: 'test-789',
           productId: 'BTC-USD',
@@ -142,7 +135,7 @@ describe('OrdersService', () => {
 
       expect(mockClient.request).toHaveBeenCalledWith({
         url: 'orders',
-        method: Method.POST,
+        method: HttpMethod.POST,
         bodyParams: {
           clientOrderId: 'test-bracket',
           productId: 'BTC-USD',
@@ -177,7 +170,7 @@ describe('OrdersService', () => {
 
       expect(mockClient.request).toHaveBeenCalledWith({
         url: 'orders',
-        method: Method.POST,
+        method: HttpMethod.POST,
         bodyParams: {
           clientOrderId: 'test-gtd',
           productId: 'BTC-USD',
@@ -211,7 +204,7 @@ describe('OrdersService', () => {
 
       expect(mockClient.request).toHaveBeenCalledWith({
         url: 'orders',
-        method: Method.POST,
+        method: HttpMethod.POST,
         bodyParams: {
           clientOrderId: 'test-fok',
           productId: 'BTC-USD',
@@ -243,7 +236,7 @@ describe('OrdersService', () => {
 
       expect(mockClient.request).toHaveBeenCalledWith({
         url: 'orders',
-        method: Method.POST,
+        method: HttpMethod.POST,
         bodyParams: {
           clientOrderId: 'test-sor',
           productId: 'BTC-USD',
@@ -277,7 +270,7 @@ describe('OrdersService', () => {
 
       expect(mockClient.request).toHaveBeenCalledWith({
         url: 'orders',
-        method: Method.POST,
+        method: HttpMethod.POST,
         bodyParams: {
           clientOrderId: 'test-stop-gtd',
           productId: 'BTC-USD',
@@ -313,7 +306,7 @@ describe('OrdersService', () => {
 
       expect(mockClient.request).toHaveBeenCalledWith({
         url: 'orders',
-        method: Method.POST,
+        method: HttpMethod.POST,
         bodyParams: {
           clientOrderId: 'test-bracket-gtd',
           productId: 'BTC-USD',
@@ -350,7 +343,7 @@ describe('OrdersService', () => {
 
       expect(mockClient.request).toHaveBeenCalledWith({
         url: 'orders',
-        method: Method.POST,
+        method: HttpMethod.POST,
         bodyParams: {
           clientOrderId: 'test-attached-market',
           productId: 'BTC-EUR',
@@ -393,7 +386,7 @@ describe('OrdersService', () => {
 
       expect(mockClient.request).toHaveBeenCalledWith({
         url: 'orders',
-        method: Method.POST,
+        method: HttpMethod.POST,
         bodyParams: {
           clientOrderId: 'test-attached-limit',
           productId: 'BTC-EUR',
@@ -430,7 +423,7 @@ describe('OrdersService', () => {
 
       expect(mockClient.request).toHaveBeenCalledWith({
         url: 'orders/edit',
-        method: Method.POST,
+        method: HttpMethod.POST,
         bodyParams: {
           orderId: 'order-123',
           price: '50000.5',
@@ -456,7 +449,7 @@ describe('OrdersService', () => {
 
       expect(mockClient.request).toHaveBeenCalledWith({
         url: 'orders/edit',
-        method: Method.POST,
+        method: HttpMethod.POST,
         bodyParams: {
           orderId: 'order-123',
           price: '50000.5',
@@ -483,7 +476,7 @@ describe('OrdersService', () => {
 
       expect(mockClient.request).toHaveBeenCalledWith({
         url: 'orders/edit',
-        method: Method.POST,
+        method: HttpMethod.POST,
         bodyParams: {
           orderId: 'order-123',
           price: '50000.5',
@@ -505,7 +498,7 @@ describe('OrdersService', () => {
 
       expect(mockClient.request).toHaveBeenCalledWith({
         url: 'orders/edit',
-        method: Method.POST,
+        method: HttpMethod.POST,
         bodyParams: {
           orderId: 'order-123',
           price: '50000.5',
@@ -533,7 +526,7 @@ describe('OrdersService', () => {
 
       expect(mockClient.request).toHaveBeenCalledWith({
         url: 'orders/edit_preview',
-        method: Method.POST,
+        method: HttpMethod.POST,
         bodyParams: {
           orderId: 'order-456',
           price: '45000',
@@ -564,7 +557,7 @@ describe('OrdersService', () => {
 
       expect(mockClient.request).toHaveBeenCalledWith({
         url: 'orders/edit_preview',
-        method: Method.POST,
+        method: HttpMethod.POST,
         bodyParams: {
           orderId: 'order-456',
           price: '45000',
@@ -592,7 +585,7 @@ describe('OrdersService', () => {
 
       expect(mockClient.request).toHaveBeenCalledWith({
         url: 'orders/close_position',
-        method: Method.POST,
+        method: HttpMethod.POST,
         bodyParams: {
           clientOrderId: 'close-123',
           productId: 'BTC-USD',
@@ -611,7 +604,7 @@ describe('OrdersService', () => {
 
       expect(mockClient.request).toHaveBeenCalledWith({
         url: 'orders/close_position',
-        method: Method.POST,
+        method: HttpMethod.POST,
         bodyParams: {
           clientOrderId: 'close-456',
           productId: 'ETH-USD',
@@ -650,7 +643,7 @@ describe('OrdersService', () => {
 
       expect(mockClient.request).toHaveBeenCalledWith({
         url: 'orders/preview',
-        method: Method.POST,
+        method: HttpMethod.POST,
         bodyParams: {
           productId: 'BTC-USD',
           side: OrderSide.Buy,
@@ -702,7 +695,7 @@ describe('OrdersService', () => {
 
       expect(mockClient.request).toHaveBeenCalledWith({
         url: 'orders/preview',
-        method: Method.POST,
+        method: HttpMethod.POST,
         bodyParams: {
           productId: 'BTC-EUR',
           side: OrderSide.Buy,
@@ -830,7 +823,7 @@ describe('OrdersService', () => {
 
       expect(mockClient.request).toHaveBeenCalledWith({
         url: 'orders/batch_cancel',
-        method: Method.POST,
+        method: HttpMethod.POST,
         bodyParams: {
           orderIds: ['123', '456'],
         },

@@ -1,5 +1,4 @@
-import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
-import { Method } from '@coinbase-sample/core-ts';
+import { type CoinbaseClient, HttpMethod } from '@client/CoinbaseClient';
 import type {
   ListPortfoliosRequest,
   CreatePortfolioRequest,
@@ -30,7 +29,7 @@ import {
  * Converts number types to strings for SDK calls and strings to numbers for responses.
  */
 export class PortfoliosService {
-  constructor(private readonly client: CoinbaseAdvTradeClient) {}
+  constructor(private readonly client: CoinbaseClient) {}
 
   public async listPortfolios(
     request?: ListPortfoliosRequest,
@@ -47,7 +46,7 @@ export class PortfoliosService {
   ): Promise<CreatePortfolioResponse> {
     const response = await this.client.request({
       url: 'portfolios',
-      method: Method.POST,
+      method: HttpMethod.POST,
       bodyParams: request,
     });
     return CreatePortfolioResponseSchema.parse(response.data);
@@ -68,7 +67,7 @@ export class PortfoliosService {
   ): Promise<EditPortfolioResponse> {
     const response = await this.client.request({
       url: `portfolios/${request.portfolioUuid}`,
-      method: Method.PUT,
+      method: HttpMethod.PUT,
       bodyParams: { ...request, portfolioUuid: undefined },
     });
     return EditPortfolioResponseSchema.parse(response.data);
@@ -79,7 +78,7 @@ export class PortfoliosService {
   ): Promise<DeletePortfolioResponse> {
     const response = await this.client.request({
       url: `portfolios/${request.portfolioUuid}`,
-      method: Method.DELETE,
+      method: HttpMethod.DELETE,
     });
     return DeletePortfolioResponseSchema.parse(response.data);
   }
@@ -89,7 +88,7 @@ export class PortfoliosService {
   ): Promise<MovePortfolioFundsResponse> {
     const response = await this.client.request({
       url: 'portfolios/move_funds',
-      method: Method.POST,
+      method: HttpMethod.POST,
       bodyParams: request,
     });
     return MovePortfolioFundsResponseSchema.parse(response.data);

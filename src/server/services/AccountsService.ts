@@ -1,4 +1,4 @@
-import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
+import type { CoinbaseClient } from '@client/CoinbaseClient';
 import type {
   ListAccountsRequest,
   GetAccountRequest,
@@ -17,7 +17,7 @@ import {
  * Converts response types from strings to numbers.
  */
 export class AccountsService {
-  constructor(private readonly client: CoinbaseAdvTradeClient) {}
+  constructor(private readonly client: CoinbaseClient) {}
 
   public async listAccounts(
     request?: ListAccountsRequest,

@@ -1,4 +1,4 @@
-import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
+import type { CoinbaseClient } from '@client/CoinbaseClient';
 import {
   GetAPIKeyPermissionsResponseSchema,
   type GetAPIKeyPermissionsResponse,
@@ -9,7 +9,7 @@ import {
  * Delegates to the SDK service with no conversion needed.
  */
 export class DataService {
-  constructor(private readonly client: CoinbaseAdvTradeClient) {}
+  constructor(private readonly client: CoinbaseClient) {}
 
   public async getAPIKeyPermissions(): Promise<GetAPIKeyPermissionsResponse> {
     const response = await this.client.request({

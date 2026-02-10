@@ -1,5 +1,4 @@
-import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
-import { Method } from '@coinbase-sample/core-ts';
+import { type CoinbaseClient, HttpMethod } from '@client/CoinbaseClient';
 import type {
   CreateConvertQuoteRequest,
   CommitConvertTradeRequest,
@@ -22,14 +21,14 @@ import {
  * Converts SDK response strings to numbers.
  */
 export class ConvertsService {
-  constructor(private readonly client: CoinbaseAdvTradeClient) {}
+  constructor(private readonly client: CoinbaseClient) {}
 
   public async createConvertQuote(
     request: CreateConvertQuoteRequest,
   ): Promise<CreateConvertQuoteResponse> {
     const response = await this.client.request({
       url: 'convert/quote',
-      method: Method.POST,
+      method: HttpMethod.POST,
       bodyParams: request,
     });
     return CreateConvertQuoteResponseSchema.parse(response.data);
@@ -40,7 +39,7 @@ export class ConvertsService {
   ): Promise<CommitConvertTradeResponse> {
     const response = await this.client.request({
       url: `convert/trade/${request.tradeId}`,
-      method: Method.POST,
+      method: HttpMethod.POST,
       bodyParams: request,
     });
     return CommitConvertTradeResponseSchema.parse(response.data);

@@ -1,4 +1,4 @@
-import type { CoinbaseAdvTradeClient } from '@coinbase-sample/advanced-trade-sdk-ts/dist/index.js';
+import type { CoinbaseClient } from '@client/CoinbaseClient';
 import type {
   GetPublicProductCandlesRequest,
   GetPublicProductRequest,
@@ -28,7 +28,7 @@ import {
  * Converts SDK response types to our types with number fields.
  */
 export class PublicService {
-  constructor(private readonly client: CoinbaseAdvTradeClient) {}
+  constructor(private readonly client: CoinbaseClient) {}
 
   public async getServerTime(): Promise<GetServerTimeResponse> {
     const response = await this.client.request({
