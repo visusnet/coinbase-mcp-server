@@ -147,6 +147,38 @@ describe('PublicService', () => {
       });
       expect(result.products).toEqual([]);
     });
+
+    it('should filter out products with empty price (newly listed, not yet tradeable)', async () => {
+      const validProduct = {
+        productId: 'ETH-USD',
+        price: '3000',
+        pricePercentageChange24h: '2.0',
+        volume24h: '500000',
+        volumePercentageChange24h: '3.0',
+        baseIncrement: '0.0001',
+        quoteIncrement: '0.01',
+        quoteMinSize: '1',
+        quoteMaxSize: '5000000',
+        baseMinSize: '0.001',
+        baseMaxSize: '5000',
+      };
+      const emptyPriceProduct = {
+        ...validProduct,
+        productId: 'RAVE-USD',
+        price: '',
+      };
+      mockClient.request.mockResolvedValue(
+        mockResponse({
+          products: [validProduct, emptyPriceProduct],
+          numProducts: 2,
+        }),
+      );
+
+      const result = await service.listProducts();
+
+      expect(result.products).toHaveLength(1);
+      expect(result.products?.[0].productId).toBe('ETH-USD');
+    });
   });
 
   describe('getProductBook', () => {

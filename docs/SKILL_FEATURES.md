@@ -710,7 +710,12 @@ Stored in `.claude/trading-state.json`
 ├─────────────────────────────────────────────────────────────┤
 │ PHASE 4: REPORT                                             │
 │  15. Output Report                                          │
-│      → Sleep → Repeat                                       │
+├─────────────────────────────────────────────────────────────┤
+│ PHASE 5: RETROSPECTIVE & ADAPTATION                         │
+│  16. Review                                                 │
+│  17. Adapt                                                  │
+│  18. Document                                               │
+│      → Repeat (see Autonomous Loop Mode)                    │
 └─────────────────────────────────────────────────────────────┘
 ```
 

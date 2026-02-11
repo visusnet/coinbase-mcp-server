@@ -6,7 +6,7 @@ import type {
   GetBestBidAskResponse,
   GetProductBookResponse,
 } from './ProductsService.response';
-import type { Product } from './common.response';
+import { ProductListSchema, type Product } from './common.response';
 import { ProductsService } from './ProductsService';
 import { ProductType } from './common.request';
 
@@ -79,6 +79,38 @@ describe('ProductsService', () => {
       // Verify number conversion happened
       expect(result.products?.[0].price).toBe(50000);
       expect(result.products?.[0].volume24h).toBe(1000000);
+    });
+
+    it('listProducts should filter out products with empty price (newly listed, not yet tradeable)', async () => {
+      const validProduct = {
+        productId: 'BTC-USD',
+        price: '50000',
+        pricePercentageChange24h: '2.5',
+        volume24h: '1000000',
+        volumePercentageChange24h: '5.0',
+        baseIncrement: '0.00000001',
+        quoteIncrement: '0.01',
+        quoteMinSize: '1',
+        quoteMaxSize: '10000000',
+        baseMinSize: '0.0001',
+        baseMaxSize: '10000',
+        productType: ProductType.Spot,
+      };
+      const emptyPriceProduct = {
+        ...validProduct,
+        productId: 'DEEP-USD',
+        price: '',
+      };
+      const mockApiResponse = {
+        products: [validProduct, emptyPriceProduct],
+        numProducts: '2',
+      };
+      mockClient.request.mockResolvedValue(mockResponse(mockApiResponse));
+
+      const result = await service.listProducts();
+
+      expect(result.products).toHaveLength(1);
+      expect(result.products?.[0].productId).toBe('BTC-USD');
     });
 
     it('getProduct should convert SDK response numbers', async () => {
@@ -938,6 +970,14 @@ describe('ProductsService', () => {
       expect(result.errors['BTC-EUR']).toBe('String error message');
       expect(Object.keys(result.productCandlesByProductId)).toHaveLength(0);
       expect(result.candleCount).toBe(0);
+    });
+  });
+
+  describe('ProductListSchema', () => {
+    it('should pass through non-array values for downstream validation', () => {
+      const result = ProductListSchema.safeParse(undefined);
+
+      expect(result.success).toBe(false);
     });
   });
 });

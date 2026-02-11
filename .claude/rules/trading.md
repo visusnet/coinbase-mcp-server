@@ -50,7 +50,7 @@ paths:
 
 After context compaction (auto or manual), you MUST re-read these files before continuing to trade:
 
-1. `.claude/skills/coinbase-trading/SKILL.md` — Your complete workflow (4 phases), order types, risk management, crash playbook
+1. `.claude/skills/coinbase-trading/SKILL.md` — Your complete workflow (5 phases), order types, risk management, crash playbook
 2. `.claude/skills/coinbase-trading/strategies.md` — Signal scoring, strategy configs, false breakout rules
 3. `.claude/trading-state.json` — Current positions, budget, trade history
 

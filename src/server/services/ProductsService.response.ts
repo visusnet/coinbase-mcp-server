@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { stringToNumber } from './schema.helpers';
 import {
   ProductSchema,
+  ProductListSchema,
   CandleSchema,
   PriceBookSchema,
   HistoricalMarketTradeSchema,
@@ -16,7 +17,7 @@ import {
  */
 export const ListProductsResponseSchema = z
   .object({
-    products: z.array(ProductSchema).optional().describe('List of products'),
+    products: ProductListSchema.optional(),
     numProducts: stringToNumber.describe('Total number of products'),
   })
   .describe('Response containing a list of products');

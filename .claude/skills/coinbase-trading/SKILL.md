@@ -199,6 +199,11 @@ On first cycle only, determine whether to start fresh or resume.
 ├─────────────────────────────────────────────────────────────┤
 │ PHASE 4: REPORT                                             │
 │  15. Output Report                                          │
+├─────────────────────────────────────────────────────────────┤
+│ PHASE 5: RETROSPECTIVE & ADAPTATION                         │
+│  16. Review                                                 │
+│  17. Adapt                                                  │
+│  18. Document                                               │
 │      → Repeat (see Autonomous Loop Mode)                    │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -230,7 +235,7 @@ results = analyze_technical_indicators_batch(
     candleCount: 100,
     indicators: ["rsi", "macd", "adx", "vwap", "bollinger_bands", "stochastic"]
   })),
-  format: "toon"
+  format: "json"
 )
 ```
 
@@ -478,6 +483,14 @@ Output a structured, compact report. See [output-format.md](reference/output-for
 - Example output
 - Formatting notes (markdown tables, indicator separators)
 
+## Phase 5: Retrospective & Adaptation (Steps 16-18)
+
+See [phase-retrospective.md](phases/phase-retrospective.md) for the complete specification including:
+
+- Step 16: Review — compare expectations vs. outcomes using MCP data
+- Step 17: Adapt — formulate specific parameter hints for future cycles
+- Step 18: Document — update analysis/retrospective.md (Current Beliefs + Log)
+
 ## Important Rules
 
 1. **NEVER move funds from the HODL Safe to the Default portfolio**
@@ -515,61 +528,7 @@ After each trading cycle:
    - `status: "timeout"` → Perform normal analysis
 4. **Start over**: Begin again at step 1 (check portfolio status)
 
-**Example: Event-Driven Monitoring (position with attached bracket)**
-
-```
-// After analysis, with BTC position open (has attached TP/SL bracket on Coinbase)
-// Entry @ 95,000€, ATR(14) ≈ 2.7%
-// Bracket: SL @ 87,300€ (8% wide, on Coinbase), TP @ 107,800€ (13.5% wide, on Coinbase)
-// Soft: SL @ 91,150€ (4.05% = ATR% × 1.5), TP @ 101,400€ (6.75% = ATR% × 2.5)
-// Monitor for soft SL/TP + trailing stop activation
-
-response = wait_for_market_event({
-  subscriptions: [{
-    productId: "BTC-EUR",
-    conditions: [
-      { field: "price", operator: "lte", value: 91150 },   // Soft SL (4.05% = ATR% × 1.5)
-      { field: "price", operator: "gte", value: 97850 }    // Trailing stop activation (3% profit)
-    ]
-  }],
-  timeout: 55
-})
-
-IF response.status == "triggered":
-  IF price <= 91150:
-    → Execute soft stop-loss (market order)
-  ELSE:
-    → Activate trailing stop logic
-ELSE:
-  → Perform normal analysis cycle (strategy re-eval, recalc SL/TP if >24h)
-```
-
-**Example: Event-Driven SL/TP Monitoring (position without bracket)**
-
-```
-// Stop-limit fill or legacy position — no attached bracket, bot manages SL/TP
-// Entry @ 95,000€, SL @ 91,200€, TP @ 98,800€
-
-response = wait_for_market_event({
-  subscriptions: [{
-    productId: "BTC-EUR",
-    conditions: [
-      { field: "price", operator: "lte", value: 91200 },  // SL
-      { field: "price", operator: "gte", value: 98800 }   // TP
-    ],
-    logic: "any"
-  }],
-  timeout: 55
-})
-
-IF response.status == "triggered":
-  IF response.triggeredConditions[0].operator == "lte":
-    → Execute STOP-LOSS (Market Order)
-  ELSE:
-    → Execute TAKE-PROFIT (Limit Order)
-ELSE:
-  → Perform normal analysis cycle
-```
+Read("reference/monitoring.md") for detailed examples, benefits and best practices on event-driven monitoring.
 
 **Fallback to sleep (when no position or signal):**
 
@@ -578,15 +537,6 @@ ELSE:
 - `interval=30m` → `sleep 1800`
 - `interval=1h` → `sleep 3600`
 - `interval=60s` → `sleep 60`
-
-**Benefits of Event-Driven Monitoring:**
-
-| Aspect | Sleep-Polling (15min) | Event-Driven |
-|--------|----------------------|--------------|
-| SL/TP Detection | Up to 15 minutes late | Within seconds |
-| Token Usage | Higher (frequent analysis) | Lower (waits for events) |
-| API Calls | Every interval | Only on triggers |
-| Reaction Time | Interval-dependent | Near-instant |
 
 The agent runs indefinitely until the user stops it with Ctrl+C.
 
@@ -608,21 +558,23 @@ Track `session.cycleCount` in trading-state.json. Increment at start of each cyc
 When cycleCount % 5 === 0:
 1. Re-read THIS file (SKILL.md) from the beginning
 2. If positions exist: Re-read phases/phase-manage.md
-3. Log: "Re-anchor at cycle {N}"
-4. Self-check: Compare recent behavior against the workflow steps
-5. Note any drift: "Correction: was {doing X}, should be {doing Y}"
+3. Re-read analysis/retrospective.md (Current Beliefs section)
+4. Log: "Re-anchor at cycle {N}"
+5. Self-check: Compare recent behavior against the workflow steps
+6. Note any drift: "Correction: was {doing X}, should be {doing Y}"
 
 ### Post-Compaction Re-Anchor
 After every context compaction (you'll notice prior messages are summarized):
 1. Re-read THIS file (SKILL.md) immediately
 2. Re-read trading-state.json to restore full state awareness
 3. Re-read the relevant phase file for any active work
-4. Log: "Post-compaction re-anchor"
-5. Reconcile: Did the compaction summary lose critical details?
+4. Re-read analysis/retrospective.md (Current Beliefs section)
+5. Log: "Post-compaction re-anchor"
+6. Reconcile: Did the compaction summary lose critical details?
 
 ### Re-Anchor Self-Check Questions
 After re-reading, verify:
-- Am I following the 4-phase workflow in order?
+- Am I following the 5-phase workflow in order?
 - Am I updating state after every action?
 - Am I using the correct ATR formulas? (TP = max(2.5%, ATR% × 2.5), SL = clamp(ATR% × 1.5, 2.5%, 10%))
 - Am I checking ADX > 20 before entries?
@@ -633,3 +585,4 @@ After re-reading, verify:
 - Am I re-evaluating strategy per position each cycle?
 - Am I using the correct BRACKET formulas? (SL = clamp(ATR% × 3, 8%, 12%), TP = strategy-dependent)
 - Am I using dual-pass screening? (trend lens + mean-reversion lens)
+- Am I doing a retrospective after every cycle and writing insights to analysis/retrospective.md?

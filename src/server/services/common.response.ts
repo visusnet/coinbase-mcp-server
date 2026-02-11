@@ -164,3 +164,20 @@ export const ProductSchema = z
   .describe('Trading product with market data');
 
 export type Product = z.output<typeof ProductSchema>;
+
+/**
+ * Array of products, filtering out products with missing price data.
+ * Some newly listed products on Coinbase return empty price strings before trading begins.
+ */
+export const ProductListSchema = z
+  .preprocess(
+    (val) =>
+      Array.isArray(val)
+        ? val.filter(
+            (p: Record<string, unknown>) =>
+              p.price !== undefined && p.price !== '',
+          )
+        : val,
+    z.array(ProductSchema),
+  )
+  .describe('List of products');
