@@ -37,6 +37,25 @@ const ConditionResultSchema = z
 export type ConditionResult = z.output<typeof ConditionResultSchema>;
 
 // =============================================================================
+// Subscription Result Schema
+// =============================================================================
+
+/**
+ * Result of evaluating a single subscription's conditions.
+ */
+const SubscriptionResultSchema = z
+  .object({
+    productId: z.string().describe('Product ID monitored'),
+    triggered: z.boolean().describe('Whether this subscription was triggered'),
+    conditions: z
+      .array(ConditionResultSchema)
+      .describe('All conditions with their evaluation results'),
+  })
+  .describe('Result of evaluating a single subscription');
+
+export type SubscriptionResult = z.output<typeof SubscriptionResultSchema>;
+
+// =============================================================================
 // Response Schemas
 // =============================================================================
 
@@ -46,10 +65,11 @@ export type ConditionResult = z.output<typeof ConditionResultSchema>;
 const MarketEventTriggeredResponseSchema = z
   .object({
     status: z.literal('triggered').describe('Event was triggered'),
-    productId: z.string().describe('Product ID that triggered'),
-    conditions: z
-      .array(ConditionResultSchema)
-      .describe('All conditions with their results'),
+    subscriptions: z
+      .array(SubscriptionResultSchema)
+      .describe(
+        'All subscriptions with their evaluation results. Multiple subscriptions can have triggered=true.',
+      ),
     timestamp: z.string().describe('Event timestamp'),
   })
   .describe('Response when market conditions are met');

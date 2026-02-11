@@ -8,4 +8,5 @@ external_docs/
 .claude/trading-state.json
 plan/
 docs/memory.md
-analaysis/
+docs/feature-requests
+analysis/

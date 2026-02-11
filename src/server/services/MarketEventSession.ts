@@ -9,7 +9,10 @@ import {
   type IndicatorCondition,
   type WaitForMarketEventRequest,
 } from './MarketEventService.request';
-import type { WaitForMarketEventResponse } from './MarketEventService.response';
+import type {
+  SubscriptionResult,
+  WaitForMarketEventResponse,
+} from './MarketEventService.response';
 import {
   ConditionLogic,
   IndicatorConditionField,
@@ -339,9 +342,13 @@ export class MarketEventSession {
   // ---------------------------------------------------------------------------
 
   /**
-   * Evaluates conditions for a product and completes if triggered.
+   * Evaluates all subscriptions and completes if any triggered.
+   * Returns results for ALL subscriptions, not just the triggered one.
    */
   private evaluateAndMaybeComplete(): void {
+    const subscriptionResults: SubscriptionResult[] = [];
+    let anyTriggered = false;
+
     for (const subscription of this.request.subscriptions) {
       const ticker =
         this.state.currentTickerByProduct.get(subscription.productId) ?? null;
@@ -386,14 +393,22 @@ export class MarketEventSession {
           : evaluatedConditions.every((r) => r.triggered);
 
       if (triggered) {
-        this.complete({
-          status: 'triggered',
-          productId: subscription.productId,
-          conditions: evaluatedConditions,
-          timestamp: new Date().toISOString(),
-        });
-        break;
+        anyTriggered = true;
       }
+
+      subscriptionResults.push({
+        productId: subscription.productId,
+        triggered,
+        conditions: evaluatedConditions,
+      });
+    }
+
+    if (anyTriggered) {
+      this.complete({
+        status: 'triggered',
+        subscriptions: subscriptionResults,
+        timestamp: new Date().toISOString(),
+      });
     }
   }
 

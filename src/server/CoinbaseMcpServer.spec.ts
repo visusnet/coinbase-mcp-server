@@ -2090,14 +2090,19 @@ describe('CoinbaseMcpServer Integration Tests', () => {
         };
         const result = {
           status: 'triggered' as const,
-          productId: 'BTC-EUR',
-          conditions: [
+          subscriptions: [
             {
-              field: TickerConditionField.Price,
-              operator: ConditionOperator.GT,
-              threshold: 65000,
-              actualValue: 66000,
+              productId: 'BTC-EUR',
               triggered: true,
+              conditions: [
+                {
+                  field: TickerConditionField.Price,
+                  operator: ConditionOperator.GT,
+                  threshold: 65000,
+                  actualValue: 66000,
+                  triggered: true,
+                },
+              ],
             },
           ],
           timestamp: '2025-01-25T12:00:00.000Z',
@@ -2134,16 +2139,6 @@ describe('CoinbaseMcpServer Integration Tests', () => {
         };
         const result = {
           status: 'timeout' as const,
-          productId: 'BTC-EUR',
-          conditions: [
-            {
-              field: TickerConditionField.Price,
-              operator: ConditionOperator.LT,
-              threshold: 50000,
-              actualValue: 60000,
-              triggered: false,
-            },
-          ],
           duration: 30,
           timestamp: '2025-01-25T12:00:30.000Z',
         };

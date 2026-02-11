@@ -861,14 +861,19 @@ describe('MarketEventSession', () => {
       expect(result).toEqual(
         expect.objectContaining({
           status: 'triggered',
-          productId: 'BTC-USD',
-          conditions: [
+          subscriptions: [
             {
-              field: TickerConditionField.Price,
-              operator: ConditionOperator.GT,
-              threshold: 100,
-              actualValue: 105,
+              productId: 'BTC-USD',
               triggered: true,
+              conditions: [
+                {
+                  field: TickerConditionField.Price,
+                  operator: ConditionOperator.GT,
+                  threshold: 100,
+                  actualValue: 105,
+                  triggered: true,
+                },
+              ],
             },
           ],
         }),
@@ -1364,7 +1369,7 @@ describe('MarketEventSession', () => {
   });
 
   describe('multiple subscriptions', () => {
-    it('should evaluate all subscriptions and trigger on first match', async () => {
+    it('should return all subscriptions when any triggers', async () => {
       const request = createRequest({
         subscriptions: [
           {
@@ -1430,14 +1435,32 @@ describe('MarketEventSession', () => {
       expect(result).toEqual(
         expect.objectContaining({
           status: 'triggered',
-          productId: 'ETH-USD',
-          conditions: [
+          subscriptions: [
             {
-              field: TickerConditionField.Price,
-              operator: ConditionOperator.GT,
-              threshold: 50,
-              actualValue: 75,
+              productId: 'BTC-USD',
+              triggered: false,
+              conditions: [
+                {
+                  field: TickerConditionField.Price,
+                  operator: ConditionOperator.GT,
+                  threshold: 200,
+                  actualValue: 100,
+                  triggered: false,
+                },
+              ],
+            },
+            {
+              productId: 'ETH-USD',
               triggered: true,
+              conditions: [
+                {
+                  field: TickerConditionField.Price,
+                  operator: ConditionOperator.GT,
+                  threshold: 50,
+                  actualValue: 75,
+                  triggered: true,
+                },
+              ],
             },
           ],
         }),
@@ -1584,14 +1607,19 @@ describe('MarketEventSession', () => {
       expect(result).toEqual(
         expect.objectContaining({
           status: 'triggered',
-          productId: 'BTC-USD',
-          conditions: [
+          subscriptions: [
             {
-              field: TickerConditionField.Price,
-              operator: ConditionOperator.GT,
-              threshold: 100,
-              actualValue: 105,
+              productId: 'BTC-USD',
               triggered: true,
+              conditions: [
+                {
+                  field: TickerConditionField.Price,
+                  operator: ConditionOperator.GT,
+                  threshold: 100,
+                  actualValue: 105,
+                  triggered: true,
+                },
+              ],
             },
           ],
         }),
@@ -1690,10 +1718,15 @@ describe('MarketEventSession', () => {
       expect(result).toEqual(
         expect.objectContaining({
           status: 'triggered',
-          productId: 'BTC-USD',
-          conditions: [
+          subscriptions: [
             expect.objectContaining({
-              actualValue: 105,
+              productId: 'BTC-USD',
+              triggered: true,
+              conditions: [
+                expect.objectContaining({
+                  actualValue: 105,
+                }),
+              ],
             }),
           ],
         }),
