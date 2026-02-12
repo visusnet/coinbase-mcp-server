@@ -22,7 +22,7 @@ export class MarketEventToolRegistry extends ToolRegistry {
   }
 
   public register(): void {
-    this.registerTool(
+    this.registerToolWithExtra(
       'wait_for_market_event',
       {
         title: 'Wait for Market Event',
@@ -45,7 +45,7 @@ Logic: any (OR), all (AND)
         inputSchema: WaitForMarketEventRequestSchema.shape,
         annotations: VIEW_API,
       },
-      this.marketEvent.waitForEvent.bind(this.marketEvent),
+      this.marketEvent.waitForMarketEvent.bind(this.marketEvent),
     );
   }
 }

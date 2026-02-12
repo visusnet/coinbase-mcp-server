@@ -213,7 +213,6 @@ type CandlesChannelMessage = z.output<typeof CandlesChannelMessageSchema>;
 type SubscriptionsChannelMessage = z.output<
   typeof SubscriptionsChannelMessageSchema
 >;
-type HeartbeatsChannelMessage = z.output<typeof HeartbeatsChannelMessageSchema>;
 type ErrorMessage = z.output<typeof ErrorMessageSchema>;
 
 /** Union schema for all possible inbound WebSocket messages */
@@ -252,13 +251,6 @@ export function isSubscriptionsMessage(
   message: WebSocketMessage,
 ): message is SubscriptionsChannelMessage {
   return 'channel' in message && message.channel === 'subscriptions';
-}
-
-/** Type guard for heartbeats channel messages */
-export function isHeartbeatsMessage(
-  message: WebSocketMessage,
-): message is HeartbeatsChannelMessage {
-  return 'channel' in message && message.channel === 'heartbeats';
 }
 
 /** Type guard for error messages */

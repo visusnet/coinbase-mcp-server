@@ -1,4 +1,11 @@
-import { describe, it, expect, jest, beforeEach } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  jest,
+  beforeEach,
+  afterEach,
+} from '@jest/globals';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
@@ -102,6 +109,12 @@ describe('CoinbaseMcpServer Integration Tests', () => {
       client.connect(clientTransport),
       mcpServer.connect(serverTransport),
     ]);
+  });
+
+  afterEach(() => {
+    // Reset MarketDataPool mock to avoid failures from tests that mock close() to throw
+    getMarketDataPoolMockInstance().close.mockReset();
+    coinbaseMcpServer.close();
   });
 
   describe('Tools', () => {
@@ -2079,7 +2092,7 @@ describe('CoinbaseMcpServer Integration Tests', () => {
     });
 
     describe('Market Events', () => {
-      it('should call waitForEvent via MCP tool wait_for_market_event', async () => {
+      it('should call waitForMarketEvent via MCP tool wait_for_market_event', async () => {
         const args = {
           subscriptions: [
             {
@@ -2107,23 +2120,26 @@ describe('CoinbaseMcpServer Integration Tests', () => {
           ],
           timestamp: '2025-01-25T12:00:00.000Z',
         };
-        mockMarketEventService.waitForEvent.mockResolvedValueOnce(result);
+        mockMarketEventService.waitForMarketEvent.mockResolvedValueOnce(result);
 
         const response = await client.callTool({
           name: 'wait_for_market_event',
           arguments: args,
         });
 
-        expect(mockMarketEventService.waitForEvent).toHaveBeenCalledWith({
-          ...args,
-          timeout: 55,
-          subscriptions: [
-            {
-              ...args.subscriptions[0],
-              logic: 'any',
-            },
-          ],
-        });
+        expect(mockMarketEventService.waitForMarketEvent).toHaveBeenCalledWith(
+          {
+            ...args,
+            timeout: 55,
+            subscriptions: [
+              {
+                ...args.subscriptions[0],
+                logic: 'any',
+              },
+            ],
+          },
+          { signal: expect.any(AbortSignal) },
+        );
         expectResponseToContain(response, result);
       });
 
@@ -2142,7 +2158,7 @@ describe('CoinbaseMcpServer Integration Tests', () => {
           duration: 30,
           timestamp: '2025-01-25T12:00:30.000Z',
         };
-        mockMarketEventService.waitForEvent.mockResolvedValueOnce(result);
+        mockMarketEventService.waitForMarketEvent.mockResolvedValueOnce(result);
 
         const response = await client.callTool({
           name: 'wait_for_market_event',
@@ -2190,10 +2206,10 @@ describe('CoinbaseMcpServer Integration Tests', () => {
       expect(app).toBeDefined();
     });
 
-    it('should close the WebSocket pool', () => {
+    it('should close the market data pool', () => {
       coinbaseMcpServer.close();
 
-      expect(getPoolMockInstance().close).toHaveBeenCalled();
+      expect(getMarketDataPoolMockInstance().close).toHaveBeenCalled();
     });
 
     it('should start listening on specified port', () => {
@@ -2308,7 +2324,7 @@ describe('CoinbaseMcpServer Integration Tests', () => {
       simulateSignal(processOnSpy, 'SIGTERM');
 
       expect(logger.server.info).toHaveBeenCalledWith('Shutting down...');
-      expect(getPoolMockInstance().close).toHaveBeenCalled();
+      expect(getMarketDataPoolMockInstance().close).toHaveBeenCalled();
       expect(mockServerClose).toHaveBeenCalled();
       expect(processExitSpy).toHaveBeenCalledWith(0);
 
@@ -2316,7 +2332,7 @@ describe('CoinbaseMcpServer Integration Tests', () => {
       processOnSpy.mockRestore();
     });
 
-    it('should close WebSocket pool and HTTP server on SIGINT', () => {
+    it('should close market data pool and HTTP server on SIGINT', () => {
       const processExitSpy = jest
         .spyOn(process, 'exit')
         .mockImplementation(() => undefined as never);
@@ -2330,7 +2346,7 @@ describe('CoinbaseMcpServer Integration Tests', () => {
       simulateSignal(processOnSpy, 'SIGINT');
 
       expect(logger.server.info).toHaveBeenCalledWith('Shutting down...');
-      expect(getPoolMockInstance().close).toHaveBeenCalled();
+      expect(getMarketDataPoolMockInstance().close).toHaveBeenCalled();
       expect(mockServerClose).toHaveBeenCalled();
       expect(processExitSpy).toHaveBeenCalledWith(0);
 
@@ -2338,7 +2354,7 @@ describe('CoinbaseMcpServer Integration Tests', () => {
       processOnSpy.mockRestore();
     });
 
-    it('should still close HTTP server when WebSocket pool close throws', () => {
+    it('should still close HTTP server when market data pool close throws', () => {
       const processExitSpy = jest
         .spyOn(process, 'exit')
         .mockImplementation(() => undefined as never);
@@ -2347,8 +2363,8 @@ describe('CoinbaseMcpServer Integration Tests', () => {
         cb();
       });
       stubExpressListen(coinbaseMcpServer, { close: mockServerClose });
-      getPoolMockInstance().close.mockImplementation(() => {
-        throw new Error('WebSocket cleanup failed');
+      getMarketDataPoolMockInstance().close.mockImplementation(() => {
+        throw new Error('Market data pool cleanup failed');
       });
 
       coinbaseMcpServer.listen(3000);
@@ -2356,7 +2372,7 @@ describe('CoinbaseMcpServer Integration Tests', () => {
 
       expect(logger.server.error).toHaveBeenCalledWith(
         { err: expect.any(Error) },
-        'Error closing WebSocket pool during shutdown',
+        'Error during shutdown cleanup',
       );
       expect(mockServerClose).toHaveBeenCalled();
       expect(processExitSpy).toHaveBeenCalledWith(0);
@@ -2405,7 +2421,7 @@ describe('CoinbaseMcpServer Integration Tests', () => {
       simulateSignal(processOnSpy, 'SIGINT');
 
       expect(mockServerClose).toHaveBeenCalledTimes(1);
-      expect(getPoolMockInstance().close).toHaveBeenCalledTimes(1);
+      expect(getMarketDataPoolMockInstance().close).toHaveBeenCalledTimes(1);
 
       processExitSpy.mockRestore();
       processOnSpy.mockRestore();
@@ -2413,17 +2429,17 @@ describe('CoinbaseMcpServer Integration Tests', () => {
   });
 
   describe('Streamable HTTP Routes', () => {
-    it('should respond with 405 for GET /mcp requests', async () => {
+    it('should respond with 404 for GET /mcp without session', async () => {
       const app = coinbaseMcpServer.getExpressApp();
 
       const response = await request(app).get('/mcp');
 
-      expect(response.status).toBe(405);
+      expect(response.status).toBe(404);
       expect(response.body).toEqual({
         jsonrpc: '2.0',
         error: {
-          code: -32601,
-          message: 'Method not allowed. Use POST for MCP requests.',
+          code: -32000,
+          message: 'Session not found',
         },
         id: null,
       });
@@ -2476,6 +2492,83 @@ describe('CoinbaseMcpServer Integration Tests', () => {
 
       spy.mockRestore();
     });
+
+    it('should remove session when transport onclose fires', async () => {
+      const server = new CoinbaseMcpServer(apiKey, privateKey);
+      const httpServer = server.listen(3458);
+
+      try {
+        const initResponse = await request('http://localhost:3458')
+          .post('/mcp')
+          .set('Accept', 'application/json, text/event-stream')
+          .send({
+            jsonrpc: '2.0',
+            method: 'initialize',
+            id: 1,
+            params: {
+              protocolVersion: '2025-03-26',
+              capabilities: {},
+              clientInfo: { name: 'test', version: '1.0.0' },
+            },
+          });
+
+        const sessionId = initResponse.headers['mcp-session-id'];
+        expect(sessionId).toBeDefined();
+
+        const sessions = (
+          server as unknown as {
+            sessions: Map<string, { onclose?: () => void }>;
+          }
+        ).sessions;
+        expect(sessions.has(sessionId)).toBe(true);
+
+        // Trigger transport's onclose callback to verify session cleanup
+        const transport = sessions.get(sessionId);
+        expect(transport).toBeDefined();
+        transport?.onclose?.();
+
+        expect(sessions.has(sessionId)).toBe(false);
+      } finally {
+        httpServer.close();
+      }
+    });
+
+    it('should create new session for POST with unknown session ID (graceful recovery)', async () => {
+      const app = coinbaseMcpServer.getExpressApp();
+
+      // Unknown session ID should trigger new session creation (not 404)
+      // This enables graceful recovery after server restarts
+      const response = await request(app)
+        .post('/mcp')
+        .set('Accept', 'application/json, text/event-stream')
+        .set('mcp-session-id', 'nonexistent-session')
+        .send({
+          jsonrpc: '2.0',
+          method: 'initialize',
+          params: {
+            protocolVersion: '2024-11-05',
+            capabilities: {},
+            clientInfo: { name: 'test', version: '1.0.0' },
+          },
+          id: 1,
+        });
+
+      // Should succeed and create a new session
+      expect(response.status).toBe(200);
+    });
+
+    it('should return 404 for DELETE without session', async () => {
+      const app = coinbaseMcpServer.getExpressApp();
+
+      const response = await request(app).delete('/mcp');
+
+      expect(response.status).toBe(404);
+      expect(response.body).toEqual({
+        jsonrpc: '2.0',
+        error: { code: -32000, message: 'Session not found' },
+        id: null,
+      });
+    });
   });
 
   describe('transport modes', () => {
@@ -2485,10 +2578,31 @@ describe('CoinbaseMcpServer Integration Tests', () => {
         const httpServer = server.listen(3457);
 
         try {
+          // Initialize session first
+          const initResponse = await request('http://localhost:3457')
+            .post('/mcp')
+            .set('Accept', 'application/json, text/event-stream')
+            .send({
+              jsonrpc: '2.0',
+              method: 'initialize',
+              id: 1,
+              params: {
+                protocolVersion: '2025-03-26',
+                capabilities: {},
+                clientInfo: { name: 'test', version: '1.0.0' },
+              },
+            });
+
+          expect(initResponse.status).toBe(200);
+          const sessionId = initResponse.headers['mcp-session-id'];
+          expect(sessionId).toBeDefined();
+
+          // Send tools/list with session ID
           const response = await request('http://localhost:3457')
             .post('/mcp')
             .set('Accept', 'application/json, text/event-stream')
-            .send({ jsonrpc: '2.0', method: 'tools/list', id: 1 });
+            .set('mcp-session-id', sessionId)
+            .send({ jsonrpc: '2.0', method: 'tools/list', id: 2 });
 
           expect(response.status).toBe(200);
 
@@ -2508,6 +2622,52 @@ describe('CoinbaseMcpServer Integration Tests', () => {
         } finally {
           httpServer.close();
         }
+      });
+
+      it('should route GET to existing session transport', async () => {
+        const app = coinbaseMcpServer.getExpressApp();
+        const sessions = getSessionsMap(coinbaseMcpServer);
+        const mockTransport = createMockTransport();
+        sessions.set('test-session', mockTransport as never);
+
+        try {
+          const response = await request(app)
+            .get('/mcp')
+            .set('mcp-session-id', 'test-session');
+
+          expect(response.status).toBe(200);
+          expect(mockTransport.handleRequest).toHaveBeenCalled();
+        } finally {
+          sessions.delete('test-session');
+        }
+      });
+
+      it('should route DELETE to existing session transport', async () => {
+        const app = coinbaseMcpServer.getExpressApp();
+        const sessions = getSessionsMap(coinbaseMcpServer);
+        const mockTransport = createMockTransport();
+        sessions.set('test-session', mockTransport as never);
+
+        const response = await request(app)
+          .delete('/mcp')
+          .set('mcp-session-id', 'test-session');
+
+        expect(response.status).toBe(200);
+        expect(mockTransport.handleRequest).toHaveBeenCalled();
+      });
+
+      it('should close all sessions on server close', () => {
+        const sessions = getSessionsMap(coinbaseMcpServer);
+        const mockTransport1 = createMockTransport();
+        const mockTransport2 = createMockTransport();
+        sessions.set('session-1', mockTransport1 as never);
+        sessions.set('session-2', mockTransport2 as never);
+
+        coinbaseMcpServer.close();
+
+        expect(mockTransport1.close).toHaveBeenCalled();
+        expect(mockTransport2.close).toHaveBeenCalled();
+        expect(sessions.size).toBe(0);
       });
     });
 
@@ -2545,12 +2705,12 @@ describe('CoinbaseMcpServer Integration Tests', () => {
   });
 });
 
-// Returns the mock WebSocketPool instance created during CoinbaseMcpServer construction
-function getPoolMockInstance(): { close: jest.Mock } {
-  const mock: { WebSocketPool: jest.Mock } = jest.requireMock(
-    '@server/websocket/WebSocketPool',
+// Returns the mock MarketDataPool instance created during CoinbaseMcpServer construction
+function getMarketDataPoolMockInstance(): { close: jest.Mock } {
+  const mock: { MarketDataPool: jest.Mock } = jest.requireMock(
+    '@server/services/MarketDataPool',
   );
-  return mock.WebSocketPool.mock.results[0].value as { close: jest.Mock };
+  return mock.MarketDataPool.mock.results[0].value as { close: jest.Mock };
 }
 
 // Stubs app.listen to avoid binding a real port, with optional server overrides
@@ -2603,4 +2763,31 @@ function expectResponseToContain(
   // Parse and compare the JSON data
   const parsedContent = JSON.parse(textContent) as unknown;
   expect(parsedContent).toEqual(expectedData);
+}
+
+// Accesses the private sessions map for testing
+function getSessionsMap(
+  server: CoinbaseMcpServer,
+): Map<string, Record<string, unknown>> {
+  return (
+    server as unknown as { sessions: Map<string, Record<string, unknown>> }
+  ).sessions;
+}
+
+// Creates a mock transport that responds with 200 for handleRequest
+function createMockTransport(): {
+  handleRequest: jest.Mock;
+  close: jest.Mock;
+} {
+  return {
+    handleRequest: jest.fn((...args: unknown[]) => {
+      const res = args[1] as {
+        writeHead: (code: number) => void;
+        end: () => void;
+      };
+      res.writeHead(200);
+      res.end();
+    }),
+    close: jest.fn<() => Promise<void>>().mockResolvedValue(),
+  };
 }

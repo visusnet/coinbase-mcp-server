@@ -177,7 +177,7 @@ export const mockTechnicalAnalysisService = {
 } as MockedService<TechnicalAnalysisService>;
 
 export const mockMarketEventService = {
-  waitForEvent: jest.fn<MarketEventService['waitForEvent']>(),
+  waitForMarketEvent: jest.fn<MarketEventService['waitForMarketEvent']>(),
 } as MockedService<MarketEventService>;
 
 const mockNewsService = {
@@ -234,9 +234,9 @@ export function mockServices(): void {
     };
   });
 
-  jest.mock('@server/websocket/WebSocketPool', () => {
+  jest.mock('@server/services/MarketDataPool', () => {
     return {
-      WebSocketPool: jest.fn().mockImplementation(() => ({
+      MarketDataPool: jest.fn().mockImplementation(() => ({
         close: jest.fn(),
       })),
     };

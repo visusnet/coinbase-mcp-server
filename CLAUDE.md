@@ -35,10 +35,8 @@ src/
 │   ├── indicators/                       # Manual indicator implementations
 │   │   └── *.ts                          # Helper functions (chartPatterns.ts, etc.)
 │   └── websocket/                        # WebSocket for real-time market data
-│       ├── WebSocketPool.ts              # Connection pool management
-│       ├── WebSocketPool.constants.ts    # WebSocket configuration constants
-│       ├── WebSocketPool.types.ts        # Callback and subscription types
-│       └── CoinbaseCredentials.ts        # JWT generation for WebSocket auth
+│       ├── WebSocketConnection.ts        # Reusable WebSocket primitive
+│       └── WebSocketConnection.constants.ts  # WebSocket configuration constants
 └── test/
     ├── serviceMocks.ts                   # Service mocks
     └── loggerMock.ts                     # Logger mock helper

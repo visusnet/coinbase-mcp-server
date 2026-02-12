@@ -13,7 +13,6 @@ export { PublicService } from './PublicService';
 export { TechnicalIndicatorsService } from './TechnicalIndicatorsService';
 export { TechnicalAnalysisService } from './TechnicalAnalysisService';
 export { MarketEventService } from './MarketEventService';
-export { RealTimeData } from './RealTimeData';
 export { NewsService } from './NewsService';
 
 // Re-export types from schema files

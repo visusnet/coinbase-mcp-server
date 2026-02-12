@@ -1,4 +1,9 @@
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
+import type { RequestHandlerExtra } from '@modelcontextprotocol/sdk/shared/protocol.js';
+import type {
+  ServerNotification,
+  ServerRequest,
+} from '@modelcontextprotocol/sdk/types.js';
 import type { ToolAnnotations } from '@modelcontextprotocol/sdk/types.js';
 import { z, type ZodRawShape } from 'zod';
 import { encode as toonEncode } from '@toon-format/toon';
@@ -11,6 +16,23 @@ const formatSchema = z
   .describe(
     'Output format: json (default) or toon (compact, ~35% fewer tokens for lists)',
   );
+
+/**
+ * Slim extra context passed from ToolRegistry to service methods.
+ * Decouples service layer from MCP SDK types.
+ */
+export interface ToolExtra {
+  signal: AbortSignal;
+}
+
+type SdkExtra = RequestHandlerExtra<ServerRequest, ServerNotification>;
+
+interface ToolOptions<S extends ZodRawShape> {
+  title: string;
+  description: string;
+  inputSchema: S;
+  annotations?: ToolAnnotations;
+}
 
 /**
  * MCP tool result structure with index signature for SDK compatibility
@@ -31,24 +53,37 @@ export abstract class ToolRegistry {
   /**
    * Registers a tool with the MCP server, wrapping the handler with logging and error handling.
    * Type-safe: the callback's input type must match the schema's output type.
-   * @param name - The tool name (used for registration and logging)
-   * @param options - Tool options (title, description, inputSchema)
-   * @param fn - The service method to call (input type inferred from schema)
    */
   protected registerTool<S extends ZodRawShape>(
     name: string,
-    options: {
-      title: string;
-      description: string;
-      inputSchema: S;
-      annotations?: ToolAnnotations;
-    },
+    options: ToolOptions<S>,
     fn: (input: z.output<z.ZodObject<S>>) => unknown,
   ): void {
     const extendedSchema = { ...options.inputSchema, format: formatSchema };
 
     // Type assertion needed: MCP SDK expects a different callback signature,
     // but our ToolResult is compatible with the expected return type.
+    this.server.registerTool(
+      name,
+      { ...options, inputSchema: extendedSchema },
+      this.call(name, (input: z.output<z.ZodObject<S>>) =>
+        fn(input),
+      ) as Parameters<typeof this.server.registerTool>[2],
+    );
+  }
+
+  /**
+   * Registers a long-running tool that receives an AbortSignal for cancellation.
+   * Use this for tools that hold open connections (WebSocket, polling) and need
+   * to clean up when the MCP client cancels the request.
+   */
+  protected registerToolWithExtra<S extends ZodRawShape>(
+    name: string,
+    options: ToolOptions<S>,
+    fn: (input: z.output<z.ZodObject<S>>, extra: ToolExtra) => unknown,
+  ): void {
+    const extendedSchema = { ...options.inputSchema, format: formatSchema };
+
     this.server.registerTool(
       name,
       { ...options, inputSchema: extendedSchema },
@@ -61,14 +96,15 @@ export abstract class ToolRegistry {
    */
   private call<I extends Record<string, unknown>>(
     toolName: string,
-    fn: (input: I) => unknown,
+    fn: (input: I, extra: ToolExtra) => unknown,
   ) {
-    return async (input: I): Promise<ToolResult> => {
+    return async (input: I, extra: SdkExtra): Promise<ToolResult> => {
       const { format, ...params } = input as I & { format?: 'json' | 'toon' };
       logger.tools.info(`${toolName} called`);
       logger.tools.debug(params as object, `${toolName} parameters`);
       try {
-        const response = await Promise.resolve(fn(params as I));
+        const toolExtra: ToolExtra = { signal: extra.signal };
+        const response = await Promise.resolve(fn(params as I, toolExtra));
         const text =
           format === 'toon'
             ? toonEncode(response)

@@ -2,7 +2,7 @@
 
 exports[`CoinbaseMcpServer Integration Tests transport modes listen should respond to tools/list 1`] = `
 {
-  "id": 1,
+  "id": 2,
   "jsonrpc": "2.0",
   "result": {
     "tools": [

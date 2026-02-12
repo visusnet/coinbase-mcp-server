@@ -97,7 +97,7 @@ export class CandleBuffer {
       return buffer.slice(-count);
     }
 
-    return buffer;
+    return [...buffer];
   }
 
   /**

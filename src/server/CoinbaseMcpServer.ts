@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import http from 'http';
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { createMcpExpressApp } from '@modelcontextprotocol/sdk/server/express.js';
@@ -22,11 +23,9 @@ import {
   TechnicalIndicatorsService,
   TechnicalAnalysisService,
   MarketEventService,
-  RealTimeData,
   NewsService,
 } from '@server/services';
-import { CandleBuffer } from '@server/services/CandleBuffer';
-import { WebSocketPool } from '@server/websocket/WebSocketPool';
+import { MarketDataPool } from '@server/services/MarketDataPool';
 import { ToolRegistry } from './tools/ToolRegistry';
 import { AccountToolRegistry } from './tools/AccountToolRegistry';
 import { OrderToolRegistry } from './tools/OrderToolRegistry';
@@ -96,8 +95,9 @@ export class CoinbaseMcpServer {
   private readonly technicalAnalysis: TechnicalAnalysisService;
   private readonly marketEvent: MarketEventService;
   private readonly news: NewsService;
-  private readonly webSocketPool: WebSocketPool;
-  private readonly realTimeData: RealTimeData;
+  private readonly marketDataPool: MarketDataPool;
+  private readonly sessions = new Map<string, StreamableHTTPServerTransport>();
+  private shutdownHandler: (() => void) | null = null;
 
   constructor(apiKey: string, privateKey: string) {
     const credentials = new CoinbaseCredentials(apiKey, privateKey);
@@ -120,15 +120,16 @@ export class CoinbaseMcpServer {
       this.products,
       this.technicalIndicators,
     );
-    this.webSocketPool = new WebSocketPool(credentials);
-    this.realTimeData = new RealTimeData(
-      this.webSocketPool,
+    this.marketDataPool = new MarketDataPool(
+      credentials,
       this.products,
-      new CandleBuffer(),
+      (reason) => {
+        logger.server.error({ reason }, 'Market data connection lost');
+      },
     );
     this.marketEvent = new MarketEventService(
-      this.realTimeData,
       this.technicalIndicators,
+      this.marketDataPool,
     );
     this.news = new NewsService();
 
@@ -139,43 +140,81 @@ export class CoinbaseMcpServer {
 
   private setupRoutes(): void {
     this.app.post('/mcp', async (req: Request, res: Response) => {
-      const server = this.createMcpServerInstance();
+      const sessionId = req.headers['mcp-session-id'] as string | undefined;
+
+      if (sessionId) {
+        const transport = this.sessions.get(sessionId);
+        if (transport) {
+          await transport.handleRequest(req, res, req.body);
+          return;
+        }
+        // Session not found — fall through to create new session
+        // This handles server restarts gracefully (stale session IDs from clients)
+        logger.server.debug(
+          { sessionId },
+          'Stale session ID, creating new session',
+        );
+      }
+
       try {
         const transport = new StreamableHTTPServerTransport({
-          sessionIdGenerator: undefined, // stateless mode
+          sessionIdGenerator: () => randomUUID(),
+          onsessioninitialized: (sessionId) => {
+            // Store transport immediately when session is initialized
+            // This avoids race conditions where requests might arrive before storage
+            this.sessions.set(sessionId, transport);
+          },
         });
+        const server = this.createMcpServerInstance();
+
+        transport.onclose = () => {
+          if (transport.sessionId) {
+            this.sessions.delete(transport.sessionId);
+          }
+        };
 
         await server.connect(transport);
         await transport.handleRequest(req, res, req.body);
-
-        res.on('close', () => {
-          void transport.close();
-          void server.close();
-        });
       } catch (error) {
         logger.server.error({ err: error }, 'Error handling MCP request');
         if (!res.headersSent) {
           res.status(500).json({
             jsonrpc: '2.0',
-            error: {
-              code: -32603,
-              message: 'Internal server error',
-            },
+            error: { code: -32603, message: 'Internal server error' },
             id: null,
           });
         }
       }
     });
 
-    this.app.get('/mcp', (_req: Request, res: Response) => {
-      res.status(405).json({
-        jsonrpc: '2.0',
-        error: {
-          code: -32601,
-          message: 'Method not allowed. Use POST for MCP requests.',
-        },
-        id: null,
-      });
+    this.app.get('/mcp', async (req: Request, res: Response) => {
+      const sessionId = req.headers['mcp-session-id'] as string | undefined;
+      const transport = sessionId ? this.sessions.get(sessionId) : undefined;
+
+      if (transport) {
+        await transport.handleRequest(req, res);
+      } else {
+        res.status(404).json({
+          jsonrpc: '2.0',
+          error: { code: -32000, message: 'Session not found' },
+          id: null,
+        });
+      }
+    });
+
+    this.app.delete('/mcp', async (req: Request, res: Response) => {
+      const sessionId = req.headers['mcp-session-id'] as string | undefined;
+      const transport = sessionId ? this.sessions.get(sessionId) : undefined;
+
+      if (transport) {
+        await transport.handleRequest(req, res);
+      } else {
+        res.status(404).json({
+          jsonrpc: '2.0',
+          error: { code: -32000, message: 'Session not found' },
+          id: null,
+        });
+      }
     });
   }
 
@@ -288,10 +327,19 @@ BEST PRACTICES:
   }
 
   /**
-   * Closes the WebSocket pool.
+   * Closes the server and cleans up resources.
    */
   public close(): void {
-    this.webSocketPool.close();
+    if (this.shutdownHandler) {
+      process.off('SIGTERM', this.shutdownHandler);
+      process.off('SIGINT', this.shutdownHandler);
+      this.shutdownHandler = null;
+    }
+    this.marketDataPool.close();
+    for (const [id, transport] of this.sessions) {
+      void transport.close();
+      this.sessions.delete(id);
+    }
   }
 
   public listen(port: number): http.Server {
@@ -310,10 +358,7 @@ BEST PRACTICES:
       try {
         this.close();
       } catch (error: unknown) {
-        logger.server.error(
-          { err: error },
-          'Error closing WebSocket pool during shutdown',
-        );
+        logger.server.error({ err: error }, 'Error during shutdown cleanup');
       }
 
       const forceExitTimeout = setTimeout(() => {
@@ -328,6 +373,7 @@ BEST PRACTICES:
       });
     };
 
+    this.shutdownHandler = shutdown;
     process.on('SIGTERM', shutdown);
     process.on('SIGINT', shutdown);
 
