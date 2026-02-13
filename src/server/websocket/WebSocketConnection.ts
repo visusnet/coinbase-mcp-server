@@ -33,37 +33,50 @@ export class WebSocketConnection {
   // Public API
   // ---------------------------------------------------------------------------
 
-  public subscribe(channel: string, productIds: string[]): void {
-    let products = this.channelProducts.get(channel);
-    if (!products) {
-      products = new Set();
-      this.channelProducts.set(channel, products);
-    }
-    for (const pid of productIds) {
-      products.add(pid);
+  public subscribe(channel: string, productIds?: string[]): void {
+    if (productIds && productIds.length > 0) {
+      let products = this.channelProducts.get(channel);
+      if (!products) {
+        products = new Set();
+        this.channelProducts.set(channel, products);
+      }
+      for (const pid of productIds) {
+        products.add(pid);
+      }
+    } else {
+      // For channels without product_ids (e.g., 'user'), track subscription
+      this.channelProducts.set(channel, new Set());
     }
 
     void this.sendSubscribe(channel, productIds);
   }
 
-  public unsubscribe(channel: string, productIds: string[]): void {
-    const products = this.channelProducts.get(channel);
-    if (products) {
-      for (const pid of productIds) {
-        products.delete(pid);
+  public unsubscribe(channel: string, productIds?: string[]): void {
+    if (productIds && productIds.length > 0) {
+      const products = this.channelProducts.get(channel);
+      if (products) {
+        for (const pid of productIds) {
+          products.delete(pid);
+        }
+        if (products.size === 0) {
+          this.channelProducts.delete(channel);
+        }
       }
-      if (products.size === 0) {
-        this.channelProducts.delete(channel);
-      }
+    } else {
+      // For channels without product_ids, just remove the channel
+      this.channelProducts.delete(channel);
     }
 
     if (this.ws?.readyState === WebSocket.OPEN) {
-      this.sendRaw({
+      const message: Record<string, unknown> = {
         type: 'unsubscribe',
-        product_ids: productIds,
         channel,
         jwt: this.credentials.generateWebSocketJwt(),
-      });
+      };
+      if (productIds && productIds.length > 0) {
+        message.product_ids = productIds;
+      }
+      this.sendRaw(message);
     }
   }
 
@@ -184,14 +197,15 @@ export class WebSocketConnection {
 
   private resubscribeAll(): void {
     for (const [channel, products] of this.channelProducts) {
+      const message: Record<string, unknown> = {
+        type: 'subscribe',
+        channel,
+        jwt: this.credentials.generateWebSocketJwt(),
+      };
       if (products.size > 0) {
-        this.sendRaw({
-          type: 'subscribe',
-          product_ids: [...products],
-          channel,
-          jwt: this.credentials.generateWebSocketJwt(),
-        });
+        message.product_ids = [...products];
       }
+      this.sendRaw(message);
     }
   }
 
@@ -201,15 +215,18 @@ export class WebSocketConnection {
 
   private async sendSubscribe(
     channel: string,
-    productIds: string[],
+    productIds?: string[],
   ): Promise<void> {
     await this.ensureConnection();
-    this.sendRaw({
+    const message: Record<string, unknown> = {
       type: 'subscribe',
-      product_ids: productIds,
       channel,
       jwt: this.credentials.generateWebSocketJwt(),
-    });
+    };
+    if (productIds && productIds.length > 0) {
+      message.product_ids = productIds;
+    }
+    this.sendRaw(message);
   }
 
   private subscribeToHeartbeats(): void {

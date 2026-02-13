@@ -44,7 +44,7 @@ BTC @ €95,000, ATR ≈ 2.7%
 
 **Dual-Layer Protection**:
 
-- **Inner Layer (Primary)**: Bot-managed soft SL/TP — tighter thresholds checked each cycle via `wait_for_market_event`, plus trailing stop management and 24h recalculation
+- **Inner Layer (Primary)**: Bot-managed soft SL/TP — tighter thresholds checked each cycle via `wait_for_event`, plus trailing stop management and 24h recalculation
 - **Outer Layer (Fallback)**: Attached bracket orders on Coinbase — wide catastrophic stop (`clamp(ATR% × 3, 8%, 12%)`) that only fires if the bot is offline
 
 ---
@@ -361,7 +361,7 @@ Checks orderbook before altcoin entries.
 
 ### Long-Polling Market Events
 
-Use `wait_for_market_event` for efficient, event-driven position monitoring instead of polling with sleep intervals.
+Use `wait_for_event` for efficient, event-driven position monitoring instead of polling with sleep intervals.
 
 | Parameter     | Value           | Description                           |
 |---------------|-----------------|---------------------------------------|
@@ -420,7 +420,7 @@ Use `wait_for_market_event` for efficient, event-driven position monitoring inst
 **Example: SL/TP Monitoring**
 
 ```
-wait_for_market_event({
+wait_for_event({
   subscriptions: [{
     productId: "BTC-EUR",
     conditions: [
@@ -436,7 +436,7 @@ wait_for_market_event({
 **Example: Indicator Condition**
 
 ```
-wait_for_market_event({
+wait_for_event({
   subscriptions: [{
     productId: "BTC-EUR",
     conditions: [
@@ -469,8 +469,8 @@ wait_for_market_event({
 
 ```
 After each analysis cycle:
-1. If open positions → wait_for_market_event with SL/TP conditions
-2. If no positions but entry signal → wait_for_market_event with entry conditions
+1. If open positions → wait_for_event with SL/TP conditions
+2. If no positions but entry signal → wait_for_event with entry conditions
 3. If no positions and no signal → sleep for next analysis cycle
 ```
 
@@ -931,4 +931,4 @@ Real-world examples demonstrating feature interactions:
 - [strategies.md](../.claude/skills/coinbase-trading/reference/strategies.md) - Signal scoring and strategies
 - [indicators.md](../.claude/skills/coinbase-trading/reference/indicators.md) - Indicator MCP tools
 - [output-format.md](../.claude/skills/coinbase-trading/reference/output-format.md) - Report format
-- [market-event-guide.md](../.claude/skills/coinbase-trading/reference/market-event-guide.md) - Event monitoring guide
+- [event-guide.md](../.claude/skills/coinbase-trading/reference/event-guide.md) - Event monitoring guide

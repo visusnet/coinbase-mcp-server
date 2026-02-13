@@ -5,13 +5,13 @@ Crashes create dislocated prices and high-conviction entry opportunities. When a
 **Crash Detection:**
 - `percentChange24h` < -15% on BTC or ETH → activate crash playbook
 - Multiple assets down > 10% simultaneously → market-wide crash
-- Check via `get_best_bid_ask` or `wait_for_market_event` with `percentChange24h` condition
+- Check via `get_best_bid_ask` or `wait_for_event` with `percentChange24h` condition
 
 **Adaptation Rules:**
 
 1. **Anchor to 1H timeframe** — During extreme volatility, 15m indicators produce noise. Use 1H as the primary signal timeframe; 15m only for entry timing.
 
-2. **Look for oversold bounces** — Crashes push RSI, MFI, and Stochastic into deep oversold territory. Use `wait_for_market_event` with indicator conditions to detect recoveries:
+2. **Look for oversold bounces** — Crashes push RSI, MFI, and Stochastic into deep oversold territory. Use `wait_for_event` with indicator conditions to detect recoveries:
    ```
    conditions: [
      { field: "rsi", operator: "crossAbove", value: 30, granularity: "ONE_HOUR" },

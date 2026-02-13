@@ -1,15 +1,15 @@
 import { jest } from '@jest/globals';
 import { mockTechnicalIndicatorsService } from '@test/serviceMocks';
-import { ConditionEvaluator } from './ConditionEvaluator';
-import type { Ticker } from './MarketEventService.message';
+import { MarketConditionEvaluator } from './MarketConditionEvaluator';
+import type { Ticker } from './MarketData.message';
 import type { CandleInput } from './common.response';
 import { Granularity } from './common.request';
-import type { Condition } from './MarketEventService.request';
+import type { MarketCondition } from './EventService.request';
 import {
   ConditionOperator,
   IndicatorConditionField,
   TickerConditionField,
-} from './MarketEventService.types';
+} from './EventService.types';
 import type { TechnicalIndicatorsService } from './TechnicalIndicatorsService';
 
 // =============================================================================
@@ -56,19 +56,19 @@ function createCandlesByGranularity(
 // Tests
 // =============================================================================
 
-describe('ConditionEvaluator', () => {
-  let evaluator: ConditionEvaluator;
+describe('MarketConditionEvaluator', () => {
+  let evaluator: MarketConditionEvaluator;
 
   beforeEach(() => {
     jest.clearAllMocks();
-    evaluator = new ConditionEvaluator(
+    evaluator = new MarketConditionEvaluator(
       null as unknown as TechnicalIndicatorsService,
     );
   });
 
   describe('ticker conditions', () => {
     it('should evaluate price GT condition as triggered', () => {
-      const conditions: Condition[] = [
+      const conditions: MarketCondition[] = [
         {
           field: TickerConditionField.Price,
           operator: ConditionOperator.GT,
@@ -96,7 +96,7 @@ describe('ConditionEvaluator', () => {
     });
 
     it('should evaluate price GTE condition as triggered', () => {
-      const conditions: Condition[] = [
+      const conditions: MarketCondition[] = [
         {
           field: TickerConditionField.Price,
           operator: ConditionOperator.GTE,
@@ -118,7 +118,7 @@ describe('ConditionEvaluator', () => {
     });
 
     it('should evaluate price LT condition as triggered', () => {
-      const conditions: Condition[] = [
+      const conditions: MarketCondition[] = [
         {
           field: TickerConditionField.Price,
           operator: ConditionOperator.LT,
@@ -140,7 +140,7 @@ describe('ConditionEvaluator', () => {
     });
 
     it('should evaluate price LTE condition as triggered', () => {
-      const conditions: Condition[] = [
+      const conditions: MarketCondition[] = [
         {
           field: TickerConditionField.Price,
           operator: ConditionOperator.LTE,
@@ -162,7 +162,7 @@ describe('ConditionEvaluator', () => {
     });
 
     it('should evaluate condition as not triggered when condition not met', () => {
-      const conditions: Condition[] = [
+      const conditions: MarketCondition[] = [
         {
           field: TickerConditionField.Price,
           operator: ConditionOperator.GT,
@@ -185,7 +185,7 @@ describe('ConditionEvaluator', () => {
     });
 
     it('should return null actualValue when ticker is null', () => {
-      const conditions: Condition[] = [
+      const conditions: MarketCondition[] = [
         {
           field: TickerConditionField.Price,
           operator: ConditionOperator.GT,
@@ -207,7 +207,7 @@ describe('ConditionEvaluator', () => {
     });
 
     it('should evaluate volume24h condition', () => {
-      const conditions: Condition[] = [
+      const conditions: MarketCondition[] = [
         {
           field: TickerConditionField.Volume24h,
           operator: ConditionOperator.GT,
@@ -230,7 +230,7 @@ describe('ConditionEvaluator', () => {
     });
 
     it('should evaluate percentChange24h condition', () => {
-      const conditions: Condition[] = [
+      const conditions: MarketCondition[] = [
         {
           field: TickerConditionField.PercentChange24h,
           operator: ConditionOperator.GT,
@@ -253,7 +253,7 @@ describe('ConditionEvaluator', () => {
     });
 
     it('should evaluate high24h condition', () => {
-      const conditions: Condition[] = [
+      const conditions: MarketCondition[] = [
         {
           field: TickerConditionField.High24h,
           operator: ConditionOperator.GT,
@@ -276,7 +276,7 @@ describe('ConditionEvaluator', () => {
     });
 
     it('should evaluate low24h condition', () => {
-      const conditions: Condition[] = [
+      const conditions: MarketCondition[] = [
         {
           field: TickerConditionField.Low24h,
           operator: ConditionOperator.LT,
@@ -299,7 +299,7 @@ describe('ConditionEvaluator', () => {
     });
 
     it('should evaluate high52w condition', () => {
-      const conditions: Condition[] = [
+      const conditions: MarketCondition[] = [
         {
           field: TickerConditionField.High52w,
           operator: ConditionOperator.GT,
@@ -322,7 +322,7 @@ describe('ConditionEvaluator', () => {
     });
 
     it('should evaluate low52w condition', () => {
-      const conditions: Condition[] = [
+      const conditions: MarketCondition[] = [
         {
           field: TickerConditionField.Low52w,
           operator: ConditionOperator.LT,
@@ -345,7 +345,7 @@ describe('ConditionEvaluator', () => {
     });
 
     it('should evaluate bestBid condition', () => {
-      const conditions: Condition[] = [
+      const conditions: MarketCondition[] = [
         {
           field: TickerConditionField.BestBid,
           operator: ConditionOperator.GT,
@@ -368,7 +368,7 @@ describe('ConditionEvaluator', () => {
     });
 
     it('should evaluate bestAsk condition', () => {
-      const conditions: Condition[] = [
+      const conditions: MarketCondition[] = [
         {
           field: TickerConditionField.BestAsk,
           operator: ConditionOperator.LT,
@@ -391,7 +391,7 @@ describe('ConditionEvaluator', () => {
     });
 
     it('should evaluate bestBidQuantity condition', () => {
-      const conditions: Condition[] = [
+      const conditions: MarketCondition[] = [
         {
           field: TickerConditionField.BestBidQuantity,
           operator: ConditionOperator.GT,
@@ -414,7 +414,7 @@ describe('ConditionEvaluator', () => {
     });
 
     it('should evaluate bestAskQuantity condition', () => {
-      const conditions: Condition[] = [
+      const conditions: MarketCondition[] = [
         {
           field: TickerConditionField.BestAskQuantity,
           operator: ConditionOperator.GT,
@@ -439,7 +439,7 @@ describe('ConditionEvaluator', () => {
 
   describe('cross conditions', () => {
     it('should evaluate CROSS_ABOVE as triggered when crossing threshold', () => {
-      const conditions: Condition[] = [
+      const conditions: MarketCondition[] = [
         {
           field: TickerConditionField.Price,
           operator: ConditionOperator.CROSS_ABOVE,
@@ -463,7 +463,7 @@ describe('ConditionEvaluator', () => {
     });
 
     it('should not trigger CROSS_ABOVE without previous ticker', () => {
-      const conditions: Condition[] = [
+      const conditions: MarketCondition[] = [
         {
           field: TickerConditionField.Price,
           operator: ConditionOperator.CROSS_ABOVE,
@@ -485,7 +485,7 @@ describe('ConditionEvaluator', () => {
     });
 
     it('should not trigger CROSS_ABOVE when already above', () => {
-      const conditions: Condition[] = [
+      const conditions: MarketCondition[] = [
         {
           field: TickerConditionField.Price,
           operator: ConditionOperator.CROSS_ABOVE,
@@ -508,7 +508,7 @@ describe('ConditionEvaluator', () => {
     });
 
     it('should evaluate CROSS_BELOW as triggered when crossing threshold', () => {
-      const conditions: Condition[] = [
+      const conditions: MarketCondition[] = [
         {
           field: TickerConditionField.Price,
           operator: ConditionOperator.CROSS_BELOW,
@@ -532,7 +532,7 @@ describe('ConditionEvaluator', () => {
     });
 
     it('should not trigger CROSS_BELOW when already below', () => {
-      const conditions: Condition[] = [
+      const conditions: MarketCondition[] = [
         {
           field: TickerConditionField.Price,
           operator: ConditionOperator.CROSS_BELOW,
@@ -556,10 +556,10 @@ describe('ConditionEvaluator', () => {
   });
 
   describe('indicator conditions', () => {
-    let evaluatorWithMock: ConditionEvaluator;
+    let evaluatorWithMock: MarketConditionEvaluator;
 
     beforeEach(() => {
-      evaluatorWithMock = new ConditionEvaluator(
+      evaluatorWithMock = new MarketConditionEvaluator(
         mockTechnicalIndicatorsService as unknown as TechnicalIndicatorsService,
       );
     });
@@ -571,7 +571,7 @@ describe('ConditionEvaluator', () => {
         latestValue: 25,
       });
 
-      const conditions: Condition[] = [
+      const conditions: MarketCondition[] = [
         {
           field: IndicatorConditionField.Rsi,
           operator: ConditionOperator.LT,
@@ -604,7 +604,7 @@ describe('ConditionEvaluator', () => {
     });
 
     it('should return null actualValue when candles not provided', () => {
-      const conditions: Condition[] = [
+      const conditions: MarketCondition[] = [
         {
           field: IndicatorConditionField.Rsi,
           operator: ConditionOperator.LT,
@@ -638,7 +638,7 @@ describe('ConditionEvaluator', () => {
         latestValue: 25,
       });
 
-      const conditions: Condition[] = [
+      const conditions: MarketCondition[] = [
         {
           field: IndicatorConditionField.Rsi,
           operator: ConditionOperator.LT,
@@ -682,7 +682,7 @@ describe('ConditionEvaluator', () => {
           latestValue: 25,
         });
 
-      const conditions: Condition[] = [
+      const conditions: MarketCondition[] = [
         {
           field: IndicatorConditionField.Rsi,
           operator: ConditionOperator.CROSS_ABOVE,
@@ -715,7 +715,7 @@ describe('ConditionEvaluator', () => {
 
   describe('multiple conditions', () => {
     it('should return all conditions with their triggered status', () => {
-      const conditions: Condition[] = [
+      const conditions: MarketCondition[] = [
         {
           field: TickerConditionField.Price,
           operator: ConditionOperator.GT,
@@ -745,7 +745,7 @@ describe('ConditionEvaluator', () => {
     });
 
     it('should return mixed triggered status when some conditions fail', () => {
-      const conditions: Condition[] = [
+      const conditions: MarketCondition[] = [
         {
           field: TickerConditionField.Price,
           operator: ConditionOperator.GT,
@@ -775,7 +775,7 @@ describe('ConditionEvaluator', () => {
     });
 
     it('should return all conditions not triggered when none match', () => {
-      const conditions: Condition[] = [
+      const conditions: MarketCondition[] = [
         {
           field: TickerConditionField.Price,
           operator: ConditionOperator.GT,
@@ -810,10 +810,10 @@ describe('ConditionEvaluator', () => {
         latestValue: 25,
       });
 
-      const evaluatorWithMock = new ConditionEvaluator(
+      const evaluatorWithMock = new MarketConditionEvaluator(
         mockTechnicalIndicatorsService as unknown as TechnicalIndicatorsService,
       );
-      const conditions: Condition[] = [
+      const conditions: MarketCondition[] = [
         {
           field: TickerConditionField.Price,
           operator: ConditionOperator.GT,
@@ -854,10 +854,10 @@ describe('ConditionEvaluator', () => {
   });
 
   describe('indicator calculation', () => {
-    let evaluatorWithMock: ConditionEvaluator;
+    let evaluatorWithMock: MarketConditionEvaluator;
 
     beforeEach(() => {
-      evaluatorWithMock = new ConditionEvaluator(
+      evaluatorWithMock = new MarketConditionEvaluator(
         mockTechnicalIndicatorsService as unknown as TechnicalIndicatorsService,
       );
     });
@@ -869,7 +869,7 @@ describe('ConditionEvaluator', () => {
         latestValue: 55,
       });
 
-      const conditions: Condition[] = [
+      const conditions: MarketCondition[] = [
         {
           field: IndicatorConditionField.Rsi,
           operator: ConditionOperator.GT,
@@ -902,7 +902,7 @@ describe('ConditionEvaluator', () => {
         latestValue: null,
       });
 
-      const conditions: Condition[] = [
+      const conditions: MarketCondition[] = [
         {
           field: IndicatorConditionField.Rsi,
           operator: ConditionOperator.GT,
@@ -933,7 +933,7 @@ describe('ConditionEvaluator', () => {
         latestValue: { MACD: 1.5, signal: 1.2, histogram: 0.3 },
       });
 
-      const conditions: Condition[] = [
+      const conditions: MarketCondition[] = [
         {
           field: IndicatorConditionField.Macd,
           operator: ConditionOperator.GT,
@@ -966,7 +966,7 @@ describe('ConditionEvaluator', () => {
         latestValue: { MACD: 1.5, signal: 1.2, histogram: 0.3 },
       });
 
-      const conditions: Condition[] = [
+      const conditions: MarketCondition[] = [
         {
           field: IndicatorConditionField.MacdHistogram,
           operator: ConditionOperator.GT,
@@ -998,7 +998,7 @@ describe('ConditionEvaluator', () => {
         latestValue: { MACD: 1.5, signal: 1.2, histogram: 0.3 },
       });
 
-      const conditions: Condition[] = [
+      const conditions: MarketCondition[] = [
         {
           field: IndicatorConditionField.MacdSignal,
           operator: ConditionOperator.GT,
@@ -1030,7 +1030,7 @@ describe('ConditionEvaluator', () => {
         latestValue: { MACD: undefined, signal: 1.2, histogram: 0.3 },
       });
 
-      const conditions: Condition[] = [
+      const conditions: MarketCondition[] = [
         {
           field: IndicatorConditionField.Macd,
           operator: ConditionOperator.GT,
@@ -1063,7 +1063,7 @@ describe('ConditionEvaluator', () => {
         latestValue: { MACD: 1.5, signal: 1.2, histogram: undefined },
       });
 
-      const conditions: Condition[] = [
+      const conditions: MarketCondition[] = [
         {
           field: IndicatorConditionField.MacdHistogram,
           operator: ConditionOperator.GT,
@@ -1096,7 +1096,7 @@ describe('ConditionEvaluator', () => {
         latestValue: { MACD: 1.5, signal: undefined, histogram: 0.3 },
       });
 
-      const conditions: Condition[] = [
+      const conditions: MarketCondition[] = [
         {
           field: IndicatorConditionField.MacdSignal,
           operator: ConditionOperator.GT,
@@ -1134,7 +1134,7 @@ describe('ConditionEvaluator', () => {
         },
       });
 
-      const conditions: Condition[] = [
+      const conditions: MarketCondition[] = [
         {
           field: IndicatorConditionField.BollingerBands,
           operator: ConditionOperator.GT,
@@ -1170,7 +1170,7 @@ describe('ConditionEvaluator', () => {
         },
       });
 
-      const conditions: Condition[] = [
+      const conditions: MarketCondition[] = [
         {
           field: IndicatorConditionField.BollingerBandsUpper,
           operator: ConditionOperator.GT,
@@ -1206,7 +1206,7 @@ describe('ConditionEvaluator', () => {
         },
       });
 
-      const conditions: Condition[] = [
+      const conditions: MarketCondition[] = [
         {
           field: IndicatorConditionField.BollingerBandsLower,
           operator: ConditionOperator.LT,
@@ -1242,7 +1242,7 @@ describe('ConditionEvaluator', () => {
         },
       });
 
-      const conditions: Condition[] = [
+      const conditions: MarketCondition[] = [
         {
           field: IndicatorConditionField.BollingerBandsBandwidth,
           operator: ConditionOperator.GT,
@@ -1278,7 +1278,7 @@ describe('ConditionEvaluator', () => {
         },
       });
 
-      const conditions: Condition[] = [
+      const conditions: MarketCondition[] = [
         {
           field: IndicatorConditionField.BollingerBandsPercentB,
           operator: ConditionOperator.GT,
@@ -1307,7 +1307,7 @@ describe('ConditionEvaluator', () => {
         latestValue: 100,
       });
 
-      const conditions: Condition[] = [
+      const conditions: MarketCondition[] = [
         {
           field: IndicatorConditionField.Sma,
           operator: ConditionOperator.GT,
@@ -1339,7 +1339,7 @@ describe('ConditionEvaluator', () => {
         latestValue: 101,
       });
 
-      const conditions: Condition[] = [
+      const conditions: MarketCondition[] = [
         {
           field: IndicatorConditionField.Ema,
           operator: ConditionOperator.GT,
@@ -1372,7 +1372,7 @@ describe('ConditionEvaluator', () => {
         latestValue: { k: 75, d: 70 },
       });
 
-      const conditions: Condition[] = [
+      const conditions: MarketCondition[] = [
         {
           field: IndicatorConditionField.Stochastic,
           operator: ConditionOperator.GT,
@@ -1402,7 +1402,7 @@ describe('ConditionEvaluator', () => {
         latestValue: { k: 75, d: 70 },
       });
 
-      const conditions: Condition[] = [
+      const conditions: MarketCondition[] = [
         {
           field: IndicatorConditionField.StochasticD,
           operator: ConditionOperator.GT,
@@ -1433,7 +1433,7 @@ describe('ConditionEvaluator', () => {
         latestValue: null,
       });
 
-      const conditions: Condition[] = [
+      const conditions: MarketCondition[] = [
         {
           field: IndicatorConditionField.Macd,
           operator: ConditionOperator.GT,
@@ -1465,7 +1465,7 @@ describe('ConditionEvaluator', () => {
         latestValue: null,
       });
 
-      const conditions: Condition[] = [
+      const conditions: MarketCondition[] = [
         {
           field: IndicatorConditionField.BollingerBands,
           operator: ConditionOperator.GT,
@@ -1496,7 +1496,7 @@ describe('ConditionEvaluator', () => {
         latestValue: null,
       });
 
-      const conditions: Condition[] = [
+      const conditions: MarketCondition[] = [
         {
           field: IndicatorConditionField.Stochastic,
           operator: ConditionOperator.GT,

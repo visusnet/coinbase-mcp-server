@@ -1,20 +1,20 @@
 import { describe, it, expect, jest, beforeEach } from '@jest/globals';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import type { MarketEventService } from '../services';
-import { mockMarketEventService } from '@test/serviceMocks';
-import { MarketEventToolRegistry } from './MarketEventToolRegistry';
+import type { EventService } from '../services';
+import { mockEventService } from '@test/serviceMocks';
+import { EventToolRegistry } from './EventToolRegistry';
 import { ToolAnnotations } from '@modelcontextprotocol/sdk/types.js';
 
-describe('MarketEventToolRegistry', () => {
+describe('EventToolRegistry', () => {
   let mockServer: { registerTool: jest.Mock };
-  let registry: MarketEventToolRegistry;
+  let registry: EventToolRegistry;
 
   beforeEach(() => {
     jest.clearAllMocks();
     mockServer = { registerTool: jest.fn() };
-    registry = new MarketEventToolRegistry(
+    registry = new EventToolRegistry(
       mockServer as unknown as McpServer,
-      mockMarketEventService as unknown as MarketEventService,
+      mockEventService as unknown as EventService,
     );
   });
 

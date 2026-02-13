@@ -60,7 +60,7 @@ jest.mock('./RestPollingConnection', () => ({
 import { Granularity } from './common.request';
 import { MarketDataPool } from './MarketDataPool';
 import type { ProductsService } from './ProductsService';
-import type { Ticker } from './MarketEventService.message';
+import type { Ticker } from './MarketData.message';
 import type { BufferedCandle } from './CandleBuffer';
 import type { CoinbaseCredentials } from '@client/CoinbaseCredentials';
 
@@ -144,7 +144,6 @@ const mockCredentials = {} as CoinbaseCredentials;
 
 describe('MarketDataPool', () => {
   let productsService: ReturnType<typeof createMockProductsService>;
-  let disconnectHandler: jest.Mock;
   let pool: MarketDataPool;
 
   beforeEach(() => {
@@ -156,11 +155,9 @@ describe('MarketDataPool', () => {
     mockRestPollingInstance.close.mockClear();
 
     productsService = createMockProductsService();
-    disconnectHandler = jest.fn();
     pool = new MarketDataPool(
       mockCredentials,
       productsService as unknown as ProductsService,
-      disconnectHandler,
     );
   });
 
@@ -463,14 +460,18 @@ describe('MarketDataPool', () => {
       );
     });
 
-    it('should close connection and notify on authentication error', () => {
+    it('should close connection and log on authentication error', () => {
       capturedMessageHandler({
         type: 'error',
         message: 'not authenticated - invalid authentication credentials',
       });
 
-      expect(disconnectHandler).toHaveBeenCalledWith(
-        'Authentication error: not authenticated - invalid authentication credentials',
+      expect(logger.streaming.error).toHaveBeenCalledWith(
+        {
+          reason:
+            'Authentication error: not authenticated - invalid authentication credentials',
+        },
+        'Market data connection lost',
       );
       expect(mockConnectionInstance.close).toHaveBeenCalled();
     });
@@ -481,7 +482,7 @@ describe('MarketDataPool', () => {
         message: 'rate limit exceeded',
       });
 
-      expect(disconnectHandler).not.toHaveBeenCalled();
+      // Only logs the error message, no disconnect
       expect(mockConnectionInstance.close).not.toHaveBeenCalled();
     });
 
@@ -521,18 +522,22 @@ describe('MarketDataPool', () => {
   // ---------------------------------------------------------------------------
 
   describe('disconnect propagation', () => {
-    it('should propagate WebSocket disconnect to handler', () => {
+    it('should log WebSocket disconnect', () => {
       capturedDisconnectHandler('Connection failed after 5 reconnect attempts');
 
-      expect(disconnectHandler).toHaveBeenCalledWith(
-        'Connection failed after 5 reconnect attempts',
+      expect(logger.streaming.error).toHaveBeenCalledWith(
+        { reason: 'Connection failed after 5 reconnect attempts' },
+        'Market data connection lost',
       );
     });
 
-    it('should propagate REST disconnect to handler', () => {
+    it('should log REST disconnect', () => {
       capturedRestDisconnectHandler('persistent failure');
 
-      expect(disconnectHandler).toHaveBeenCalledWith('persistent failure');
+      expect(logger.streaming.error).toHaveBeenCalledWith(
+        { reason: 'persistent failure' },
+        'Market data connection lost',
+      );
     });
 
     it('should notify subscriber onDisconnect on REST disconnect', () => {
@@ -548,6 +553,17 @@ describe('MarketDataPool', () => {
       capturedRestDisconnectHandler('fetch failed');
 
       expect(onDisconnect).toHaveBeenCalledWith('fetch failed');
+    });
+
+    it('should notify subscriber onDisconnect on WebSocket disconnect', () => {
+      const onDisconnect = jest.fn();
+      pool.subscribeToTicker('BTC-USD', jest.fn(), onDisconnect);
+
+      capturedDisconnectHandler('Connection failed after 5 reconnect attempts');
+
+      expect(onDisconnect).toHaveBeenCalledWith(
+        'Connection failed after 5 reconnect attempts',
+      );
     });
   });
 

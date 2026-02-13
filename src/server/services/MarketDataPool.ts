@@ -3,13 +3,13 @@ import { logger } from '../../logger';
 import { CandleBuffer, type BufferedCandle } from './CandleBuffer';
 import { Granularity } from './common.request';
 import {
-  isTickerMessage,
-  isCandlesMessage,
-  isSubscriptionsMessage,
-  isErrorMessage,
+  isTickerChannelMessage,
+  isCandlesChannelMessage,
+  isSubscriptionsChannelMessage,
   WebSocketMessageSchema,
   type Ticker,
-} from './MarketEventService.message';
+} from './MarketData.message';
+import { isErrorMessage } from './common.message';
 import type { ProductsService } from './ProductsService';
 import { RestPollingConnection } from './RestPollingConnection';
 import type { CoinbaseCredentials } from '@client/CoinbaseCredentials';
@@ -75,7 +75,6 @@ export class MarketDataPool {
   constructor(
     credentials: CoinbaseCredentials,
     productsService: ProductsService,
-    private readonly disconnectHandler: (reason: string) => void,
   ) {
     this.webSocketConnection = new WebSocketConnection(
       COINBASE_WS_URL,
@@ -170,14 +169,14 @@ export class MarketDataPool {
   // ---------------------------------------------------------------------------
 
   private handlePoolDisconnect(reason: string): void {
-    this.disconnectHandler(reason);
+    logger.streaming.error({ reason }, 'Market data connection lost');
     for (const sub of this.subscriptions.values()) {
       sub.onDisconnect?.(reason);
     }
   }
 
   private handleRestDisconnect(reason: string): void {
-    this.disconnectHandler(reason);
+    logger.streaming.error({ reason }, 'Market data connection lost');
     for (const sub of this.subscriptions.values()) {
       sub.onDisconnect?.(reason);
     }
@@ -268,20 +267,20 @@ export class MarketDataPool {
       return;
     }
 
-    if (isTickerMessage(message)) {
+    if (isTickerChannelMessage(message)) {
       for (const event of message.events) {
         for (const ticker of event.tickers) {
           this.deliverTicker(ticker);
         }
       }
-    } else if (isCandlesMessage(message)) {
+    } else if (isCandlesChannelMessage(message)) {
       for (const event of message.events) {
         for (const candle of event.candles) {
           this.candleBuffer.addCandle(candle, Granularity.FIVE_MINUTE);
           this.deliverWsCandles(candle.productId, Granularity.FIVE_MINUTE);
         }
       }
-    } else if (isSubscriptionsMessage(message)) {
+    } else if (isSubscriptionsChannelMessage(message)) {
       const subs = message.events[0].subscriptions;
       logger.streaming.debug(
         {

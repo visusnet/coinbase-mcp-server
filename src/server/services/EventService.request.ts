@@ -5,7 +5,9 @@ import {
   ConditionOperator,
   IndicatorConditionField,
   TickerConditionField,
-} from './MarketEventService.types';
+} from './EventService.types';
+import { OrderConditionField, SubscriptionType } from './EventService.types';
+import { OrderExecutionStatus } from './OrdersService.types';
 import {
   Granularity,
   GranularitySchema as BaseGranularitySchema,
@@ -27,7 +29,7 @@ const GranularitySchema = BaseGranularitySchema.default(
 );
 
 // =============================================================================
-// Ticker Conditions
+// Market Ticker Conditions
 // =============================================================================
 
 const TickerConditionSchema = z.discriminatedUnion('field', [
@@ -106,17 +108,8 @@ const TickerConditionSchema = z.discriminatedUnion('field', [
 
 export type TickerCondition = z.output<typeof TickerConditionSchema>;
 
-/**
- * Type guard to check if a field is a ticker field.
- */
-export function isTickerField(field: string): field is TickerConditionField {
-  return Object.values(TickerConditionField).includes(
-    field as TickerConditionField,
-  );
-}
-
 // =============================================================================
-// RSI Condition
+// Market Indicator Conditions
 // =============================================================================
 
 const RsiConditionSchema = z.discriminatedUnion('field', [
@@ -132,10 +125,6 @@ const RsiConditionSchema = z.discriminatedUnion('field', [
       .describe('RSI threshold (typically 30 for oversold, 70 for overbought)'),
   }),
 ]);
-
-// =============================================================================
-// MACD Conditions
-// =============================================================================
 
 const macdParams = {
   granularity: GranularitySchema,
@@ -169,10 +158,6 @@ const MacdConditionSchema = z.discriminatedUnion('field', [
     ...macdParams,
   }),
 ]);
-
-// =============================================================================
-// Bollinger Bands Conditions
-// =============================================================================
 
 const bollingerParams = {
   granularity: GranularitySchema,
@@ -224,10 +209,6 @@ const BollingerConditionSchema = z.discriminatedUnion('field', [
   }),
 ]);
 
-// =============================================================================
-// SMA Condition
-// =============================================================================
-
 const SmaConditionSchema = z.discriminatedUnion('field', [
   z.object({
     field: z
@@ -240,10 +221,6 @@ const SmaConditionSchema = z.discriminatedUnion('field', [
   }),
 ]);
 
-// =============================================================================
-// EMA Condition
-// =============================================================================
-
 const EmaConditionSchema = z.discriminatedUnion('field', [
   z.object({
     field: z
@@ -255,10 +232,6 @@ const EmaConditionSchema = z.discriminatedUnion('field', [
     value: z.number().describe('Threshold value to compare against'),
   }),
 ]);
-
-// =============================================================================
-// Stochastic Conditions
-// =============================================================================
 
 const stochasticParams = {
   granularity: GranularitySchema,
@@ -295,10 +268,6 @@ const StochasticConditionSchema = z.discriminatedUnion('field', [
   }),
 ]);
 
-// =============================================================================
-// Indicator Condition Type (union of all indicator conditions)
-// =============================================================================
-
 const IndicatorConditionSchema = z.discriminatedUnion('field', [
   ...RsiConditionSchema.options,
   ...MacdConditionSchema.options,
@@ -311,49 +280,150 @@ const IndicatorConditionSchema = z.discriminatedUnion('field', [
 export type IndicatorCondition = z.output<typeof IndicatorConditionSchema>;
 
 /**
- * Type guard to check if a condition is an indicator condition.
- */
-export function isIndicatorCondition(
-  condition: Condition,
-): condition is IndicatorCondition {
-  return Object.values(IndicatorConditionField).includes(
-    condition.field as IndicatorConditionField,
-  );
-}
-
-// =============================================================================
-// Combined Condition Schema
-// =============================================================================
-
-/**
  * A condition to evaluate against ticker data or technical indicators.
  */
-const ConditionSchema = z
+const MarketConditionSchema = z
   .discriminatedUnion('field', [
-    // Ticker conditions
     ...TickerConditionSchema.options,
-
-    // Indicator conditions
     ...IndicatorConditionSchema.options,
   ])
   .describe(
     'A condition to evaluate against ticker data or technical indicators',
   );
 
-export type Condition = z.output<typeof ConditionSchema>;
+export type MarketCondition = z.output<typeof MarketConditionSchema>;
+
+/**
+ * Type guard to check if a field is a ticker condition field.
+ */
+export function isTickerConditionField(
+  field: string,
+): field is TickerConditionField {
+  return Object.values(TickerConditionField).includes(
+    field as TickerConditionField,
+  );
+}
+
+/**
+ * Type guard to check if a field is an indicator condition field.
+ */
+function isIndicatorConditionField(
+  field: string,
+): field is IndicatorConditionField {
+  return Object.values(IndicatorConditionField).includes(
+    field as IndicatorConditionField,
+  );
+}
+
+/**
+ * Type guard to check if a market condition is an indicator condition.
+ */
+export function isIndicatorCondition(
+  condition: MarketCondition,
+): condition is IndicatorCondition {
+  return isIndicatorConditionField(condition.field);
+}
 
 // =============================================================================
-// Subscription Schema
+// Order Conditions
 // =============================================================================
 
 /**
- * A subscription to monitor a specific product with conditions.
+ * Status condition — triggers when order status is in the target list.
  */
-const SubscriptionSchema = z
+const OrderStatusConditionSchema = z.object({
+  field: z
+    .literal(OrderConditionField.Status)
+    .describe('Order execution status'),
+  targetStatus: z
+    .array(z.nativeEnum(OrderExecutionStatus))
+    .min(1)
+    .describe(
+      'Target statuses to match (triggers when order status is in this list)',
+    ),
+});
+
+/**
+ * Numeric order conditions — same operators as market conditions.
+ */
+const OrderNumericConditionSchema = z.discriminatedUnion('field', [
+  z.object({
+    field: z
+      .literal(OrderConditionField.AvgPrice)
+      .describe('Average fill price'),
+    operator: OperatorSchema,
+    value: z.number().describe('Threshold value to compare against'),
+  }),
+  z.object({
+    field: z
+      .literal(OrderConditionField.CompletionPercentage)
+      .describe('Order completion percentage (0-100)'),
+    operator: OperatorSchema,
+    value: z.number().describe('Threshold value to compare against'),
+  }),
+  z.object({
+    field: z
+      .literal(OrderConditionField.CumulativeQuantity)
+      .describe('Total quantity filled so far'),
+    operator: OperatorSchema,
+    value: z.number().describe('Threshold value to compare against'),
+  }),
+  z.object({
+    field: z.literal(OrderConditionField.TotalFees).describe('Total fees paid'),
+    operator: OperatorSchema,
+    value: z.number().describe('Threshold value to compare against'),
+  }),
+  z.object({
+    field: z
+      .literal(OrderConditionField.FilledValue)
+      .describe('Total filled value in quote currency'),
+    operator: OperatorSchema,
+    value: z.number().describe('Threshold value to compare against'),
+  }),
+  z.object({
+    field: z
+      .literal(OrderConditionField.NumberOfFills)
+      .describe('Number of individual fills'),
+    operator: OperatorSchema,
+    value: z.number().describe('Threshold value to compare against'),
+  }),
+]);
+
+/**
+ * Order condition — either a status check or a numeric comparison.
+ */
+const OrderConditionSchema = z
+  .union([OrderStatusConditionSchema, OrderNumericConditionSchema])
+  .describe('A condition to evaluate against order data');
+
+export type OrderCondition = z.output<typeof OrderConditionSchema>;
+export type OrderStatusCondition = z.output<typeof OrderStatusConditionSchema>;
+export type OrderNumericCondition = z.output<
+  typeof OrderNumericConditionSchema
+>;
+
+/**
+ * Type guard for status conditions.
+ */
+export function isOrderStatusCondition(
+  condition: OrderCondition,
+): condition is OrderStatusCondition {
+  return condition.field === OrderConditionField.Status;
+}
+
+// =============================================================================
+// Subscription Schemas (discriminated union on type)
+// =============================================================================
+
+/**
+ * Market subscription — monitor a product's ticker and indicator data.
+ */
+const MarketSubscriptionSchema = z
   .object({
+    type: z.literal(SubscriptionType.Market).describe('Subscription type'),
     productId: z.string().describe('Trading pair to monitor (e.g., "BTC-EUR")'),
     conditions: z
-      .array(ConditionSchema)
+      .array(MarketConditionSchema)
       .min(1)
       .max(5)
       .describe('Conditions that trigger the event'),
@@ -362,7 +432,44 @@ const SubscriptionSchema = z
       .default(ConditionLogic.ANY)
       .describe('How to combine conditions: "any" (OR) or "all" (AND)'),
   })
-  .describe('A subscription to monitor a specific product with conditions');
+  .describe(
+    'A market subscription to monitor a specific product with conditions',
+  );
+
+export type MarketSubscription = z.output<typeof MarketSubscriptionSchema>;
+
+/**
+ * Order subscription — monitor an order's status and fill data.
+ */
+const OrderSubscriptionSchema = z
+  .object({
+    type: z.literal(SubscriptionType.Order).describe('Subscription type'),
+    orderId: z.string().describe('Order ID to monitor'),
+    conditions: z
+      .array(OrderConditionSchema)
+      .min(1)
+      .max(5)
+      .describe('Conditions that trigger the event'),
+    logic: z
+      .nativeEnum(ConditionLogic)
+      .default(ConditionLogic.ANY)
+      .describe('How to combine conditions: "any" (OR) or "all" (AND)'),
+  })
+  .describe(
+    'An order subscription to monitor a specific order with conditions',
+  );
+
+export type OrderSubscription = z.output<typeof OrderSubscriptionSchema>;
+
+/**
+ * Discriminated union of all subscription types.
+ */
+const SubscriptionSchema = z
+  .discriminatedUnion('type', [
+    MarketSubscriptionSchema,
+    OrderSubscriptionSchema,
+  ])
+  .describe('A subscription — either market or order');
 
 export type Subscription = z.output<typeof SubscriptionSchema>;
 
@@ -371,16 +478,16 @@ export type Subscription = z.output<typeof SubscriptionSchema>;
 // =============================================================================
 
 /**
- * Request schema for wait_for_market_event tool.
+ * Request schema for wait_for_event tool.
  */
-export const WaitForMarketEventRequestSchema = z
+export const WaitForEventRequestSchema = z
   .object({
     subscriptions: z
       .array(SubscriptionSchema)
       .min(1)
       .max(10)
       .describe(
-        "Products and conditions to monitor. If multiple subscriptions are provided, the event triggers when any subscription's conditions are met.",
+        "Subscriptions to monitor. Supports market (ticker/indicator) and order (status/fill) subscriptions. Triggers when any subscription's conditions are met.",
       ),
     timeout: z
       .number()
@@ -389,8 +496,6 @@ export const WaitForMarketEventRequestSchema = z
       .default(55)
       .describe('Wait time in seconds (default: 55, max: 240)'),
   })
-  .describe('Request to wait for a market event matching specified conditions');
+  .describe('Request to wait for an event matching specified conditions');
 
-export type WaitForMarketEventRequest = z.output<
-  typeof WaitForMarketEventRequestSchema
->;
+export type WaitForEventRequest = z.output<typeof WaitForEventRequestSchema>;

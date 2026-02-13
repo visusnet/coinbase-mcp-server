@@ -8,10 +8,10 @@ jest.mock('../../logger', () => ({
 
 import { MarketDataSubscription } from './MarketDataSubscription';
 import type { MarketDataPool } from './MarketDataPool';
-import type { ConditionEvaluator } from './ConditionEvaluator';
-import type { Subscription as SubscriptionConfig } from './MarketEventService.request';
-import type { ConditionResult } from './MarketEventService.response';
-import type { Ticker } from './MarketEventService.message';
+import type { MarketConditionEvaluator } from './MarketConditionEvaluator';
+import type { MarketSubscription } from './EventService.request';
+import type { MarketConditionResult } from './EventService.response';
+import type { Ticker } from './MarketData.message';
 import type { BufferedCandle } from './CandleBuffer';
 import { Granularity } from './common.request';
 import {
@@ -19,7 +19,8 @@ import {
   ConditionOperator,
   IndicatorConditionField,
   TickerConditionField,
-} from './MarketEventService.types';
+} from './EventService.types';
+import { SubscriptionType } from './EventService.types';
 
 // =============================================================================
 // Mock Factories
@@ -101,13 +102,13 @@ function createMockPool(): MockPool {
 
 // Extract mock as standalone jest.fn() to avoid unbound-method errors
 const evaluateConditionsMock =
-  jest.fn<ConditionEvaluator['evaluateConditions']>();
+  jest.fn<MarketConditionEvaluator['evaluateConditions']>();
 
-function createMockEvaluator(): jest.Mocked<ConditionEvaluator> {
+function createMockEvaluator(): jest.Mocked<MarketConditionEvaluator> {
   evaluateConditionsMock.mockReset();
   return {
     evaluateConditions: evaluateConditionsMock,
-  } as unknown as jest.Mocked<ConditionEvaluator>;
+  } as unknown as jest.Mocked<MarketConditionEvaluator>;
 }
 
 function makeTicker(price: number): Ticker {
@@ -140,11 +141,11 @@ function makeCandles(count: number): BufferedCandle[] {
   }));
 }
 
-function triggeredConditionResult(
+function triggeredMarketConditionResult(
   field:
     | TickerConditionField
     | IndicatorConditionField = TickerConditionField.Price,
-): ConditionResult {
+): MarketConditionResult {
   return {
     field,
     operator: ConditionOperator.GT,
@@ -154,11 +155,11 @@ function triggeredConditionResult(
   };
 }
 
-function notTriggeredConditionResult(
+function notTriggeredMarketConditionResult(
   field:
     | TickerConditionField
     | IndicatorConditionField = TickerConditionField.Price,
-): ConditionResult {
+): MarketConditionResult {
   return {
     field,
     operator: ConditionOperator.GT,
@@ -174,7 +175,7 @@ function notTriggeredConditionResult(
 
 describe('MarketDataSubscription', () => {
   let mockPool: MockPool;
-  let mockEvaluator: jest.Mocked<ConditionEvaluator>;
+  let mockEvaluator: jest.Mocked<MarketConditionEvaluator>;
 
   beforeEach(() => {
     mockPool = createMockPool();
@@ -187,7 +188,8 @@ describe('MarketDataSubscription', () => {
 
   describe('start', () => {
     it('should subscribe to ticker when conditions include ticker fields', () => {
-      const config: SubscriptionConfig = {
+      const config: MarketSubscription = {
+        type: SubscriptionType.Market,
         productId: 'BTC-USD',
         conditions: [
           {
@@ -215,7 +217,8 @@ describe('MarketDataSubscription', () => {
     });
 
     it('should not subscribe to ticker when only indicator conditions', () => {
-      const config: SubscriptionConfig = {
+      const config: MarketSubscription = {
+        type: SubscriptionType.Market,
         productId: 'BTC-USD',
         conditions: [
           {
@@ -241,7 +244,8 @@ describe('MarketDataSubscription', () => {
     });
 
     it('should subscribe to candles per granularity for indicator conditions', () => {
-      const config: SubscriptionConfig = {
+      const config: MarketSubscription = {
+        type: SubscriptionType.Market,
         productId: 'BTC-USD',
         conditions: [
           {
@@ -287,7 +291,8 @@ describe('MarketDataSubscription', () => {
     });
 
     it('should subscribe to both ticker and candles when mixed conditions', () => {
-      const config: SubscriptionConfig = {
+      const config: MarketSubscription = {
+        type: SubscriptionType.Market,
         productId: 'BTC-USD',
         conditions: [
           {
@@ -318,7 +323,8 @@ describe('MarketDataSubscription', () => {
     });
 
     it('should calculate candle count with 20% buffer', () => {
-      const config: SubscriptionConfig = {
+      const config: MarketSubscription = {
+        type: SubscriptionType.Market,
         productId: 'BTC-USD',
         conditions: [
           {
@@ -349,7 +355,8 @@ describe('MarketDataSubscription', () => {
     });
 
     it('should use maximum candle count when multiple indicators share granularity', () => {
-      const config: SubscriptionConfig = {
+      const config: MarketSubscription = {
+        type: SubscriptionType.Market,
         productId: 'BTC-USD',
         conditions: [
           {
@@ -389,7 +396,8 @@ describe('MarketDataSubscription', () => {
     });
 
     it('should calculate candle count for MACD conditions', () => {
-      const config: SubscriptionConfig = {
+      const config: MarketSubscription = {
+        type: SubscriptionType.Market,
         productId: 'BTC-USD',
         conditions: [
           {
@@ -423,7 +431,8 @@ describe('MarketDataSubscription', () => {
     });
 
     it('should calculate candle count for Bollinger Bands conditions', () => {
-      const config: SubscriptionConfig = {
+      const config: MarketSubscription = {
+        type: SubscriptionType.Market,
         productId: 'BTC-USD',
         conditions: [
           {
@@ -456,7 +465,8 @@ describe('MarketDataSubscription', () => {
     });
 
     it('should calculate candle count for Stochastic conditions', () => {
-      const config: SubscriptionConfig = {
+      const config: MarketSubscription = {
+        type: SubscriptionType.Market,
         productId: 'BTC-USD',
         conditions: [
           {
@@ -489,7 +499,8 @@ describe('MarketDataSubscription', () => {
     });
 
     it('should calculate candle count for EMA conditions', () => {
-      const config: SubscriptionConfig = {
+      const config: MarketSubscription = {
+        type: SubscriptionType.Market,
         productId: 'BTC-USD',
         conditions: [
           {
@@ -527,7 +538,8 @@ describe('MarketDataSubscription', () => {
 
   describe('condition evaluation', () => {
     it('should evaluate conditions on ticker update', () => {
-      const config: SubscriptionConfig = {
+      const config: MarketSubscription = {
+        type: SubscriptionType.Market,
         productId: 'BTC-USD',
         conditions: [
           {
@@ -539,7 +551,9 @@ describe('MarketDataSubscription', () => {
         logic: ConditionLogic.ANY,
       };
 
-      evaluateConditionsMock.mockReturnValue([notTriggeredConditionResult()]);
+      evaluateConditionsMock.mockReturnValue([
+        notTriggeredMarketConditionResult(),
+      ]);
 
       const sub = new MarketDataSubscription(
         config,
@@ -561,7 +575,8 @@ describe('MarketDataSubscription', () => {
     });
 
     it('should track previous ticker for crossAbove/crossBelow', () => {
-      const config: SubscriptionConfig = {
+      const config: MarketSubscription = {
+        type: SubscriptionType.Market,
         productId: 'BTC-USD',
         conditions: [
           {
@@ -573,7 +588,9 @@ describe('MarketDataSubscription', () => {
         logic: ConditionLogic.ANY,
       };
 
-      evaluateConditionsMock.mockReturnValue([notTriggeredConditionResult()]);
+      evaluateConditionsMock.mockReturnValue([
+        notTriggeredMarketConditionResult(),
+      ]);
 
       const sub = new MarketDataSubscription(
         config,
@@ -599,7 +616,8 @@ describe('MarketDataSubscription', () => {
     });
 
     it('should evaluate conditions on candle update', () => {
-      const config: SubscriptionConfig = {
+      const config: MarketSubscription = {
+        type: SubscriptionType.Market,
         productId: 'BTC-USD',
         conditions: [
           {
@@ -614,7 +632,7 @@ describe('MarketDataSubscription', () => {
       };
 
       evaluateConditionsMock.mockReturnValue([
-        notTriggeredConditionResult(IndicatorConditionField.Rsi),
+        notTriggeredMarketConditionResult(IndicatorConditionField.Rsi),
       ]);
 
       const sub = new MarketDataSubscription(
@@ -637,7 +655,8 @@ describe('MarketDataSubscription', () => {
     });
 
     it('should track previous candles for crossAbove/crossBelow', () => {
-      const config: SubscriptionConfig = {
+      const config: MarketSubscription = {
+        type: SubscriptionType.Market,
         productId: 'BTC-USD',
         conditions: [
           {
@@ -652,7 +671,7 @@ describe('MarketDataSubscription', () => {
       };
 
       evaluateConditionsMock.mockReturnValue([
-        notTriggeredConditionResult(IndicatorConditionField.Rsi),
+        notTriggeredMarketConditionResult(IndicatorConditionField.Rsi),
       ]);
 
       const sub = new MarketDataSubscription(
@@ -676,8 +695,43 @@ describe('MarketDataSubscription', () => {
       );
     });
 
+    it('should update result with evaluated conditions', () => {
+      const config: MarketSubscription = {
+        type: SubscriptionType.Market,
+        productId: 'BTC-USD',
+        conditions: [
+          {
+            field: TickerConditionField.Price,
+            operator: ConditionOperator.GT,
+            value: 50000,
+          },
+        ],
+        logic: ConditionLogic.ANY,
+      };
+
+      const conditionResult = notTriggeredMarketConditionResult();
+      evaluateConditionsMock.mockReturnValue([conditionResult]);
+
+      const sub = new MarketDataSubscription(
+        config,
+        mockPool as unknown as MarketDataPool,
+        mockEvaluator,
+      );
+      sub.start();
+
+      mockPool.emitTicker(makeTicker(49000));
+
+      expect(sub.result).toEqual({
+        type: SubscriptionType.Market,
+        productId: 'BTC-USD',
+        triggered: false,
+        conditions: [conditionResult],
+      });
+    });
+
     it('should resolve promise when conditions trigger with ANY logic', async () => {
-      const config: SubscriptionConfig = {
+      const config: MarketSubscription = {
+        type: SubscriptionType.Market,
         productId: 'BTC-USD',
         conditions: [
           {
@@ -696,14 +750,14 @@ describe('MarketDataSubscription', () => {
 
       // First tick: nothing triggers
       evaluateConditionsMock.mockReturnValueOnce([
-        notTriggeredConditionResult(TickerConditionField.Price),
-        notTriggeredConditionResult(TickerConditionField.Volume24h),
+        notTriggeredMarketConditionResult(TickerConditionField.Price),
+        notTriggeredMarketConditionResult(TickerConditionField.Volume24h),
       ]);
 
       // Second tick: price triggers (but not volume)
       evaluateConditionsMock.mockReturnValueOnce([
-        triggeredConditionResult(TickerConditionField.Price),
-        notTriggeredConditionResult(TickerConditionField.Volume24h),
+        triggeredMarketConditionResult(TickerConditionField.Price),
+        notTriggeredMarketConditionResult(TickerConditionField.Volume24h),
       ]);
 
       const sub = new MarketDataSubscription(
@@ -723,7 +777,8 @@ describe('MarketDataSubscription', () => {
     });
 
     it('should resolve promise when all conditions trigger with ALL logic', async () => {
-      const config: SubscriptionConfig = {
+      const config: MarketSubscription = {
+        type: SubscriptionType.Market,
         productId: 'BTC-USD',
         conditions: [
           {
@@ -742,14 +797,14 @@ describe('MarketDataSubscription', () => {
 
       // Only price triggers — not enough for ALL
       evaluateConditionsMock.mockReturnValueOnce([
-        triggeredConditionResult(TickerConditionField.Price),
-        notTriggeredConditionResult(TickerConditionField.Volume24h),
+        triggeredMarketConditionResult(TickerConditionField.Price),
+        notTriggeredMarketConditionResult(TickerConditionField.Volume24h),
       ]);
 
       // Both trigger
       evaluateConditionsMock.mockReturnValueOnce([
-        triggeredConditionResult(TickerConditionField.Price),
-        triggeredConditionResult(TickerConditionField.Volume24h),
+        triggeredMarketConditionResult(TickerConditionField.Price),
+        triggeredMarketConditionResult(TickerConditionField.Volume24h),
       ]);
 
       const sub = new MarketDataSubscription(
@@ -771,7 +826,8 @@ describe('MarketDataSubscription', () => {
     });
 
     it('should not resolve when only some conditions trigger with ALL logic', () => {
-      const config: SubscriptionConfig = {
+      const config: MarketSubscription = {
+        type: SubscriptionType.Market,
         productId: 'BTC-USD',
         conditions: [
           {
@@ -789,8 +845,8 @@ describe('MarketDataSubscription', () => {
       };
 
       evaluateConditionsMock.mockReturnValue([
-        triggeredConditionResult(TickerConditionField.Price),
-        notTriggeredConditionResult(TickerConditionField.Volume24h),
+        triggeredMarketConditionResult(TickerConditionField.Price),
+        notTriggeredMarketConditionResult(TickerConditionField.Volume24h),
       ]);
 
       const sub = new MarketDataSubscription(
@@ -806,7 +862,8 @@ describe('MarketDataSubscription', () => {
     });
 
     it('should ignore data after triggered', async () => {
-      const config: SubscriptionConfig = {
+      const config: MarketSubscription = {
+        type: SubscriptionType.Market,
         productId: 'BTC-USD',
         conditions: [
           {
@@ -818,7 +875,9 @@ describe('MarketDataSubscription', () => {
         logic: ConditionLogic.ANY,
       };
 
-      evaluateConditionsMock.mockReturnValue([triggeredConditionResult()]);
+      evaluateConditionsMock.mockReturnValue([
+        triggeredMarketConditionResult(),
+      ]);
 
       const sub = new MarketDataSubscription(
         config,
@@ -837,7 +896,8 @@ describe('MarketDataSubscription', () => {
     });
 
     it('should ignore candle data after triggered', async () => {
-      const config: SubscriptionConfig = {
+      const config: MarketSubscription = {
+        type: SubscriptionType.Market,
         productId: 'BTC-USD',
         conditions: [
           {
@@ -852,7 +912,7 @@ describe('MarketDataSubscription', () => {
       };
 
       evaluateConditionsMock.mockReturnValue([
-        triggeredConditionResult(IndicatorConditionField.Rsi),
+        triggeredMarketConditionResult(IndicatorConditionField.Rsi),
       ]);
 
       const sub = new MarketDataSubscription(
@@ -878,7 +938,8 @@ describe('MarketDataSubscription', () => {
 
   describe('result', () => {
     it('should return initial not-triggered result before any data', () => {
-      const config: SubscriptionConfig = {
+      const config: MarketSubscription = {
+        type: SubscriptionType.Market,
         productId: 'BTC-USD',
         conditions: [
           {
@@ -897,6 +958,7 @@ describe('MarketDataSubscription', () => {
       );
 
       expect(sub.result).toEqual({
+        type: SubscriptionType.Market,
         productId: 'BTC-USD',
         triggered: false,
         conditions: [],
@@ -904,7 +966,8 @@ describe('MarketDataSubscription', () => {
     });
 
     it('should return latest evaluation result', () => {
-      const config: SubscriptionConfig = {
+      const config: MarketSubscription = {
+        type: SubscriptionType.Market,
         productId: 'BTC-USD',
         conditions: [
           {
@@ -916,7 +979,7 @@ describe('MarketDataSubscription', () => {
         logic: ConditionLogic.ANY,
       };
 
-      const expectedResult: ConditionResult[] = [
+      const expectedResult: MarketConditionResult[] = [
         {
           field: TickerConditionField.Price,
           operator: ConditionOperator.GT,
@@ -938,6 +1001,7 @@ describe('MarketDataSubscription', () => {
       mockPool.emitTicker(makeTicker(49500));
 
       expect(sub.result).toEqual({
+        type: SubscriptionType.Market,
         productId: 'BTC-USD',
         triggered: false,
         conditions: expectedResult,
@@ -951,7 +1015,8 @@ describe('MarketDataSubscription', () => {
 
   describe('cleanup', () => {
     it('should unsubscribe all subscriptions', () => {
-      const config: SubscriptionConfig = {
+      const config: MarketSubscription = {
+        type: SubscriptionType.Market,
         productId: 'BTC-USD',
         conditions: [
           {
@@ -982,6 +1047,30 @@ describe('MarketDataSubscription', () => {
       expect(mockPool.unsubscribe).toHaveBeenCalledWith('ticker-sub-1');
       expect(mockPool.unsubscribe).toHaveBeenCalledWith('candle-sub-2');
     });
+
+    it('should not call unsubscribe if start was never called', () => {
+      const config: MarketSubscription = {
+        type: SubscriptionType.Market,
+        productId: 'BTC-USD',
+        conditions: [
+          {
+            field: TickerConditionField.Price,
+            operator: ConditionOperator.GT,
+            value: 50000,
+          },
+        ],
+        logic: ConditionLogic.ANY,
+      };
+
+      const sub = new MarketDataSubscription(
+        config,
+        mockPool as unknown as MarketDataPool,
+        mockEvaluator,
+      );
+      sub.cleanup();
+
+      expect(mockPool.unsubscribe).not.toHaveBeenCalled();
+    });
   });
 
   // ---------------------------------------------------------------------------
@@ -990,7 +1079,8 @@ describe('MarketDataSubscription', () => {
 
   describe('disconnect', () => {
     it('should resolve with disconnected and set reason', async () => {
-      const config: SubscriptionConfig = {
+      const config: MarketSubscription = {
+        type: SubscriptionType.Market,
         productId: 'BTC-USD',
         conditions: [
           {
@@ -1015,7 +1105,8 @@ describe('MarketDataSubscription', () => {
     });
 
     it('should ignore disconnect after triggered', async () => {
-      const config: SubscriptionConfig = {
+      const config: MarketSubscription = {
+        type: SubscriptionType.Market,
         productId: 'BTC-USD',
         conditions: [
           {
@@ -1027,7 +1118,9 @@ describe('MarketDataSubscription', () => {
         logic: ConditionLogic.ANY,
       };
 
-      evaluateConditionsMock.mockReturnValue([triggeredConditionResult()]);
+      evaluateConditionsMock.mockReturnValue([
+        triggeredMarketConditionResult(),
+      ]);
 
       const sub = new MarketDataSubscription(
         config,
@@ -1055,7 +1148,8 @@ describe('MarketDataSubscription', () => {
     it('should log condition evaluation when trace enabled', () => {
       logger.streaming.isLevelEnabled.mockReturnValue(true);
 
-      const config: SubscriptionConfig = {
+      const config: MarketSubscription = {
+        type: SubscriptionType.Market,
         productId: 'BTC-USD',
         conditions: [
           {
@@ -1067,7 +1161,7 @@ describe('MarketDataSubscription', () => {
         logic: ConditionLogic.ANY,
       };
 
-      const condResult = notTriggeredConditionResult();
+      const condResult = notTriggeredMarketConditionResult();
       evaluateConditionsMock.mockReturnValue([condResult]);
 
       const sub = new MarketDataSubscription(
@@ -1095,7 +1189,8 @@ describe('MarketDataSubscription', () => {
     it('should not log when trace disabled', () => {
       logger.streaming.isLevelEnabled.mockReturnValue(false);
 
-      const config: SubscriptionConfig = {
+      const config: MarketSubscription = {
+        type: SubscriptionType.Market,
         productId: 'BTC-USD',
         conditions: [
           {
@@ -1107,7 +1202,9 @@ describe('MarketDataSubscription', () => {
         logic: ConditionLogic.ANY,
       };
 
-      evaluateConditionsMock.mockReturnValue([notTriggeredConditionResult()]);
+      evaluateConditionsMock.mockReturnValue([
+        notTriggeredMarketConditionResult(),
+      ]);
 
       const sub = new MarketDataSubscription(
         config,

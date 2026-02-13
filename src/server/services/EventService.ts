@@ -1,13 +1,19 @@
 import { logger } from '../../logger';
-import { ConditionEvaluator } from './ConditionEvaluator';
+import { MarketConditionEvaluator } from './MarketConditionEvaluator';
+import { OrderConditionEvaluator } from './OrderConditionEvaluator';
 import { MarketDataSubscription } from './MarketDataSubscription';
-import type { MarketDataPool } from './MarketDataPool';
-import type { WaitForMarketEventRequest } from './MarketEventService.request';
 import {
-  WaitForMarketEventResponseSchema,
-  type WaitForMarketEventResponse,
-} from './MarketEventService.response';
+  OrderDataSubscription,
+  type OrderDataPool,
+} from './OrderDataSubscription';
+import type { MarketDataPool } from './MarketDataPool';
+import type { WaitForEventRequest } from './EventService.request';
+import {
+  WaitForEventResponseSchema,
+  type WaitForEventResponse,
+} from './EventService.response';
 import type { TechnicalIndicatorsService } from './TechnicalIndicatorsService';
+import { SubscriptionType, type EventSubscription } from './EventService.types';
 import type { ToolExtra } from '@server/tools/ToolRegistry';
 
 function createTimeout(seconds: number): {
@@ -20,36 +26,54 @@ function createTimeout(seconds: number): {
 }
 
 /**
- * Service for monitoring market events via WebSocket.
+ * Service for monitoring market and order events via WebSocket.
  */
-export class MarketEventService {
-  private readonly conditionEvaluator: ConditionEvaluator;
+export class EventService {
+  private readonly marketConditionEvaluator: MarketConditionEvaluator;
+  private readonly orderConditionEvaluator: OrderConditionEvaluator;
 
   constructor(
     indicatorsService: TechnicalIndicatorsService,
     private readonly marketDataPool: MarketDataPool,
+    private readonly orderDataPool: OrderDataPool,
   ) {
-    this.conditionEvaluator = new ConditionEvaluator(indicatorsService);
+    this.marketConditionEvaluator = new MarketConditionEvaluator(
+      indicatorsService,
+    );
+    this.orderConditionEvaluator = new OrderConditionEvaluator();
   }
 
   /**
-   * Waits for market conditions to be met or timeout.
-   * Creates independent subscriptions per product that race against a timeout.
+   * Waits for event conditions to be met or timeout.
+   * Creates independent subscriptions that race against a timeout.
    */
-  public async waitForMarketEvent(
-    request: WaitForMarketEventRequest,
+  public async waitForEvent(
+    request: WaitForEventRequest,
     { signal }: ToolExtra,
-  ): Promise<WaitForMarketEventResponse> {
-    const subscriptions = request.subscriptions.map(
-      (sub) =>
-        new MarketDataSubscription(
-          sub,
-          this.marketDataPool,
-          this.conditionEvaluator,
-        ),
-    );
+  ): Promise<WaitForEventResponse> {
+    const subscriptions: EventSubscription[] = [];
 
-    return WaitForMarketEventResponseSchema.parse(
+    for (const sub of request.subscriptions) {
+      if (sub.type === SubscriptionType.Market) {
+        subscriptions.push(
+          new MarketDataSubscription(
+            sub,
+            this.marketDataPool,
+            this.marketConditionEvaluator,
+          ),
+        );
+      } else {
+        subscriptions.push(
+          new OrderDataSubscription(
+            sub,
+            this.orderDataPool,
+            this.orderConditionEvaluator,
+          ),
+        );
+      }
+    }
+
+    return WaitForEventResponseSchema.parse(
       await this.waitForAnySubscription(subscriptions, request.timeout, signal),
     );
   }
@@ -59,10 +83,10 @@ export class MarketEventService {
    * and cleans up.
    */
   private async waitForAnySubscription(
-    subscriptions: MarketDataSubscription[],
+    subscriptions: EventSubscription[],
     timeout: number,
     signal: AbortSignal,
-  ): Promise<WaitForMarketEventResponse> {
+  ): Promise<WaitForEventResponse> {
     for (const sub of subscriptions) {
       sub.start();
     }
@@ -74,7 +98,7 @@ export class MarketEventService {
         'abort',
         () => {
           logger.streaming.info(
-            { productIds: subscriptions.map((s) => s.result.productId) },
+            { subscriptionCount: subscriptions.length },
             'AbortSignal fired — cancelling waitForAnySubscription',
           );
           resolve('aborted');

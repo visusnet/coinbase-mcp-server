@@ -97,7 +97,7 @@ const TEST_API_KEY = 'organizations/test-org/apiKeys/test-key';
 // Import AFTER mock setup (jest.mock is hoisted, globals set in beforeEach)
 import { CoinbaseMcpServer } from './CoinbaseMcpServer';
 
-describe('Market Event Integration', () => {
+describe('Event Integration', () => {
   let server: CoinbaseMcpServer;
   let client: Client;
 
@@ -139,6 +139,7 @@ describe('Market Event Integration', () => {
     const ARGS = {
       subscriptions: [
         {
+          type: 'market',
           productId: 'BTC-EUR',
           conditions: [{ field: 'price', operator: 'gt', value: 65000 }],
         },
@@ -150,6 +151,7 @@ describe('Market Event Integration', () => {
       status: 'triggered',
       subscriptions: [
         {
+          type: 'market',
           productId: 'BTC-EUR',
           triggered: true,
           conditions: [
@@ -168,12 +170,12 @@ describe('Market Event Integration', () => {
 
     async function callAndInject(): Promise<unknown> {
       const toolPromise = client.callTool({
-        name: 'wait_for_market_event',
+        name: 'wait_for_event',
         arguments: ARGS,
       });
 
       await settle();
-      MockWebSocket.instances[0].simulateMessage(
+      getMarketDataWebSocket().simulateMessage(
         tickerMessage([makeTicker('BTC-EUR', '66000.00')]),
       );
 
@@ -193,6 +195,7 @@ describe('Market Event Integration', () => {
     const ARGS = {
       subscriptions: [
         {
+          type: 'market',
           productId: 'BTC-EUR',
           conditions: [
             {
@@ -212,6 +215,7 @@ describe('Market Event Integration', () => {
       status: 'triggered',
       subscriptions: [
         {
+          type: 'market',
           productId: 'BTC-EUR',
           triggered: true,
           conditions: [
@@ -230,15 +234,13 @@ describe('Market Event Integration', () => {
 
     async function callAndInject(): Promise<unknown> {
       const toolPromise = client.callTool({
-        name: 'wait_for_market_event',
+        name: 'wait_for_event',
         arguments: ARGS,
       });
 
       await settle();
       // SMA(2) on closes [100, 200, 400] = (200+400)/2 = 300 > 250
-      MockWebSocket.instances[0].simulateMessage(
-        candleMessage([100, 200, 400]),
-      );
+      getMarketDataWebSocket().simulateMessage(candleMessage([100, 200, 400]));
 
       return parseToolResult((await toolPromise) as CallToolResult);
     }
@@ -256,6 +258,7 @@ describe('Market Event Integration', () => {
     const ARGS = {
       subscriptions: [
         {
+          type: 'market',
           productId: 'BTC-EUR',
           conditions: [
             {
@@ -275,6 +278,7 @@ describe('Market Event Integration', () => {
       status: 'triggered',
       subscriptions: [
         {
+          type: 'market',
           productId: 'BTC-EUR',
           triggered: true,
           conditions: [
@@ -296,7 +300,7 @@ describe('Market Event Integration', () => {
       mockFetchWithCandles();
 
       const toolPromise = client.callTool({
-        name: 'wait_for_market_event',
+        name: 'wait_for_event',
         arguments: ARGS,
       });
 
@@ -318,6 +322,7 @@ describe('Market Event Integration', () => {
     const ARGS = {
       subscriptions: [
         {
+          type: 'market',
           productId: 'BTC-EUR',
           conditions: [
             { field: 'price', operator: 'gt', value: 65000 },
@@ -339,6 +344,7 @@ describe('Market Event Integration', () => {
       status: 'triggered',
       subscriptions: [
         {
+          type: 'market',
           productId: 'BTC-EUR',
           triggered: true,
           conditions: [
@@ -364,13 +370,13 @@ describe('Market Event Integration', () => {
 
     async function callAndInject(): Promise<unknown> {
       const toolPromise = client.callTool({
-        name: 'wait_for_market_event',
+        name: 'wait_for_event',
         arguments: ARGS,
       });
 
       await settle();
       // Only inject ticker — no candle data, so SMA stays null
-      MockWebSocket.instances[0].simulateMessage(
+      getMarketDataWebSocket().simulateMessage(
         tickerMessage([makeTicker('BTC-EUR', '66000.00')]),
       );
 
@@ -390,6 +396,7 @@ describe('Market Event Integration', () => {
     const ARGS = {
       subscriptions: [
         {
+          type: 'market',
           productId: 'BTC-EUR',
           conditions: [
             { field: 'price', operator: 'gt', value: 65000 },
@@ -411,6 +418,7 @@ describe('Market Event Integration', () => {
       status: 'triggered',
       subscriptions: [
         {
+          type: 'market',
           productId: 'BTC-EUR',
           triggered: true,
           conditions: [
@@ -436,16 +444,14 @@ describe('Market Event Integration', () => {
 
     async function callAndInject(): Promise<unknown> {
       const toolPromise = client.callTool({
-        name: 'wait_for_market_event',
+        name: 'wait_for_event',
         arguments: ARGS,
       });
 
       await settle();
       // Only inject candles — no ticker data, so price stays null
       // SMA(2) on [100, 200, 400] = 300 > 250
-      MockWebSocket.instances[0].simulateMessage(
-        candleMessage([100, 200, 400]),
-      );
+      getMarketDataWebSocket().simulateMessage(candleMessage([100, 200, 400]));
 
       return parseToolResult((await toolPromise) as CallToolResult);
     }
@@ -463,10 +469,12 @@ describe('Market Event Integration', () => {
     const ARGS = {
       subscriptions: [
         {
+          type: 'market',
           productId: 'BTC-EUR',
           conditions: [{ field: 'price', operator: 'gt', value: 65000 }],
         },
         {
+          type: 'market',
           productId: 'ETH-EUR',
           conditions: [{ field: 'price', operator: 'gt', value: 5000 }],
         },
@@ -478,6 +486,7 @@ describe('Market Event Integration', () => {
       status: 'triggered',
       subscriptions: [
         {
+          type: 'market',
           productId: 'BTC-EUR',
           triggered: true,
           conditions: [
@@ -491,6 +500,7 @@ describe('Market Event Integration', () => {
           ],
         },
         {
+          type: 'market',
           productId: 'ETH-EUR',
           triggered: false,
           conditions: [
@@ -509,12 +519,12 @@ describe('Market Event Integration', () => {
 
     async function callAndInject(): Promise<unknown> {
       const toolPromise = client.callTool({
-        name: 'wait_for_market_event',
+        name: 'wait_for_event',
         arguments: ARGS,
       });
 
       await settle();
-      const ws = MockWebSocket.instances[0];
+      const ws = getMarketDataWebSocket();
 
       // Send ETH first (not triggering) so it has condition results
       ws.simulateMessage(tickerMessage([makeTicker('ETH-EUR', '4000.00')]));
@@ -530,13 +540,344 @@ describe('Market Event Integration', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // 7. WebSocket disconnect returns error
+  // 7. Order status condition triggers
   // ---------------------------------------------------------------------------
 
-  describe('WebSocket disconnect returns error', () => {
+  describe('order status condition triggers', () => {
     const ARGS = {
       subscriptions: [
         {
+          type: 'order',
+          orderId: 'order-123',
+          conditions: [{ field: 'status', targetStatus: ['FILLED'] }],
+        },
+      ],
+      timeout: 10,
+    };
+
+    const EXPECTED = {
+      status: 'triggered',
+      subscriptions: [
+        {
+          type: 'order',
+          orderId: 'order-123',
+          triggered: true,
+          conditions: [
+            {
+              field: 'status',
+              targetStatus: ['FILLED'],
+              actualStatus: 'FILLED',
+              triggered: true,
+            },
+          ],
+        },
+      ],
+      timestamp: expect.any(String),
+    };
+
+    async function callAndInject(): Promise<unknown> {
+      const toolPromise = client.callTool({
+        name: 'wait_for_event',
+        arguments: ARGS,
+      });
+
+      await settle();
+      getUserChannelWebSocket().simulateMessage(
+        orderMessage([makeOrder('order-123', 'FILLED')]),
+      );
+
+      return parseToolResult((await toolPromise) as CallToolResult);
+    }
+
+    it('triggers', async () => {
+      expect(await callAndInject()).toEqual(EXPECTED);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // 8. Order numeric condition triggers
+  // ---------------------------------------------------------------------------
+
+  describe('order numeric condition triggers', () => {
+    const ARGS = {
+      subscriptions: [
+        {
+          type: 'order',
+          orderId: 'order-123',
+          conditions: [
+            { field: 'completionPercentage', operator: 'gte', value: 50 },
+          ],
+        },
+      ],
+      timeout: 10,
+    };
+
+    const EXPECTED = {
+      status: 'triggered',
+      subscriptions: [
+        {
+          type: 'order',
+          orderId: 'order-123',
+          triggered: true,
+          conditions: [
+            {
+              field: 'completionPercentage',
+              operator: 'gte',
+              threshold: 50,
+              actualValue: 75,
+              triggered: true,
+            },
+          ],
+        },
+      ],
+      timestamp: expect.any(String),
+    };
+
+    async function callAndInject(): Promise<unknown> {
+      const toolPromise = client.callTool({
+        name: 'wait_for_event',
+        arguments: ARGS,
+      });
+
+      await settle();
+      getUserChannelWebSocket().simulateMessage(
+        orderMessage([
+          makeOrder('order-123', 'OPEN', { completion_percentage: '75' }),
+        ]),
+      );
+
+      return parseToolResult((await toolPromise) as CallToolResult);
+    }
+
+    it('triggers', async () => {
+      expect(await callAndInject()).toEqual(EXPECTED);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // 9. Order status with multiple targets
+  // ---------------------------------------------------------------------------
+
+  describe('order status with multiple targets', () => {
+    const ARGS = {
+      subscriptions: [
+        {
+          type: 'order',
+          orderId: 'order-123',
+          conditions: [
+            { field: 'status', targetStatus: ['FILLED', 'CANCELLED'] },
+          ],
+        },
+      ],
+      timeout: 10,
+    };
+
+    const EXPECTED = {
+      status: 'triggered',
+      subscriptions: [
+        {
+          type: 'order',
+          orderId: 'order-123',
+          triggered: true,
+          conditions: [
+            {
+              field: 'status',
+              targetStatus: ['FILLED', 'CANCELLED'],
+              actualStatus: 'CANCELLED',
+              triggered: true,
+            },
+          ],
+        },
+      ],
+      timestamp: expect.any(String),
+    };
+
+    async function callAndInject(): Promise<unknown> {
+      const toolPromise = client.callTool({
+        name: 'wait_for_event',
+        arguments: ARGS,
+      });
+
+      await settle();
+      getUserChannelWebSocket().simulateMessage(
+        orderMessage([makeOrder('order-123', 'CANCELLED')]),
+      );
+
+      return parseToolResult((await toolPromise) as CallToolResult);
+    }
+
+    it('triggers', async () => {
+      expect(await callAndInject()).toEqual(EXPECTED);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // 10. Mixed market + order: market triggers first
+  // ---------------------------------------------------------------------------
+
+  describe('mixed market + order: market triggers first', () => {
+    const ARGS = {
+      subscriptions: [
+        {
+          type: 'market',
+          productId: 'BTC-EUR',
+          conditions: [{ field: 'price', operator: 'gt', value: 65000 }],
+        },
+        {
+          type: 'order',
+          orderId: 'order-123',
+          conditions: [{ field: 'status', targetStatus: ['FILLED'] }],
+        },
+      ],
+      timeout: 10,
+    };
+
+    const EXPECTED = {
+      status: 'triggered',
+      subscriptions: [
+        {
+          type: 'market',
+          productId: 'BTC-EUR',
+          triggered: true,
+          conditions: [
+            {
+              field: 'price',
+              operator: 'gt',
+              threshold: 65000,
+              actualValue: 66000,
+              triggered: true,
+            },
+          ],
+        },
+        {
+          type: 'order',
+          orderId: 'order-123',
+          triggered: false,
+          conditions: [
+            {
+              field: 'status',
+              targetStatus: ['FILLED'],
+              actualStatus: 'OPEN',
+              triggered: false,
+            },
+          ],
+        },
+      ],
+      timestamp: expect.any(String),
+    };
+
+    async function callAndInject(): Promise<unknown> {
+      const toolPromise = client.callTool({
+        name: 'wait_for_event',
+        arguments: ARGS,
+      });
+
+      await settle();
+      // Order still open
+      getUserChannelWebSocket().simulateMessage(
+        orderMessage([makeOrder('order-123', 'OPEN')]),
+      );
+      // Market triggers
+      getMarketDataWebSocket().simulateMessage(
+        tickerMessage([makeTicker('BTC-EUR', '66000.00')]),
+      );
+
+      return parseToolResult((await toolPromise) as CallToolResult);
+    }
+
+    it('triggers', async () => {
+      expect(await callAndInject()).toEqual(EXPECTED);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // 11. Mixed market + order: order triggers first
+  // ---------------------------------------------------------------------------
+
+  describe('mixed market + order: order triggers first', () => {
+    const ARGS = {
+      subscriptions: [
+        {
+          type: 'market',
+          productId: 'BTC-EUR',
+          conditions: [{ field: 'price', operator: 'gt', value: 99999 }],
+        },
+        {
+          type: 'order',
+          orderId: 'order-123',
+          conditions: [{ field: 'status', targetStatus: ['FILLED'] }],
+        },
+      ],
+      timeout: 10,
+    };
+
+    const EXPECTED = {
+      status: 'triggered',
+      subscriptions: [
+        {
+          type: 'market',
+          productId: 'BTC-EUR',
+          triggered: false,
+          conditions: [
+            {
+              field: 'price',
+              operator: 'gt',
+              threshold: 99999,
+              actualValue: 66000,
+              triggered: false,
+            },
+          ],
+        },
+        {
+          type: 'order',
+          orderId: 'order-123',
+          triggered: true,
+          conditions: [
+            {
+              field: 'status',
+              targetStatus: ['FILLED'],
+              actualStatus: 'FILLED',
+              triggered: true,
+            },
+          ],
+        },
+      ],
+      timestamp: expect.any(String),
+    };
+
+    async function callAndInject(): Promise<unknown> {
+      const toolPromise = client.callTool({
+        name: 'wait_for_event',
+        arguments: ARGS,
+      });
+
+      await settle();
+      // Market not triggering
+      getMarketDataWebSocket().simulateMessage(
+        tickerMessage([makeTicker('BTC-EUR', '66000.00')]),
+      );
+      // Order fills — triggers
+      getUserChannelWebSocket().simulateMessage(
+        orderMessage([makeOrder('order-123', 'FILLED')]),
+      );
+
+      return parseToolResult((await toolPromise) as CallToolResult);
+    }
+
+    it('triggers', async () => {
+      expect(await callAndInject()).toEqual(EXPECTED);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // 12. Market data WebSocket disconnect returns error
+  // ---------------------------------------------------------------------------
+
+  describe('market data WebSocket disconnect returns error', () => {
+    const ARGS = {
+      subscriptions: [
+        {
+          type: 'market',
           productId: 'BTC-EUR',
           conditions: [{ field: 'price', operator: 'gt', value: 65000 }],
         },
@@ -557,14 +898,14 @@ describe('Market Event Integration', () => {
 
     async function callAndDisconnect(): Promise<unknown> {
       const toolPromise = client.callTool({
-        name: 'wait_for_market_event',
+        name: 'wait_for_event',
         arguments: ARGS,
       });
 
       await settle();
 
       // Simulate authentication error — triggers disconnect
-      MockWebSocket.instances[0].simulateMessage(AUTH_ERROR);
+      getMarketDataWebSocket().simulateMessage(AUTH_ERROR);
 
       const response = (await toolPromise) as CallToolResult;
       return JSON.parse(
@@ -578,7 +919,56 @@ describe('Market Event Integration', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // 8. Timeout when no conditions trigger
+  // 13. User channel WebSocket disconnect returns error
+  // ---------------------------------------------------------------------------
+
+  describe('user channel WebSocket disconnect returns error', () => {
+    const ARGS = {
+      subscriptions: [
+        {
+          type: 'order',
+          orderId: 'order-123',
+          conditions: [{ field: 'status', targetStatus: ['FILLED'] }],
+        },
+      ],
+      timeout: 2,
+    };
+
+    const AUTH_ERROR = {
+      type: 'error',
+      message: 'authentication failure - invalid token',
+    };
+
+    const EXPECTED = {
+      status: 'error',
+      reason: expect.stringContaining('authentication'),
+      timestamp: expect.any(String),
+    };
+
+    async function callAndDisconnect(): Promise<unknown> {
+      const toolPromise = client.callTool({
+        name: 'wait_for_event',
+        arguments: ARGS,
+      });
+
+      await settle();
+
+      // Simulate authentication error on user channel — triggers disconnect
+      getUserChannelWebSocket().simulateMessage(AUTH_ERROR);
+
+      const response = (await toolPromise) as CallToolResult;
+      return JSON.parse(
+        (response.content[0] as { text: string }).text,
+      ) as unknown;
+    }
+
+    it('returns error', async () => {
+      expect(await callAndDisconnect()).toEqual(EXPECTED);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // 14. Timeout when no conditions trigger
   // ---------------------------------------------------------------------------
 
   describe('timeout when no conditions trigger', () => {
@@ -592,6 +982,7 @@ describe('Market Event Integration', () => {
     const ARGS = {
       subscriptions: [
         {
+          type: 'market',
           productId: 'BTC-EUR',
           conditions: [{ field: 'price', operator: 'gt', value: 99999 }],
         },
@@ -606,7 +997,7 @@ describe('Market Event Integration', () => {
 
     async function callAndTimeout(): Promise<unknown> {
       const toolPromise = client.callTool({
-        name: 'wait_for_market_event',
+        name: 'wait_for_event',
         arguments: ARGS,
       });
 
@@ -614,7 +1005,7 @@ describe('Market Event Integration', () => {
       await jest.advanceTimersByTimeAsync(0);
 
       // Inject a ticker that does NOT meet the condition
-      MockWebSocket.instances[0].simulateMessage(
+      getMarketDataWebSocket().simulateMessage(
         tickerMessage([makeTicker('BTC-EUR', '50000.00')]),
       );
 
@@ -630,13 +1021,67 @@ describe('Market Event Integration', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // 9. ALL logic: both conditions must trigger
+  // 15. Order subscription timeout
   // ---------------------------------------------------------------------------
 
-  describe('ALL logic: both conditions must trigger', () => {
+  describe('order subscription timeout', () => {
+    beforeEach(() => {
+      jest.useFakeTimers();
+    });
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
     const ARGS = {
       subscriptions: [
         {
+          type: 'order',
+          orderId: 'order-123',
+          conditions: [{ field: 'status', targetStatus: ['FILLED'] }],
+        },
+      ],
+      timeout: 10,
+    };
+
+    const EXPECTED = expect.objectContaining({
+      status: 'timeout',
+      duration: 10,
+    });
+
+    async function callAndTimeout(): Promise<unknown> {
+      const toolPromise = client.callTool({
+        name: 'wait_for_event',
+        arguments: ARGS,
+      });
+
+      // Let microtasks run to set up WebSocket + subscriptions
+      await jest.advanceTimersByTimeAsync(0);
+
+      // Inject an order update that does NOT meet the condition
+      getUserChannelWebSocket().simulateMessage(
+        orderMessage([makeOrder('order-123', 'OPEN')]),
+      );
+
+      // Fast-forward past the timeout
+      await jest.advanceTimersByTimeAsync(10_000);
+
+      return parseToolResult((await toolPromise) as CallToolResult);
+    }
+
+    it('times out', async () => {
+      expect(await callAndTimeout()).toEqual(EXPECTED);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // 16. ALL logic of market conditions: both must trigger
+  // ---------------------------------------------------------------------------
+
+  describe('ALL logic of market conditions: both must trigger', () => {
+    const ARGS = {
+      subscriptions: [
+        {
+          type: 'market',
           productId: 'BTC-EUR',
           conditions: [
             { field: 'price', operator: 'gt', value: 65000 },
@@ -652,6 +1097,7 @@ describe('Market Event Integration', () => {
       status: 'triggered',
       subscriptions: [
         {
+          type: 'market',
           productId: 'BTC-EUR',
           triggered: true,
           conditions: [
@@ -676,13 +1122,13 @@ describe('Market Event Integration', () => {
 
     async function callAndInject(): Promise<unknown> {
       const toolPromise = client.callTool({
-        name: 'wait_for_market_event',
+        name: 'wait_for_event',
         arguments: ARGS,
       });
 
       await settle();
       // Both price (66000 > 65000) and volume (1000.5 > 500) satisfy conditions
-      MockWebSocket.instances[0].simulateMessage(
+      getMarketDataWebSocket().simulateMessage(
         tickerMessage([makeTicker('BTC-EUR', '66000.00')]),
       );
 
@@ -695,10 +1141,10 @@ describe('Market Event Integration', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // 10. ALL logic: partial trigger does not resolve
+  // 17. ALL logic of market conditions: partial trigger times out
   // ---------------------------------------------------------------------------
 
-  describe('ALL logic: partial trigger times out', () => {
+  describe('ALL logic of market conditions: partial trigger times out', () => {
     beforeEach(() => {
       jest.useFakeTimers();
     });
@@ -709,6 +1155,7 @@ describe('Market Event Integration', () => {
     const ARGS = {
       subscriptions: [
         {
+          type: 'market',
           productId: 'BTC-EUR',
           conditions: [
             { field: 'price', operator: 'gt', value: 65000 },
@@ -727,7 +1174,7 @@ describe('Market Event Integration', () => {
 
     async function callAndPartialTrigger(): Promise<unknown> {
       const toolPromise = client.callTool({
-        name: 'wait_for_market_event',
+        name: 'wait_for_event',
         arguments: ARGS,
       });
 
@@ -735,7 +1182,7 @@ describe('Market Event Integration', () => {
       await jest.advanceTimersByTimeAsync(0);
 
       // Price triggers (66000 > 65000) but volume does NOT (1000.5 < 9999)
-      MockWebSocket.instances[0].simulateMessage(
+      getMarketDataWebSocket().simulateMessage(
         tickerMessage([makeTicker('BTC-EUR', '66000.00')]),
       );
 
@@ -751,17 +1198,349 @@ describe('Market Event Integration', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // 11. Multiple subscriptions: second product triggers
+  // 18. ALL logic of order conditions: both must trigger
+  // ---------------------------------------------------------------------------
+
+  describe('ALL logic of order conditions: both must trigger', () => {
+    const ARGS = {
+      subscriptions: [
+        {
+          type: 'order',
+          orderId: 'order-123',
+          conditions: [
+            { field: 'status', targetStatus: ['FILLED'] },
+            { field: 'completionPercentage', operator: 'gte', value: 100 },
+          ],
+          logic: 'all',
+        },
+      ],
+      timeout: 10,
+    };
+
+    const EXPECTED = expect.objectContaining({
+      status: 'triggered',
+      subscriptions: [
+        {
+          type: 'order',
+          orderId: 'order-123',
+          triggered: true,
+          conditions: [
+            {
+              field: 'status',
+              targetStatus: ['FILLED'],
+              actualStatus: 'FILLED',
+              triggered: true,
+            },
+            {
+              field: 'completionPercentage',
+              operator: 'gte',
+              threshold: 100,
+              actualValue: 100,
+              triggered: true,
+            },
+          ],
+        },
+      ],
+    });
+
+    async function callAndInject(): Promise<unknown> {
+      const toolPromise = client.callTool({
+        name: 'wait_for_event',
+        arguments: ARGS,
+      });
+
+      await settle();
+      // Both status=FILLED and completionPercentage=100 satisfy conditions
+      getUserChannelWebSocket().simulateMessage(
+        orderMessage([
+          makeOrder('order-123', 'FILLED', { completion_percentage: '100' }),
+        ]),
+      );
+
+      return parseToolResult((await toolPromise) as CallToolResult);
+    }
+
+    it('triggers', async () => {
+      expect(await callAndInject()).toEqual(EXPECTED);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // 19. ALL logic of order conditions: partial trigger times out
+  // ---------------------------------------------------------------------------
+
+  describe('ALL logic of order conditions: partial trigger times out', () => {
+    beforeEach(() => {
+      jest.useFakeTimers();
+    });
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    const ARGS = {
+      subscriptions: [
+        {
+          type: 'order',
+          orderId: 'order-123',
+          conditions: [
+            { field: 'status', targetStatus: ['FILLED'] },
+            { field: 'completionPercentage', operator: 'gte', value: 100 },
+          ],
+          logic: 'all',
+        },
+      ],
+      timeout: 10,
+    };
+
+    const EXPECTED = expect.objectContaining({
+      status: 'timeout',
+      duration: 10,
+    });
+
+    async function callAndPartialTrigger(): Promise<unknown> {
+      const toolPromise = client.callTool({
+        name: 'wait_for_event',
+        arguments: ARGS,
+      });
+
+      // Let microtasks run to set up WebSocket + subscriptions
+      await jest.advanceTimersByTimeAsync(0);
+
+      // Status is OPEN (not FILLED) but completionPercentage is 100 — partial trigger
+      getUserChannelWebSocket().simulateMessage(
+        orderMessage([
+          makeOrder('order-123', 'OPEN', { completion_percentage: '100' }),
+        ]),
+      );
+
+      // Fast-forward past the timeout
+      await jest.advanceTimersByTimeAsync(10_000);
+
+      return parseToolResult((await toolPromise) as CallToolResult);
+    }
+
+    it('times out', async () => {
+      expect(await callAndPartialTrigger()).toEqual(EXPECTED);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // 20. Order completionPercentage crossAbove triggers
+  // ---------------------------------------------------------------------------
+
+  describe('order completionPercentage crossAbove triggers', () => {
+    const ARGS = {
+      subscriptions: [
+        {
+          type: 'order',
+          orderId: 'order-123',
+          conditions: [
+            {
+              field: 'completionPercentage',
+              operator: 'crossAbove',
+              value: 50,
+            },
+          ],
+        },
+      ],
+      timeout: 10,
+    };
+
+    const EXPECTED = expect.objectContaining({
+      status: 'triggered',
+      subscriptions: [
+        {
+          type: 'order',
+          orderId: 'order-123',
+          triggered: true,
+          conditions: [
+            {
+              field: 'completionPercentage',
+              operator: 'crossAbove',
+              threshold: 50,
+              actualValue: 75,
+              triggered: true,
+            },
+          ],
+        },
+      ],
+    });
+
+    async function callAndInject(): Promise<unknown> {
+      const toolPromise = client.callTool({
+        name: 'wait_for_event',
+        arguments: ARGS,
+      });
+
+      await settle();
+      const ws = getUserChannelWebSocket();
+
+      // First update: below threshold (sets previous value)
+      ws.simulateMessage(
+        orderMessage([
+          makeOrder('order-123', 'OPEN', { completion_percentage: '25' }),
+        ]),
+      );
+      // Second update: above threshold (crosses upward)
+      ws.simulateMessage(
+        orderMessage([
+          makeOrder('order-123', 'OPEN', { completion_percentage: '75' }),
+        ]),
+      );
+
+      return parseToolResult((await toolPromise) as CallToolResult);
+    }
+
+    it('triggers', async () => {
+      expect(await callAndInject()).toEqual(EXPECTED);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // 21. User channel WebSocket reconnect delivers order update
+  // ---------------------------------------------------------------------------
+
+  describe('user channel WebSocket reconnect delivers order update', () => {
+    beforeEach(() => {
+      jest.useFakeTimers();
+    });
+    afterEach(() => {
+      jest.useRealTimers();
+    });
+
+    const ARGS = {
+      subscriptions: [
+        {
+          type: 'order',
+          orderId: 'order-123',
+          conditions: [{ field: 'status', targetStatus: ['FILLED'] }],
+        },
+      ],
+      timeout: 30,
+    };
+
+    const EXPECTED = expect.objectContaining({
+      status: 'triggered',
+      subscriptions: [
+        {
+          type: 'order',
+          orderId: 'order-123',
+          triggered: true,
+          conditions: [
+            {
+              field: 'status',
+              targetStatus: ['FILLED'],
+              actualStatus: 'FILLED',
+              triggered: true,
+            },
+          ],
+        },
+      ],
+    });
+
+    async function callAndReconnect(): Promise<unknown> {
+      const toolPromise = client.callTool({
+        name: 'wait_for_event',
+        arguments: ARGS,
+      });
+
+      // Let microtasks settle — WS connects, subscriptions set up
+      await jest.advanceTimersByTimeAsync(0);
+
+      // Simulate unexpected close — triggers reconnect with exponential backoff
+      getUserChannelWebSocket().close();
+
+      // Advance past first reconnect delay (1000ms)
+      await jest.advanceTimersByTimeAsync(1000);
+
+      // Reconnected WebSocket receives order update normally
+      getUserChannelWebSocket(MockWebSocket.OPEN).simulateMessage(
+        orderMessage([makeOrder('order-123', 'FILLED')]),
+      );
+
+      return parseToolResult((await toolPromise) as CallToolResult);
+    }
+
+    it('triggers', async () => {
+      expect(await callAndReconnect()).toEqual(EXPECTED);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // 22. User channel WebSocket max reconnect attempts returns error
+  // ---------------------------------------------------------------------------
+
+  describe('user channel WebSocket max reconnect attempts returns error', () => {
+    beforeEach(() => {
+      jest.useFakeTimers();
+    });
+    afterEach(() => {
+      MockWebSocket.shouldError = false;
+      jest.useRealTimers();
+    });
+
+    const ARGS = {
+      subscriptions: [
+        {
+          type: 'order',
+          orderId: 'order-123',
+          conditions: [{ field: 'status', targetStatus: ['FILLED'] }],
+        },
+      ],
+      timeout: 60,
+    };
+
+    const EXPECTED = expect.objectContaining({
+      status: 'error',
+      reason: expect.stringContaining('reconnect attempts'),
+    });
+
+    async function callAndExhaust(): Promise<unknown> {
+      const toolPromise = client.callTool({
+        name: 'wait_for_event',
+        arguments: ARGS,
+      });
+
+      // Let the initial WebSocket connect
+      await jest.advanceTimersByTimeAsync(0);
+
+      // All subsequent connections fail
+      MockWebSocket.shouldError = true;
+      getUserChannelWebSocket().close();
+
+      // Advance through each reconnect delay individually so microtasks
+      // from MockWebSocket constructors are flushed between attempts.
+      // Delays: 1s, 2s, 4s, 8s, 16s (5 attempts, total 31s)
+      for (let attempt = 0; attempt < 5; attempt++) {
+        const delay = 1000 * Math.pow(2, attempt);
+        await jest.advanceTimersByTimeAsync(delay);
+      }
+
+      const response = (await toolPromise) as CallToolResult;
+      return JSON.parse(
+        (response.content[0] as { text: string }).text,
+      ) as unknown;
+    }
+
+    it('returns error', async () => {
+      expect(await callAndExhaust()).toEqual(EXPECTED);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // 23. Multiple subscriptions: second product triggers
   // ---------------------------------------------------------------------------
 
   describe('multiple subscriptions: second product triggers', () => {
     const ARGS = {
       subscriptions: [
         {
+          type: 'market',
           productId: 'BTC-EUR',
           conditions: [{ field: 'price', operator: 'gt', value: 99999 }],
         },
         {
+          type: 'market',
           productId: 'ETH-EUR',
           conditions: [{ field: 'price', operator: 'gt', value: 3000 }],
         },
@@ -773,6 +1552,7 @@ describe('Market Event Integration', () => {
       status: 'triggered',
       subscriptions: [
         {
+          type: 'market',
           productId: 'BTC-EUR',
           triggered: false,
           conditions: [
@@ -786,6 +1566,7 @@ describe('Market Event Integration', () => {
           ],
         },
         {
+          type: 'market',
           productId: 'ETH-EUR',
           triggered: true,
           conditions: [
@@ -803,13 +1584,13 @@ describe('Market Event Integration', () => {
 
     async function callAndInject(): Promise<unknown> {
       const toolPromise = client.callTool({
-        name: 'wait_for_market_event',
+        name: 'wait_for_event',
         arguments: ARGS,
       });
 
       await settle();
       // Both products get a ticker, but only ETH triggers
-      MockWebSocket.instances[0].simulateMessage(
+      getMarketDataWebSocket().simulateMessage(
         tickerMessage([
           makeTicker('BTC-EUR', '66000.00'),
           makeTicker('ETH-EUR', '3500.00'),
@@ -825,13 +1606,14 @@ describe('Market Event Integration', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // 12. Ticker condition with LT operator
+  // 19. Ticker condition with LT operator
   // ---------------------------------------------------------------------------
 
   describe('ticker triggers on LT condition', () => {
     const ARGS = {
       subscriptions: [
         {
+          type: 'market',
           productId: 'BTC-EUR',
           conditions: [{ field: 'price', operator: 'lt', value: 70000 }],
         },
@@ -843,6 +1625,7 @@ describe('Market Event Integration', () => {
       status: 'triggered',
       subscriptions: [
         {
+          type: 'market',
           productId: 'BTC-EUR',
           triggered: true,
           conditions: [
@@ -860,12 +1643,12 @@ describe('Market Event Integration', () => {
 
     async function callAndInject(): Promise<unknown> {
       const toolPromise = client.callTool({
-        name: 'wait_for_market_event',
+        name: 'wait_for_event',
         arguments: ARGS,
       });
 
       await settle();
-      MockWebSocket.instances[0].simulateMessage(
+      getMarketDataWebSocket().simulateMessage(
         tickerMessage([makeTicker('BTC-EUR', '66000.00')]),
       );
 
@@ -878,13 +1661,14 @@ describe('Market Event Integration', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // 13. Ticker crossAbove operator
+  // 20. Ticker crossAbove operator
   // ---------------------------------------------------------------------------
 
   describe('ticker crossAbove triggers on threshold crossing', () => {
     const ARGS = {
       subscriptions: [
         {
+          type: 'market',
           productId: 'BTC-EUR',
           conditions: [
             { field: 'price', operator: 'crossAbove', value: 65000 },
@@ -898,6 +1682,7 @@ describe('Market Event Integration', () => {
       status: 'triggered',
       subscriptions: [
         {
+          type: 'market',
           productId: 'BTC-EUR',
           triggered: true,
           conditions: [
@@ -915,12 +1700,12 @@ describe('Market Event Integration', () => {
 
     async function callAndInject(): Promise<unknown> {
       const toolPromise = client.callTool({
-        name: 'wait_for_market_event',
+        name: 'wait_for_event',
         arguments: ARGS,
       });
 
       await settle();
-      const ws = MockWebSocket.instances[0];
+      const ws = getMarketDataWebSocket();
 
       // First tick: below threshold (sets previousTicker)
       ws.simulateMessage(tickerMessage([makeTicker('BTC-EUR', '64000.00')]));
@@ -936,13 +1721,14 @@ describe('Market Event Integration', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // 14. Ticker crossBelow operator
+  // 21. Ticker crossBelow operator
   // ---------------------------------------------------------------------------
 
   describe('ticker crossBelow triggers on threshold crossing', () => {
     const ARGS = {
       subscriptions: [
         {
+          type: 'market',
           productId: 'BTC-EUR',
           conditions: [
             { field: 'price', operator: 'crossBelow', value: 65000 },
@@ -956,6 +1742,7 @@ describe('Market Event Integration', () => {
       status: 'triggered',
       subscriptions: [
         {
+          type: 'market',
           productId: 'BTC-EUR',
           triggered: true,
           conditions: [
@@ -973,12 +1760,12 @@ describe('Market Event Integration', () => {
 
     async function callAndInject(): Promise<unknown> {
       const toolPromise = client.callTool({
-        name: 'wait_for_market_event',
+        name: 'wait_for_event',
         arguments: ARGS,
       });
 
       await settle();
-      const ws = MockWebSocket.instances[0];
+      const ws = getMarketDataWebSocket();
 
       // First tick: above threshold (sets previousTicker)
       ws.simulateMessage(tickerMessage([makeTicker('BTC-EUR', '66000.00')]));
@@ -994,13 +1781,14 @@ describe('Market Event Integration', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // 15. GTE operator at exact boundary
+  // 22. GTE operator at exact boundary
   // ---------------------------------------------------------------------------
 
   describe('GTE triggers when value equals threshold', () => {
     const ARGS = {
       subscriptions: [
         {
+          type: 'market',
           productId: 'BTC-EUR',
           conditions: [{ field: 'price', operator: 'gte', value: 66000 }],
         },
@@ -1012,6 +1800,7 @@ describe('Market Event Integration', () => {
       status: 'triggered',
       subscriptions: [
         {
+          type: 'market',
           productId: 'BTC-EUR',
           triggered: true,
           conditions: [
@@ -1029,13 +1818,13 @@ describe('Market Event Integration', () => {
 
     async function callAndInject(): Promise<unknown> {
       const toolPromise = client.callTool({
-        name: 'wait_for_market_event',
+        name: 'wait_for_event',
         arguments: ARGS,
       });
 
       await settle();
       // Price exactly equals threshold — GT would fail, GTE succeeds
-      MockWebSocket.instances[0].simulateMessage(
+      getMarketDataWebSocket().simulateMessage(
         tickerMessage([makeTicker('BTC-EUR', '66000.00')]),
       );
 
@@ -1048,13 +1837,14 @@ describe('Market Event Integration', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // 16. Multiple granularities in one subscription
+  // 23. Multiple granularities in one subscription
   // ---------------------------------------------------------------------------
 
   describe('multiple granularities: 5m WebSocket + 1h REST in same subscription', () => {
     const ARGS = {
       subscriptions: [
         {
+          type: 'market',
           productId: 'BTC-EUR',
           conditions: [
             {
@@ -1082,6 +1872,7 @@ describe('Market Event Integration', () => {
       status: 'triggered',
       subscriptions: [
         {
+          type: 'market',
           productId: 'BTC-EUR',
           triggered: true,
           conditions: [
@@ -1109,15 +1900,13 @@ describe('Market Event Integration', () => {
       mockFetchWithCandles();
 
       const toolPromise = client.callTool({
-        name: 'wait_for_market_event',
+        name: 'wait_for_event',
         arguments: ARGS,
       });
 
       await settle();
       // WebSocket candles for FIVE_MINUTE: SMA(2) = (200+400)/2 = 300 > 250
-      MockWebSocket.instances[0].simulateMessage(
-        candleMessage([100, 200, 400]),
-      );
+      getMarketDataWebSocket().simulateMessage(candleMessage([100, 200, 400]));
 
       return parseToolResult((await toolPromise) as CallToolResult);
     }
@@ -1128,13 +1917,14 @@ describe('Market Event Integration', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // 17. ALL logic: ticker + indicator both must trigger
+  // 24. ALL logic: ticker + indicator both must trigger
   // ---------------------------------------------------------------------------
 
-  describe('ALL logic: ticker + indicator from different sources', () => {
+  describe('ALL logic of market conditions: ticker + indicator from different sources', () => {
     const ARGS = {
       subscriptions: [
         {
+          type: 'market',
           productId: 'BTC-EUR',
           conditions: [
             { field: 'price', operator: 'gt', value: 65000 },
@@ -1156,6 +1946,7 @@ describe('Market Event Integration', () => {
       status: 'triggered',
       subscriptions: [
         {
+          type: 'market',
           productId: 'BTC-EUR',
           triggered: true,
           conditions: [
@@ -1180,12 +1971,12 @@ describe('Market Event Integration', () => {
 
     async function callAndInject(): Promise<unknown> {
       const toolPromise = client.callTool({
-        name: 'wait_for_market_event',
+        name: 'wait_for_event',
         arguments: ARGS,
       });
 
       await settle();
-      const ws = MockWebSocket.instances[0];
+      const ws = getMarketDataWebSocket();
 
       // Ticker alone satisfies price but ALL requires both
       ws.simulateMessage(tickerMessage([makeTicker('BTC-EUR', '66000.00')]));
@@ -1201,13 +1992,14 @@ describe('Market Event Integration', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // 18. Non-auth WebSocket error does not disconnect
+  // 25. Non-auth WebSocket error does not disconnect
   // ---------------------------------------------------------------------------
 
-  describe('non-auth WebSocket error does not disconnect', () => {
+  describe('market data WebSocket non-auth error does not disconnect', () => {
     const ARGS = {
       subscriptions: [
         {
+          type: 'market',
           productId: 'BTC-EUR',
           conditions: [{ field: 'price', operator: 'gt', value: 65000 }],
         },
@@ -1219,6 +2011,7 @@ describe('Market Event Integration', () => {
       status: 'triggered',
       subscriptions: [
         {
+          type: 'market',
           productId: 'BTC-EUR',
           triggered: true,
           conditions: [
@@ -1236,12 +2029,12 @@ describe('Market Event Integration', () => {
 
     async function callAndInject(): Promise<unknown> {
       const toolPromise = client.callTool({
-        name: 'wait_for_market_event',
+        name: 'wait_for_event',
         arguments: ARGS,
       });
 
       await settle();
-      const ws = MockWebSocket.instances[0];
+      const ws = getMarketDataWebSocket();
 
       // Non-auth error — logged but does NOT trigger disconnect
       ws.simulateMessage({ type: 'error', message: 'rate limited' });
@@ -1258,10 +2051,10 @@ describe('Market Event Integration', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // 19. WebSocket reconnect delivers data after close
+  // 26. Market data WebSocket reconnect delivers data after close
   // ---------------------------------------------------------------------------
 
-  describe('WebSocket reconnect delivers data after close', () => {
+  describe('market data WebSocket reconnect delivers data after close', () => {
     beforeEach(() => {
       jest.useFakeTimers();
     });
@@ -1272,6 +2065,7 @@ describe('Market Event Integration', () => {
     const ARGS = {
       subscriptions: [
         {
+          type: 'market',
           productId: 'BTC-EUR',
           conditions: [{ field: 'price', operator: 'gt', value: 65000 }],
         },
@@ -1283,6 +2077,7 @@ describe('Market Event Integration', () => {
       status: 'triggered',
       subscriptions: [
         {
+          type: 'market',
           productId: 'BTC-EUR',
           triggered: true,
           conditions: [
@@ -1300,7 +2095,7 @@ describe('Market Event Integration', () => {
 
     async function callAndReconnect(): Promise<unknown> {
       const toolPromise = client.callTool({
-        name: 'wait_for_market_event',
+        name: 'wait_for_event',
         arguments: ARGS,
       });
 
@@ -1308,13 +2103,13 @@ describe('Market Event Integration', () => {
       await jest.advanceTimersByTimeAsync(0);
 
       // Simulate unexpected close — triggers reconnect with exponential backoff
-      MockWebSocket.instances[0].close();
+      getMarketDataWebSocket().close();
 
       // Advance past first reconnect delay (1000ms)
       await jest.advanceTimersByTimeAsync(1000);
 
       // Reconnected WebSocket receives data normally
-      MockWebSocket.instances[1].simulateMessage(
+      getMarketDataWebSocket(MockWebSocket.OPEN).simulateMessage(
         tickerMessage([makeTicker('BTC-EUR', '66000.00')]),
       );
 
@@ -1327,7 +2122,7 @@ describe('Market Event Integration', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // 20. REST fetch retries then triggers
+  // 27. REST fetch retries then triggers
   // ---------------------------------------------------------------------------
 
   describe('REST fetch retries then triggers', () => {
@@ -1341,6 +2136,7 @@ describe('Market Event Integration', () => {
     const ARGS = {
       subscriptions: [
         {
+          type: 'market',
           productId: 'BTC-EUR',
           conditions: [
             {
@@ -1360,6 +2156,7 @@ describe('Market Event Integration', () => {
       status: 'triggered',
       subscriptions: [
         {
+          type: 'market',
           productId: 'BTC-EUR',
           triggered: true,
           conditions: [
@@ -1423,7 +2220,7 @@ describe('Market Event Integration', () => {
       mockFetchFailThenSucceed();
 
       const toolPromise = client.callTool({
-        name: 'wait_for_market_event',
+        name: 'wait_for_event',
         arguments: ARGS,
       });
 
@@ -1442,13 +2239,14 @@ describe('Market Event Integration', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // 21. LTE triggers when value equals threshold
+  // 28. LTE triggers when value equals threshold
   // ---------------------------------------------------------------------------
 
   describe('LTE triggers when value equals threshold', () => {
     const ARGS = {
       subscriptions: [
         {
+          type: 'market',
           productId: 'BTC-EUR',
           conditions: [{ field: 'price', operator: 'lte', value: 66000 }],
         },
@@ -1460,6 +2258,7 @@ describe('Market Event Integration', () => {
       status: 'triggered',
       subscriptions: [
         {
+          type: 'market',
           productId: 'BTC-EUR',
           triggered: true,
           conditions: [
@@ -1477,12 +2276,12 @@ describe('Market Event Integration', () => {
 
     async function callAndInject(): Promise<unknown> {
       const toolPromise = client.callTool({
-        name: 'wait_for_market_event',
+        name: 'wait_for_event',
         arguments: ARGS,
       });
 
       await settle();
-      MockWebSocket.instances[0].simulateMessage(
+      getMarketDataWebSocket().simulateMessage(
         tickerMessage([makeTicker('BTC-EUR', '66000.00')]),
       );
 
@@ -1495,13 +2294,14 @@ describe('Market Event Integration', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // 22. Indicator crossAbove triggers on candle update
+  // 29. Indicator crossAbove triggers on candle update
   // ---------------------------------------------------------------------------
 
   describe('indicator crossAbove triggers on candle update', () => {
     const ARGS = {
       subscriptions: [
         {
+          type: 'market',
           productId: 'BTC-EUR',
           conditions: [
             {
@@ -1521,6 +2321,7 @@ describe('Market Event Integration', () => {
       status: 'triggered',
       subscriptions: [
         {
+          type: 'market',
           productId: 'BTC-EUR',
           triggered: true,
           conditions: [
@@ -1538,12 +2339,12 @@ describe('Market Event Integration', () => {
 
     async function callAndInject(): Promise<unknown> {
       const toolPromise = client.callTool({
-        name: 'wait_for_market_event',
+        name: 'wait_for_event',
         arguments: ARGS,
       });
 
       await settle();
-      const ws = MockWebSocket.instances[0];
+      const ws = getMarketDataWebSocket();
 
       // First candles: SMA(2) = (100+200)/2 = 150 — below threshold
       ws.simulateMessage(candleMessage([100, 200]));
@@ -1559,10 +2360,10 @@ describe('Market Event Integration', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // 23. Max reconnect attempts returns error
+  // 30. Market data WebSocket max reconnect attempts returns error
   // ---------------------------------------------------------------------------
 
-  describe('max reconnect attempts returns error', () => {
+  describe('market data WebSocket max reconnect attempts returns error', () => {
     beforeEach(() => {
       jest.useFakeTimers();
     });
@@ -1574,6 +2375,7 @@ describe('Market Event Integration', () => {
     const ARGS = {
       subscriptions: [
         {
+          type: 'market',
           productId: 'BTC-EUR',
           conditions: [{ field: 'price', operator: 'gt', value: 65000 }],
         },
@@ -1588,7 +2390,7 @@ describe('Market Event Integration', () => {
 
     async function callAndExhaust(): Promise<unknown> {
       const toolPromise = client.callTool({
-        name: 'wait_for_market_event',
+        name: 'wait_for_event',
         arguments: ARGS,
       });
 
@@ -1597,7 +2399,7 @@ describe('Market Event Integration', () => {
 
       // All subsequent connections fail
       MockWebSocket.shouldError = true;
-      MockWebSocket.instances[0].close();
+      getMarketDataWebSocket().close();
 
       // Advance through each reconnect delay individually so microtasks
       // from MockWebSocket constructors are flushed between attempts.
@@ -1619,7 +2421,7 @@ describe('Market Event Integration', () => {
   });
 
   // ---------------------------------------------------------------------------
-  // 24. REST fetch exhausts all retries returns error
+  // 31. REST fetch exhausts all retries returns error
   // ---------------------------------------------------------------------------
 
   describe('REST fetch exhausts all retries returns error', () => {
@@ -1633,6 +2435,7 @@ describe('Market Event Integration', () => {
     const ARGS = {
       subscriptions: [
         {
+          type: 'market',
           productId: 'BTC-EUR',
           conditions: [
             {
@@ -1659,7 +2462,7 @@ describe('Market Event Integration', () => {
       );
 
       const toolPromise = client.callTool({
-        name: 'wait_for_market_event',
+        name: 'wait_for_event',
         arguments: ARGS,
       });
 
@@ -1780,4 +2583,49 @@ async function settle(): Promise<void> {
   for (let i = 0; i < 10; i++) {
     await new Promise<void>((r) => setTimeout(r, 0));
   }
+}
+
+function makeOrder(
+  orderId: string,
+  status: string,
+  overrides?: Record<string, unknown>,
+): Record<string, unknown> {
+  return {
+    order_id: orderId,
+    status,
+    avg_price: '65000.00',
+    completion_percentage: '100',
+    cumulative_quantity: '0.1',
+    total_fees: '0.50',
+    filled_value: '6500.00',
+    number_of_fills: '1',
+    ...overrides,
+  };
+}
+
+function orderMessage(
+  orders: Record<string, unknown>[],
+): Record<string, unknown> {
+  return {
+    channel: 'user',
+    timestamp: '2026-02-11T00:00:00.000Z',
+    sequence_num: 1,
+    events: [{ type: 'update', orders }],
+  };
+}
+
+function getUserChannelWebSocket(readyState?: number): MockWebSocket {
+  return MockWebSocket.instances.find(
+    (ws) =>
+      ws.url.includes('user') &&
+      (readyState === undefined || ws.readyState === readyState),
+  ) as MockWebSocket;
+}
+
+function getMarketDataWebSocket(readyState?: number): MockWebSocket {
+  return MockWebSocket.instances.find(
+    (ws) =>
+      !ws.url.includes('user') &&
+      (readyState === undefined || ws.readyState === readyState),
+  ) as MockWebSocket;
 }

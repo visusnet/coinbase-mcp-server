@@ -98,7 +98,7 @@ function setupMockWebSocket(): void {
 const TEST_URL = 'wss://test.example.com';
 const noop = jest.fn();
 
-function createConn(
+function createConnection(
   messageHandler = noop as (data: unknown) => void,
   disconnectHandler = noop as (reason: string) => void,
 ): WebSocketConnection {
@@ -140,20 +140,20 @@ describe('WebSocketConnection', () => {
 
   describe('subscribe', () => {
     it('should create WebSocket connection on first subscribe', () => {
-      const conn = createConn();
+      const connection = createConnection();
 
-      conn.subscribe('ticker', ['BTC-USD']);
+      connection.subscribe('ticker', ['BTC-USD']);
 
       expect(mockWebSocketInstances).toHaveLength(1);
       expect(mockWebSocketInstances[0].url).toBe(TEST_URL);
 
-      conn.close();
+      connection.close();
     });
 
     it('should subscribe to heartbeats on connection open', async () => {
-      const conn = createConn();
+      const connection = createConnection();
 
-      conn.subscribe('ticker', ['BTC-USD']);
+      connection.subscribe('ticker', ['BTC-USD']);
       mockWebSocketInstances[0].simulateOpen();
       await flush();
 
@@ -165,13 +165,13 @@ describe('WebSocketConnection', () => {
         channel: 'heartbeats',
       });
 
-      conn.close();
+      connection.close();
     });
 
     it('should send subscribe message with JWT after connection opens', async () => {
-      const conn = createConn();
+      const connection = createConnection();
 
-      conn.subscribe('ticker', ['BTC-USD']);
+      connection.subscribe('ticker', ['BTC-USD']);
       mockWebSocketInstances[0].simulateOpen();
       await flush();
 
@@ -185,14 +185,14 @@ describe('WebSocketConnection', () => {
         jwt: 'mock-jwt-token',
       });
 
-      conn.close();
+      connection.close();
     });
 
     it('should deduplicate connections for multiple subscribes', async () => {
-      const conn = createConn();
+      const connection = createConnection();
 
-      conn.subscribe('ticker', ['BTC-USD']);
-      conn.subscribe('candles', ['ETH-USD']);
+      connection.subscribe('ticker', ['BTC-USD']);
+      connection.subscribe('candles', ['ETH-USD']);
 
       expect(mockWebSocketInstances).toHaveLength(1);
 
@@ -202,25 +202,44 @@ describe('WebSocketConnection', () => {
       // heartbeats + ticker + candles = 3 send calls
       expect(mockWebSocketInstances[0].send).toHaveBeenCalledTimes(3);
 
-      conn.close();
+      connection.close();
     });
 
     it('should send immediately if already connected', async () => {
-      const conn = createConn();
+      const connection = createConnection();
 
-      conn.subscribe('ticker', ['BTC-USD']);
+      connection.subscribe('ticker', ['BTC-USD']);
       mockWebSocketInstances[0].simulateOpen();
       await flush();
       mockWebSocketInstances[0].send.mockClear();
 
       // Subscribe again — already connected
-      conn.subscribe('candles', ['ETH-USD']);
+      connection.subscribe('candles', ['ETH-USD']);
       await flush();
 
       expect(mockWebSocketInstances).toHaveLength(1);
       expect(mockWebSocketInstances[0].send).toHaveBeenCalledTimes(1);
 
-      conn.close();
+      connection.close();
+    });
+
+    it('should handle channels without product_ids (e.g., user channel)', async () => {
+      const connection = createConnection();
+
+      connection.subscribe('user');
+      mockWebSocketInstances[0].simulateOpen();
+      await flush();
+
+      const calls = mockWebSocketInstances[0].send.mock.calls.map(
+        (c) => JSON.parse(c[0]) as Record<string, unknown>,
+      );
+      expect(calls[1]).toEqual({
+        type: 'subscribe',
+        channel: 'user',
+        jwt: 'mock-jwt-token',
+      });
+
+      connection.close();
     });
   });
 
@@ -230,46 +249,46 @@ describe('WebSocketConnection', () => {
 
   describe('unsubscribe', () => {
     it('should send unsubscribe message with JWT', async () => {
-      const conn = createConn();
+      const connection = createConnection();
 
-      conn.subscribe('ticker', ['BTC-USD']);
+      connection.subscribe('ticker', ['BTC-USD']);
       mockWebSocketInstances[0].simulateOpen();
       await flush();
       mockWebSocketInstances[0].send.mockClear();
 
-      conn.unsubscribe('ticker', ['BTC-USD']);
+      connection.unsubscribe('ticker', ['BTC-USD']);
 
       expect(mockWebSocketInstances[0].send).toHaveBeenCalledWith(
         JSON.stringify({
           type: 'unsubscribe',
-          product_ids: ['BTC-USD'],
           channel: 'ticker',
           jwt: 'mock-jwt-token',
+          product_ids: ['BTC-USD'],
         }),
       );
 
-      conn.close();
+      connection.close();
     });
 
     it('should not send if not connected', () => {
-      const conn = createConn();
+      const connection = createConnection();
 
       // Unsubscribe before any connection
-      conn.unsubscribe('ticker', ['BTC-USD']);
+      connection.unsubscribe('ticker', ['BTC-USD']);
 
       expect(mockWebSocketInstances).toHaveLength(0);
 
-      conn.close();
+      connection.close();
     });
 
     it('should remove products from tracking', async () => {
-      const conn = createConn();
+      const connection = createConnection();
 
-      conn.subscribe('ticker', ['BTC-USD']);
+      connection.subscribe('ticker', ['BTC-USD']);
       mockWebSocketInstances[0].simulateOpen();
       await flush();
 
-      conn.unsubscribe('ticker', ['BTC-USD']);
+      connection.unsubscribe('ticker', ['BTC-USD']);
 
       // Trigger reconnect — should NOT re-subscribe to ticker
       mockWebSocketInstances[0].simulateClose();
@@ -279,7 +298,28 @@ describe('WebSocketConnection', () => {
       // No new connection because no tracked subscriptions
       expect(mockWebSocketInstances).toHaveLength(1);
 
-      conn.close();
+      connection.close();
+    });
+
+    it('should handle unsubscribe for channels without product_ids', async () => {
+      const connection = createConnection();
+
+      connection.subscribe('user');
+      mockWebSocketInstances[0].simulateOpen();
+      await flush();
+      mockWebSocketInstances[0].send.mockClear();
+
+      connection.unsubscribe('user');
+
+      expect(mockWebSocketInstances[0].send).toHaveBeenCalledWith(
+        JSON.stringify({
+          type: 'unsubscribe',
+          channel: 'user',
+          jwt: 'mock-jwt-token',
+        }),
+      );
+
+      connection.close();
     });
   });
 
@@ -290,9 +330,9 @@ describe('WebSocketConnection', () => {
   describe('messageHandler', () => {
     it('should deliver parsed messages to handler', async () => {
       const handler = jest.fn();
-      const conn = createConn(handler);
+      const connection = createConnection(handler);
 
-      conn.subscribe('ticker', ['BTC-USD']);
+      connection.subscribe('ticker', ['BTC-USD']);
       mockWebSocketInstances[0].simulateOpen();
       await flush();
 
@@ -302,14 +342,14 @@ describe('WebSocketConnection', () => {
       expect(handler).toHaveBeenCalledTimes(1);
       expect(handler).toHaveBeenCalledWith(testMessage);
 
-      conn.close();
+      connection.close();
     });
 
     it('should handle JSON parse errors gracefully', async () => {
       const handler = jest.fn();
-      const conn = createConn(handler);
+      const connection = createConnection(handler);
 
-      conn.subscribe('ticker', ['BTC-USD']);
+      connection.subscribe('ticker', ['BTC-USD']);
       mockWebSocketInstances[0].simulateOpen();
       await flush();
 
@@ -334,7 +374,7 @@ describe('WebSocketConnection', () => {
         'Raw message',
       );
 
-      conn.close();
+      connection.close();
     });
   });
 
@@ -344,9 +384,9 @@ describe('WebSocketConnection', () => {
 
   describe('reconnect', () => {
     it('should reconnect on unexpected close', async () => {
-      const conn = createConn();
+      const connection = createConnection();
 
-      conn.subscribe('ticker', ['BTC-USD']);
+      connection.subscribe('ticker', ['BTC-USD']);
       mockWebSocketInstances[0].simulateOpen();
       await flush();
 
@@ -359,13 +399,13 @@ describe('WebSocketConnection', () => {
 
       expect(mockWebSocketInstances).toHaveLength(2);
 
-      conn.close();
+      connection.close();
     });
 
     it('should use exponential backoff', async () => {
-      const conn = createConn();
+      const connection = createConnection();
 
-      conn.subscribe('ticker', ['BTC-USD']);
+      connection.subscribe('ticker', ['BTC-USD']);
       mockWebSocketInstances[0].simulateOpen();
       await flush();
 
@@ -391,14 +431,14 @@ describe('WebSocketConnection', () => {
       await flush();
       expect(mockWebSocketInstances).toHaveLength(3);
 
-      conn.close();
+      connection.close();
     });
 
     it('should re-subscribe after reconnect', async () => {
-      const conn = createConn();
+      const connection = createConnection();
 
-      conn.subscribe('ticker', ['BTC-USD']);
-      conn.subscribe('candles', ['ETH-USD']);
+      connection.subscribe('ticker', ['BTC-USD']);
+      connection.subscribe('candles', ['ETH-USD']);
       mockWebSocketInstances[0].simulateOpen();
       await flush();
 
@@ -432,14 +472,14 @@ describe('WebSocketConnection', () => {
         }),
       );
 
-      conn.close();
+      connection.close();
     });
 
     it('should stop after max reconnect attempts and notify disconnect handler', async () => {
       const disconnectHandler = jest.fn();
-      const conn = createConn(jest.fn(), disconnectHandler);
+      const connection = createConnection(jest.fn(), disconnectHandler);
 
-      conn.subscribe('ticker', ['BTC-USD']);
+      connection.subscribe('ticker', ['BTC-USD']);
       mockWebSocketInstances[0].simulateOpen();
       await flush();
 
@@ -472,13 +512,13 @@ describe('WebSocketConnection', () => {
 
       expect(mockWebSocketInstances).toHaveLength(countBefore);
 
-      conn.close();
+      connection.close();
     });
 
     it('should not start duplicate reconnect while already reconnecting', async () => {
-      const conn = createConn();
+      const connection = createConnection();
 
-      conn.subscribe('ticker', ['BTC-USD']);
+      connection.subscribe('ticker', ['BTC-USD']);
       mockWebSocketInstances[0].simulateOpen();
       await flush();
 
@@ -501,17 +541,17 @@ describe('WebSocketConnection', () => {
       // No additional instances created — guard prevented duplicate
       expect(mockWebSocketInstances).toHaveLength(2);
 
-      conn.close();
+      connection.close();
     });
 
     it('should not reconnect after close()', async () => {
-      const conn = createConn();
+      const connection = createConnection();
 
-      conn.subscribe('ticker', ['BTC-USD']);
+      connection.subscribe('ticker', ['BTC-USD']);
       mockWebSocketInstances[0].simulateOpen();
       await flush();
 
-      conn.close();
+      connection.close();
 
       mockWebSocketInstances[0].simulateClose();
 
@@ -522,14 +562,14 @@ describe('WebSocketConnection', () => {
     });
 
     it('should not reconnect when no subscriptions exist', async () => {
-      const conn = createConn();
+      const connection = createConnection();
 
-      conn.subscribe('ticker', ['BTC-USD']);
+      connection.subscribe('ticker', ['BTC-USD']);
       mockWebSocketInstances[0].simulateOpen();
       await flush();
 
       // Remove all subscriptions
-      conn.unsubscribe('ticker', ['BTC-USD']);
+      connection.unsubscribe('ticker', ['BTC-USD']);
 
       mockWebSocketInstances[0].simulateClose();
 
@@ -538,13 +578,13 @@ describe('WebSocketConnection', () => {
 
       expect(mockWebSocketInstances).toHaveLength(1);
 
-      conn.close();
+      connection.close();
     });
 
     it('should ignore stale close from replaced socket', async () => {
-      const conn = createConn();
+      const connection = createConnection();
 
-      conn.subscribe('ticker', ['BTC-USD']);
+      connection.subscribe('ticker', ['BTC-USD']);
       mockWebSocketInstances[0].simulateOpen();
       await flush();
 
@@ -564,13 +604,13 @@ describe('WebSocketConnection', () => {
 
       expect(mockWebSocketInstances).toHaveLength(2);
 
-      conn.close();
+      connection.close();
     });
 
     it('should coalesce subscribe with in-flight reconnect', async () => {
-      const conn = createConn();
+      const connection = createConnection();
 
-      conn.subscribe('ticker', ['BTC-USD']);
+      connection.subscribe('ticker', ['BTC-USD']);
       mockWebSocketInstances[0].simulateOpen();
       await flush();
 
@@ -581,7 +621,7 @@ describe('WebSocketConnection', () => {
       expect(mockWebSocketInstances).toHaveLength(2);
 
       // Subscribe during reconnect — should await same connectionPromise
-      conn.subscribe('candles', ['ETH-USD']);
+      connection.subscribe('candles', ['ETH-USD']);
       expect(mockWebSocketInstances).toHaveLength(2);
 
       // Open socket 1 → both reconnect resubscribeAll and pending subscribe resolve
@@ -591,7 +631,7 @@ describe('WebSocketConnection', () => {
       // No extra connection created
       expect(mockWebSocketInstances).toHaveLength(2);
 
-      conn.close();
+      connection.close();
     });
   });
 
@@ -601,33 +641,33 @@ describe('WebSocketConnection', () => {
 
   describe('close', () => {
     it('should close the WebSocket connection', async () => {
-      const conn = createConn();
+      const connection = createConnection();
 
-      conn.subscribe('ticker', ['BTC-USD']);
+      connection.subscribe('ticker', ['BTC-USD']);
       mockWebSocketInstances[0].simulateOpen();
       await flush();
 
-      conn.close();
+      connection.close();
 
       expect(mockWebSocketInstances[0].readyState).toBe(MockWebSocket.CLOSED);
     });
 
     it('should prevent new connections after close()', async () => {
-      const conn = createConn();
+      const connection = createConnection();
 
-      conn.close();
+      connection.close();
 
       // Subscribe after close — ensureConnection guard prevents connection
-      conn.subscribe('ticker', ['BTC-USD']);
+      connection.subscribe('ticker', ['BTC-USD']);
       await flush();
 
       expect(mockWebSocketInstances).toHaveLength(0);
     });
 
     it('should not reconnect if close() triggers synchronous close event', async () => {
-      const conn = createConn();
+      const connection = createConnection();
 
-      conn.subscribe('ticker', ['BTC-USD']);
+      connection.subscribe('ticker', ['BTC-USD']);
       mockWebSocketInstances[0].simulateOpen();
       await flush();
 
@@ -640,7 +680,7 @@ describe('WebSocketConnection', () => {
         ws.simulateClose();
       };
 
-      conn.close();
+      connection.close();
 
       jest.advanceTimersByTime(100000);
       await flush();
@@ -656,9 +696,9 @@ describe('WebSocketConnection', () => {
 
   describe('sendRaw guard', () => {
     it('should log warning when WebSocket closes between connect and send', async () => {
-      const conn = createConn();
+      const connection = createConnection();
 
-      conn.subscribe('ticker', ['BTC-USD']);
+      connection.subscribe('ticker', ['BTC-USD']);
 
       const ws = mockWebSocketInstances[0];
       ws.simulateOpen();
@@ -671,7 +711,7 @@ describe('WebSocketConnection', () => {
         'Cannot send - WebSocket not open',
       );
 
-      conn.close();
+      connection.close();
     });
   });
 });

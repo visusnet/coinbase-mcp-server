@@ -9,7 +9,7 @@
 // Soft: SL @ 91,150€ (4.05% = ATR% × 1.5), TP @ 101,400€ (6.75% = ATR% × 2.5)
 // Monitor for soft SL/TP + trailing stop activation
 
-response = wait_for_market_event({
+response = wait_for_event({
   subscriptions: [{
     productId: "BTC-EUR",
     conditions: [
@@ -35,7 +35,7 @@ ELSE:
 // Stop-limit fill or legacy position — no attached bracket, bot manages SL/TP
 // Entry @ 95,000€, SL @ 91,200€, TP @ 98,800€
 
-response = wait_for_market_event({
+response = wait_for_event({
   subscriptions: [{
     productId: "BTC-EUR",
     conditions: [

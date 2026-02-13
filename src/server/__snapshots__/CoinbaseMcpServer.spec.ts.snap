@@ -4230,18 +4230,28 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listen should respo
           "openWorldHint": true,
           "readOnlyHint": true,
         },
-        "description": "Waits for specific market conditions to be met before returning.
-Monitors real-time ticker data via WebSocket and triggers when
-conditions are satisfied or timeout is reached.
+        "description": "Waits for market or order conditions to be met before returning.
+Monitors real-time data via WebSocket and triggers when conditions
+are satisfied or timeout is reached.
+
+SUBSCRIPTION TYPES:
+- market: Monitor price/indicator conditions for a product
+- order: Monitor order status/fill conditions for an order
 
 Use this instead of polling with sleep intervals for efficient
 event-driven trading strategies.
 
 Returns immediately when any subscription's conditions are met,
-or returns timeout status with last known ticker data.
+or returns timeout status with last known state.
 
+MARKET CONDITIONS:
 Ticker fields: price, volume24h, percentChange24h, high24h, low24h, high52w, low52w, bestBid, bestAsk, bestBidQuantity, bestAskQuantity
 Indicator fields: rsi, macd, macd.histogram, macd.signal, bollingerBands, bollingerBands.upper, bollingerBands.lower, bollingerBands.bandwidth, bollingerBands.percentB, sma, ema, stochastic, stochastic.d
+
+ORDER CONDITIONS:
+- status: Uses targetStatus array with implicit IN operator (triggers if status IN targetStatus)
+- Numeric fields (avgPrice, completionPercentage, cumulativeQuantity, totalFees, filledValue, numberOfFills): Use operator + value
+
 Operators: gt, gte, lt, lte, crossAbove, crossBelow
 Logic: any (OR), all (AND)",
         "execution": {
@@ -4260,754 +4270,983 @@ Logic: any (OR), all (AND)",
               "type": "string",
             },
             "subscriptions": {
-              "description": "Products and conditions to monitor. If multiple subscriptions are provided, the event triggers when any subscription's conditions are met.",
+              "description": "Subscriptions to monitor. Supports market (ticker/indicator) and order (status/fill) subscriptions. Triggers when any subscription's conditions are met.",
               "items": {
-                "additionalProperties": false,
-                "description": "A subscription to monitor a specific product with conditions",
-                "properties": {
-                  "conditions": {
-                    "description": "Conditions that trigger the event",
-                    "items": {
-                      "anyOf": [
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "field": {
-                              "const": "price",
-                              "description": "Current price",
-                              "type": "string",
-                            },
-                            "operator": {
-                              "description": "Comparison operator. Note: crossAbove/crossBelow require a previous value to detect crossing",
-                              "enum": [
-                                "gt",
-                                "gte",
-                                "lt",
-                                "lte",
-                                "crossAbove",
-                                "crossBelow",
+                "anyOf": [
+                  {
+                    "additionalProperties": false,
+                    "description": "A market subscription to monitor a specific product with conditions",
+                    "properties": {
+                      "conditions": {
+                        "description": "Conditions that trigger the event",
+                        "items": {
+                          "anyOf": [
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "field": {
+                                  "const": "price",
+                                  "description": "Current price",
+                                  "type": "string",
+                                },
+                                "operator": {
+                                  "description": "Comparison operator. Note: crossAbove/crossBelow require a previous value to detect crossing",
+                                  "enum": [
+                                    "gt",
+                                    "gte",
+                                    "lt",
+                                    "lte",
+                                    "crossAbove",
+                                    "crossBelow",
+                                  ],
+                                  "type": "string",
+                                },
+                                "value": {
+                                  "description": "Threshold value to compare against",
+                                  "type": "number",
+                                },
+                              },
+                              "required": [
+                                "field",
+                                "operator",
+                                "value",
                               ],
-                              "type": "string",
+                              "type": "object",
                             },
-                            "value": {
-                              "description": "Threshold value to compare against",
-                              "type": "number",
-                            },
-                          },
-                          "required": [
-                            "field",
-                            "operator",
-                            "value",
-                          ],
-                          "type": "object",
-                        },
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "field": {
-                              "const": "volume24h",
-                              "description": "24-hour trading volume",
-                              "type": "string",
-                            },
-                            "operator": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/0/properties/operator",
-                            },
-                            "value": {
-                              "description": "Threshold value to compare against",
-                              "type": "number",
-                            },
-                          },
-                          "required": [
-                            "field",
-                            "operator",
-                            "value",
-                          ],
-                          "type": "object",
-                        },
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "field": {
-                              "const": "percentChange24h",
-                              "description": "24-hour percent change",
-                              "type": "string",
-                            },
-                            "operator": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/0/properties/operator",
-                            },
-                            "value": {
-                              "description": "Threshold value to compare against",
-                              "type": "number",
-                            },
-                          },
-                          "required": [
-                            "field",
-                            "operator",
-                            "value",
-                          ],
-                          "type": "object",
-                        },
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "field": {
-                              "const": "high24h",
-                              "description": "24-hour high price",
-                              "type": "string",
-                            },
-                            "operator": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/0/properties/operator",
-                            },
-                            "value": {
-                              "description": "Threshold value to compare against",
-                              "type": "number",
-                            },
-                          },
-                          "required": [
-                            "field",
-                            "operator",
-                            "value",
-                          ],
-                          "type": "object",
-                        },
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "field": {
-                              "const": "low24h",
-                              "description": "24-hour low price",
-                              "type": "string",
-                            },
-                            "operator": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/0/properties/operator",
-                            },
-                            "value": {
-                              "description": "Threshold value to compare against",
-                              "type": "number",
-                            },
-                          },
-                          "required": [
-                            "field",
-                            "operator",
-                            "value",
-                          ],
-                          "type": "object",
-                        },
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "field": {
-                              "const": "high52w",
-                              "description": "52-week high price",
-                              "type": "string",
-                            },
-                            "operator": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/0/properties/operator",
-                            },
-                            "value": {
-                              "description": "Threshold value to compare against",
-                              "type": "number",
-                            },
-                          },
-                          "required": [
-                            "field",
-                            "operator",
-                            "value",
-                          ],
-                          "type": "object",
-                        },
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "field": {
-                              "const": "low52w",
-                              "description": "52-week low price",
-                              "type": "string",
-                            },
-                            "operator": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/0/properties/operator",
-                            },
-                            "value": {
-                              "description": "Threshold value to compare against",
-                              "type": "number",
-                            },
-                          },
-                          "required": [
-                            "field",
-                            "operator",
-                            "value",
-                          ],
-                          "type": "object",
-                        },
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "field": {
-                              "const": "bestBid",
-                              "description": "Current best bid price",
-                              "type": "string",
-                            },
-                            "operator": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/0/properties/operator",
-                            },
-                            "value": {
-                              "description": "Threshold value to compare against",
-                              "type": "number",
-                            },
-                          },
-                          "required": [
-                            "field",
-                            "operator",
-                            "value",
-                          ],
-                          "type": "object",
-                        },
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "field": {
-                              "const": "bestAsk",
-                              "description": "Current best ask price",
-                              "type": "string",
-                            },
-                            "operator": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/0/properties/operator",
-                            },
-                            "value": {
-                              "description": "Threshold value to compare against",
-                              "type": "number",
-                            },
-                          },
-                          "required": [
-                            "field",
-                            "operator",
-                            "value",
-                          ],
-                          "type": "object",
-                        },
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "field": {
-                              "const": "bestBidQuantity",
-                              "description": "Current best bid quantity available",
-                              "type": "string",
-                            },
-                            "operator": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/0/properties/operator",
-                            },
-                            "value": {
-                              "description": "Threshold value to compare against",
-                              "type": "number",
-                            },
-                          },
-                          "required": [
-                            "field",
-                            "operator",
-                            "value",
-                          ],
-                          "type": "object",
-                        },
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "field": {
-                              "const": "bestAskQuantity",
-                              "description": "Current best ask quantity available",
-                              "type": "string",
-                            },
-                            "operator": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/0/properties/operator",
-                            },
-                            "value": {
-                              "description": "Threshold value to compare against",
-                              "type": "number",
-                            },
-                          },
-                          "required": [
-                            "field",
-                            "operator",
-                            "value",
-                          ],
-                          "type": "object",
-                        },
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "field": {
-                              "const": "rsi",
-                              "description": "Relative Strength Index value",
-                              "type": "string",
-                            },
-                            "granularity": {
-                              "default": "FIVE_MINUTE",
-                              "description": "Candle granularity (e.g., ONE_MINUTE, FIVE_MINUTE, ONE_HOUR, ONE_DAY)",
-                              "enum": [
-                                "ONE_MINUTE",
-                                "FIVE_MINUTE",
-                                "FIFTEEN_MINUTE",
-                                "THIRTY_MINUTE",
-                                "ONE_HOUR",
-                                "TWO_HOUR",
-                                "SIX_HOUR",
-                                "ONE_DAY",
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "field": {
+                                  "const": "volume24h",
+                                  "description": "24-hour trading volume",
+                                  "type": "string",
+                                },
+                                "operator": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/0/properties/operator",
+                                },
+                                "value": {
+                                  "description": "Threshold value to compare against",
+                                  "type": "number",
+                                },
+                              },
+                              "required": [
+                                "field",
+                                "operator",
+                                "value",
                               ],
-                              "type": "string",
+                              "type": "object",
                             },
-                            "operator": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/0/properties/operator",
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "field": {
+                                  "const": "percentChange24h",
+                                  "description": "24-hour percent change",
+                                  "type": "string",
+                                },
+                                "operator": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/0/properties/operator",
+                                },
+                                "value": {
+                                  "description": "Threshold value to compare against",
+                                  "type": "number",
+                                },
+                              },
+                              "required": [
+                                "field",
+                                "operator",
+                                "value",
+                              ],
+                              "type": "object",
                             },
-                            "period": {
-                              "default": 14,
-                              "description": "RSI period",
-                              "minimum": 2,
-                              "type": "integer",
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "field": {
+                                  "const": "high24h",
+                                  "description": "24-hour high price",
+                                  "type": "string",
+                                },
+                                "operator": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/0/properties/operator",
+                                },
+                                "value": {
+                                  "description": "Threshold value to compare against",
+                                  "type": "number",
+                                },
+                              },
+                              "required": [
+                                "field",
+                                "operator",
+                                "value",
+                              ],
+                              "type": "object",
                             },
-                            "value": {
-                              "description": "RSI threshold (typically 30 for oversold, 70 for overbought)",
-                              "type": "number",
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "field": {
+                                  "const": "low24h",
+                                  "description": "24-hour low price",
+                                  "type": "string",
+                                },
+                                "operator": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/0/properties/operator",
+                                },
+                                "value": {
+                                  "description": "Threshold value to compare against",
+                                  "type": "number",
+                                },
+                              },
+                              "required": [
+                                "field",
+                                "operator",
+                                "value",
+                              ],
+                              "type": "object",
                             },
-                          },
-                          "required": [
-                            "field",
-                            "operator",
-                            "value",
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "field": {
+                                  "const": "high52w",
+                                  "description": "52-week high price",
+                                  "type": "string",
+                                },
+                                "operator": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/0/properties/operator",
+                                },
+                                "value": {
+                                  "description": "Threshold value to compare against",
+                                  "type": "number",
+                                },
+                              },
+                              "required": [
+                                "field",
+                                "operator",
+                                "value",
+                              ],
+                              "type": "object",
+                            },
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "field": {
+                                  "const": "low52w",
+                                  "description": "52-week low price",
+                                  "type": "string",
+                                },
+                                "operator": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/0/properties/operator",
+                                },
+                                "value": {
+                                  "description": "Threshold value to compare against",
+                                  "type": "number",
+                                },
+                              },
+                              "required": [
+                                "field",
+                                "operator",
+                                "value",
+                              ],
+                              "type": "object",
+                            },
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "field": {
+                                  "const": "bestBid",
+                                  "description": "Current best bid price",
+                                  "type": "string",
+                                },
+                                "operator": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/0/properties/operator",
+                                },
+                                "value": {
+                                  "description": "Threshold value to compare against",
+                                  "type": "number",
+                                },
+                              },
+                              "required": [
+                                "field",
+                                "operator",
+                                "value",
+                              ],
+                              "type": "object",
+                            },
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "field": {
+                                  "const": "bestAsk",
+                                  "description": "Current best ask price",
+                                  "type": "string",
+                                },
+                                "operator": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/0/properties/operator",
+                                },
+                                "value": {
+                                  "description": "Threshold value to compare against",
+                                  "type": "number",
+                                },
+                              },
+                              "required": [
+                                "field",
+                                "operator",
+                                "value",
+                              ],
+                              "type": "object",
+                            },
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "field": {
+                                  "const": "bestBidQuantity",
+                                  "description": "Current best bid quantity available",
+                                  "type": "string",
+                                },
+                                "operator": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/0/properties/operator",
+                                },
+                                "value": {
+                                  "description": "Threshold value to compare against",
+                                  "type": "number",
+                                },
+                              },
+                              "required": [
+                                "field",
+                                "operator",
+                                "value",
+                              ],
+                              "type": "object",
+                            },
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "field": {
+                                  "const": "bestAskQuantity",
+                                  "description": "Current best ask quantity available",
+                                  "type": "string",
+                                },
+                                "operator": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/0/properties/operator",
+                                },
+                                "value": {
+                                  "description": "Threshold value to compare against",
+                                  "type": "number",
+                                },
+                              },
+                              "required": [
+                                "field",
+                                "operator",
+                                "value",
+                              ],
+                              "type": "object",
+                            },
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "field": {
+                                  "const": "rsi",
+                                  "description": "Relative Strength Index value",
+                                  "type": "string",
+                                },
+                                "granularity": {
+                                  "default": "FIVE_MINUTE",
+                                  "description": "Candle granularity (e.g., ONE_MINUTE, FIVE_MINUTE, ONE_HOUR, ONE_DAY)",
+                                  "enum": [
+                                    "ONE_MINUTE",
+                                    "FIVE_MINUTE",
+                                    "FIFTEEN_MINUTE",
+                                    "THIRTY_MINUTE",
+                                    "ONE_HOUR",
+                                    "TWO_HOUR",
+                                    "SIX_HOUR",
+                                    "ONE_DAY",
+                                  ],
+                                  "type": "string",
+                                },
+                                "operator": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/0/properties/operator",
+                                },
+                                "period": {
+                                  "default": 14,
+                                  "description": "RSI period",
+                                  "minimum": 2,
+                                  "type": "integer",
+                                },
+                                "value": {
+                                  "description": "RSI threshold (typically 30 for oversold, 70 for overbought)",
+                                  "type": "number",
+                                },
+                              },
+                              "required": [
+                                "field",
+                                "operator",
+                                "value",
+                              ],
+                              "type": "object",
+                            },
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "fastPeriod": {
+                                  "default": 12,
+                                  "description": "Fast EMA period",
+                                  "minimum": 2,
+                                  "type": "integer",
+                                },
+                                "field": {
+                                  "const": "macd",
+                                  "description": "MACD line value",
+                                  "type": "string",
+                                },
+                                "granularity": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/11/properties/granularity",
+                                },
+                                "operator": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/0/properties/operator",
+                                },
+                                "signalPeriod": {
+                                  "default": 9,
+                                  "description": "Signal line period",
+                                  "minimum": 2,
+                                  "type": "integer",
+                                },
+                                "slowPeriod": {
+                                  "default": 26,
+                                  "description": "Slow EMA period",
+                                  "minimum": 2,
+                                  "type": "integer",
+                                },
+                                "value": {
+                                  "description": "Threshold value to compare against",
+                                  "type": "number",
+                                },
+                              },
+                              "required": [
+                                "field",
+                                "operator",
+                                "value",
+                              ],
+                              "type": "object",
+                            },
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "fastPeriod": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/12/properties/fastPeriod",
+                                },
+                                "field": {
+                                  "const": "macd.histogram",
+                                  "description": "MACD histogram value",
+                                  "type": "string",
+                                },
+                                "granularity": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/11/properties/granularity",
+                                },
+                                "operator": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/0/properties/operator",
+                                },
+                                "signalPeriod": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/12/properties/signalPeriod",
+                                },
+                                "slowPeriod": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/12/properties/slowPeriod",
+                                },
+                                "value": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/12/properties/value",
+                                },
+                              },
+                              "required": [
+                                "field",
+                                "operator",
+                                "value",
+                              ],
+                              "type": "object",
+                            },
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "fastPeriod": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/12/properties/fastPeriod",
+                                },
+                                "field": {
+                                  "const": "macd.signal",
+                                  "description": "MACD signal line value",
+                                  "type": "string",
+                                },
+                                "granularity": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/11/properties/granularity",
+                                },
+                                "operator": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/0/properties/operator",
+                                },
+                                "signalPeriod": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/12/properties/signalPeriod",
+                                },
+                                "slowPeriod": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/12/properties/slowPeriod",
+                                },
+                                "value": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/12/properties/value",
+                                },
+                              },
+                              "required": [
+                                "field",
+                                "operator",
+                                "value",
+                              ],
+                              "type": "object",
+                            },
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "field": {
+                                  "const": "bollingerBands",
+                                  "description": "Bollinger Bands middle band (SMA)",
+                                  "type": "string",
+                                },
+                                "granularity": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/11/properties/granularity",
+                                },
+                                "operator": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/0/properties/operator",
+                                },
+                                "period": {
+                                  "default": 20,
+                                  "description": "Bollinger Bands period",
+                                  "minimum": 2,
+                                  "type": "integer",
+                                },
+                                "stdDev": {
+                                  "default": 2,
+                                  "description": "Standard deviation multiplier",
+                                  "minimum": 0.1,
+                                  "type": "number",
+                                },
+                                "value": {
+                                  "description": "Threshold value to compare against",
+                                  "type": "number",
+                                },
+                              },
+                              "required": [
+                                "field",
+                                "operator",
+                                "value",
+                              ],
+                              "type": "object",
+                            },
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "field": {
+                                  "const": "bollingerBands.upper",
+                                  "description": "Bollinger Bands upper band",
+                                  "type": "string",
+                                },
+                                "granularity": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/11/properties/granularity",
+                                },
+                                "operator": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/0/properties/operator",
+                                },
+                                "period": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/15/properties/period",
+                                },
+                                "stdDev": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/15/properties/stdDev",
+                                },
+                                "value": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/15/properties/value",
+                                },
+                              },
+                              "required": [
+                                "field",
+                                "operator",
+                                "value",
+                              ],
+                              "type": "object",
+                            },
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "field": {
+                                  "const": "bollingerBands.lower",
+                                  "description": "Bollinger Bands lower band",
+                                  "type": "string",
+                                },
+                                "granularity": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/11/properties/granularity",
+                                },
+                                "operator": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/0/properties/operator",
+                                },
+                                "period": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/15/properties/period",
+                                },
+                                "stdDev": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/15/properties/stdDev",
+                                },
+                                "value": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/15/properties/value",
+                                },
+                              },
+                              "required": [
+                                "field",
+                                "operator",
+                                "value",
+                              ],
+                              "type": "object",
+                            },
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "field": {
+                                  "const": "bollingerBands.bandwidth",
+                                  "description": "Bollinger Bands bandwidth",
+                                  "type": "string",
+                                },
+                                "granularity": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/11/properties/granularity",
+                                },
+                                "operator": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/0/properties/operator",
+                                },
+                                "period": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/15/properties/period",
+                                },
+                                "stdDev": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/15/properties/stdDev",
+                                },
+                                "value": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/15/properties/value",
+                                },
+                              },
+                              "required": [
+                                "field",
+                                "operator",
+                                "value",
+                              ],
+                              "type": "object",
+                            },
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "field": {
+                                  "const": "bollingerBands.percentB",
+                                  "description": "Bollinger Bands %B (0 = lower band, 1 = upper band)",
+                                  "type": "string",
+                                },
+                                "granularity": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/11/properties/granularity",
+                                },
+                                "operator": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/0/properties/operator",
+                                },
+                                "period": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/15/properties/period",
+                                },
+                                "stdDev": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/15/properties/stdDev",
+                                },
+                                "value": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/15/properties/value",
+                                },
+                              },
+                              "required": [
+                                "field",
+                                "operator",
+                                "value",
+                              ],
+                              "type": "object",
+                            },
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "field": {
+                                  "const": "sma",
+                                  "description": "Simple Moving Average value",
+                                  "type": "string",
+                                },
+                                "granularity": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/11/properties/granularity",
+                                },
+                                "operator": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/0/properties/operator",
+                                },
+                                "period": {
+                                  "description": "SMA period (required)",
+                                  "minimum": 2,
+                                  "type": "integer",
+                                },
+                                "value": {
+                                  "description": "Threshold value to compare against",
+                                  "type": "number",
+                                },
+                              },
+                              "required": [
+                                "field",
+                                "period",
+                                "operator",
+                                "value",
+                              ],
+                              "type": "object",
+                            },
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "field": {
+                                  "const": "ema",
+                                  "description": "Exponential Moving Average value",
+                                  "type": "string",
+                                },
+                                "granularity": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/11/properties/granularity",
+                                },
+                                "operator": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/0/properties/operator",
+                                },
+                                "period": {
+                                  "description": "EMA period (required)",
+                                  "minimum": 2,
+                                  "type": "integer",
+                                },
+                                "value": {
+                                  "description": "Threshold value to compare against",
+                                  "type": "number",
+                                },
+                              },
+                              "required": [
+                                "field",
+                                "period",
+                                "operator",
+                                "value",
+                              ],
+                              "type": "object",
+                            },
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "dPeriod": {
+                                  "default": 3,
+                                  "description": "Period for %D signal line smoothing",
+                                  "minimum": 1,
+                                  "type": "integer",
+                                },
+                                "field": {
+                                  "const": "stochastic",
+                                  "description": "Stochastic %K value",
+                                  "type": "string",
+                                },
+                                "granularity": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/11/properties/granularity",
+                                },
+                                "kPeriod": {
+                                  "default": 14,
+                                  "description": "Period for %K line calculation",
+                                  "minimum": 1,
+                                  "type": "integer",
+                                },
+                                "operator": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/0/properties/operator",
+                                },
+                                "value": {
+                                  "description": "Threshold value (typically 20 for oversold, 80 for overbought)",
+                                  "type": "number",
+                                },
+                              },
+                              "required": [
+                                "field",
+                                "operator",
+                                "value",
+                              ],
+                              "type": "object",
+                            },
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "dPeriod": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/22/properties/dPeriod",
+                                },
+                                "field": {
+                                  "const": "stochastic.d",
+                                  "description": "Stochastic %D signal line value",
+                                  "type": "string",
+                                },
+                                "granularity": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/11/properties/granularity",
+                                },
+                                "kPeriod": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/22/properties/kPeriod",
+                                },
+                                "operator": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/0/properties/operator",
+                                },
+                                "value": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/22/properties/value",
+                                },
+                              },
+                              "required": [
+                                "field",
+                                "operator",
+                                "value",
+                              ],
+                              "type": "object",
+                            },
                           ],
-                          "type": "object",
+                          "description": "A condition to evaluate against ticker data or technical indicators",
                         },
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "fastPeriod": {
-                              "default": 12,
-                              "description": "Fast EMA period",
-                              "minimum": 2,
-                              "type": "integer",
-                            },
-                            "field": {
-                              "const": "macd",
-                              "description": "MACD line value",
-                              "type": "string",
-                            },
-                            "granularity": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/11/properties/granularity",
-                            },
-                            "operator": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/0/properties/operator",
-                            },
-                            "signalPeriod": {
-                              "default": 9,
-                              "description": "Signal line period",
-                              "minimum": 2,
-                              "type": "integer",
-                            },
-                            "slowPeriod": {
-                              "default": 26,
-                              "description": "Slow EMA period",
-                              "minimum": 2,
-                              "type": "integer",
-                            },
-                            "value": {
-                              "description": "Threshold value to compare against",
-                              "type": "number",
-                            },
-                          },
-                          "required": [
-                            "field",
-                            "operator",
-                            "value",
-                          ],
-                          "type": "object",
-                        },
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "fastPeriod": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/12/properties/fastPeriod",
-                            },
-                            "field": {
-                              "const": "macd.histogram",
-                              "description": "MACD histogram value",
-                              "type": "string",
-                            },
-                            "granularity": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/11/properties/granularity",
-                            },
-                            "operator": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/0/properties/operator",
-                            },
-                            "signalPeriod": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/12/properties/signalPeriod",
-                            },
-                            "slowPeriod": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/12/properties/slowPeriod",
-                            },
-                            "value": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/12/properties/value",
-                            },
-                          },
-                          "required": [
-                            "field",
-                            "operator",
-                            "value",
-                          ],
-                          "type": "object",
-                        },
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "fastPeriod": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/12/properties/fastPeriod",
-                            },
-                            "field": {
-                              "const": "macd.signal",
-                              "description": "MACD signal line value",
-                              "type": "string",
-                            },
-                            "granularity": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/11/properties/granularity",
-                            },
-                            "operator": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/0/properties/operator",
-                            },
-                            "signalPeriod": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/12/properties/signalPeriod",
-                            },
-                            "slowPeriod": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/12/properties/slowPeriod",
-                            },
-                            "value": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/12/properties/value",
-                            },
-                          },
-                          "required": [
-                            "field",
-                            "operator",
-                            "value",
-                          ],
-                          "type": "object",
-                        },
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "field": {
-                              "const": "bollingerBands",
-                              "description": "Bollinger Bands middle band (SMA)",
-                              "type": "string",
-                            },
-                            "granularity": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/11/properties/granularity",
-                            },
-                            "operator": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/0/properties/operator",
-                            },
-                            "period": {
-                              "default": 20,
-                              "description": "Bollinger Bands period",
-                              "minimum": 2,
-                              "type": "integer",
-                            },
-                            "stdDev": {
-                              "default": 2,
-                              "description": "Standard deviation multiplier",
-                              "minimum": 0.1,
-                              "type": "number",
-                            },
-                            "value": {
-                              "description": "Threshold value to compare against",
-                              "type": "number",
-                            },
-                          },
-                          "required": [
-                            "field",
-                            "operator",
-                            "value",
-                          ],
-                          "type": "object",
-                        },
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "field": {
-                              "const": "bollingerBands.upper",
-                              "description": "Bollinger Bands upper band",
-                              "type": "string",
-                            },
-                            "granularity": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/11/properties/granularity",
-                            },
-                            "operator": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/0/properties/operator",
-                            },
-                            "period": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/15/properties/period",
-                            },
-                            "stdDev": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/15/properties/stdDev",
-                            },
-                            "value": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/15/properties/value",
-                            },
-                          },
-                          "required": [
-                            "field",
-                            "operator",
-                            "value",
-                          ],
-                          "type": "object",
-                        },
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "field": {
-                              "const": "bollingerBands.lower",
-                              "description": "Bollinger Bands lower band",
-                              "type": "string",
-                            },
-                            "granularity": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/11/properties/granularity",
-                            },
-                            "operator": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/0/properties/operator",
-                            },
-                            "period": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/15/properties/period",
-                            },
-                            "stdDev": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/15/properties/stdDev",
-                            },
-                            "value": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/15/properties/value",
-                            },
-                          },
-                          "required": [
-                            "field",
-                            "operator",
-                            "value",
-                          ],
-                          "type": "object",
-                        },
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "field": {
-                              "const": "bollingerBands.bandwidth",
-                              "description": "Bollinger Bands bandwidth",
-                              "type": "string",
-                            },
-                            "granularity": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/11/properties/granularity",
-                            },
-                            "operator": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/0/properties/operator",
-                            },
-                            "period": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/15/properties/period",
-                            },
-                            "stdDev": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/15/properties/stdDev",
-                            },
-                            "value": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/15/properties/value",
-                            },
-                          },
-                          "required": [
-                            "field",
-                            "operator",
-                            "value",
-                          ],
-                          "type": "object",
-                        },
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "field": {
-                              "const": "bollingerBands.percentB",
-                              "description": "Bollinger Bands %B (0 = lower band, 1 = upper band)",
-                              "type": "string",
-                            },
-                            "granularity": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/11/properties/granularity",
-                            },
-                            "operator": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/0/properties/operator",
-                            },
-                            "period": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/15/properties/period",
-                            },
-                            "stdDev": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/15/properties/stdDev",
-                            },
-                            "value": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/15/properties/value",
-                            },
-                          },
-                          "required": [
-                            "field",
-                            "operator",
-                            "value",
-                          ],
-                          "type": "object",
-                        },
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "field": {
-                              "const": "sma",
-                              "description": "Simple Moving Average value",
-                              "type": "string",
-                            },
-                            "granularity": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/11/properties/granularity",
-                            },
-                            "operator": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/0/properties/operator",
-                            },
-                            "period": {
-                              "description": "SMA period (required)",
-                              "minimum": 2,
-                              "type": "integer",
-                            },
-                            "value": {
-                              "description": "Threshold value to compare against",
-                              "type": "number",
-                            },
-                          },
-                          "required": [
-                            "field",
-                            "period",
-                            "operator",
-                            "value",
-                          ],
-                          "type": "object",
-                        },
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "field": {
-                              "const": "ema",
-                              "description": "Exponential Moving Average value",
-                              "type": "string",
-                            },
-                            "granularity": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/11/properties/granularity",
-                            },
-                            "operator": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/0/properties/operator",
-                            },
-                            "period": {
-                              "description": "EMA period (required)",
-                              "minimum": 2,
-                              "type": "integer",
-                            },
-                            "value": {
-                              "description": "Threshold value to compare against",
-                              "type": "number",
-                            },
-                          },
-                          "required": [
-                            "field",
-                            "period",
-                            "operator",
-                            "value",
-                          ],
-                          "type": "object",
-                        },
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "dPeriod": {
-                              "default": 3,
-                              "description": "Period for %D signal line smoothing",
-                              "minimum": 1,
-                              "type": "integer",
-                            },
-                            "field": {
-                              "const": "stochastic",
-                              "description": "Stochastic %K value",
-                              "type": "string",
-                            },
-                            "granularity": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/11/properties/granularity",
-                            },
-                            "kPeriod": {
-                              "default": 14,
-                              "description": "Period for %K line calculation",
-                              "minimum": 1,
-                              "type": "integer",
-                            },
-                            "operator": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/0/properties/operator",
-                            },
-                            "value": {
-                              "description": "Threshold value (typically 20 for oversold, 80 for overbought)",
-                              "type": "number",
-                            },
-                          },
-                          "required": [
-                            "field",
-                            "operator",
-                            "value",
-                          ],
-                          "type": "object",
-                        },
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "dPeriod": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/22/properties/dPeriod",
-                            },
-                            "field": {
-                              "const": "stochastic.d",
-                              "description": "Stochastic %D signal line value",
-                              "type": "string",
-                            },
-                            "granularity": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/11/properties/granularity",
-                            },
-                            "kPeriod": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/22/properties/kPeriod",
-                            },
-                            "operator": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/0/properties/operator",
-                            },
-                            "value": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/22/properties/value",
-                            },
-                          },
-                          "required": [
-                            "field",
-                            "operator",
-                            "value",
-                          ],
-                          "type": "object",
-                        },
-                      ],
-                      "description": "A condition to evaluate against ticker data or technical indicators",
+                        "maxItems": 5,
+                        "minItems": 1,
+                        "type": "array",
+                      },
+                      "logic": {
+                        "default": "any",
+                        "description": "How to combine conditions: "any" (OR) or "all" (AND)",
+                        "enum": [
+                          "any",
+                          "all",
+                        ],
+                        "type": "string",
+                      },
+                      "productId": {
+                        "description": "Trading pair to monitor (e.g., "BTC-EUR")",
+                        "type": "string",
+                      },
+                      "type": {
+                        "const": "market",
+                        "description": "Subscription type",
+                        "type": "string",
+                      },
                     },
-                    "maxItems": 5,
-                    "minItems": 1,
-                    "type": "array",
-                  },
-                  "logic": {
-                    "default": "any",
-                    "description": "How to combine conditions: "any" (OR) or "all" (AND)",
-                    "enum": [
-                      "any",
-                      "all",
+                    "required": [
+                      "type",
+                      "productId",
+                      "conditions",
                     ],
-                    "type": "string",
+                    "type": "object",
                   },
-                  "productId": {
-                    "description": "Trading pair to monitor (e.g., "BTC-EUR")",
-                    "type": "string",
+                  {
+                    "additionalProperties": false,
+                    "description": "An order subscription to monitor a specific order with conditions",
+                    "properties": {
+                      "conditions": {
+                        "description": "Conditions that trigger the event",
+                        "items": {
+                          "anyOf": [
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "field": {
+                                  "const": "status",
+                                  "description": "Order execution status",
+                                  "type": "string",
+                                },
+                                "targetStatus": {
+                                  "description": "Target statuses to match (triggers when order status is in this list)",
+                                  "items": {
+                                    "enum": [
+                                      "PENDING",
+                                      "OPEN",
+                                      "FILLED",
+                                      "CANCELLED",
+                                      "EXPIRED",
+                                      "FAILED",
+                                      "UNKNOWN_ORDER_STATUS",
+                                      "QUEUED",
+                                      "CANCEL_QUEUED",
+                                      "EDIT_QUEUED",
+                                    ],
+                                    "type": "string",
+                                  },
+                                  "minItems": 1,
+                                  "type": "array",
+                                },
+                              },
+                              "required": [
+                                "field",
+                                "targetStatus",
+                              ],
+                              "type": "object",
+                            },
+                            {
+                              "anyOf": [
+                                {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "field": {
+                                      "const": "avgPrice",
+                                      "description": "Average fill price",
+                                      "type": "string",
+                                    },
+                                    "operator": {
+                                      "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/0/properties/operator",
+                                    },
+                                    "value": {
+                                      "description": "Threshold value to compare against",
+                                      "type": "number",
+                                    },
+                                  },
+                                  "required": [
+                                    "field",
+                                    "operator",
+                                    "value",
+                                  ],
+                                  "type": "object",
+                                },
+                                {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "field": {
+                                      "const": "completionPercentage",
+                                      "description": "Order completion percentage (0-100)",
+                                      "type": "string",
+                                    },
+                                    "operator": {
+                                      "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/0/properties/operator",
+                                    },
+                                    "value": {
+                                      "description": "Threshold value to compare against",
+                                      "type": "number",
+                                    },
+                                  },
+                                  "required": [
+                                    "field",
+                                    "operator",
+                                    "value",
+                                  ],
+                                  "type": "object",
+                                },
+                                {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "field": {
+                                      "const": "cumulativeQuantity",
+                                      "description": "Total quantity filled so far",
+                                      "type": "string",
+                                    },
+                                    "operator": {
+                                      "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/0/properties/operator",
+                                    },
+                                    "value": {
+                                      "description": "Threshold value to compare against",
+                                      "type": "number",
+                                    },
+                                  },
+                                  "required": [
+                                    "field",
+                                    "operator",
+                                    "value",
+                                  ],
+                                  "type": "object",
+                                },
+                                {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "field": {
+                                      "const": "totalFees",
+                                      "description": "Total fees paid",
+                                      "type": "string",
+                                    },
+                                    "operator": {
+                                      "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/0/properties/operator",
+                                    },
+                                    "value": {
+                                      "description": "Threshold value to compare against",
+                                      "type": "number",
+                                    },
+                                  },
+                                  "required": [
+                                    "field",
+                                    "operator",
+                                    "value",
+                                  ],
+                                  "type": "object",
+                                },
+                                {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "field": {
+                                      "const": "filledValue",
+                                      "description": "Total filled value in quote currency",
+                                      "type": "string",
+                                    },
+                                    "operator": {
+                                      "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/0/properties/operator",
+                                    },
+                                    "value": {
+                                      "description": "Threshold value to compare against",
+                                      "type": "number",
+                                    },
+                                  },
+                                  "required": [
+                                    "field",
+                                    "operator",
+                                    "value",
+                                  ],
+                                  "type": "object",
+                                },
+                                {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "field": {
+                                      "const": "numberOfFills",
+                                      "description": "Number of individual fills",
+                                      "type": "string",
+                                    },
+                                    "operator": {
+                                      "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/0/properties/operator",
+                                    },
+                                    "value": {
+                                      "description": "Threshold value to compare against",
+                                      "type": "number",
+                                    },
+                                  },
+                                  "required": [
+                                    "field",
+                                    "operator",
+                                    "value",
+                                  ],
+                                  "type": "object",
+                                },
+                              ],
+                            },
+                          ],
+                          "description": "A condition to evaluate against order data",
+                        },
+                        "maxItems": 5,
+                        "minItems": 1,
+                        "type": "array",
+                      },
+                      "logic": {
+                        "default": "any",
+                        "description": "How to combine conditions: "any" (OR) or "all" (AND)",
+                        "enum": [
+                          "any",
+                          "all",
+                        ],
+                        "type": "string",
+                      },
+                      "orderId": {
+                        "description": "Order ID to monitor",
+                        "type": "string",
+                      },
+                      "type": {
+                        "const": "order",
+                        "description": "Subscription type",
+                        "type": "string",
+                      },
+                    },
+                    "required": [
+                      "type",
+                      "orderId",
+                      "conditions",
+                    ],
+                    "type": "object",
                   },
-                },
-                "required": [
-                  "productId",
-                  "conditions",
                 ],
-                "type": "object",
+                "description": "A subscription — either market or order",
               },
               "maxItems": 10,
               "minItems": 1,
@@ -5026,8 +5265,8 @@ Logic: any (OR), all (AND)",
           ],
           "type": "object",
         },
-        "name": "wait_for_market_event",
-        "title": "Wait for Market Event",
+        "name": "wait_for_event",
+        "title": "Wait for Event",
       },
       {
         "annotations": {
@@ -9376,18 +9615,28 @@ exports[`CoinbaseMcpServer Integration Tests transport modes listenStdio should 
           "openWorldHint": true,
           "readOnlyHint": true,
         },
-        "description": "Waits for specific market conditions to be met before returning.
-Monitors real-time ticker data via WebSocket and triggers when
-conditions are satisfied or timeout is reached.
+        "description": "Waits for market or order conditions to be met before returning.
+Monitors real-time data via WebSocket and triggers when conditions
+are satisfied or timeout is reached.
+
+SUBSCRIPTION TYPES:
+- market: Monitor price/indicator conditions for a product
+- order: Monitor order status/fill conditions for an order
 
 Use this instead of polling with sleep intervals for efficient
 event-driven trading strategies.
 
 Returns immediately when any subscription's conditions are met,
-or returns timeout status with last known ticker data.
+or returns timeout status with last known state.
 
+MARKET CONDITIONS:
 Ticker fields: price, volume24h, percentChange24h, high24h, low24h, high52w, low52w, bestBid, bestAsk, bestBidQuantity, bestAskQuantity
 Indicator fields: rsi, macd, macd.histogram, macd.signal, bollingerBands, bollingerBands.upper, bollingerBands.lower, bollingerBands.bandwidth, bollingerBands.percentB, sma, ema, stochastic, stochastic.d
+
+ORDER CONDITIONS:
+- status: Uses targetStatus array with implicit IN operator (triggers if status IN targetStatus)
+- Numeric fields (avgPrice, completionPercentage, cumulativeQuantity, totalFees, filledValue, numberOfFills): Use operator + value
+
 Operators: gt, gte, lt, lte, crossAbove, crossBelow
 Logic: any (OR), all (AND)",
         "execution": {
@@ -9406,754 +9655,983 @@ Logic: any (OR), all (AND)",
               "type": "string",
             },
             "subscriptions": {
-              "description": "Products and conditions to monitor. If multiple subscriptions are provided, the event triggers when any subscription's conditions are met.",
+              "description": "Subscriptions to monitor. Supports market (ticker/indicator) and order (status/fill) subscriptions. Triggers when any subscription's conditions are met.",
               "items": {
-                "additionalProperties": false,
-                "description": "A subscription to monitor a specific product with conditions",
-                "properties": {
-                  "conditions": {
-                    "description": "Conditions that trigger the event",
-                    "items": {
-                      "anyOf": [
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "field": {
-                              "const": "price",
-                              "description": "Current price",
-                              "type": "string",
-                            },
-                            "operator": {
-                              "description": "Comparison operator. Note: crossAbove/crossBelow require a previous value to detect crossing",
-                              "enum": [
-                                "gt",
-                                "gte",
-                                "lt",
-                                "lte",
-                                "crossAbove",
-                                "crossBelow",
+                "anyOf": [
+                  {
+                    "additionalProperties": false,
+                    "description": "A market subscription to monitor a specific product with conditions",
+                    "properties": {
+                      "conditions": {
+                        "description": "Conditions that trigger the event",
+                        "items": {
+                          "anyOf": [
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "field": {
+                                  "const": "price",
+                                  "description": "Current price",
+                                  "type": "string",
+                                },
+                                "operator": {
+                                  "description": "Comparison operator. Note: crossAbove/crossBelow require a previous value to detect crossing",
+                                  "enum": [
+                                    "gt",
+                                    "gte",
+                                    "lt",
+                                    "lte",
+                                    "crossAbove",
+                                    "crossBelow",
+                                  ],
+                                  "type": "string",
+                                },
+                                "value": {
+                                  "description": "Threshold value to compare against",
+                                  "type": "number",
+                                },
+                              },
+                              "required": [
+                                "field",
+                                "operator",
+                                "value",
                               ],
-                              "type": "string",
+                              "type": "object",
                             },
-                            "value": {
-                              "description": "Threshold value to compare against",
-                              "type": "number",
-                            },
-                          },
-                          "required": [
-                            "field",
-                            "operator",
-                            "value",
-                          ],
-                          "type": "object",
-                        },
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "field": {
-                              "const": "volume24h",
-                              "description": "24-hour trading volume",
-                              "type": "string",
-                            },
-                            "operator": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/0/properties/operator",
-                            },
-                            "value": {
-                              "description": "Threshold value to compare against",
-                              "type": "number",
-                            },
-                          },
-                          "required": [
-                            "field",
-                            "operator",
-                            "value",
-                          ],
-                          "type": "object",
-                        },
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "field": {
-                              "const": "percentChange24h",
-                              "description": "24-hour percent change",
-                              "type": "string",
-                            },
-                            "operator": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/0/properties/operator",
-                            },
-                            "value": {
-                              "description": "Threshold value to compare against",
-                              "type": "number",
-                            },
-                          },
-                          "required": [
-                            "field",
-                            "operator",
-                            "value",
-                          ],
-                          "type": "object",
-                        },
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "field": {
-                              "const": "high24h",
-                              "description": "24-hour high price",
-                              "type": "string",
-                            },
-                            "operator": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/0/properties/operator",
-                            },
-                            "value": {
-                              "description": "Threshold value to compare against",
-                              "type": "number",
-                            },
-                          },
-                          "required": [
-                            "field",
-                            "operator",
-                            "value",
-                          ],
-                          "type": "object",
-                        },
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "field": {
-                              "const": "low24h",
-                              "description": "24-hour low price",
-                              "type": "string",
-                            },
-                            "operator": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/0/properties/operator",
-                            },
-                            "value": {
-                              "description": "Threshold value to compare against",
-                              "type": "number",
-                            },
-                          },
-                          "required": [
-                            "field",
-                            "operator",
-                            "value",
-                          ],
-                          "type": "object",
-                        },
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "field": {
-                              "const": "high52w",
-                              "description": "52-week high price",
-                              "type": "string",
-                            },
-                            "operator": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/0/properties/operator",
-                            },
-                            "value": {
-                              "description": "Threshold value to compare against",
-                              "type": "number",
-                            },
-                          },
-                          "required": [
-                            "field",
-                            "operator",
-                            "value",
-                          ],
-                          "type": "object",
-                        },
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "field": {
-                              "const": "low52w",
-                              "description": "52-week low price",
-                              "type": "string",
-                            },
-                            "operator": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/0/properties/operator",
-                            },
-                            "value": {
-                              "description": "Threshold value to compare against",
-                              "type": "number",
-                            },
-                          },
-                          "required": [
-                            "field",
-                            "operator",
-                            "value",
-                          ],
-                          "type": "object",
-                        },
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "field": {
-                              "const": "bestBid",
-                              "description": "Current best bid price",
-                              "type": "string",
-                            },
-                            "operator": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/0/properties/operator",
-                            },
-                            "value": {
-                              "description": "Threshold value to compare against",
-                              "type": "number",
-                            },
-                          },
-                          "required": [
-                            "field",
-                            "operator",
-                            "value",
-                          ],
-                          "type": "object",
-                        },
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "field": {
-                              "const": "bestAsk",
-                              "description": "Current best ask price",
-                              "type": "string",
-                            },
-                            "operator": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/0/properties/operator",
-                            },
-                            "value": {
-                              "description": "Threshold value to compare against",
-                              "type": "number",
-                            },
-                          },
-                          "required": [
-                            "field",
-                            "operator",
-                            "value",
-                          ],
-                          "type": "object",
-                        },
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "field": {
-                              "const": "bestBidQuantity",
-                              "description": "Current best bid quantity available",
-                              "type": "string",
-                            },
-                            "operator": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/0/properties/operator",
-                            },
-                            "value": {
-                              "description": "Threshold value to compare against",
-                              "type": "number",
-                            },
-                          },
-                          "required": [
-                            "field",
-                            "operator",
-                            "value",
-                          ],
-                          "type": "object",
-                        },
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "field": {
-                              "const": "bestAskQuantity",
-                              "description": "Current best ask quantity available",
-                              "type": "string",
-                            },
-                            "operator": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/0/properties/operator",
-                            },
-                            "value": {
-                              "description": "Threshold value to compare against",
-                              "type": "number",
-                            },
-                          },
-                          "required": [
-                            "field",
-                            "operator",
-                            "value",
-                          ],
-                          "type": "object",
-                        },
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "field": {
-                              "const": "rsi",
-                              "description": "Relative Strength Index value",
-                              "type": "string",
-                            },
-                            "granularity": {
-                              "default": "FIVE_MINUTE",
-                              "description": "Candle granularity (e.g., ONE_MINUTE, FIVE_MINUTE, ONE_HOUR, ONE_DAY)",
-                              "enum": [
-                                "ONE_MINUTE",
-                                "FIVE_MINUTE",
-                                "FIFTEEN_MINUTE",
-                                "THIRTY_MINUTE",
-                                "ONE_HOUR",
-                                "TWO_HOUR",
-                                "SIX_HOUR",
-                                "ONE_DAY",
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "field": {
+                                  "const": "volume24h",
+                                  "description": "24-hour trading volume",
+                                  "type": "string",
+                                },
+                                "operator": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/0/properties/operator",
+                                },
+                                "value": {
+                                  "description": "Threshold value to compare against",
+                                  "type": "number",
+                                },
+                              },
+                              "required": [
+                                "field",
+                                "operator",
+                                "value",
                               ],
-                              "type": "string",
+                              "type": "object",
                             },
-                            "operator": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/0/properties/operator",
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "field": {
+                                  "const": "percentChange24h",
+                                  "description": "24-hour percent change",
+                                  "type": "string",
+                                },
+                                "operator": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/0/properties/operator",
+                                },
+                                "value": {
+                                  "description": "Threshold value to compare against",
+                                  "type": "number",
+                                },
+                              },
+                              "required": [
+                                "field",
+                                "operator",
+                                "value",
+                              ],
+                              "type": "object",
                             },
-                            "period": {
-                              "default": 14,
-                              "description": "RSI period",
-                              "minimum": 2,
-                              "type": "integer",
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "field": {
+                                  "const": "high24h",
+                                  "description": "24-hour high price",
+                                  "type": "string",
+                                },
+                                "operator": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/0/properties/operator",
+                                },
+                                "value": {
+                                  "description": "Threshold value to compare against",
+                                  "type": "number",
+                                },
+                              },
+                              "required": [
+                                "field",
+                                "operator",
+                                "value",
+                              ],
+                              "type": "object",
                             },
-                            "value": {
-                              "description": "RSI threshold (typically 30 for oversold, 70 for overbought)",
-                              "type": "number",
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "field": {
+                                  "const": "low24h",
+                                  "description": "24-hour low price",
+                                  "type": "string",
+                                },
+                                "operator": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/0/properties/operator",
+                                },
+                                "value": {
+                                  "description": "Threshold value to compare against",
+                                  "type": "number",
+                                },
+                              },
+                              "required": [
+                                "field",
+                                "operator",
+                                "value",
+                              ],
+                              "type": "object",
                             },
-                          },
-                          "required": [
-                            "field",
-                            "operator",
-                            "value",
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "field": {
+                                  "const": "high52w",
+                                  "description": "52-week high price",
+                                  "type": "string",
+                                },
+                                "operator": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/0/properties/operator",
+                                },
+                                "value": {
+                                  "description": "Threshold value to compare against",
+                                  "type": "number",
+                                },
+                              },
+                              "required": [
+                                "field",
+                                "operator",
+                                "value",
+                              ],
+                              "type": "object",
+                            },
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "field": {
+                                  "const": "low52w",
+                                  "description": "52-week low price",
+                                  "type": "string",
+                                },
+                                "operator": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/0/properties/operator",
+                                },
+                                "value": {
+                                  "description": "Threshold value to compare against",
+                                  "type": "number",
+                                },
+                              },
+                              "required": [
+                                "field",
+                                "operator",
+                                "value",
+                              ],
+                              "type": "object",
+                            },
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "field": {
+                                  "const": "bestBid",
+                                  "description": "Current best bid price",
+                                  "type": "string",
+                                },
+                                "operator": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/0/properties/operator",
+                                },
+                                "value": {
+                                  "description": "Threshold value to compare against",
+                                  "type": "number",
+                                },
+                              },
+                              "required": [
+                                "field",
+                                "operator",
+                                "value",
+                              ],
+                              "type": "object",
+                            },
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "field": {
+                                  "const": "bestAsk",
+                                  "description": "Current best ask price",
+                                  "type": "string",
+                                },
+                                "operator": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/0/properties/operator",
+                                },
+                                "value": {
+                                  "description": "Threshold value to compare against",
+                                  "type": "number",
+                                },
+                              },
+                              "required": [
+                                "field",
+                                "operator",
+                                "value",
+                              ],
+                              "type": "object",
+                            },
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "field": {
+                                  "const": "bestBidQuantity",
+                                  "description": "Current best bid quantity available",
+                                  "type": "string",
+                                },
+                                "operator": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/0/properties/operator",
+                                },
+                                "value": {
+                                  "description": "Threshold value to compare against",
+                                  "type": "number",
+                                },
+                              },
+                              "required": [
+                                "field",
+                                "operator",
+                                "value",
+                              ],
+                              "type": "object",
+                            },
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "field": {
+                                  "const": "bestAskQuantity",
+                                  "description": "Current best ask quantity available",
+                                  "type": "string",
+                                },
+                                "operator": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/0/properties/operator",
+                                },
+                                "value": {
+                                  "description": "Threshold value to compare against",
+                                  "type": "number",
+                                },
+                              },
+                              "required": [
+                                "field",
+                                "operator",
+                                "value",
+                              ],
+                              "type": "object",
+                            },
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "field": {
+                                  "const": "rsi",
+                                  "description": "Relative Strength Index value",
+                                  "type": "string",
+                                },
+                                "granularity": {
+                                  "default": "FIVE_MINUTE",
+                                  "description": "Candle granularity (e.g., ONE_MINUTE, FIVE_MINUTE, ONE_HOUR, ONE_DAY)",
+                                  "enum": [
+                                    "ONE_MINUTE",
+                                    "FIVE_MINUTE",
+                                    "FIFTEEN_MINUTE",
+                                    "THIRTY_MINUTE",
+                                    "ONE_HOUR",
+                                    "TWO_HOUR",
+                                    "SIX_HOUR",
+                                    "ONE_DAY",
+                                  ],
+                                  "type": "string",
+                                },
+                                "operator": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/0/properties/operator",
+                                },
+                                "period": {
+                                  "default": 14,
+                                  "description": "RSI period",
+                                  "minimum": 2,
+                                  "type": "integer",
+                                },
+                                "value": {
+                                  "description": "RSI threshold (typically 30 for oversold, 70 for overbought)",
+                                  "type": "number",
+                                },
+                              },
+                              "required": [
+                                "field",
+                                "operator",
+                                "value",
+                              ],
+                              "type": "object",
+                            },
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "fastPeriod": {
+                                  "default": 12,
+                                  "description": "Fast EMA period",
+                                  "minimum": 2,
+                                  "type": "integer",
+                                },
+                                "field": {
+                                  "const": "macd",
+                                  "description": "MACD line value",
+                                  "type": "string",
+                                },
+                                "granularity": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/11/properties/granularity",
+                                },
+                                "operator": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/0/properties/operator",
+                                },
+                                "signalPeriod": {
+                                  "default": 9,
+                                  "description": "Signal line period",
+                                  "minimum": 2,
+                                  "type": "integer",
+                                },
+                                "slowPeriod": {
+                                  "default": 26,
+                                  "description": "Slow EMA period",
+                                  "minimum": 2,
+                                  "type": "integer",
+                                },
+                                "value": {
+                                  "description": "Threshold value to compare against",
+                                  "type": "number",
+                                },
+                              },
+                              "required": [
+                                "field",
+                                "operator",
+                                "value",
+                              ],
+                              "type": "object",
+                            },
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "fastPeriod": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/12/properties/fastPeriod",
+                                },
+                                "field": {
+                                  "const": "macd.histogram",
+                                  "description": "MACD histogram value",
+                                  "type": "string",
+                                },
+                                "granularity": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/11/properties/granularity",
+                                },
+                                "operator": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/0/properties/operator",
+                                },
+                                "signalPeriod": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/12/properties/signalPeriod",
+                                },
+                                "slowPeriod": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/12/properties/slowPeriod",
+                                },
+                                "value": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/12/properties/value",
+                                },
+                              },
+                              "required": [
+                                "field",
+                                "operator",
+                                "value",
+                              ],
+                              "type": "object",
+                            },
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "fastPeriod": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/12/properties/fastPeriod",
+                                },
+                                "field": {
+                                  "const": "macd.signal",
+                                  "description": "MACD signal line value",
+                                  "type": "string",
+                                },
+                                "granularity": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/11/properties/granularity",
+                                },
+                                "operator": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/0/properties/operator",
+                                },
+                                "signalPeriod": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/12/properties/signalPeriod",
+                                },
+                                "slowPeriod": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/12/properties/slowPeriod",
+                                },
+                                "value": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/12/properties/value",
+                                },
+                              },
+                              "required": [
+                                "field",
+                                "operator",
+                                "value",
+                              ],
+                              "type": "object",
+                            },
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "field": {
+                                  "const": "bollingerBands",
+                                  "description": "Bollinger Bands middle band (SMA)",
+                                  "type": "string",
+                                },
+                                "granularity": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/11/properties/granularity",
+                                },
+                                "operator": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/0/properties/operator",
+                                },
+                                "period": {
+                                  "default": 20,
+                                  "description": "Bollinger Bands period",
+                                  "minimum": 2,
+                                  "type": "integer",
+                                },
+                                "stdDev": {
+                                  "default": 2,
+                                  "description": "Standard deviation multiplier",
+                                  "minimum": 0.1,
+                                  "type": "number",
+                                },
+                                "value": {
+                                  "description": "Threshold value to compare against",
+                                  "type": "number",
+                                },
+                              },
+                              "required": [
+                                "field",
+                                "operator",
+                                "value",
+                              ],
+                              "type": "object",
+                            },
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "field": {
+                                  "const": "bollingerBands.upper",
+                                  "description": "Bollinger Bands upper band",
+                                  "type": "string",
+                                },
+                                "granularity": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/11/properties/granularity",
+                                },
+                                "operator": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/0/properties/operator",
+                                },
+                                "period": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/15/properties/period",
+                                },
+                                "stdDev": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/15/properties/stdDev",
+                                },
+                                "value": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/15/properties/value",
+                                },
+                              },
+                              "required": [
+                                "field",
+                                "operator",
+                                "value",
+                              ],
+                              "type": "object",
+                            },
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "field": {
+                                  "const": "bollingerBands.lower",
+                                  "description": "Bollinger Bands lower band",
+                                  "type": "string",
+                                },
+                                "granularity": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/11/properties/granularity",
+                                },
+                                "operator": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/0/properties/operator",
+                                },
+                                "period": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/15/properties/period",
+                                },
+                                "stdDev": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/15/properties/stdDev",
+                                },
+                                "value": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/15/properties/value",
+                                },
+                              },
+                              "required": [
+                                "field",
+                                "operator",
+                                "value",
+                              ],
+                              "type": "object",
+                            },
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "field": {
+                                  "const": "bollingerBands.bandwidth",
+                                  "description": "Bollinger Bands bandwidth",
+                                  "type": "string",
+                                },
+                                "granularity": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/11/properties/granularity",
+                                },
+                                "operator": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/0/properties/operator",
+                                },
+                                "period": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/15/properties/period",
+                                },
+                                "stdDev": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/15/properties/stdDev",
+                                },
+                                "value": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/15/properties/value",
+                                },
+                              },
+                              "required": [
+                                "field",
+                                "operator",
+                                "value",
+                              ],
+                              "type": "object",
+                            },
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "field": {
+                                  "const": "bollingerBands.percentB",
+                                  "description": "Bollinger Bands %B (0 = lower band, 1 = upper band)",
+                                  "type": "string",
+                                },
+                                "granularity": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/11/properties/granularity",
+                                },
+                                "operator": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/0/properties/operator",
+                                },
+                                "period": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/15/properties/period",
+                                },
+                                "stdDev": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/15/properties/stdDev",
+                                },
+                                "value": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/15/properties/value",
+                                },
+                              },
+                              "required": [
+                                "field",
+                                "operator",
+                                "value",
+                              ],
+                              "type": "object",
+                            },
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "field": {
+                                  "const": "sma",
+                                  "description": "Simple Moving Average value",
+                                  "type": "string",
+                                },
+                                "granularity": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/11/properties/granularity",
+                                },
+                                "operator": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/0/properties/operator",
+                                },
+                                "period": {
+                                  "description": "SMA period (required)",
+                                  "minimum": 2,
+                                  "type": "integer",
+                                },
+                                "value": {
+                                  "description": "Threshold value to compare against",
+                                  "type": "number",
+                                },
+                              },
+                              "required": [
+                                "field",
+                                "period",
+                                "operator",
+                                "value",
+                              ],
+                              "type": "object",
+                            },
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "field": {
+                                  "const": "ema",
+                                  "description": "Exponential Moving Average value",
+                                  "type": "string",
+                                },
+                                "granularity": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/11/properties/granularity",
+                                },
+                                "operator": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/0/properties/operator",
+                                },
+                                "period": {
+                                  "description": "EMA period (required)",
+                                  "minimum": 2,
+                                  "type": "integer",
+                                },
+                                "value": {
+                                  "description": "Threshold value to compare against",
+                                  "type": "number",
+                                },
+                              },
+                              "required": [
+                                "field",
+                                "period",
+                                "operator",
+                                "value",
+                              ],
+                              "type": "object",
+                            },
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "dPeriod": {
+                                  "default": 3,
+                                  "description": "Period for %D signal line smoothing",
+                                  "minimum": 1,
+                                  "type": "integer",
+                                },
+                                "field": {
+                                  "const": "stochastic",
+                                  "description": "Stochastic %K value",
+                                  "type": "string",
+                                },
+                                "granularity": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/11/properties/granularity",
+                                },
+                                "kPeriod": {
+                                  "default": 14,
+                                  "description": "Period for %K line calculation",
+                                  "minimum": 1,
+                                  "type": "integer",
+                                },
+                                "operator": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/0/properties/operator",
+                                },
+                                "value": {
+                                  "description": "Threshold value (typically 20 for oversold, 80 for overbought)",
+                                  "type": "number",
+                                },
+                              },
+                              "required": [
+                                "field",
+                                "operator",
+                                "value",
+                              ],
+                              "type": "object",
+                            },
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "dPeriod": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/22/properties/dPeriod",
+                                },
+                                "field": {
+                                  "const": "stochastic.d",
+                                  "description": "Stochastic %D signal line value",
+                                  "type": "string",
+                                },
+                                "granularity": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/11/properties/granularity",
+                                },
+                                "kPeriod": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/22/properties/kPeriod",
+                                },
+                                "operator": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/0/properties/operator",
+                                },
+                                "value": {
+                                  "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/22/properties/value",
+                                },
+                              },
+                              "required": [
+                                "field",
+                                "operator",
+                                "value",
+                              ],
+                              "type": "object",
+                            },
                           ],
-                          "type": "object",
+                          "description": "A condition to evaluate against ticker data or technical indicators",
                         },
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "fastPeriod": {
-                              "default": 12,
-                              "description": "Fast EMA period",
-                              "minimum": 2,
-                              "type": "integer",
-                            },
-                            "field": {
-                              "const": "macd",
-                              "description": "MACD line value",
-                              "type": "string",
-                            },
-                            "granularity": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/11/properties/granularity",
-                            },
-                            "operator": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/0/properties/operator",
-                            },
-                            "signalPeriod": {
-                              "default": 9,
-                              "description": "Signal line period",
-                              "minimum": 2,
-                              "type": "integer",
-                            },
-                            "slowPeriod": {
-                              "default": 26,
-                              "description": "Slow EMA period",
-                              "minimum": 2,
-                              "type": "integer",
-                            },
-                            "value": {
-                              "description": "Threshold value to compare against",
-                              "type": "number",
-                            },
-                          },
-                          "required": [
-                            "field",
-                            "operator",
-                            "value",
-                          ],
-                          "type": "object",
-                        },
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "fastPeriod": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/12/properties/fastPeriod",
-                            },
-                            "field": {
-                              "const": "macd.histogram",
-                              "description": "MACD histogram value",
-                              "type": "string",
-                            },
-                            "granularity": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/11/properties/granularity",
-                            },
-                            "operator": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/0/properties/operator",
-                            },
-                            "signalPeriod": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/12/properties/signalPeriod",
-                            },
-                            "slowPeriod": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/12/properties/slowPeriod",
-                            },
-                            "value": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/12/properties/value",
-                            },
-                          },
-                          "required": [
-                            "field",
-                            "operator",
-                            "value",
-                          ],
-                          "type": "object",
-                        },
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "fastPeriod": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/12/properties/fastPeriod",
-                            },
-                            "field": {
-                              "const": "macd.signal",
-                              "description": "MACD signal line value",
-                              "type": "string",
-                            },
-                            "granularity": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/11/properties/granularity",
-                            },
-                            "operator": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/0/properties/operator",
-                            },
-                            "signalPeriod": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/12/properties/signalPeriod",
-                            },
-                            "slowPeriod": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/12/properties/slowPeriod",
-                            },
-                            "value": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/12/properties/value",
-                            },
-                          },
-                          "required": [
-                            "field",
-                            "operator",
-                            "value",
-                          ],
-                          "type": "object",
-                        },
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "field": {
-                              "const": "bollingerBands",
-                              "description": "Bollinger Bands middle band (SMA)",
-                              "type": "string",
-                            },
-                            "granularity": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/11/properties/granularity",
-                            },
-                            "operator": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/0/properties/operator",
-                            },
-                            "period": {
-                              "default": 20,
-                              "description": "Bollinger Bands period",
-                              "minimum": 2,
-                              "type": "integer",
-                            },
-                            "stdDev": {
-                              "default": 2,
-                              "description": "Standard deviation multiplier",
-                              "minimum": 0.1,
-                              "type": "number",
-                            },
-                            "value": {
-                              "description": "Threshold value to compare against",
-                              "type": "number",
-                            },
-                          },
-                          "required": [
-                            "field",
-                            "operator",
-                            "value",
-                          ],
-                          "type": "object",
-                        },
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "field": {
-                              "const": "bollingerBands.upper",
-                              "description": "Bollinger Bands upper band",
-                              "type": "string",
-                            },
-                            "granularity": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/11/properties/granularity",
-                            },
-                            "operator": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/0/properties/operator",
-                            },
-                            "period": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/15/properties/period",
-                            },
-                            "stdDev": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/15/properties/stdDev",
-                            },
-                            "value": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/15/properties/value",
-                            },
-                          },
-                          "required": [
-                            "field",
-                            "operator",
-                            "value",
-                          ],
-                          "type": "object",
-                        },
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "field": {
-                              "const": "bollingerBands.lower",
-                              "description": "Bollinger Bands lower band",
-                              "type": "string",
-                            },
-                            "granularity": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/11/properties/granularity",
-                            },
-                            "operator": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/0/properties/operator",
-                            },
-                            "period": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/15/properties/period",
-                            },
-                            "stdDev": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/15/properties/stdDev",
-                            },
-                            "value": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/15/properties/value",
-                            },
-                          },
-                          "required": [
-                            "field",
-                            "operator",
-                            "value",
-                          ],
-                          "type": "object",
-                        },
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "field": {
-                              "const": "bollingerBands.bandwidth",
-                              "description": "Bollinger Bands bandwidth",
-                              "type": "string",
-                            },
-                            "granularity": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/11/properties/granularity",
-                            },
-                            "operator": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/0/properties/operator",
-                            },
-                            "period": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/15/properties/period",
-                            },
-                            "stdDev": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/15/properties/stdDev",
-                            },
-                            "value": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/15/properties/value",
-                            },
-                          },
-                          "required": [
-                            "field",
-                            "operator",
-                            "value",
-                          ],
-                          "type": "object",
-                        },
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "field": {
-                              "const": "bollingerBands.percentB",
-                              "description": "Bollinger Bands %B (0 = lower band, 1 = upper band)",
-                              "type": "string",
-                            },
-                            "granularity": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/11/properties/granularity",
-                            },
-                            "operator": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/0/properties/operator",
-                            },
-                            "period": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/15/properties/period",
-                            },
-                            "stdDev": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/15/properties/stdDev",
-                            },
-                            "value": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/15/properties/value",
-                            },
-                          },
-                          "required": [
-                            "field",
-                            "operator",
-                            "value",
-                          ],
-                          "type": "object",
-                        },
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "field": {
-                              "const": "sma",
-                              "description": "Simple Moving Average value",
-                              "type": "string",
-                            },
-                            "granularity": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/11/properties/granularity",
-                            },
-                            "operator": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/0/properties/operator",
-                            },
-                            "period": {
-                              "description": "SMA period (required)",
-                              "minimum": 2,
-                              "type": "integer",
-                            },
-                            "value": {
-                              "description": "Threshold value to compare against",
-                              "type": "number",
-                            },
-                          },
-                          "required": [
-                            "field",
-                            "period",
-                            "operator",
-                            "value",
-                          ],
-                          "type": "object",
-                        },
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "field": {
-                              "const": "ema",
-                              "description": "Exponential Moving Average value",
-                              "type": "string",
-                            },
-                            "granularity": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/11/properties/granularity",
-                            },
-                            "operator": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/0/properties/operator",
-                            },
-                            "period": {
-                              "description": "EMA period (required)",
-                              "minimum": 2,
-                              "type": "integer",
-                            },
-                            "value": {
-                              "description": "Threshold value to compare against",
-                              "type": "number",
-                            },
-                          },
-                          "required": [
-                            "field",
-                            "period",
-                            "operator",
-                            "value",
-                          ],
-                          "type": "object",
-                        },
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "dPeriod": {
-                              "default": 3,
-                              "description": "Period for %D signal line smoothing",
-                              "minimum": 1,
-                              "type": "integer",
-                            },
-                            "field": {
-                              "const": "stochastic",
-                              "description": "Stochastic %K value",
-                              "type": "string",
-                            },
-                            "granularity": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/11/properties/granularity",
-                            },
-                            "kPeriod": {
-                              "default": 14,
-                              "description": "Period for %K line calculation",
-                              "minimum": 1,
-                              "type": "integer",
-                            },
-                            "operator": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/0/properties/operator",
-                            },
-                            "value": {
-                              "description": "Threshold value (typically 20 for oversold, 80 for overbought)",
-                              "type": "number",
-                            },
-                          },
-                          "required": [
-                            "field",
-                            "operator",
-                            "value",
-                          ],
-                          "type": "object",
-                        },
-                        {
-                          "additionalProperties": false,
-                          "properties": {
-                            "dPeriod": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/22/properties/dPeriod",
-                            },
-                            "field": {
-                              "const": "stochastic.d",
-                              "description": "Stochastic %D signal line value",
-                              "type": "string",
-                            },
-                            "granularity": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/11/properties/granularity",
-                            },
-                            "kPeriod": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/22/properties/kPeriod",
-                            },
-                            "operator": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/0/properties/operator",
-                            },
-                            "value": {
-                              "$ref": "#/properties/subscriptions/items/properties/conditions/items/anyOf/22/properties/value",
-                            },
-                          },
-                          "required": [
-                            "field",
-                            "operator",
-                            "value",
-                          ],
-                          "type": "object",
-                        },
-                      ],
-                      "description": "A condition to evaluate against ticker data or technical indicators",
+                        "maxItems": 5,
+                        "minItems": 1,
+                        "type": "array",
+                      },
+                      "logic": {
+                        "default": "any",
+                        "description": "How to combine conditions: "any" (OR) or "all" (AND)",
+                        "enum": [
+                          "any",
+                          "all",
+                        ],
+                        "type": "string",
+                      },
+                      "productId": {
+                        "description": "Trading pair to monitor (e.g., "BTC-EUR")",
+                        "type": "string",
+                      },
+                      "type": {
+                        "const": "market",
+                        "description": "Subscription type",
+                        "type": "string",
+                      },
                     },
-                    "maxItems": 5,
-                    "minItems": 1,
-                    "type": "array",
-                  },
-                  "logic": {
-                    "default": "any",
-                    "description": "How to combine conditions: "any" (OR) or "all" (AND)",
-                    "enum": [
-                      "any",
-                      "all",
+                    "required": [
+                      "type",
+                      "productId",
+                      "conditions",
                     ],
-                    "type": "string",
+                    "type": "object",
                   },
-                  "productId": {
-                    "description": "Trading pair to monitor (e.g., "BTC-EUR")",
-                    "type": "string",
+                  {
+                    "additionalProperties": false,
+                    "description": "An order subscription to monitor a specific order with conditions",
+                    "properties": {
+                      "conditions": {
+                        "description": "Conditions that trigger the event",
+                        "items": {
+                          "anyOf": [
+                            {
+                              "additionalProperties": false,
+                              "properties": {
+                                "field": {
+                                  "const": "status",
+                                  "description": "Order execution status",
+                                  "type": "string",
+                                },
+                                "targetStatus": {
+                                  "description": "Target statuses to match (triggers when order status is in this list)",
+                                  "items": {
+                                    "enum": [
+                                      "PENDING",
+                                      "OPEN",
+                                      "FILLED",
+                                      "CANCELLED",
+                                      "EXPIRED",
+                                      "FAILED",
+                                      "UNKNOWN_ORDER_STATUS",
+                                      "QUEUED",
+                                      "CANCEL_QUEUED",
+                                      "EDIT_QUEUED",
+                                    ],
+                                    "type": "string",
+                                  },
+                                  "minItems": 1,
+                                  "type": "array",
+                                },
+                              },
+                              "required": [
+                                "field",
+                                "targetStatus",
+                              ],
+                              "type": "object",
+                            },
+                            {
+                              "anyOf": [
+                                {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "field": {
+                                      "const": "avgPrice",
+                                      "description": "Average fill price",
+                                      "type": "string",
+                                    },
+                                    "operator": {
+                                      "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/0/properties/operator",
+                                    },
+                                    "value": {
+                                      "description": "Threshold value to compare against",
+                                      "type": "number",
+                                    },
+                                  },
+                                  "required": [
+                                    "field",
+                                    "operator",
+                                    "value",
+                                  ],
+                                  "type": "object",
+                                },
+                                {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "field": {
+                                      "const": "completionPercentage",
+                                      "description": "Order completion percentage (0-100)",
+                                      "type": "string",
+                                    },
+                                    "operator": {
+                                      "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/0/properties/operator",
+                                    },
+                                    "value": {
+                                      "description": "Threshold value to compare against",
+                                      "type": "number",
+                                    },
+                                  },
+                                  "required": [
+                                    "field",
+                                    "operator",
+                                    "value",
+                                  ],
+                                  "type": "object",
+                                },
+                                {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "field": {
+                                      "const": "cumulativeQuantity",
+                                      "description": "Total quantity filled so far",
+                                      "type": "string",
+                                    },
+                                    "operator": {
+                                      "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/0/properties/operator",
+                                    },
+                                    "value": {
+                                      "description": "Threshold value to compare against",
+                                      "type": "number",
+                                    },
+                                  },
+                                  "required": [
+                                    "field",
+                                    "operator",
+                                    "value",
+                                  ],
+                                  "type": "object",
+                                },
+                                {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "field": {
+                                      "const": "totalFees",
+                                      "description": "Total fees paid",
+                                      "type": "string",
+                                    },
+                                    "operator": {
+                                      "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/0/properties/operator",
+                                    },
+                                    "value": {
+                                      "description": "Threshold value to compare against",
+                                      "type": "number",
+                                    },
+                                  },
+                                  "required": [
+                                    "field",
+                                    "operator",
+                                    "value",
+                                  ],
+                                  "type": "object",
+                                },
+                                {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "field": {
+                                      "const": "filledValue",
+                                      "description": "Total filled value in quote currency",
+                                      "type": "string",
+                                    },
+                                    "operator": {
+                                      "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/0/properties/operator",
+                                    },
+                                    "value": {
+                                      "description": "Threshold value to compare against",
+                                      "type": "number",
+                                    },
+                                  },
+                                  "required": [
+                                    "field",
+                                    "operator",
+                                    "value",
+                                  ],
+                                  "type": "object",
+                                },
+                                {
+                                  "additionalProperties": false,
+                                  "properties": {
+                                    "field": {
+                                      "const": "numberOfFills",
+                                      "description": "Number of individual fills",
+                                      "type": "string",
+                                    },
+                                    "operator": {
+                                      "$ref": "#/properties/subscriptions/items/anyOf/0/properties/conditions/items/anyOf/0/properties/operator",
+                                    },
+                                    "value": {
+                                      "description": "Threshold value to compare against",
+                                      "type": "number",
+                                    },
+                                  },
+                                  "required": [
+                                    "field",
+                                    "operator",
+                                    "value",
+                                  ],
+                                  "type": "object",
+                                },
+                              ],
+                            },
+                          ],
+                          "description": "A condition to evaluate against order data",
+                        },
+                        "maxItems": 5,
+                        "minItems": 1,
+                        "type": "array",
+                      },
+                      "logic": {
+                        "default": "any",
+                        "description": "How to combine conditions: "any" (OR) or "all" (AND)",
+                        "enum": [
+                          "any",
+                          "all",
+                        ],
+                        "type": "string",
+                      },
+                      "orderId": {
+                        "description": "Order ID to monitor",
+                        "type": "string",
+                      },
+                      "type": {
+                        "const": "order",
+                        "description": "Subscription type",
+                        "type": "string",
+                      },
+                    },
+                    "required": [
+                      "type",
+                      "orderId",
+                      "conditions",
+                    ],
+                    "type": "object",
                   },
-                },
-                "required": [
-                  "productId",
-                  "conditions",
                 ],
-                "type": "object",
+                "description": "A subscription — either market or order",
               },
               "maxItems": 10,
               "minItems": 1,
@@ -10172,8 +10650,8 @@ Logic: any (OR), all (AND)",
           ],
           "type": "object",
         },
-        "name": "wait_for_market_event",
-        "title": "Wait for Market Event",
+        "name": "wait_for_event",
+        "title": "Wait for Event",
       },
       {
         "_meta": undefined,

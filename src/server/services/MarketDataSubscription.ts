@@ -1,20 +1,18 @@
 import { logger } from '../../logger';
 import type { BufferedCandle } from './CandleBuffer';
 import { Granularity } from './common.request';
-import type { ConditionEvaluator } from './ConditionEvaluator';
+import type { MarketConditionEvaluator } from './MarketConditionEvaluator';
 import type { MarketDataPool } from './MarketDataPool';
-import type { Ticker } from './MarketEventService.message';
+import type { Ticker } from './MarketData.message';
 import {
   isIndicatorCondition,
-  isTickerField,
+  isTickerConditionField,
   type IndicatorCondition,
-  type Subscription as SubscriptionConfig,
-} from './MarketEventService.request';
-import type { SubscriptionResult } from './MarketEventService.response';
-import {
-  ConditionLogic,
-  IndicatorConditionField,
-} from './MarketEventService.types';
+  type MarketSubscription,
+} from './EventService.request';
+import type { MarketSubscriptionResult } from './EventService.response';
+import { SubscriptionType, type EventSubscription } from './EventService.types';
+import { ConditionLogic, IndicatorConditionField } from './EventService.types';
 
 /**
  * Self-contained unit for a single product subscription.
@@ -25,12 +23,12 @@ import {
  * - `.start()` subscribes to data sources via MarketDataPool
  * - `.cleanup()` unsubscribes from all data sources
  */
-export class MarketDataSubscription {
+export class MarketDataSubscription implements EventSubscription {
   public readonly promise: Promise<void>;
 
   private readonly resolve: () => void;
   private readonly reject: (error: Error) => void;
-  public result: SubscriptionResult;
+  public result: MarketSubscriptionResult;
   private triggered = false;
 
   // State tracking (single product)
@@ -49,9 +47,9 @@ export class MarketDataSubscription {
   private readonly subscriptionIds: string[] = [];
 
   constructor(
-    private readonly config: SubscriptionConfig,
+    private readonly config: MarketSubscription,
     private readonly marketDataPool: MarketDataPool,
-    private readonly conditionEvaluator: ConditionEvaluator,
+    private readonly conditionEvaluator: MarketConditionEvaluator,
   ) {
     const { promise, resolve, reject }: PromiseWithResolvers<void> =
       Promise.withResolvers();
@@ -59,6 +57,7 @@ export class MarketDataSubscription {
     this.resolve = resolve;
     this.reject = reject;
     this.result = {
+      type: SubscriptionType.Market,
       productId: config.productId,
       triggered: false,
       conditions: [],
@@ -183,6 +182,7 @@ export class MarketDataSubscription {
         : evaluatedConditions.every((r) => r.triggered);
 
     this.result = {
+      type: SubscriptionType.Market,
       productId: this.config.productId,
       triggered: conditionsTriggered,
       conditions: evaluatedConditions,
@@ -199,7 +199,7 @@ export class MarketDataSubscription {
   // ---------------------------------------------------------------------------
 
   private hasTickerConditions(): boolean {
-    return this.config.conditions.some((c) => isTickerField(c.field));
+    return this.config.conditions.some((c) => isTickerConditionField(c.field));
   }
 
   private groupIndicatorConditionsByGranularity(): Map<

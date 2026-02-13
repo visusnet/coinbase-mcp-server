@@ -22,10 +22,11 @@ import {
   PublicService,
   TechnicalIndicatorsService,
   TechnicalAnalysisService,
-  MarketEventService,
+  EventService,
   NewsService,
 } from '@server/services';
 import { MarketDataPool } from '@server/services/MarketDataPool';
+import { OrderDataPool } from '@server/services/OrderDataPool';
 import { ToolRegistry } from './tools/ToolRegistry';
 import { AccountToolRegistry } from './tools/AccountToolRegistry';
 import { OrderToolRegistry } from './tools/OrderToolRegistry';
@@ -40,7 +41,7 @@ import { PerpetualsToolRegistry } from './tools/PerpetualsToolRegistry';
 import { DataToolRegistry } from './tools/DataToolRegistry';
 import { IndicatorToolRegistry } from './tools/IndicatorToolRegistry';
 import { AnalysisToolRegistry } from './tools/AnalysisToolRegistry';
-import { MarketEventToolRegistry } from './tools/MarketEventToolRegistry';
+import { EventToolRegistry } from './tools/EventToolRegistry';
 import { NewsToolRegistry } from './tools/NewsToolRegistry';
 
 const SERVER_INSTRUCTIONS = `Cryptocurrency trading server for Coinbase Advanced Trade API.
@@ -93,9 +94,10 @@ export class CoinbaseMcpServer {
   private readonly data: DataService;
   private readonly technicalIndicators: TechnicalIndicatorsService;
   private readonly technicalAnalysis: TechnicalAnalysisService;
-  private readonly marketEvent: MarketEventService;
+  private readonly event: EventService;
   private readonly news: NewsService;
   private readonly marketDataPool: MarketDataPool;
+  private readonly orderDataPool: OrderDataPool;
   private readonly sessions = new Map<string, StreamableHTTPServerTransport>();
   private shutdownHandler: (() => void) | null = null;
 
@@ -120,16 +122,12 @@ export class CoinbaseMcpServer {
       this.products,
       this.technicalIndicators,
     );
-    this.marketDataPool = new MarketDataPool(
-      credentials,
-      this.products,
-      (reason) => {
-        logger.server.error({ reason }, 'Market data connection lost');
-      },
-    );
-    this.marketEvent = new MarketEventService(
+    this.marketDataPool = new MarketDataPool(credentials, this.products);
+    this.orderDataPool = new OrderDataPool(credentials);
+    this.event = new EventService(
       this.technicalIndicators,
       this.marketDataPool,
+      this.orderDataPool,
     );
     this.news = new NewsService();
 
@@ -148,12 +146,17 @@ export class CoinbaseMcpServer {
           await transport.handleRequest(req, res, req.body);
           return;
         }
-        // Session not found — fall through to create new session
-        // This handles server restarts gracefully (stale session IDs from clients)
-        logger.server.debug(
-          { sessionId },
-          'Stale session ID, creating new session',
-        );
+        // Session not found — return 404 per MCP spec
+        // Client must re-initialize to get a new session
+        // Note: Claude Code doesn't auto-reinitialize on 404 yet
+        // See: https://github.com/anthropics/claude-code/issues/9608
+        logger.server.debug({ sessionId }, 'Unknown session ID, returning 404');
+        res.status(404).json({
+          jsonrpc: '2.0',
+          error: { code: -32001, message: 'Session not found' },
+          id: null,
+        });
+        return;
       }
 
       try {
@@ -196,7 +199,7 @@ export class CoinbaseMcpServer {
       } else {
         res.status(404).json({
           jsonrpc: '2.0',
-          error: { code: -32000, message: 'Session not found' },
+          error: { code: -32001, message: 'Session not found' },
           id: null,
         });
       }
@@ -211,7 +214,7 @@ export class CoinbaseMcpServer {
       } else {
         res.status(404).json({
           jsonrpc: '2.0',
-          error: { code: -32000, message: 'Session not found' },
+          error: { code: -32001, message: 'Session not found' },
           id: null,
         });
       }
@@ -233,7 +236,7 @@ export class CoinbaseMcpServer {
       new DataToolRegistry(server, this.data),
       new IndicatorToolRegistry(server, this.technicalIndicators),
       new AnalysisToolRegistry(server, this.technicalAnalysis),
-      new MarketEventToolRegistry(server, this.marketEvent),
+      new EventToolRegistry(server, this.event),
       new NewsToolRegistry(server, this.news),
     ];
 
@@ -270,7 +273,7 @@ TOOL CATEGORIES (74 total):
 - Info (2): get_api_key_permissions, get_transaction_summary
 - Technical Indicators (24): calculate_rsi, calculate_macd, calculate_sma, calculate_ema, calculate_bollinger_bands, calculate_atr, calculate_stochastic, calculate_adx, calculate_obv, calculate_vwap, calculate_cci, calculate_williams_r, calculate_roc, calculate_mfi, calculate_psar, calculate_ichimoku_cloud, calculate_keltner_channels, calculate_fibonacci_retracement, detect_candlestick_patterns, calculate_volume_profile, calculate_pivot_points, detect_rsi_divergence, detect_chart_patterns, detect_swing_points
 - Technical Analysis (2): analyze_technical_indicators, analyze_technical_indicators_batch
-- Market Events (1): wait_for_market_event
+- Events (1): wait_for_event
 - Market Intelligence (1): get_news_sentiment
 
 BEST PRACTICES:
@@ -282,7 +285,7 @@ BEST PRACTICES:
 6. Use analyze_technical_indicators for efficient multi-indicator analysis (reduces context by ~90%)
 7. Use analyze_technical_indicators_batch when analyzing multiple products (returns ranking by signal score)
 8. Use individual indicator tools (calculate_*, detect_*) when you need specific indicator values
-9. Use wait_for_market_event for event-driven monitoring instead of polling with sleep
+9. Use wait_for_event for event-driven monitoring instead of polling with sleep
 10. Consider market sentiment before significant trades - Use get_news_sentiment to check recent headlines`,
               },
             },

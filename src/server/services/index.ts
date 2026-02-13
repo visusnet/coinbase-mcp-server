@@ -12,7 +12,7 @@ export { ProductsService } from './ProductsService';
 export { PublicService } from './PublicService';
 export { TechnicalIndicatorsService } from './TechnicalIndicatorsService';
 export { TechnicalAnalysisService } from './TechnicalAnalysisService';
-export { MarketEventService } from './MarketEventService';
+export { EventService } from './EventService';
 export { NewsService } from './NewsService';
 
 // Re-export types from schema files

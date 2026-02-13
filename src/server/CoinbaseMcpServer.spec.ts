@@ -41,15 +41,18 @@ import {
   mockDataService,
   mockTechnicalIndicatorsService,
   mockTechnicalAnalysisService,
-  mockMarketEventService,
+  mockEventService,
   mockServices,
 } from '@test/serviceMocks';
 import { mockLogger } from '@test/loggerMock';
 import { Granularity } from './services/common.request';
 import {
   ConditionOperator,
+  OrderConditionField,
+  SubscriptionType,
   TickerConditionField,
-} from './services/MarketEventService.types';
+} from './services/EventService.types';
+import type { WaitForEventResponse } from './services/EventService.response';
 
 const logger = mockLogger();
 jest.mock('../logger', () => ({
@@ -2091,20 +2094,35 @@ describe('CoinbaseMcpServer Integration Tests', () => {
       });
     });
 
-    describe('Market Events', () => {
-      it('should call waitForMarketEvent via MCP tool wait_for_market_event', async () => {
+    describe('Events', () => {
+      it('should call waitForEvent via MCP tool wait_for_event', async () => {
         const args = {
           subscriptions: [
             {
+              type: SubscriptionType.Market,
               productId: 'BTC-EUR',
               conditions: [{ field: 'price', operator: 'gt', value: 65000 }],
             },
+            {
+              type: SubscriptionType.Order,
+              orderId: 'order-123',
+              conditions: [
+                {
+                  field: 'status',
+                  targetStatus: [
+                    OrderExecutionStatus.Filled,
+                    OrderExecutionStatus.Cancelled,
+                  ],
+                },
+              ],
+            },
           ],
         };
-        const result = {
-          status: 'triggered' as const,
+        const result: WaitForEventResponse = {
+          status: 'triggered',
           subscriptions: [
             {
+              type: SubscriptionType.Market,
               productId: 'BTC-EUR',
               triggered: true,
               conditions: [
@@ -2117,25 +2135,39 @@ describe('CoinbaseMcpServer Integration Tests', () => {
                 },
               ],
             },
+            {
+              type: SubscriptionType.Order,
+              orderId: 'order-123',
+              triggered: false,
+              conditions: [
+                {
+                  field: OrderConditionField.Status,
+                  targetStatus: [
+                    OrderExecutionStatus.Filled,
+                    OrderExecutionStatus.Cancelled,
+                  ],
+                  actualStatus: OrderExecutionStatus.Pending,
+                  triggered: false,
+                },
+              ],
+            },
           ],
           timestamp: '2025-01-25T12:00:00.000Z',
         };
-        mockMarketEventService.waitForMarketEvent.mockResolvedValueOnce(result);
+        mockEventService.waitForEvent.mockResolvedValueOnce(result);
 
         const response = await client.callTool({
-          name: 'wait_for_market_event',
+          name: 'wait_for_event',
           arguments: args,
         });
 
-        expect(mockMarketEventService.waitForMarketEvent).toHaveBeenCalledWith(
+        expect(mockEventService.waitForEvent).toHaveBeenCalledWith(
           {
             ...args,
             timeout: 55,
             subscriptions: [
-              {
-                ...args.subscriptions[0],
-                logic: 'any',
-              },
+              { ...args.subscriptions[0], logic: 'any' },
+              { ...args.subscriptions[1], logic: 'any' },
             ],
           },
           { signal: expect.any(AbortSignal) },
@@ -2143,10 +2175,11 @@ describe('CoinbaseMcpServer Integration Tests', () => {
         expectResponseToContain(response, result);
       });
 
-      it('should handle wait_for_market_event timeout', async () => {
+      it('should handle wait_for_event timeout', async () => {
         const args = {
           subscriptions: [
             {
+              type: SubscriptionType.Market,
               productId: 'BTC-EUR',
               conditions: [{ field: 'price', operator: 'lt', value: 50000 }],
             },
@@ -2158,10 +2191,10 @@ describe('CoinbaseMcpServer Integration Tests', () => {
           duration: 30,
           timestamp: '2025-01-25T12:00:30.000Z',
         };
-        mockMarketEventService.waitForMarketEvent.mockResolvedValueOnce(result);
+        mockEventService.waitForEvent.mockResolvedValueOnce(result);
 
         const response = await client.callTool({
-          name: 'wait_for_market_event',
+          name: 'wait_for_event',
           arguments: args,
         });
 
@@ -2196,7 +2229,7 @@ describe('CoinbaseMcpServer Integration Tests', () => {
       expect(contentStr).toContain('list_accounts');
       expect(contentStr).toContain('create_order');
       expect(contentStr).toContain('calculate_rsi');
-      expect(contentStr).toContain('wait_for_market_event');
+      expect(contentStr).toContain('wait_for_event');
     });
   });
 
@@ -2438,7 +2471,7 @@ describe('CoinbaseMcpServer Integration Tests', () => {
       expect(response.body).toEqual({
         jsonrpc: '2.0',
         error: {
-          code: -32000,
+          code: -32001,
           message: 'Session not found',
         },
         id: null,
@@ -2533,28 +2566,32 @@ describe('CoinbaseMcpServer Integration Tests', () => {
       }
     });
 
-    it('should create new session for POST with unknown session ID (graceful recovery)', async () => {
+    it('should return 404 for POST with unknown session ID (per MCP spec)', async () => {
       const app = coinbaseMcpServer.getExpressApp();
 
-      // Unknown session ID should trigger new session creation (not 404)
-      // This enables graceful recovery after server restarts
+      // Per MCP spec: unknown session ID returns 404, client must re-initialize
+      // See: https://modelcontextprotocol.io/specification/2025-03-26/basic/lifecycle
       const response = await request(app)
         .post('/mcp')
         .set('Accept', 'application/json, text/event-stream')
         .set('mcp-session-id', 'nonexistent-session')
         .send({
           jsonrpc: '2.0',
-          method: 'initialize',
-          params: {
-            protocolVersion: '2024-11-05',
-            capabilities: {},
-            clientInfo: { name: 'test', version: '1.0.0' },
-          },
+          method: 'tools/call',
+          params: { name: 'get_server_time', arguments: {} },
           id: 1,
         });
 
-      // Should succeed and create a new session
-      expect(response.status).toBe(200);
+      expect(response.status).toBe(404);
+      expect(response.body).toEqual({
+        jsonrpc: '2.0',
+        error: { code: -32001, message: 'Session not found' },
+        id: null,
+      });
+      expect(logger.server.debug).toHaveBeenCalledWith(
+        { sessionId: 'nonexistent-session' },
+        'Unknown session ID, returning 404',
+      );
     });
 
     it('should return 404 for DELETE without session', async () => {
@@ -2565,7 +2602,7 @@ describe('CoinbaseMcpServer Integration Tests', () => {
       expect(response.status).toBe(404);
       expect(response.body).toEqual({
         jsonrpc: '2.0',
-        error: { code: -32000, message: 'Session not found' },
+        error: { code: -32001, message: 'Session not found' },
         id: null,
       });
     });

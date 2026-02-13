@@ -1,4 +1,4 @@
-import type { WebSocketCandle } from './MarketEventService.message';
+import type { WebSocketCandle } from './MarketData.message';
 import { CandleBuffer } from './CandleBuffer';
 
 function createCandle(

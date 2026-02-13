@@ -1,5 +1,10 @@
 import { z } from 'zod';
 import { stringToNumberRequired } from './schema.helpers';
+import { UserEventType } from './EventService.types';
+import {
+  HeartbeatsChannelMessageSchema,
+  ErrorMessageSchema,
+} from './common.message';
 
 // =============================================================================
 // WebSocket Message Schemas (from Coinbase)
@@ -47,7 +52,7 @@ export type Ticker = z.output<typeof TickerSchema>;
 /** Schema for ticker event containing one or more ticker updates */
 const TickerEventSchema = z
   .object({
-    type: z.enum(['snapshot', 'update']).describe('Event type'),
+    type: z.nativeEnum(UserEventType).describe('Event type'),
     tickers: z.array(TickerSchema).describe('Array of ticker data'),
   })
   .strict()
@@ -104,7 +109,7 @@ export type WebSocketCandle = z.output<typeof WebSocketCandleSchema>;
 /** Schema for candle event containing one or more candle updates */
 const CandleEventSchema = z
   .object({
-    type: z.enum(['snapshot', 'update']).describe('Event type'),
+    type: z.nativeEnum(UserEventType).describe('Event type'),
     candles: z.array(WebSocketCandleSchema).describe('Array of candle data'),
   })
   .strict()
@@ -169,41 +174,6 @@ const SubscriptionsChannelMessageSchema = z
   }))
   .describe('Subscriptions channel message');
 
-/** Schema for heartbeats channel message */
-const HeartbeatsChannelMessageSchema = z
-  .object({
-    channel: z.literal('heartbeats').describe('Channel name'),
-    client_id: z.string().optional().describe('Client identifier (optional)'),
-    timestamp: z.string().describe('Message timestamp'),
-    sequence_num: z.number().describe('Sequence number'),
-    events: z
-      .array(
-        z.object({
-          current_time: z.string().describe('Current server time'),
-          heartbeat_counter: z.number().describe('Heartbeat counter'),
-        }),
-      )
-      .describe('Heartbeat events'),
-  })
-  .strict()
-  .transform((data) => ({
-    channel: data.channel,
-    clientId: data.client_id,
-    timestamp: data.timestamp,
-    sequenceNum: data.sequence_num,
-    events: data.events,
-  }))
-  .describe('Heartbeats channel message');
-
-/** Schema for error message from Coinbase WebSocket */
-const ErrorMessageSchema = z
-  .object({
-    type: z.literal('error').describe('Message type'),
-    message: z.string().describe('Error message'),
-  })
-  .strict()
-  .describe('Error message from Coinbase WebSocket');
-
 // =============================================================================
 // Message Types
 // =============================================================================
@@ -213,7 +183,6 @@ type CandlesChannelMessage = z.output<typeof CandlesChannelMessageSchema>;
 type SubscriptionsChannelMessage = z.output<
   typeof SubscriptionsChannelMessageSchema
 >;
-type ErrorMessage = z.output<typeof ErrorMessageSchema>;
 
 /** Union schema for all possible inbound WebSocket messages */
 export const WebSocketMessageSchema = z
@@ -233,29 +202,22 @@ export type WebSocketMessage = z.output<typeof WebSocketMessageSchema>;
 // =============================================================================
 
 /** Type guard for ticker channel messages */
-export function isTickerMessage(
+export function isTickerChannelMessage(
   message: WebSocketMessage,
 ): message is TickerChannelMessage {
   return 'channel' in message && message.channel === 'ticker';
 }
 
 /** Type guard for candles channel messages */
-export function isCandlesMessage(
+export function isCandlesChannelMessage(
   message: WebSocketMessage,
 ): message is CandlesChannelMessage {
   return 'channel' in message && message.channel === 'candles';
 }
 
 /** Type guard for subscriptions channel messages */
-export function isSubscriptionsMessage(
+export function isSubscriptionsChannelMessage(
   message: WebSocketMessage,
 ): message is SubscriptionsChannelMessage {
   return 'channel' in message && message.channel === 'subscriptions';
-}
-
-/** Type guard for error messages */
-export function isErrorMessage(
-  message: WebSocketMessage,
-): message is ErrorMessage {
-  return 'type' in message;
 }

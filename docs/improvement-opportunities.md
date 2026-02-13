@@ -15,7 +15,7 @@ Based on analysis of 7 trades (1W/6L) from 2026-01-12 to 2026-02-10.
 
 **Problem**: Attached bracket SL at `ATR% x 1.5` (typically 2.5-3%) is too tight for overnight holds. Normal volatility wicks sweep the level and Coinbase executes the bracket instantly — no time filter, no close-below confirmation. All 3 recent whipsaws would have recovered if the SL had been wider.
 
-**Proposed Change**: Set attached bracket SL wider (e.g., `ATR% x 2.5` or fixed 5-6%) as a catastrophic safety net. The bot manages a tighter "soft SL" during active monitoring via `wait_for_market_event`. When the bot sleeps (overnight), only the wide bracket protects.
+**Proposed Change**: Set attached bracket SL wider (e.g., `ATR% x 2.5` or fixed 5-6%) as a catastrophic safety net. The bot manages a tighter "soft SL" during active monitoring via `wait_for_event`. When the bot sleeps (overnight), only the wide bracket protects.
 
 **Trade-off**: Larger max loss per trade (5-6% vs 2.5-3%), but fewer whipsaws. Two of the three whipsawed trades would have recovered to profit or breakeven.
 

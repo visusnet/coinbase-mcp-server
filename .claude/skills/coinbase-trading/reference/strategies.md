@@ -382,7 +382,7 @@ bracket_sl_price = entry_price * (1 - bracket_sl_pct / 100)
 
 | Layer | SL | TP | Managed by |
 |-------|----|----|------------|
-| **Soft (inner)** | ATR-based (2.5-10%) | ATR/fixed (1.5-10%+) | Bot via `wait_for_market_event` |
+| **Soft (inner)** | ATR-based (2.5-10%) | ATR/fixed (1.5-10%+) | Bot via `wait_for_event` |
 | **Bracket (outer)** | `clamp(ATR% × 3, 8%, 12%)` | Strategy-dependent | Coinbase (attached bracket) |
 
 The soft layer is always tighter. The bracket is the fallback.

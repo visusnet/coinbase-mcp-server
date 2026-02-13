@@ -114,23 +114,23 @@ Returns results for all pairs in a single call. Use this for Phase 1 data collec
 
 ### Event-Driven Position Monitoring
 
-Use `wait_for_market_event` instead of polling with sleep intervals for efficient, immediate reaction to market conditions.
+Use `wait_for_event` instead of polling with sleep intervals for efficient, immediate reaction to market conditions.
 
-**When to use `wait_for_market_event` vs `sleep`:**
+**When to use `wait_for_event` vs `sleep`:**
 
 | Situation | Tool | Reason |
 |-----------|------|--------|
 | Waiting for next cycle (no condition) | `sleep` | Simple interval waiting |
-| Waiting for stop-loss/take-profit | `wait_for_market_event` | Immediate reaction to price thresholds |
-| Waiting for entry signal | `wait_for_market_event` | Buy breakout/dip |
-| Waiting for volatility spike | `wait_for_market_event` | Volume/percent change condition |
+| Waiting for stop-loss/take-profit | `wait_for_event` | Immediate reaction to price thresholds |
+| Waiting for entry signal | `wait_for_event` | Buy breakout/dip |
+| Waiting for volatility spike | `wait_for_event` | Volume/percent change condition |
 
-→ See [market-event-guide.md](reference/market-event-guide.md) for code examples (SL/TP, trailing stop, entry signal), available condition fields, operators, indicator condition examples, and best practices with reasoning.
+→ See [event-guide.md](reference/event-guide.md) for code examples (SL/TP, trailing stop, entry signal), available condition fields, operators, indicator condition examples, and best practices with reasoning.
 
 **Response Handling:**
 
 ```
-response = wait_for_market_event(...)
+response = wait_for_event(...)
 
 IF response.status == "triggered":
   // Condition was met - act immediately
@@ -519,9 +519,9 @@ After each trading cycle:
 
 1. **Output report** (as described above)
 2. **Wait for next event**:
-   - **With open positions (attached bracket)**: Use `wait_for_market_event` for soft SL/TP + trailing stop — bracket (wide catastrophic stop) is on Coinbase as fallback
-   - **With open positions (no bracket)**: Use `wait_for_market_event` with SL/TP conditions (stop-limit fills, legacy positions)
-   - **Without positions, with entry signal**: Use `wait_for_market_event` with entry conditions
+   - **With open positions (attached bracket)**: Use `wait_for_event` for soft SL/TP + trailing stop — bracket (wide catastrophic stop) is on Coinbase as fallback
+   - **With open positions (no bracket)**: Use `wait_for_event` with SL/TP conditions (stop-limit fills, legacy positions)
+   - **Without positions, with entry signal**: Use `wait_for_event` with entry conditions
    - **Without positions, no signal**: Use `sleep` for next analysis cycle
 3. **Handle response**:
    - `status: "triggered"` → Act immediately (execute SL/TP, check entry)
@@ -543,7 +543,7 @@ The agent runs indefinitely until the user stops it with Ctrl+C.
 **Important during the loop:**
 
 - Load/save positions from trading-state.json each cycle
-- Use `wait_for_market_event` for positions with active SL/TP
+- Use `wait_for_event` for positions with active SL/TP
 - Fall back to `sleep` when no conditions to monitor
 - Show at the end of each cycle: "Monitoring SL/TP..." or "Next cycle in X minutes..."
 
@@ -580,7 +580,7 @@ After re-reading, verify:
 - Am I checking ADX > 20 before entries?
 - Does the HODL Safe still exist? (via get_portfolio(portfolios.hodlSafeUuid) — if error, halt trading, trigger Flow E)
 - Am I NEVER moving funds from the HODL Safe?
-- Am I using wait_for_market_event between cycles (not sleep when positions exist)?
+- Am I using wait_for_event between cycles (not sleep when positions exist)?
 - Am I using the DUAL-LAYER SL? (bracket = wide catastrophic, soft = tight bot-managed)
 - Am I re-evaluating strategy per position each cycle?
 - Am I using the correct BRACKET formulas? (SL = clamp(ATR% × 3, 8%, 12%), TP = strategy-dependent)

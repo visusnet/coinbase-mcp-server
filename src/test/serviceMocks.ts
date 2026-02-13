@@ -12,7 +12,7 @@ import type {
   PublicService,
   TechnicalIndicatorsService,
   TechnicalAnalysisService,
-  MarketEventService,
+  EventService,
   NewsService,
 } from '@server/services';
 import { jest } from '@jest/globals';
@@ -176,9 +176,9 @@ export const mockTechnicalAnalysisService = {
     jest.fn<TechnicalAnalysisService['analyzeTechnicalIndicatorsBatch']>(),
 } as MockedService<TechnicalAnalysisService>;
 
-export const mockMarketEventService = {
-  waitForMarketEvent: jest.fn<MarketEventService['waitForMarketEvent']>(),
-} as MockedService<MarketEventService>;
+export const mockEventService = {
+  waitForEvent: jest.fn<EventService['waitForEvent']>(),
+} as MockedService<EventService>;
 
 const mockNewsService = {
   getNewsSentiment: jest.fn<NewsService['getNewsSentiment']>(),
@@ -227,9 +227,7 @@ export function mockServices(): void {
       TechnicalAnalysisService: jest
         .fn()
         .mockImplementation(() => mockTechnicalAnalysisService),
-      MarketEventService: jest
-        .fn()
-        .mockImplementation(() => mockMarketEventService),
+      EventService: jest.fn().mockImplementation(() => mockEventService),
       NewsService: jest.fn().mockImplementation(() => mockNewsService),
     };
   });
@@ -237,6 +235,14 @@ export function mockServices(): void {
   jest.mock('@server/services/MarketDataPool', () => {
     return {
       MarketDataPool: jest.fn().mockImplementation(() => ({
+        close: jest.fn(),
+      })),
+    };
+  });
+
+  jest.mock('@server/services/OrderDataPool', () => {
+    return {
+      OrderDataPool: jest.fn().mockImplementation(() => ({
         close: jest.fn(),
       })),
     };

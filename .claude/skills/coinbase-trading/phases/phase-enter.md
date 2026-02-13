@@ -326,7 +326,7 @@ When a signal is present and expected profit exceeds MIN_PROFIT threshold (compu
 
 **Attached TP/SL (Dual-Layer — Market and Limit BUY entries)**:
 
-All Market and Limit BUY entries include `attachedOrderConfiguration` with **wide bracket** values (catastrophic stop). The bot manages tighter soft SL/TP via `wait_for_market_event`.
+All Market and Limit BUY entries include `attachedOrderConfiguration` with **wide bracket** values (catastrophic stop). The bot manages tighter soft SL/TP via `wait_for_event`.
 
 ```
 // Step 1: Calculate bracket SL (all strategies — wide catastrophic stop)
@@ -346,7 +346,7 @@ ELSE:  // conservative
 bracket_tp_price = entry_price * (1 + bracket_tp_pct / 100)
 
 // Step 3: Calculate soft SL/TP (unchanged — per strategies.md)
-// These are monitored by the bot via wait_for_market_event
+// These are monitored by the bot via wait_for_event
 
 // Step 4: Place order with wide bracket
 attachedOrderConfiguration: {
@@ -370,7 +370,7 @@ Save to state:
 - `position.riskManagement.dynamicSL = soft_sl_price`
 - `position.riskManagement.dynamicTP = soft_tp_price`
 
-The bot monitors soft SL/TP with `wait_for_market_event` for trailing stops, SL/TP recalculation (after 24h), strategy re-evaluation, and rebalancing. The bracket is the catastrophic fallback — it only fires if the bot is offline.
+The bot monitors soft SL/TP with `wait_for_event` for trailing stops, SL/TP recalculation (after 24h), strategy re-evaluation, and rebalancing. The bracket is the catastrophic fallback — it only fires if the bot is offline.
 
 Stop-limit entries do NOT support `attachedOrderConfiguration` (Coinbase limitation). After a stop-limit fills, the bot immediately places a **standalone sell bracket** to give the position the same Coinbase-level protection as market/limit entries.
 
@@ -419,7 +419,7 @@ create_order({
     }
   }
   // No attachedOrderConfiguration — not supported for stop-limit
-  // Bot manages SL/TP via wait_for_market_event after fill
+  // Bot manages SL/TP via wait_for_event after fill
 })
 ```
 

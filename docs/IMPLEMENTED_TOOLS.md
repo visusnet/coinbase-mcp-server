@@ -119,9 +119,12 @@ All tools accept an optional `format` parameter: `"json"` (default) for standard
 - ✅ `analyze_technical_indicators` - Calculate multiple indicators server-side, reducing context usage by ~90-95%. Fetches candles and returns computed values, aggregated signals, price summary, and risk metrics. The response includes an optional `risk` field containing: `volatilityDaily` (daily standard deviation of log returns), `volatilityAnnualized` (annualized volatility), `var95` (Value at Risk at 95% confidence - expected max daily loss %), `maxDrawdown` (maximum peak-to-trough decline as percentage), `sharpeRatio` (risk-adjusted return metric, null if zero volatility), and `riskLevel` (one of: low, moderate, high, extreme)
 - ✅ `analyze_technical_indicators_batch` - Analyze multiple products in parallel. Returns results for each product (including risk metrics) with a summary ranking by signal score
 
-## Market Events (1)
+## Events (1)
 
-- ✅ `wait_for_market_event` - Wait for specific market conditions via real-time WebSocket. Monitors ticker and indicator data, triggers when conditions are met or timeout reached. Supports operators: gt, gte, lt, lte, crossAbove, crossBelow. Ticker fields: price, volume24h, percentChange24h, high24h, low24h. Indicator fields: rsi, macd, macd.histogram, macd.signal, bollingerBands, sma, ema, stochastic, stochastic.d (with configurable granularity and parameters). Use instead of polling for efficient event-driven monitoring
+- ✅ `wait_for_event` - Wait for market or order conditions via real-time WebSocket. Supports two subscription types:
+  - **Market subscriptions**: Monitor ticker and indicator data. Ticker fields: price, volume24h, percentChange24h, high24h, low24h, high52w, low52w, bestBid, bestAsk, bestBidQuantity, bestAskQuantity. Indicator fields: rsi, macd, macd.histogram, macd.signal, bollingerBands (.upper, .lower, .bandwidth, .percentB), sma, ema, stochastic, stochastic.d (with configurable granularity and parameters)
+  - **Order subscriptions**: Monitor order status and fill progress via User Channel WebSocket. Status conditions: triggers when order status is in target list (PENDING, OPEN, FILLED, CANCELLED, etc.). Numeric conditions: avgPrice, completionPercentage, cumulativeQuantity, totalFees, filledValue, numberOfFills
+  - Operators: gt, gte, lt, lte, crossAbove, crossBelow. Logic: any (OR), all (AND). Use instead of polling for efficient event-driven monitoring
 
 ## Market Intelligence (1)
 

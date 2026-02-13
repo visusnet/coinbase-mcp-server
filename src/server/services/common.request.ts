@@ -7,7 +7,7 @@ import { numberToString } from './schema.helpers';
 
 /**
  * Candle granularity (timeframe) for OHLCV data.
- * Used across Products, Technical Analysis, and Market Events.
+ * Used across Products, Technical Analysis, and Event subscriptions.
  */
 export enum Granularity {
   ONE_MINUTE = 'ONE_MINUTE',

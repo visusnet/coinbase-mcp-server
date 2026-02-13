@@ -1,6 +1,6 @@
-# wait_for_market_event Usage Guide
+# wait_for_event Usage Guide
 
-Examples, condition fields, operators, and best practices for `wait_for_market_event`.
+Examples, condition fields, operators, and best practices for `wait_for_event`.
 
 ---
 
@@ -9,7 +9,7 @@ Examples, condition fields, operators, and best practices for `wait_for_market_e
 ```
 // Monitor the soft (inner) layer — bracket (outer) is on Coinbase
 // Soft SL is tighter than bracket SL — bot exits first under normal operation
-wait_for_market_event({
+wait_for_event({
   subscriptions: [{
     productId: "BTC-EUR",
     conditions: [
@@ -27,7 +27,7 @@ wait_for_market_event({
 **Trailing Stop Monitoring:**
 
 ```
-wait_for_market_event({
+wait_for_event({
   subscriptions: [{
     productId: "BTC-EUR",
     conditions: [
@@ -41,7 +41,7 @@ wait_for_market_event({
 **Entry Signal Waiting (Buy the Dip):**
 
 ```
-wait_for_market_event({
+wait_for_event({
   subscriptions: [{
     productId: "BTC-EUR",
     conditions: [
@@ -133,5 +133,5 @@ For very low-activity periods you may want to wait longer than 240s, but that's 
 4. **Keep conditions simple**: Max 5 conditions per subscription, max 10 subscriptions per call.
 
 <reasoning>
-More conditions means more potential triggers and harder-to-debug behavior. If the bot needs complex multi-indicator logic (e.g., "RSI > 30 AND MACD positive AND price above EMA50"), do that in the analysis cycle where you can log and reason about each factor. Use `wait_for_market_event` for simple trip-wires, not for replicating the full analysis pipeline.
+More conditions means more potential triggers and harder-to-debug behavior. If the bot needs complex multi-indicator logic (e.g., "RSI > 30 AND MACD positive AND price above EMA50"), do that in the analysis cycle where you can log and reason about each factor. Use `wait_for_event` for simple trip-wires, not for replicating the full analysis pipeline.
 </reasoning>

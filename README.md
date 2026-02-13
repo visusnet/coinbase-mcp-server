@@ -138,7 +138,7 @@ Add the MCP server to your Claude settings (e.g., `~/.claude/settings.json`):
 }
 ```
 
-Now you can use all 74 tools (46 Coinbase API + 24 indicators + 2 analysis + 1 market event + 1 market intelligence) and the `/coinbase:assist` prompt in Claude, but without the autonomous `/trade` skill.
+Now you can use all 74 tools (46 Coinbase API + 24 indicators + 2 analysis + 1 event + 1 market intelligence) and the `/coinbase:assist` prompt in Claude, but without the autonomous `/trade` skill.
 
 ## Features
 
