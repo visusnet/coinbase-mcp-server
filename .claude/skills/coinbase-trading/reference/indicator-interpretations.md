@@ -6,6 +6,32 @@ See [indicators.md](indicators.md) for detailed tool documentation and [strategi
 
 ---
 
+## Signal Decay Pattern (CRITICAL)
+
+STRONG_BUY (+50) signals are **short-lived entry windows**, NOT persistent conditions:
+
+| Cycle | Signal | Stochastic | Price | What Happened |
+|-------|--------|------------|-------|---------------|
+| N | +50 STRONG_BUY | 5 (oversold) | $1.00 | Entry window open |
+| N+1 | +17 | 35 (normalizing) | $1.03 | Stoch normalized, price UP |
+| N+2 | 0 | 55 (neutral) | $1.05 | Stoch neutral, price UP |
+
+**Why signals decay**: Stochastic and RSI measure price vs recent range. When price bounces from oversold:
+- Cycle N: Price at bottom of range → stoch 5 → STRONG_BUY
+- Cycle N+1: Price 3% higher → stoch 35 → signal weakens
+- Cycle N+2: Price 5% higher → stoch neutral → signal gone
+
+**The signal decaying does NOT mean the trade was wrong.** It means the entry window closed.
+
+**Action**: When you see a +50 STRONG_BUY that passes filters, enter immediately. Do NOT wait for "confirmation" — the signal IS the confirmation. Waiting one cycle means the signal will decay regardless of whether price continues rising.
+
+Evidence from Feb 11-12 retrospective:
+- RENDER-USD: +50 → 0 in 1 cycle, but price +5.0%
+- DOT-EUR: +50 → +17 in 1 cycle, but price +3.8%
+- AAVE-EUR: +50 → +17 in 1 cycle, but price +3.5%
+
+---
+
 ## Momentum Indicators
 
 ```

@@ -680,3 +680,5 @@ After re-reading, verify:
 - Am I tracking the current market regime? (session.regime.current)
 - If POST_CAPITULATION: has 72h expired? Has F&G recovered above 40?
 - Am I applying regime-appropriate entry rules?
+- If a +50 signal decayed to +17 next cycle, am I interpreting this correctly?
+  (Signal decay is EXPECTED — stochastic normalizes as price rises. Check PRICE movement, not signal persistence.)

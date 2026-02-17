@@ -30,7 +30,9 @@ Check orderbook before altcoin entries:
 
 ## Step 11: Signal Aggregation
 
-Combine all signals into a decision:
+Combine all signals into a decision.
+
+**Signal Decay Warning**: A +50 STRONG_BUY in the current cycle may be +17 or 0 next cycle. This is NORMAL — stochastic normalizes as price moves away from oversold. Do not interpret signal decay as "the signal was wrong." If filters pass NOW, enter NOW. See `indicator-interpretations.md` for full explanation.
 
 **Strategy-Specific Signal Thresholds**:
 

@@ -162,6 +162,8 @@ Search for recent news and categorize:
 | Weak (20-40%) | 50% of available capital |
 | Very Weak (<20%) | No trade |
 
+**Note**: Signal strength is a SNAPSHOT, not a prediction. A +50 STRONG_BUY today will likely be +17 tomorrow because the indicators that created +50 (oversold stochastic, RSI divergence) normalize as price rises. This is expected behavior, not a warning sign. See `indicator-interpretations.md` for the full Signal Decay Pattern explanation.
+
 ### Based on Volatility (ATR)
 
 - ATR < average: Full position size
