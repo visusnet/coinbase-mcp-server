@@ -105,6 +105,26 @@ Each indicator provides a score from -3 to +3:
 - **Focus**: Momentum indicators (RSI, Stochastic)
 - **Volume confirmation required**
 
+## Strategy: Post-Capitulation Scalp
+
+Activated automatically when `session.regime.current == "POST_CAPITULATION"`. Not user-selectable.
+
+- **Take-Profit**: 4.5% fixed
+- **Stop-Loss**: 2.5% fixed
+- **Max Position Size**: 50% of available capital (hard cap, CUMULATIVE across all POST_CAP positions)
+- **MTF Requirement**: 1H neutral or better (6H/daily skipped)
+- **ADX Requirement**: ADX > 10 AND rising + (+DI > -DI) replaces ADX > 20
+- **Min Technical Score**: > +33% for BUY
+- **Min Categories Confirming**: 2+
+- **Duration Limit**: Auto-expires after 72h, falls back to BEAR
+- **Trailing Stop**: Uses global trailing (3.0% activation, 1.5% trail, 1.0% min lock-in) — activates before TP, allowing positions to ride strong bounces
+
+**Activation**: F&G < 15 + 3+ pairs at STRONG_SELL (-50) simultaneously + volume spikes (3x+)
+
+**R:R Analysis**: With ~1.5% round-trip fees: net TP = 4.5% - 1.5% = 3.0%, net SL = 2.5% + 1.5% = 4.0%. Breakeven win rate: ~57%. Trailing stop provides intermediate exits between 3-4.5% if price reverses.
+
+**Rationale**: After a 50% crash, 6H EMAs are 30-40% above price (structurally unfillable for months). ADX is 10-14 at bottoms (trend exhaustion, not absence). These filters block all recovery entries. This strategy accepts structural HTF bearishness and trades the bounce with tight stops.
+
 ---
 
 ## Sentiment Interpretation
@@ -226,7 +246,7 @@ Orderbook for SOL-EUR:
 
 ### Conditions to AVOID trading
 
-1. **Low ADX** (< 20): No clear trend
+1. **Low ADX**: < 20 in NORMAL/BEAR. In POST_CAPITULATION: ADX > 10 AND rising + (+DI > -DI).
 2. **Bollinger Squeeze**: Await breakout direction
 3. **Conflicting Signals**: More than 2 categories disagree
 4. **High ATR**: Extreme volatility (> 3× average)
@@ -377,6 +397,7 @@ bracket_sl_price = entry_price * (1 - bracket_sl_pct / 100)
 | **Aggressive** | `max(10%, ATR% × 5)` | Wide ceiling — trailing stop manages real exit |
 | **Conservative** | `3.0%` fixed | Predictable, moderate target |
 | **Scalping** | `round_trip_fees × 2` (~3% at current tier) | Guarantees net profit after fees |
+| **Post-Cap Scalp** | `max(8%, round_trip_fees × 4)` | Wide safety net above soft TP |
 
 ### Relationship: Bracket vs Soft
 
@@ -384,8 +405,11 @@ bracket_sl_price = entry_price * (1 - bracket_sl_pct / 100)
 |-------|----|----|------------|
 | **Soft (inner)** | ATR-based (2.5-10%) | ATR/fixed (1.5-10%+) | Bot via `wait_for_event` |
 | **Bracket (outer)** | `clamp(ATR% × 3, 8%, 12%)` | Strategy-dependent | Coinbase (attached bracket) |
+| **Post-Cap Soft (inner)** | 2.5% fixed | 4.5% fixed | Bot via wait_for_event |
 
 The soft layer is always tighter. The bracket is the fallback.
+
+**Note**: BEAR regime uses the same entry parameters as NORMAL. The distinction exists for state machine transitions (preventing POST_CAP during ongoing bear, requiring stronger recovery signals before NORMAL). Do not add ad-hoc restrictions for BEAR.
 
 ---
 

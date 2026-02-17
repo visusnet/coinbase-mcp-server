@@ -17,6 +17,10 @@ rsi_div = detect_rsi_divergence(candles)
 
 stoch = calculate_stochastic(candles)
 → stoch.latestValue.k < 20 && stoch.latestValue.k > stoch.latestValue.d: BUY (+2)
+// 6H timeframe regime note:
+// NORMAL: 6H stoch > 80 / RSI > 70 = overbought exhaustion (-2)
+// POST_CAPITULATION: 6H overbought after crash = recovery signal, not exhaustion.
+//   POST_CAPITULATION regime skips 6H filter entirely.
 
 williams = calculate_williams_r(candles)
 → williams.latestValue < -80: BUY (+1), > -20: SELL (-1)
@@ -43,6 +47,10 @@ ema_50 = calculate_ema(candles, period=50)
 adx = calculate_adx(candles)
 → adx.latestValue.adx > 25: Strong trend (confirms signals)
 → adx.latestValue.pdi > adx.latestValue.mdi: Bullish (+2)
+// Regime-aware:
+// NORMAL/BEAR: ADX < 20 = no trade
+// POST_CAPITULATION: ADX < 20 is EXPECTED at bottoms.
+//   Check: ADX rising (current > previous) AND +DI > -DI = new trend forming (+1)
 
 psar = calculate_psar(candles)
 → price > psar.latestValue: Uptrend (+1)

@@ -47,12 +47,13 @@ The project does NOT need to be built. Just call the tools.
 - **Aggressive**: TP = max(2.5%, ATR% × 2.5), SL = clamp(ATR% × 1.5, 2.5%, 10%)
 - **Conservative**: TP = 3.0% fixed, SL = 5.0% fixed
 - **Scalping**: TP = 1.5% fixed, SL = 2.0% fixed
+- **Post-Cap Scalp**: TP = 4.5% fixed, SL = 2.5% fixed
 - Full formulas and validation guards → phases/phase-manage.md
 
 ### Bracket SL/TP Summary (Coinbase, Outer Layer — Catastrophic Stop)
 
 - **Bracket SL** (all strategies): `clamp(ATR% × 3, 8%, 12%)`
-- **Bracket TP**: Aggressive = `max(10%, ATR% × 5)`, Conservative = `3.0%`, Scalping = `round_trip_fees × 2` (~3%)
+- **Bracket TP**: Aggressive = `max(10%, ATR% × 5)`, Conservative = `3.0%`, Scalping = `round_trip_fees × 2` (~3%), Post-Cap Scalp = `max(8%, round_trip_fees × 4)`
 - Full formulas → reference/strategies.md
 
 ### Trailing Stop Summary
@@ -183,34 +184,35 @@ On first cycle only, determine whether to start fresh or resume.
 │   3. Collect Market Data (for selected pairs)               │
 │   4. Technical Analysis                                     │
 │   5. Sentiment Analysis                                     │
+│   6. Regime Detection                                       │
 ├─────────────────────────────────────────────────────────────┤
 │ PHASE 2: MANAGE EXISTING POSITIONS (frees up capital)       │
-│   6. Strategy Re-evaluation                                 │
-│   7. Check SL/TP/Trailing                                   │
-│   8. Rebalancing Check                                      │
-│   9. Capital Exhaustion Check                               │
+│   7. Strategy Re-evaluation                                 │
+│   8. Check SL/TP/Trailing                                   │
+│   9. Rebalancing Check                                      │
+│  10. Capital Exhaustion Check                               │
 ├─────────────────────────────────────────────────────────────┤
 │ PHASE 3: NEW ENTRIES (uses freed capital)                   │
-│  10. Signal Aggregation                                     │
-│  11. Apply Volatility-Based Position Sizing                 │
-│  12. Check Fees & Profit Threshold                          │
-│  13. Pre-Trade Liquidity Check                              │
-│  14. Execute Order                                          │
+│  11. Signal Aggregation                                     │
+│  12. Apply Volatility-Based Position Sizing                 │
+│  13. Check Fees & Profit Threshold                          │
+│  14. Pre-Trade Liquidity Check                              │
+│  15. Execute Order                                          │
 ├─────────────────────────────────────────────────────────────┤
 │ PHASE 4: REPORT                                             │
-│  15. Output Report                                          │
+│  16. Output Report                                          │
 ├─────────────────────────────────────────────────────────────┤
 │ PHASE 5: RETROSPECTIVE & ADAPTATION                         │
-│  16. Review                                                 │
-│  17. Adapt                                                  │
-│  18. Document                                               │
+│  17. Review                                                 │
+│  18. Adapt                                                  │
+│  19. Document                                               │
 │      → Repeat (see Autonomous Loop Mode)                    │
 └─────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Phase 1: Data Collection (Steps 1-5) — INLINE
+## Phase 1: Data Collection (Steps 1-6) — INLINE
 
 ### 1. Check Portfolio Status
 
@@ -390,7 +392,7 @@ BTC-EUR Trend Analysis:
 
 ### 5. Sentiment Analysis
 
-Check sentiment **every cycle** (not just the first). Results feed into Step 10 as signal modifiers.
+Check sentiment **every cycle** (not just the first). Results feed into Step 11 as signal modifiers.
 
 **Source 1 — Fear & Greed Index (global macro)**:
 
@@ -412,7 +414,7 @@ Call `get_news_sentiment` for the top BUY candidates from Step 2. This surfaces 
 - Strongly negative news on a BUY candidate: reduces confidence (apply as negative modifier)
 - Use the news context to distinguish crash types (systemic risk vs. temporary liquidation)
 
-**Overall sentiment classification** for Step 10:
+**Overall sentiment classification** for Step 11:
 
 | Fear & Greed | News Sentiment | → Classification |
 |-------------|----------------|------------------|
@@ -425,7 +427,80 @@ Call `get_news_sentiment` for the top BUY candidates from Step 2. This surfaces 
 
 ---
 
-## Phase 2: Manage Existing Positions (Steps 6-9) — CONDITIONAL
+### 6. Regime Detection
+
+Determine market regime using data from Steps 2-5. The regime persists in `session.regime` and adjusts entry rules in Phase 3.
+
+**IMPORTANT**: Only ONE regime transition per cycle. After any transition, skip remaining checks.
+
+**Regime Transitions:**
+
+```
+// ONE TRANSITION PER CYCLE — after any transition, skip remaining checks
+
+strong_sell_pairs = batch_results.filter(r => r.signal.score <= -50)
+fear_greed = sentiment.fearGreedIndex
+
+// 1. POST_CAPITULATION worsening check — update bottomTimestamp if conditions deepened
+IF regime == "POST_CAPITULATION":
+  IF strong_sell_pairs.count >= 3 AND fear_greed < capitulationData.fearGreedAtDetection:
+    → capitulationData.bottomTimestamp = now  // Reset 72h window
+    → capitulationData.fearGreedAtDetection = fear_greed
+    → Log: "POST_CAPITULATION deepened: F&G {fg}, resetting 72h window"
+    → DONE (skip remaining checks)
+
+// 2. POST_CAPITULATION entry (highest priority, only if not already POST_CAP)
+IF regime != "POST_CAPITULATION"
+   AND strong_sell_pairs.count >= 3
+   AND fear_greed < 15
+   AND any pair has volume > 3x SMA(volume, 20):
+  → regime = "POST_CAPITULATION"
+  → detectedAt = now
+  → triggerEvent = "capitulation_cluster"
+  → Store capitulationData (pairs, F&G, volume spikes, bottomTimestamp = now)
+  → Log: "REGIME → POST_CAPITULATION: {N} STRONG_SELL pairs, F&G {fg}"
+  → DONE
+
+// 3. POST_CAPITULATION exit
+IF regime == "POST_CAPITULATION":
+  hours_since = (now - capitulationData.bottomTimestamp) / 3600
+  IF hours_since > 72:
+    → regime = "BEAR"
+    → detectedAt = now
+    → triggerEvent = "bear_confirmed"
+    → Log: "REGIME → BEAR: POST_CAPITULATION expired after 72h"
+    → DONE
+  ELSE IF fear_greed > 40:
+    → regime = "BEAR"  // Always BEAR, never skip to NORMAL
+    → detectedAt = now
+    → triggerEvent = "bear_confirmed"
+    → Log: "REGIME → BEAR: F&G recovered to {fg} (POST_CAP → BEAR, not NORMAL)"
+    → DONE
+
+// 4. BEAR detection (only if NORMAL)
+IF regime == "NORMAL":
+  bearish_pct = watch_list pairs with bearish 6H / total
+  IF bearish_pct > 0.7 AND fear_greed < 30:
+    → regime = "BEAR"
+    → detectedAt = now
+    → triggerEvent = "bear_confirmed"
+    → DONE
+
+// 5. BEAR exit (only if BEAR)
+IF regime == "BEAR":
+  bullish_pct = watch_list pairs with bullish 6H / total
+  IF bullish_pct > 0.5 AND fear_greed > 40:
+    → regime = "NORMAL"
+    → detectedAt = now
+    → triggerEvent = "recovery_complete"
+    → DONE
+```
+
+**Write `session.regime` to trading-state.json IMMEDIATELY after evaluation, before proceeding to Phase 2.** This ensures Phase 3 reads the correct regime.
+
+---
+
+## Phase 2: Manage Existing Positions (Steps 7-10) — CONDITIONAL
 
 ```
 IF openPositions.length > 0:
@@ -436,7 +511,7 @@ ELSE:
   → Skip Phase 2
 ```
 
-## Step 9: Capital Exhaustion Check
+## Step 10: Capital Exhaustion Check
 
 Before seeking new entries, verify sufficient capital for trading:
 
@@ -462,10 +537,15 @@ IF available_capital < min_order_size (typically $2.00):
 - Only exits if BOTH: insufficient capital AND no rebalanceable positions
 - This prevents deadlock while allowing capital reallocation
 
-## Phase 3: New Entries (Steps 10-14) — CONDITIONAL
+## Phase 3: New Entries (Steps 11-15) — CONDITIONAL
 
 ```
-IF any pair scored above entry threshold (+40 aggressive):
+IF session.regime.current == "POST_CAPITULATION":
+  entry_threshold = +33
+ELSE:
+  entry_threshold = +40
+
+IF any pair scored above entry_threshold:
   → Read("phases/phase-enter.md")
   → Read("reference/strategies.md")
   → Execute: signal aggregation, MTF alignment, ADX filter, sizing, execution
@@ -474,7 +554,14 @@ ELSE:
   → Skip Phase 3
 ```
 
-## Phase 4: Report (Step 15)
+Note: BEAR regime uses the same entry parameters as NORMAL (+40 threshold,
+ADX > 20, 6H MTF filter). The regime distinction exists for:
+(a) preventing POST_CAPITULATION from re-activating during an ongoing bear
+(b) requiring stronger recovery signals (bullish_pct > 0.5 AND F&G > 40)
+    before transitioning back to NORMAL
+Do not invent additional restrictions for BEAR beyond what is specified.
+
+## Phase 4: Report (Step 16)
 
 Output a structured, compact report. See [output-format.md](reference/output-format.md) for the complete specification including:
 
@@ -483,13 +570,13 @@ Output a structured, compact report. See [output-format.md](reference/output-for
 - Example output
 - Formatting notes (markdown tables, indicator separators)
 
-## Phase 5: Retrospective & Adaptation (Steps 16-18)
+## Phase 5: Retrospective & Adaptation (Steps 17-19)
 
 See [phase-retrospective.md](phases/phase-retrospective.md) for the complete specification including:
 
-- Step 16: Review — compare expectations vs. outcomes using MCP data
-- Step 17: Adapt — formulate specific parameter hints for future cycles
-- Step 18: Document — update analysis/retrospective.md (Current Beliefs + Log)
+- Step 17: Review — compare expectations vs. outcomes using MCP data
+- Step 18: Adapt — formulate specific parameter hints for future cycles
+- Step 19: Document — update analysis/retrospective.md (Current Beliefs + Log)
 
 ## Important Rules
 
@@ -512,6 +599,7 @@ If the argument contains "dry-run":
 
 If `percentChange24h` < -15% on BTC/ETH or multiple assets down > 10%:
 → Read("playbooks/crash-playbook.md") and adapt strategy accordingly.
+→ Also evaluate regime transition per Step 6. Once POST_CAPITULATION is active, its strategy parameters (phase-enter.md, strategies.md) supersede crash playbook rules (1x ATR stops, etc.).
 
 ## Autonomous Loop Mode
 
@@ -571,13 +659,16 @@ After every context compaction (you'll notice prior messages are summarized):
 4. Re-read analysis/retrospective.md (Current Beliefs section)
 5. Log: "Post-compaction re-anchor"
 6. Reconcile: Did the compaction summary lose critical details?
+7. If compaction occurred mid-cycle, restart from Step 1 (full data refresh).
+   Do NOT attempt to resume from a compaction summary — intermediate
+   analysis data (batch scores, F&G values, volume checks) is lost.
 
 ### Re-Anchor Self-Check Questions
 After re-reading, verify:
 - Am I following the 5-phase workflow in order?
 - Am I updating state after every action?
 - Am I using the correct ATR formulas? (TP = max(2.5%, ATR% × 2.5), SL = clamp(ATR% × 1.5, 2.5%, 10%))
-- Am I checking ADX > 20 before entries?
+- Am I applying regime-appropriate ADX filter? (ADX > 20 in NORMAL/BEAR, ADX > 10 AND rising + +DI > -DI in POST_CAP)
 - Does the HODL Safe still exist? (via get_portfolio(portfolios.hodlSafeUuid) — if error, halt trading, trigger Flow E)
 - Am I NEVER moving funds from the HODL Safe?
 - Am I using wait_for_event between cycles (not sleep when positions exist)?
@@ -586,3 +677,6 @@ After re-reading, verify:
 - Am I using the correct BRACKET formulas? (SL = clamp(ATR% × 3, 8%, 12%), TP = strategy-dependent)
 - Am I using dual-pass screening? (trend lens + mean-reversion lens)
 - Am I doing a retrospective after every cycle and writing insights to analysis/retrospective.md?
+- Am I tracking the current market regime? (session.regime.current)
+- If POST_CAPITULATION: has 72h expired? Has F&G recovered above 40?
+- Am I applying regime-appropriate entry rules?

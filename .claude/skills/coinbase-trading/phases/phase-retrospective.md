@@ -1,10 +1,10 @@
-# Phase 5: Retrospective & Adaptation (Steps 16-18)
+# Phase 5: Retrospective & Adaptation (Steps 17-19)
 
 After reporting, perform a deep retrospective to learn from recent market behavior and refine future decisions. This runs every cycle — the learning loop is as important as the trade itself.
 
 Read analysis/retrospective.md before starting to build on prior insights.
 
-## 16. Review
+## 17. Review
 
 - Read analysis/retrospective.md (Current Beliefs + recent log entries)
 - Review the last cycle's trades, skipped signals, and price movements using MCP tools (candles, trades, indicators)
@@ -14,7 +14,7 @@ Read analysis/retrospective.md before starting to build on prior insights.
   - SL/TP calibration (stopped out too early or left profit on table)
   - Indicator reliability (which indicators were predictive vs. noisy)
 
-## 17. Adapt
+## 18. Adapt
 
 Based on findings, formulate specific parameter hints for future cycles:
 
@@ -25,7 +25,7 @@ Based on findings, formulate specific parameter hints for future cycles:
 
 These are not hard rules — they are learned heuristics that inform judgment. Override them when current data contradicts them.
 
-## 18. Document
+## 19. Document
 
 Update analysis/retrospective.md with two sections:
 

@@ -145,6 +145,30 @@ When resuming, reconcile state with reality before trading:
 
 Read `trading-state.json`, parse and validate structure.
 
+**Regime Validation (after loading state):**
+
+After loading trading-state.json, validate the regime before proceeding:
+
+```
+IF session.regime.current == "POST_CAPITULATION":
+  IF capitulationData is null OR capitulationData.bottomTimestamp is null:
+    → regime = "BEAR"
+    → detectedAt = now
+    → triggerEvent = "bear_confirmed"
+    → Log: "WARNING: POST_CAPITULATION with missing capitulationData — forcing BEAR"
+  ELSE:
+    hours_since = (now - capitulationData.bottomTimestamp) / 3600
+    IF hours_since > 72:
+      → regime = "BEAR"
+      → detectedAt = now
+      → triggerEvent = "bear_confirmed"
+      → Log: "POST_CAPITULATION expired during offline ({hours_since}h) — forcing BEAR"
+
+Write corrected regime to trading-state.json immediately.
+```
+
+This prevents stale POST_CAPITULATION from persisting through a restart, and guards against null/corrupted capitulationData causing NaN in 72h calculations.
+
 **Step 2: Reconcile Positions with Reality**
 
 <reasoning>

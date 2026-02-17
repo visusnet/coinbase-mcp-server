@@ -1,6 +1,9 @@
 # Phase 3: New Entries
 
-This file is read by the orchestrator when any pair scored above the entry threshold (+40% aggressive).
+This file is read when any pair scored above the entry threshold.
+- NORMAL/BEAR: +40% aggressive
+- POST_CAPITULATION: +33% (relaxed)
+Rules marked [POST_CAP] apply only in POST_CAPITULATION regime.
 It covers: signal aggregation, position sizing, fee checks, liquidity checks, and order execution.
 
 ---
@@ -25,7 +28,7 @@ Check orderbook before altcoin entries:
 
 ---
 
-## Step 10: Signal Aggregation
+## Step 11: Signal Aggregation
 
 Combine all signals into a decision:
 
@@ -39,12 +42,28 @@ Different strategies require different signal strengths:
 | Conservative | +60%          | -60%           | 3+                        | > 25          |
 | Scalping     | +40%          | -40%           | 2+ (momentum focus)       | > 20          |
 
+**Regime Comparison:**
+
+| Parameter | NORMAL/BEAR | POST_CAPITULATION |
+|-----------|-------------|-------------------|
+| Min BUY Score | +40% (aggressive) | +33% |
+| ADX Filter | ADX > 20 | ADX > 10 AND rising + (+DI > -DI) |
+| MTF 6H bearish | signal x 0.3 | No penalty (skip 6H) |
+| MTF 1H bearish | signal x 0.7 | signal x 0.7 (unchanged) |
+| Max Position | 100% | 50% cumulative across all POST_CAP positions |
+| SL/TP | ATR-based | 2.5% SL, 4.5% TP fixed |
+| Bracket TP | strategy-dependent | max(8%, round_trip_fees × 4) |
+
 **Per-Pair Strategy Selection:**
 
 Before applying signal thresholds, determine the strategy for this pair based on current conditions:
 
 ```
-IF ADX > 25 AND ADX rising AND MACD histogram expanding
+// [POST_CAP] Override: force post-capitulation parameters
+IF session.regime.current == "POST_CAPITULATION":
+  pair_strategy = "post_capitulation_scalp"
+
+ELSE IF ADX > 25 AND ADX rising AND MACD histogram expanding
    AND htf_bullish_count >= 2 AND OBV > SMA(OBV,10) AND 40 <= RSI <= 70:
   pair_strategy = "aggressive"
 ELSE IF ADX < 25 AND ADX declining AND BB_width < SMA(BB_width,20)
@@ -92,39 +111,47 @@ Apply trend alignment rules BEFORE executing trades:
 ```
 // Rule: Only trade in direction of higher timeframe trend
 
-// For BUY signals (score > +40):
-IF signal_15m > 40:  // BUY signal detected
+IF session.regime.current == "POST_CAPITULATION":
+  // [POST_CAP] Only require 1H neutral, skip 6H/daily
+  IF trend_1h == "bearish":
+    signal_strength = signal_strength × 0.7
+  // No 6H/daily penalty
 
-  // Check higher timeframe alignment
-  IF trend_daily == "bearish" OR trend_6h == "bearish":
-    Log: "BUY signal rejected: conflicts with higher timeframe trend"
-    Log: "  Daily: {trend_daily}, 6h: {trend_6h}, 1h: {trend_1h}"
-    signal_strength = signal_strength × 0.3  // Reduce by 70%
+ELSE:
+  // Existing NORMAL/BEAR logic (unchanged)
+  // For BUY signals (score > +40):
+  IF signal_15m > 40:  // BUY signal detected
 
-  ELSE IF trend_1h == "bearish":
-    Log: "BUY signal weakened: 1h trend bearish (pullback zone)"
-    signal_strength = signal_strength × 0.7  // Reduce by 30%
+    // Check higher timeframe alignment
+    IF trend_daily == "bearish" OR trend_6h == "bearish":
+      Log: "BUY signal rejected: conflicts with higher timeframe trend"
+      Log: "  Daily: {trend_daily}, 6h: {trend_6h}, 1h: {trend_1h}"
+      signal_strength = signal_strength × 0.3  // Reduce by 70%
 
-  ELSE IF trend_daily == "bullish" AND trend_6h == "bullish":
-    Log: "BUY signal CONFIRMED: aligned with higher timeframes ✓"
-    // No reduction, proceed with full strength
+    ELSE IF trend_1h == "bearish":
+      Log: "BUY signal weakened: 1h trend bearish (pullback zone)"
+      signal_strength = signal_strength × 0.7  // Reduce by 30%
 
-// For SELL signals (score < -40):
-IF signal_15m < -40:  // SELL signal detected
+    ELSE IF trend_daily == "bullish" AND trend_6h == "bullish":
+      Log: "BUY signal CONFIRMED: aligned with higher timeframes ✓"
+      // No reduction, proceed with full strength
 
-  // Check higher timeframe alignment
-  IF trend_daily == "bullish" OR trend_6h == "bullish":
-    Log: "SELL signal rejected: conflicts with higher timeframe trend"
-    Log: "  Daily: {trend_daily}, 6h: {trend_6h}, 1h: {trend_1h}"
-    signal_strength = signal_strength × 0.3  // Reduce by 70%
+  // For SELL signals (score < -40):
+  IF signal_15m < -40:  // SELL signal detected
 
-  ELSE IF trend_1h == "bullish":
-    Log: "SELL signal weakened: 1h trend bullish (rally in downtrend)"
-    signal_strength = signal_strength × 0.7  // Reduce by 30%
+    // Check higher timeframe alignment
+    IF trend_daily == "bullish" OR trend_6h == "bullish":
+      Log: "SELL signal rejected: conflicts with higher timeframe trend"
+      Log: "  Daily: {trend_daily}, 6h: {trend_6h}, 1h: {trend_1h}"
+      signal_strength = signal_strength × 0.3  // Reduce by 70%
 
-  ELSE IF trend_daily == "bearish" AND trend_6h == "bearish":
-    Log: "SELL signal CONFIRMED: aligned with higher timeframes ✓"
-    // No reduction, proceed with full strength
+    ELSE IF trend_1h == "bullish":
+      Log: "SELL signal weakened: 1h trend bullish (rally in downtrend)"
+      signal_strength = signal_strength × 0.7  // Reduce by 30%
+
+    ELSE IF trend_daily == "bearish" AND trend_6h == "bearish":
+      Log: "SELL signal CONFIRMED: aligned with higher timeframes ✓"
+      // No reduction, proceed with full strength
 ```
 
 **Ideal Entry Scenarios**:
@@ -134,7 +161,13 @@ IF signal_15m < -40:  // SELL signal detected
 
 **Trade Filters** (do NOT trade if):
 
-- ADX < 20 (no clear trend)
+- ADX filter (regime-aware):
+  - NORMAL/BEAR: ADX < 20 → no trade
+  - POST_CAPITULATION: ADX > 10 AND rising AND (+DI > -DI) → pass
+    - "Rising" = current cycle ADX > previous cycle ADX (from indicatorCache)
+    - First cycle / post-resume (no cache): compare current ADX vs ADX from 3 candles ago
+      in the same dataset. If current > 3-candles-ago, consider "rising".
+    - ADX > 10 minimum prevents entry on completely directionless pairs
 - Conflicting signals between categories
 - ATR > 3× average (extreme volatility)
 - Volume below average
@@ -144,12 +177,12 @@ See [strategies.md](../reference/strategies.md) for strategy configurations.
 
 ---
 
-## Step 11: Apply Volatility-Based Position Sizing
+## Step 12: Apply Volatility-Based Position Sizing
 
 After determining base position size from signal strength, adjust for volatility:
 
 ```
-// Step 1: Calculate base position size from signal strength (from Step 10)
+// Step 1: Calculate base position size from signal strength (from Step 11)
 IF signal_strength > 60:
   base_position_pct = 100  // Full position
 ELSE IF signal_strength >= 40:
@@ -183,6 +216,16 @@ ELSE:
 // Step 4: Calculate final position size
 final_position_pct = min(100, base_position_pct × volatility_multiplier)
 
+// Regime cap — CUMULATIVE across all POST_CAP positions
+IF session.regime.current == "POST_CAPITULATION":
+  existing_post_cap_pct = sum of all open positions where strategy == "post_capitulation_scalp"
+                          as % of total portfolio value
+  remaining_post_cap_budget = max(0, 50 - existing_post_cap_pct)
+  final_position_pct = min(remaining_post_cap_budget, final_position_pct)
+  IF remaining_post_cap_budget <= 0:
+    → Log: "POST_CAP cumulative cap reached (50%). Skipping new entry."
+    → Skip this pair
+
 // Step 5: Apply exposure limits (from strategies.md Risk Per Trade section)
 // Check ALL limits before finalizing position size:
 //
@@ -210,7 +253,7 @@ Log: "Position: {base_position_pct}% (signal) × {volatility_multiplier} (ATR {a
 
 ---
 
-## Step 12: Check Fees & Profit Threshold
+## Step 13: Check Fees & Profit Threshold
 
 Call `get_transaction_summary` and calculate:
 
@@ -278,7 +321,7 @@ Fees:
 
 ---
 
-## Step 13: Pre-Trade Liquidity Check
+## Step 14: Pre-Trade Liquidity Check
 
 For altcoin market order entries only (skip for major pairs like BTC-USD, BTC-EUR, ETH-USD, ETH-EUR, limit orders, exits):
 
@@ -310,9 +353,9 @@ IF spread > 10.0:
 
 ---
 
-## Step 14: Execute Order
+## Step 15: Execute Order
 
-When a signal is present and expected profit exceeds MIN_PROFIT threshold (computed in Step 12):
+When a signal is present and expected profit exceeds MIN_PROFIT threshold (computed in Step 13):
 
 **Order Type Selection**:
 
@@ -335,7 +378,15 @@ bracket_sl_pct = clamp(ATR_PERCENT * 3, 8.0, 12.0)
 bracket_sl_price = entry_price * (1 - bracket_sl_pct / 100)
 
 // Step 2: Calculate bracket TP (strategy-dependent)
-IF pair_strategy == "scalping":
+IF pair_strategy == "post_capitulation_scalp":
+  // Bracket TP: wide safety net, well above soft TP
+  fees = get_transaction_summary()
+  round_trip_fees = fees.taker_fee_rate * 2 + 0.003  // + slippage
+  bracket_tp_pct = max(8.0, round_trip_fees * 4)
+  // Soft SL/TP: fixed
+  soft_sl_pct = 2.5
+  soft_tp_pct = 4.5
+ELSE IF pair_strategy == "scalping":
   fees = get_transaction_summary()
   round_trip_fees = fees.taker_fee_rate * 2 + 0.003  // + slippage
   bracket_tp_pct = round_trip_fees * 2

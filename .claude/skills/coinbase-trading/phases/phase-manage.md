@@ -33,7 +33,7 @@ Automatically exit stagnant positions for better opportunities:
 
 ---
 
-## Step 6: Strategy Re-evaluation
+## Step 7: Strategy Re-evaluation
 
 For each open position, re-evaluate the strategy based on current market conditions:
 
@@ -57,7 +57,20 @@ FOR EACH position in openPositions:
   current_price = get_best_bid_ask(pair).price
 
   // Priority chain — first match wins
-  IF adx > 25 AND adx > adx_prev AND macd_hist > macd_hist_prev
+  // Regime override — highest priority
+  IF session.regime.current == "POST_CAPITULATION":
+    new_strategy = "post_capitulation_scalp"
+    // Skip normal strategy selection
+
+  // Forced re-eval when regime expired but position still on post_cap
+  ELSE IF position.strategy == "post_capitulation_scalp"
+          AND session.regime.current != "POST_CAPITULATION":
+    // Regime expired — force re-evaluate using normal priority chain
+    // Do NOT fall back to post_capitulation_scalp as default
+    → Run normal strategy selection (aggressive/conservative/scalping)
+    → Log: "POST_CAP expired: re-evaluating {pair} strategy"
+
+  ELSE IF adx > 25 AND adx > adx_prev AND macd_hist > macd_hist_prev
      AND htf_bullish_count >= 2 AND obv > obv_sma AND 40 <= rsi <= 70:
     new_strategy = "aggressive"
   ELSE IF adx < 25 AND adx <= adx_prev AND bb_width < bb_width_sma
@@ -78,7 +91,11 @@ FOR EACH position in openPositions:
     bracket_sl_pct = clamp(ATR_PERCENT * 3, 8.0, 12.0)
     bracket_sl_price = entry_price * (1 - bracket_sl_pct / 100)
 
-    IF new_strategy == "scalping":
+    IF new_strategy == "post_capitulation_scalp":
+      fees = get_transaction_summary()
+      round_trip_fees = fees.taker_fee_rate * 2 + 0.003
+      bracket_tp_pct = max(8.0, round_trip_fees * 4)
+    ELSE IF new_strategy == "scalping":
       fees = get_transaction_summary()
       round_trip_fees = fees.taker_fee_rate * 2 + 0.003
       bracket_tp_pct = round_trip_fees * 2
@@ -97,7 +114,9 @@ FOR EACH position in openPositions:
     })
 
     // Recalculate soft SL/TP per new strategy
-    IF new_strategy == "aggressive":
+    IF new_strategy == "post_capitulation_scalp":
+      soft_tp_pct = 4.5; soft_sl_pct = 2.5
+    ELSE IF new_strategy == "aggressive":
       soft_tp_pct = max(2.5, ATR_PERCENT * 2.5)
       soft_sl_pct = clamp(ATR_PERCENT * 1.5, 2.5, 10.0)
     ELSE IF new_strategy == "conservative":
@@ -125,7 +144,7 @@ FOR EACH position in openPositions:
 
 ---
 
-## Step 7: Check Stop-Loss / Take-Profit
+## Step 8: Check Stop-Loss / Take-Profit
 
 **Positions with attached bracket orders** (`riskManagement.hasBracket == true`):
 The bot manages soft SL/TP as the **primary** exit mechanism (inner layer). The attached bracket on Coinbase is a **wide catastrophic stop** (outer layer) that only fires if the bot is offline. The bot's SL/TP check below handles:
@@ -154,8 +173,12 @@ ELSE IF ATR(14) < 0.001:
 ELSE:
   ATR_PERCENT = ATR(14) / entry_price × 100
 
-// Calculate TP/SL based on per-position strategy (set at entry, updated by Step 6)
-IF position.strategy == "aggressive":
+// Calculate TP/SL based on per-position strategy (set at entry, updated by Step 7)
+IF position.strategy == "post_capitulation_scalp":
+  TP_PERCENT = 4.5  // Fixed 4.5%
+  SL_PERCENT = 2.5  // Fixed 2.5%
+
+ELSE IF position.strategy == "aggressive":
   TP_PERCENT = max(2.5, ATR_PERCENT × 2.5)  // 2.5× ATR, floor at 2.5%
   SL_PERCENT = clamp(ATR_PERCENT × 1.5, 2.5, 10.0)  // 1.5× ATR, 2.5-10%
 
@@ -228,7 +251,7 @@ Position: SOL-EUR
 
 ---
 
-## Step 8: Rebalancing Check
+## Step 9: Rebalancing Check
 
 For positions held > 12h with < 3% movement:
 

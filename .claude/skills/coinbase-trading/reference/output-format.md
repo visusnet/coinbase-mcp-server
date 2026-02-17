@@ -22,7 +22,7 @@ Structured, compact report format for trading cycle output using markdown tables
 ## Report Template
 
 ```
-### {EMOJI} CYCLE {N} · {YYYY-MM-DD HH:MM} UTC · {SIGNAL} · {POSITION_STATUS}
+### {EMOJI} CYCLE {N} · {YYYY-MM-DD HH:MM} UTC · {SIGNAL} · [{REGIME}] · {POSITION_STATUS}
 
 #### Rankings
 
@@ -56,7 +56,10 @@ Structured, compact report format for trading cycle output using markdown tables
 
 ## Section Details
 
-1. **Header**: H3 with cycle number, UTC timestamp, signal emoji + text, position status — all on one line
+1. **Header**: H3 with cycle number, UTC timestamp, signal emoji + text, regime tag, position status — all on one line
+   - `[NORMAL]` — Standard rules
+   - `[BEAR]` — Bear market, reduced confidence
+   - `[POST_CAP]` — Post-capitulation recovery mode (relaxed entry rules)
 2. **RANKINGS**: Table of all analyzed pairs ranked by score, with emoji indicator and key reason
 3. **SPOTLIGHT**: H4 with pair, price, and 24h change; table with indicator categories
 4. **RATIONALE**: 2-5 sentence prose explaining reasoning (why HOLD, why not BUY, etc.)
@@ -65,7 +68,7 @@ Structured, compact report format for trading cycle output using markdown tables
 
 ## Example Output
 
-### ⏸️ CYCLE 5 · 2026-02-04 20:53 UTC · HOLD · No positions
+### ⏸️ CYCLE 5 · 2026-02-04 20:53 UTC · HOLD · [NORMAL] · No positions
 
 #### Rankings
 

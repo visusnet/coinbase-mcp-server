@@ -189,6 +189,14 @@ Single Source of Truth for `.claude/trading-state.json` structure.
 | `session.indicatorCache[pair][timeframe].macd` | object | MACD indicator result |
 | `session.indicatorCache[pair][timeframe].adx` | object | ADX indicator result |
 | `session.indicatorCache[pair][timeframe].scores` | object | Category scores (momentum, trend, etc.) |
+| `session.regime.current` | enum | "NORMAL" / "BEAR" / "POST_CAPITULATION" |
+| `session.regime.detectedAt` | string/null | ISO 8601, when current regime detected |
+| `session.regime.triggerEvent` | string/null | "capitulation_cluster" / "bear_confirmed" / "recovery_complete" / "session_start" |
+| `session.regime.capitulationData` | object/null | Null when not POST_CAPITULATION |
+| `session.regime.capitulationData.strongSellPairs` | array | Pairs that hit STRONG_SELL (-50) simultaneously |
+| `session.regime.capitulationData.fearGreedAtDetection` | number | F&G at detection |
+| `session.regime.capitulationData.volumeSpikePairs` | array | Pairs with 3x+ volume |
+| `session.regime.capitulationData.bottomTimestamp` | string | ISO 8601, set to `detectedAt` at activation; updated to `now` if conditions worsen (deeper STRONG_SELL or lower F&G) — 72h expiry counts from this |
 
 ## Portfolios Object Fields
 
@@ -330,6 +338,8 @@ Each entry in `session.rebalancing.rebalanceHistory[]` has the following structu
   - `stagnant`: Position stagnant >12h with <3% movement, alternative delta >40
   - `urgent_delta`: Alternative delta >60, regardless of stagnation
   - `profitable_delta`: Position stagnant, profitable (>0%), alternative delta >30
+- `session.regime.current`: "NORMAL" | "BEAR" | "POST_CAPITULATION"
+- `session.regime.triggerEvent`: "capitulation_cluster" | "bear_confirmed" | "recovery_complete" | "session_start"
 
 ## State Validation Rules
 
@@ -408,6 +418,7 @@ session.stats.* = all 0
 session.config.strategy = "aggressive" (default)
 session.config.interval = parsed or "15m"
 session.config.dryRun = true if "dry-run" in arguments
+session.regime = { current: "NORMAL", detectedAt: now, triggerEvent: "session_start", capitulationData: null }
 openPositions = []
 tradeHistory = [] (or keep existing)
 
@@ -424,7 +435,7 @@ tradeHistory = [] (or keep existing)
 id = "pos_{YYYYMMDD}_{HHMMSS}_{COIN}"
 pair = trading pair
 side = "long"
-strategy = determined by per-pair strategy selection (aggressive/conservative/scalping)
+strategy = determined by per-pair strategy selection (aggressive/conservative/scalping/post_capitulation_scalp)
 size = calculated position size
 
 entry.price = execution price

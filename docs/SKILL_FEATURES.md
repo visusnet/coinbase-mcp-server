@@ -193,7 +193,7 @@ Signal aggregation determines trade execution:
 
 **Trade Filters (Skip if):**
 
-- ADX < 20 (no clear trend)
+- ADX < 20 in NORMAL/BEAR (no clear trend). POST_CAPITULATION: ADX rising + (+DI > -DI).
 - Conflicting signals between categories
 - ATR > 3× average (extreme volatility)
 - Volume below average
@@ -621,7 +621,7 @@ Stored in `.claude/trading-state.json`
 **Position Data**:
 
 - Entry (price, time, orderType, fee)
-- Strategy (aggressive / conservative / scalping — per-position)
+- Strategy (aggressive / conservative / scalping / post_capitulation_scalp — per-position)
 - Analysis (signalStrength, reason, confidence)
 - Risk Management (dynamicSL, dynamicTP, bracketSL, bracketTP, trailingStop, bracketOrderId, hasBracket)
 - Performance (currentPrice, unrealizedPnL, peakPnL)
@@ -643,6 +643,7 @@ Stored in `.claude/trading-state.json`
 | Aggressive   | +40%          | -40%           | 2+             | > 20          | Default, balanced |
 | Conservative | +60%          | -60%           | 3+             | > 25          | Risk-averse       |
 | Scalping     | +40%          | -40%           | 2+ (momentum)  | > 20          | Fast trades       |
+| Post-Cap Scalp | +33%        | N/A            | 2+             | Rising + +DI>-DI | Post-crash bounce |
 
 ---
 
@@ -694,27 +695,28 @@ Stored in `.claude/trading-state.json`
 │   3. Collect Market Data (for selected pairs)               │
 │   4. Technical Analysis                                     │
 │   5. Sentiment Analysis                                     │
+│   6. Regime Detection                                       │
 ├─────────────────────────────────────────────────────────────┤
 │ PHASE 2: MANAGE EXISTING POSITIONS (frees up capital)       │
-│   6. Strategy Re-evaluation                                 │
-│   7. Check SL/TP/Trailing                                   │
-│   8. Rebalancing Check                                      │
-│   9. Capital Exhaustion Check                               │
+│   7. Strategy Re-evaluation                                 │
+│   8. Check SL/TP/Trailing                                   │
+│   9. Rebalancing Check                                      │
+│  10. Capital Exhaustion Check                               │
 ├─────────────────────────────────────────────────────────────┤
 │ PHASE 3: NEW ENTRIES (uses freed capital)                   │
-│  10. Signal Aggregation                                     │
-│  11. Apply Volatility-Based Position Sizing                 │
-│  12. Check Fees & Profit Threshold                          │
-│  13. Pre-Trade Liquidity Check                              │
-│  14. Execute Order                                          │
+│  11. Signal Aggregation                                     │
+│  12. Apply Volatility-Based Position Sizing                 │
+│  13. Check Fees & Profit Threshold                          │
+│  14. Pre-Trade Liquidity Check                              │
+│  15. Execute Order                                          │
 ├─────────────────────────────────────────────────────────────┤
 │ PHASE 4: REPORT                                             │
-│  15. Output Report                                          │
+│  16. Output Report                                          │
 ├─────────────────────────────────────────────────────────────┤
 │ PHASE 5: RETROSPECTIVE & ADAPTATION                         │
-│  16. Review                                                 │
-│  17. Adapt                                                  │
-│  18. Document                                               │
+│  17. Review                                                 │
+│  18. Adapt                                                  │
+│  19. Document                                               │
 │      → Repeat (see Autonomous Loop Mode)                    │
 └─────────────────────────────────────────────────────────────┘
 ```
